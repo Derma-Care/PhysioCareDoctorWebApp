@@ -1,0 +1,382 @@
+.doctor-profile {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  border: none;
+  background: #f1f1f1;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+.tab-button.active {
+  background: #4caf50;
+  color: white;
+}
+
+.tab-button:hover {
+  background: #ddd;
+}
+
+/* Content */
+.tab-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Info Tab */
+.doctor-header {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.doctor-image {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.doctor-image-placeholder {
+  width: 150px;
+  height: 150px;
+  background: #ccc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.doctor-basic-info h2 {
+  margin: 0;
+}
+
+.doctor-extra {
+  margin-top: 20px;
+}
+
+/* Ratings */
+.rating-card {
+  padding: 15px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.status-available {
+  color: green;
+}
+
+.status-unavailable {
+  color: red;
+}
+
+/* Lists */
+ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 4px;
+}
+
+
+
+.doctor-services {
+  font-family: Arial, sans-serif;
+}
+
+.category-section,
+.subservice-section,
+.service-section,
+.focusarea-section {
+  border: 1px solid;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  color: blue;
+}
+
+.service-section strong{
+  color: green;
+}
+
+.subservice-section strong{
+  color: #d2691e;
+}
+
+.focusarea-section strong{
+  color: #d2691e; /* Chocolate color for difference */
+}
+
+.doctor-services ul {
+  padding-left: 20px; /* proper indentation */
+  list-style-type: disc; /* ensure unordered list */
+}
+ul li{
+  color:black;
+}
+
+
+
+
+
+.feedback-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  background: white;
+  width: 100%;
+}
+
+.profile-pic {
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.feedback-details {
+  flex: 1;
+}
+
+.patient-name {
+  font-weight: bold;
+  margin: 0;
+}
+
+.feedback-time {
+  font-size: 0.85rem;
+  color: gray;
+  margin: 4px 0;
+}
+
+.feedback-text {
+  margin: 5px 0 0;
+}
+
+.feedback-rating {
+  display: flex;
+  align-items: center;
+  font-size: 1.2rem;
+}
+
+.feedback-rating .star {
+  color: gold;
+  margin-right: 5px;
+}
+
+.rating-number {
+  font-weight: bold;
+}
+
+
+
+
+.doctor-info-container {
+  font-family: Arial, sans-serif;
+  max-width: 100%;
+  padding: 20px;
+  background: #fff;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.doctor-profile-pic {
+  display: block;
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  /* border-radius: 50%; */
+  margin-bottom: 20px;
+}
+
+.doctor-profile-placeholder {
+  width: 120px;
+  height: 120px;
+  background: #eee;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.doctor-info-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.doctor-info-left,
+.doctor-info-right {
+  flex: 1;
+  min-width: 280px;
+}
+
+.info-field {
+  margin-bottom: 18px;
+}
+
+.info-field label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+.info-field div {
+  font-size: 14px;
+  color: #333;
+}
+
+/* .doctor-signature {
+  display: block;
+  max-width: 200px;
+  margin-top: 5px;
+} */
+
+.overall-rating{
+  display:flex;
+  justify-content: space-between;
+  margin-bottom:30px;
+}
+
+
+.slot-btn {
+  margin: 5px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.slot-btn.available {
+  background-color: #4caf50;
+  color: white;
+}
+.slot-btn.booked {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+.slots-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.slots-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slot-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.legend-box.available {
+  background-color: green;
+}
+
+.legend-box.booked {
+  background-color: grey;
+}
+
+/* Slot buttons */
+.slot-btn.available {
+  background-color: green;
+  color: white;
+}
+
+.slot-btn.booked {
+  background-color: grey;
+  color: white;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Optional: For smaller screen spacing or dark mode */
+.bg-white {
+  background-color: #fff !important;
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #ccc;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 16px;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment-avatar-sm {
+  width: 30px;
+  height: 30px;
+  background-color: #bbb;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 13px;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment-text {
+  font-size: 14px;
+  line-height: 1.5;
+}

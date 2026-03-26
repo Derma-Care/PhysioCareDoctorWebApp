@@ -1,0 +1,93 @@
+.visit-history {
+  max-height: 80vh;
+  overflow-y: auto; /* outer scroll */
+  padding-right: 10px;
+}
+.vh-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.vh-accordion {
+  margin-top: 10px;
+}
+
+.vh-acc-item + .vh-acc-item {
+  margin-top: 10px;
+}
+
+.vh-acc-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f7f7fb;
+  border: 1px solid #e6e6ef;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vh-acc-title {
+  font-size: 14px;
+}
+.vh-acc-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.vh-acc-panel {
+  padding: 10px 12px;
+  border-left: 1px solid #e6e6ef;
+  border-right: 1px solid #e6e6ef;
+  border-bottom: 1px solid #e6e6ef;
+  border-radius: 0 0 10px 10px;
+  background: #fff;
+  /* remove max-height from here */
+  overflow: visible;
+}
+
+.section {
+  margin-top: 14px;
+}
+.section-title {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+.symptoms-text {
+  margin: 6px 0 12px;
+}
+.item-list {
+  padding-left: 18px;
+  margin: 0;
+}
+.diagnosis {
+  font-weight: 600;
+}
+
+.vh-inner-accordion {
+  margin-top: 10px;
+}
+
+/* Scrollable reports */
+.accordion-scroller {
+  max-height: 40vh; 
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+.accordion-scroller::-webkit-scrollbar {
+  width: 8px;
+}
+.accordion-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+.accordion-scroller::-webkit-scrollbar-thumb {
+  background: #cfd4dc;
+  border-radius: 8px;
+}
+.accordion-scroller:hover::-webkit-scrollbar-thumb {
+  background: #b6bcc7;
+}

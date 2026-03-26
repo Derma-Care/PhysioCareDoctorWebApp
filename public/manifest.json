@@ -1,0 +1,15 @@
+{
+  "short_name": "Doctor App",
+  "name": "Derma Doctor Web App",
+  "icons": [
+    {
+      "src": "./assets/img/favicon.png",
+      "sizes": "100x100",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#7e3a93",
+  "background_color": "#ffffff"
+}

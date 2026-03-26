@@ -1,0 +1,45 @@
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.6em 1.2em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  color: white;
+}
+
+.outline {
+  background: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+}
+
+.small {
+  font-size: 0.875rem;
+  padding: 0.35em 0.8em;
+}
+
+.medium {
+  font-size: 1rem;
+  padding: 0.6em 1.2em;
+}
+
+.large {
+  font-size: 1.25rem;
+  padding: 0.75em 1.5em;
+}

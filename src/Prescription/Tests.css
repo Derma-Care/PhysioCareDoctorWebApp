@@ -1,0 +1,124 @@
+.card-like {
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.muted {
+  color: #6b7280;
+}
+.small {
+  font-size: 12px;
+}
+
+/* Grid layout: two columns on desktop, stack on small screens */
+.tests-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+/* Boxes */
+.dropdown-box,
+.reason-box {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+}
+/* Simple toast */
+
+/* Optional toast using your existing snackbar colors */
+.tests-toast {
+  position: fixed;
+  top: 84px; /* adjust for your header height */
+  right: 16px;
+  z-index: 1100;
+  background: #111827;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+.tests-toast.warning {
+  background: #92400e;
+}
+.tests-toast.success {
+  background: #065f46;
+}
+
+@media (max-width: 992px) {
+  .tests-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.select,
+.textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+/* Chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f5f7fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.chip-text {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip-x {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+}
+.chip-x:hover {
+  color: #ef4444;
+}
+
+/* Boxes */
+.dropdown-box,
+.reason-box {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+}
+
+.reason-box {
+  grid-column: 1 / -1; /* span both columns */
+}

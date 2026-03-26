@@ -1,0 +1,56 @@
+.medicine-card {
+  width: 100%;
+  max-width: 408px;
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  margin: 10px auto;
+  font-family: 'Inter', sans-serif;
+}
+
+.medicine-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.delete-button {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.medicine-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.medicine-fields label,
+.medicine-times label {
+  font-size: 12px;
+  margin-bottom: 4px;
+  display: block;
+  color: #333;
+}
+
+.medicine-fields input,
+.medicine-fields select,
+.medicine-times select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.medicine-times {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}

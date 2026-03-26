@@ -1,0 +1,158 @@
+/* Summary.css */
+
+.summary-container {
+  padding: 2rem;
+
+  color: #111;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.summary-section {
+  margin-bottom: 2rem;
+}
+
+.summary-section h3,
+.summary-section h4 {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.summary-section p {
+  margin: 0.3rem 0;
+  line-height: 1.6;
+}
+
+.summary-section ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.summary-section li {
+  margin-bottom: 0.7rem;
+  line-height: 1.5;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.symptoms-col {
+  flex: 1.5;
+}
+
+.duration-col {
+  flex: 1;
+}
+
+/* Table Styling */
+.table-container {
+  overflow-x: auto;
+}
+
+.prescription-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  background: #f9f9ff;
+}
+
+.prescription-table th,
+.prescription-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.prescription-table th {
+  background-color: #f3f3f3;
+}
+
+/* Footer Buttons */
+.summary-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+
+.save-btn,
+.print-btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background-color: #22c55e;
+  color: white;
+}
+
+.print-btn {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* Print styling */
+@media print {
+  .summary-footer {
+    display: none;
+  }
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+  .row {
+    flex-direction: column;
+  }
+
+  .summary-container {
+    padding: 1rem;
+  }
+
+  .save-btn,
+  .print-btn {
+    flex: 1;
+    font-size: 0.9rem;
+  }
+
+  .prescription-table th,
+  .prescription-table td {
+    font-size: 0.85rem;
+  }
+}
+.delete-btn {
+  padding: 4px 10px;
+  background-color: #ef4444; /* red-500 */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626; /* red-600 */
+}
+.vh-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  z-index: 99999;
+}
+.vh-modal {
+  width: min(520px, 92vw);
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+.muted {
+  color: #6b7280;
+}

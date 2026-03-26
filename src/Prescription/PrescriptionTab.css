@@ -1,0 +1,204 @@
+.prescription-table {
+  width: 100%;
+  overflow-x: auto;
+  background-color: #fff;
+  border-radius: 8px;
+  margin-top: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.input-group {
+  background-color: "red";
+}
+
+.prescription-table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.prescription-table th,
+.prescription-table td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.prescription-table th {
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.prescription-table td {
+  white-space: nowrap;
+  color: #555;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.medicine-form {
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 1rem;
+  background-color: #fff;
+  margin: 1.5rem 0;
+  max-width: 700px;
+}
+
+.medicine-title {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.medicine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.medicine-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.medicine-field label {
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.medicine-field input,
+.medicine-field select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+/* remove hover/focus outline & glow for this input group only */
+.no-focus-ring .form-control:hover,
+.no-focus-ring .form-control:focus,
+.no-focus-ring .btn:hover,
+.no-focus-ring .btn:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* optional: also suppress :focus-visible if your browser shows it */
+.no-focus-ring .form-control:focus-visible,
+.no-focus-ring .btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.prescription-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-top: 1.5rem;
+}
+
+.btn-save {
+  background-color: #0da8ff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-next {
+  background: linear-gradient(to right, #0a6fc3, #02446d);
+  color: white;
+  border: none;
+  padding: 8px 22px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 1rem 0;
+}
+
+.search-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #bfbfbf;
+  border-radius: 8px;
+  background-color: white;
+  flex: 1;
+  height: 40px;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0 10px;
+  font-size: 0.95rem;
+  border-radius: 8px 0 0 8px;
+}
+
+.clear-btn {
+  background: transparent;
+  border: none;
+  padding: 0 12px;
+  font-size: 1.1rem;
+  color: #555;
+  cursor: pointer;
+  border-left: 1px solid #ccc;
+  height: 100%;
+  border-radius: 0 8px 8px 0;
+}
+
+.add-btn {
+  background-color: #335c3f;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  font-size: 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.no-data {
+  text-align: center;
+  font-size: 1rem;
+  color: #999;
+  padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  .prescription-table table {
+    font-size: 0.85rem;
+  }
+
+  .prescription-table th,
+  .prescription-table td {
+    padding: 10px;
+  }
+}

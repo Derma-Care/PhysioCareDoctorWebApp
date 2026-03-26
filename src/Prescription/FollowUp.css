@@ -1,0 +1,50 @@
+ 
+
+/* Side-by-side row (stacks on small screens) */
+.row-sbs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 992px) {
+  .row-sbs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.col label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.text-input,
+.select,
+.notes-area {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.duration-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.next-date-label {
+  color: #374151;
+  margin: 10px 0;
+}
+
+.notes-area {
+  min-height: 120px;
+  resize: vertical;
+  background: #fff;
+}

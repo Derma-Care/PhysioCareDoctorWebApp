@@ -1,0 +1,10 @@
+.profile-image {
+  width: 50px; /* or 60px, adjust as needed */
+  height: 50px;
+  transition: transform 0.3s ease-in-out;
+  border-radius: 50%;
+}
+
+.profile-image:hover {
+  transform: scale(1.2); /* Slight zoom */
+}

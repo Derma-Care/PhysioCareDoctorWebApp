@@ -1,0 +1,30 @@
+/* Full viewport and no scrollbars anywhere on the page */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* The page container fills the viewport exactly */
+.login-page {
+  width: 100vw;
+  height: 100vh; /* exact viewport height */
+  padding: 0;
+  margin: 0;
+  overflow: hidden; /* no inner scroll */
+  background: #fff; /* match your design */
+}
+
+/* Hide scrollbars for any nested element just in case */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  /* Chrome/Safari */
+  display: none;
+}
+::placeholder{
+  color: #0061c2 !important;
+}

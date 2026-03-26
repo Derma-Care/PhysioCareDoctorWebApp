@@ -1,0 +1,123 @@
+.compare-pane {
+  background: #f8f9fb;
+  border: 1px solid #e6e6ef;
+  border-radius: 8px;
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.compare-img {
+  width: 100%;
+  height: 100%;
+  max-height: 380px;
+  object-fit: contain;
+}
+/* Common hover effect for all custom buttons */
+button:hover,
+.btn:hover,
+.cmp-btn:hover {
+  background-color: #a5c4d4ff;  /* light violet hover */
+  border-color: #7e3a93;      /* purple border */
+  color: #4f46e5;             /* text color changes */
+  transition: all 0.2s ease-in-out;
+}
+
+.preview-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 per row */
+  gap: 2;                                  /* no gaps */
+}
+
+.preview-cell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.preview-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center; /* center the image */
+}
+
+.remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+
+/*   */
+
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+.cmp-card {
+  border: 1px solid #e6e6ef;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 0;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+.cmp-card img {
+  display: block;
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+}
+.cmp-card .cmp-meta {
+  padding: 6px 8px;
+}
+.cmp-name {
+  font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cmp-date {
+  font-size: 11px; color: #6b7280;
+}
+.cmp-card.active {
+  outline: 2px solid #4f46e5;
+  outline-offset: -2px;
+}
+
+
+.compare-grid {
+  display: flex;
+  justify-content: center; /* center the whole grid */
+}
+
+.preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px; /* space between items */
+  justify-content: center; /* center items inside the grid */
+}
+
+.preview-item {
+  display: flex;
+  flex-direction: column; /* stack image and button vertically */
+  align-items: center; /* center horizontally */
+  width: 120px; /* adjust size as needed */
+}
+
+.preview-img {
+  width: 100%;
+  height: 120px; /* adjust size */
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.remove-btn {
+  margin-top: 8px; /* space between image and button */
+  width: 80%; /* optional, make button fit nicely under image */
+  display: flex;
+
+}
+

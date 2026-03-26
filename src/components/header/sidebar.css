@@ -1,0 +1,56 @@
+:root {
+  --main-color: #0061c2;
+  --secondary-color: #0196ee;
+  --font-size-xl: 1.25rem;
+  --spacing-md: 16px;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.clinic-header {
+  font-size: clamp(1rem, 4vw, 1.8rem);
+  letter-spacing: 1px;
+  animation: fadeInUp 0.6s ease-out;
+  background: linear-gradient(to right, var(--main-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all 0.3s ease-in-out;
+  /* Allow 2 lines */
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 👈 Limit to 2 lines */
+  -webkit-box-orient: vertical;
+}
+@media (max-width: 400px) {
+  .clinic-header {
+    font-size: 1rem;
+  }
+}
+
+.doctor-header {
+  font-size: clamp(1rem, 4vw, 1.8rem);
+  letter-spacing: 1px;
+ 
+  background: linear-gradient(to right, var(--main-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all 0.3s ease-in-out;
+  /* Allow 2 lines */
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 👈 Limit to 2 lines */
+  -webkit-box-orient: vertical;
+}
+
+ 
+

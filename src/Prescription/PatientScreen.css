@@ -1,0 +1,35 @@
+.patient-layout {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  background-color: #f9f9f9;
+}
+
+.patient-main {
+  flex: 1;
+  padding: 1rem;
+  overflow-x: hidden;
+}
+
+.sidebar {
+  width: 260px;
+  background-color: #fff;
+  padding: 1rem;
+  border-right: 1px solid #ddd;
+}
+
+@media (max-width: 768px) {
+  .patient-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .patient-main {
+    padding: 0.5rem;
+  }
+}
