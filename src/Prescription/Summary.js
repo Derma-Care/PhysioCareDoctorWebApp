@@ -1,770 +1,827 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  CContainer,
-  CRow,
-  CCol,
-  CCard,
-  CCardHeader,
-  CCardBody,
-  CTable,
-  CTableHead,
-  CTableRow,
-  CTableHeaderCell,
-  CTableBody,
-  CTableDataCell,
-  CBadge,
-} from '@coreui/react'
+import { CContainer, CSpinner } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 import Snackbar from '../components/Snackbar'
 import { COLORS } from '../Themes'
-import './Summary.css'
 import { useToast } from '../utils/Toaster'
 import FileUploader from './FileUploader'
-import { createDoctorSaveDetails, getClinicDetails, getDoctorDetails } from '../Auth/Auth'
+import { createDoctorSaveDetails, getClinicDetails, getDoctorDetails, SavePatientPrescription } from '../Auth/Auth'
 import { useDoctorContext } from '../Context/DoctorContext'
 import PrescriptionPDF from '../utils/PdfGenerator'
 import { pdf } from '@react-pdf/renderer'
-import { capitalizeEachWord, capitalizeFirst } from '../utils/CaptalZeWord'
+import { capitalizeEachWord } from '../utils/CaptalZeWord'
 
-/**
- * Props:
- * - patientData
- * - formData: {
- *    symptoms: { symptomDetails, doctorObs, diagnosis, duration, attachments? }
- *    tests: { selectedTests: string[], testReason?: string }
- *    prescription: { medicines: [{ id?, name, dose, remindWhen, note, duration, times }] }
- *    treatments: { selectedTestTreatments: string[], treatmentReason?, generatedData? }
- *    followUp: { durationValue, durationUnit, nextFollowUpDate, followUpNote }
- *   }
- */
+/* ─── Design tokens ─────────────────────────────────────────────────────── */
+const P = '#1a3a5c'
+const A = '#1a5fa8'
+const LIGHT = '#f5f9ff'
+const BORDER = '#d8e8f5'
 
+/* ─── Tiny helpers ───────────────────────────────────────────────────────── */
+const dash = (v) => (v && v !== 'NA' && String(v).trim() !== '' ? v : '—')
+const toImageSrc = (raw) => {
+  if (!raw || typeof raw !== 'string') return null
+  if (raw.startsWith('http') || raw.startsWith('blob:') || raw.startsWith('/')) return raw
+  if (raw.startsWith('data:')) return raw
+  if (raw.startsWith('/9j/'))   return `data:image/jpeg;base64,${raw}`
+  if (raw.startsWith('iVBOR')) return `data:image/png;base64,${raw}`
+  if (raw.startsWith('R0lGO')) return `data:image/gif;base64,${raw}`
+  return `data:image/jpeg;base64,${raw}`
+}
+const Section = ({ icon, title, children, accent = false }) => (
+  <div style={{
+    background: '#fff',
+    border: `1px solid ${accent ? '#c3dafe' : BORDER}`,
+    borderRadius: 14, marginBottom: 20, overflow: 'hidden',
+    boxShadow: '0 2px 12px rgba(26,90,168,0.06)',
+  }}>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '12px 20px',
+      background: accent
+        ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)'
+        : 'linear-gradient(135deg,#1a3a5c,#1a5fa8)',
+      borderBottom: `1px solid ${BORDER}`,
+    }}>
+      <span style={{ fontSize: 18 }}>{icon}</span>
+      <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.03em' }}>
+        {title}
+      </span>
+    </div>
+    <div style={{ padding: '18px 20px' }}>{children}</div>
+  </div>
+)
+
+const Row = ({ label, value, full = false, highlight = false }) => (
+  <div style={{
+    display: full ? 'block' : 'flex',
+    gap: 8, marginBottom: 10,
+    padding: highlight ? '8px 12px' : 0,
+    background: highlight ? '#f0f7ff' : 'transparent',
+    borderRadius: highlight ? 8 : 0,
+    borderLeft: highlight ? '3px solid #1a5fa8' : 'none',
+  }}>
+    <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+      {label}:
+    </span>
+    <span style={{ fontSize: '0.9rem', color: P, wordBreak: 'break-word' }}>{dash(value)}</span>
+  </div>
+)
+
+const Grid = ({ children, cols = 2 }) => (
+  <div style={{
+    display: 'grid',
+    gridTemplateColumns: `repeat(${cols}, 1fr)`,
+    gap: '10px 28px',
+  }}>{children}</div>
+)
+
+const Chip = ({ label, color = A, bg = '#dbeafe' }) => (
+  <span style={{
+    background: bg, color, borderRadius: 20,
+    padding: '3px 12px', fontSize: '0.78rem', fontWeight: 700,
+    border: `1px solid ${color}33`, display: 'inline-block', margin: '2px 4px 2px 0',
+  }}>{label}</span>
+)
+
+const StatusDot = ({ status }) => {
+  const map = {
+    Confirmed: ['#d1fae5', '#065f46', '#6ee7b7'],
+    Completed: ['#d1fae5', '#065f46', '#6ee7b7'],
+    Pending: ['#fef3c7', '#92400e', '#fcd34d'],
+    Cancelled: ['#fee2e2', '#991b1b', '#fecaca'],
+  }
+  const [bg, fg, border] = map[status] || ['#f3f4f6', '#374151', '#d1d5db']
+  return (
+    <span style={{
+      background: bg, color: fg, border: `1px solid ${border}`,
+      borderRadius: 20, padding: '3px 14px', fontSize: '0.8rem', fontWeight: 700,
+    }}>{status}</span>
+  )
+}
+
+const AnswerBadge = ({ answer }) => {
+  const up = String(answer).toUpperCase()
+  const [bg, color, border] =
+    up === 'YES' ? ['#d1fae5', '#065f46', '#6ee7b7'] :
+      up === 'NO' ? ['#fee2e2', '#991b1b', '#fecaca'] :
+        ['#eff6ff', '#1d4ed8', '#bfdbfe']
+  return (
+    <span style={{ background: bg, color, border: `1px solid ${border}`, borderRadius: 20, padding: '2px 12px', fontSize: '0.78rem', fontWeight: 700 }}>
+      {answer}
+    </span>
+  )
+}
+
+/* ─── Main component ─────────────────────────────────────────────────────── */
 const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formData = {}, fromPage }) => {
-  const { doctorDetails, setDoctorDetails, setClinicDetails, clinicDetails, updateTemplate } =
-    useDoctorContext()
-
+  const { doctorDetails, setDoctorDetails, setClinicDetails, clinicDetails, updateTemplate } = useDoctorContext()
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
-  const navigate = useNavigate()
-  const navigatingRef = useRef(false)
+  const [saving, setSaving] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
   const [clickedSaveTemplate, setClickedSaveTemplate] = useState(false)
-
+  const navigate = useNavigate()
   const { success, error, info, warning } = useToast()
-
-  // ----------- Safe mapping from props -----------
-  const symptomsDetails = formData?.symptoms?.symptomDetails ?? formData?.symptoms?.doctorObs ?? '—'
-  const symptomsDuration = formData?.symptoms?.duration ?? patientData?.duration ?? '—'
-  const doctorObs = formData?.symptoms?.doctorObs ?? patientData?.doctorObs ?? '—'
-  const attachments = Array.isArray(formData?.symptoms?.attachments)
-    ? formData.symptoms.attachments
-    : Array.isArray(patientData?.attachments)
-      ? patientData.attachments
-      : []
-
-  const diagnosis = formData?.symptoms?.diagnosis ?? formData?.summary?.diagnosis ?? ''
-
-  const tests = Array.isArray(formData?.tests?.selectedTests) ? formData.tests.selectedTests : []
-  const testsReason = formData?.tests?.testReason ? formData.tests.testReason : ''
-
-
-  const treatmentReason = formData?.treatments?.treatmentReason
-    ? formData.treatments.treatmentReason
-    : ''
-
-  const treatments = Array.isArray(formData?.treatments?.selectedTestTreatments)
-    ? formData.treatments.selectedTestTreatments
-    : []
-
-  const treatmentSchedules = formData?.treatments?.generatedData || {}
-
-  const medicines = Array.isArray(formData?.prescription?.medicines)
-    ? formData.prescription.medicines
-    : []
-
-  const followUp = {
-    durationValue: formData?.followUp?.durationValue ?? 'NA',
-    durationUnit: formData?.followUp?.durationUnit ?? 'NA',
-    date: formData?.followUp?.nextFollowUpDate ?? 'NA',
-    note: formData?.followUp?.followUpNote ?? 'NA',
-  }
-
   const ACTIONS = { SAVE: 'save', SAVE_PRINT: 'savePrint' }
-  const freqLabel = (f) =>
-    f === 'day' ? 'Daily' : f === 'week' ? 'Weekly' : f === 'month' ? 'Monthly' : f || '—'
 
-  const toInitials = (input, sep = ', ') => {
-    if (!input) return ''
-    let tokens = []
-    if (Array.isArray(input)) {
-      tokens = input
-    } else {
-      const s = String(input).trim()
-      if (s.includes(',') || s.includes('|') || /\s/.test(s)) {
-        tokens = s.split(/[,|\s]+/)
-      } else {
-        tokens = s.match(/morning|afternoon|evening|night/gi) || [s]
-      }
-    }
-    const map = {
-      morning: 'M',
-      m: 'M',
-      afternoon: 'A',
-      a: 'A',
-      evening: 'E',
-      e: 'E',
-      night: 'N',
-      n: 'N',
-    }
-    return tokens
-      .map((t) => map[t.toLowerCase()] ?? (t[0]?.toUpperCase() || ''))
-      .filter(Boolean)
-      .join(sep)
+  const record = formData?.physiotherapyRecord ?? formData ?? {}
+
+  /* ── Booking-level IDs ── */
+  const bookingId = record.bookingId ?? patientData?.bookingId ?? ''
+  const clinicId = record.clinicId ?? patientData?.clinicId ?? clinicDetails?.hospitalId ?? ''
+  const branchId = record.branchId ?? patientData?.branchId ?? ''
+  const clinicName = clinicDetails?.name ?? patientData?.clinicName ?? ''
+  const customerId = patientData?.customerId ?? ''
+  const subServiceId = patientData?.subServiceId ?? ''
+  const doctorId = doctorDetails?.doctorId ?? patientData?.doctorId ?? ''
+
+  /* ── patientInfo ── */
+  const patientInfo = record.patientInfo ?? {}
+  const patientId = patientInfo.patientId ?? patientData?.patientId ?? ''
+  const patientName = patientInfo.name ?? patientData?.name ?? ''
+  const patientMobile = patientInfo.mobileNumber ?? patientData?.mobileNumber ?? patientData?.patientMobileNumber ?? ''
+  const patientAge = patientInfo.age ?? patientData?.age ?? ''
+  const patientSex = patientInfo.sex ?? patientData?.sex ?? patientData?.gender ?? ''
+
+  /* ── complaints ── */
+  // ── complaints ──
+  const complaintsObj = record.complaints ?? {}
+
+  const complaintDetails =
+    complaintsObj.complaintDetails ?? patientData?.problem ?? ''
+
+  const complaintDuration =
+    complaintsObj.duration ?? patientData?.symptomsDuration ?? ''
+
+  const selectedTherapy = complaintsObj.selectedTherapy ?? ''
+ const painAssessmentImage = complaintsObj.painAssessmentImage ?? ''
+  const partImage = complaintsObj.partImage ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
+  const reportImages = Array.isArray(complaintsObj.reportImages)
+    ? complaintsObj.reportImages
+    : []
+
+
+  // ✅ ALWAYS USE BACKEND KEY (theraphyAnswers)
+  const therapyAnswers =
+    complaintsObj.theraphyAnswers ??
+    formData?.theraphyAnswers ??
+    patientData?.theraphyAnswers ??
+    {}
+
+  // ✅ FINAL COMPLAINTS (ONLY ONE KEY)
+  const finalComplaints = {
+    ...complaintsObj,
+    complaintDetails,
+    duration: complaintDuration,
+    theraphyAnswers: therapyAnswers,
+    selectedTherapy,
+    selectedTherapyID: complaintsObj.selectedTherapyID || '',
+    painAssessmentImage,
+    reportImages,
   }
+  const therapyGroups = Object.entries(therapyAnswers).map(([cat, qs]) => ({
+    category: cat, questions: Array.isArray(qs) ? qs : [],
+  }))
+  const attachments = [
+    ...(painAssessmentImage ? [{ url: painAssessmentImage, name: 'Pain Assessment' }] : []),
+    ...reportImages.map((url, i) => ({ url, name: `Report ${i + 1}` })),
+  ]
 
-  // Inside useEffect (after fetching doctor & clinic details)
+  /* ── assessment ── */
+  const assessment = record.assessment ?? formData?.assessment ?? {}
+
+  /* ── diagnosis ── */
+  const diagnosis = record.diagnosis ?? formData?.diagnosis ?? {}
+
+  /* ── treatmentPlan ── */
+  const treatmentPlanRaw = record.treatmentPlan ?? {}
+  const treatmentPlans = Object.keys(treatmentPlanRaw).length > 0
+    ? [treatmentPlanRaw]
+    : (formData?.treatmentPlans ?? [])
+
+  /* ── therapySessions ── */
+  const therapySessionsObj = record.therapySessions ?? formData?.therapySessions ?? {}
+  const overallStatus = therapySessionsObj.overallStatus ?? ''
+  const sessions = Array.isArray(therapySessionsObj.sessions) ? therapySessionsObj.sessions : []
+
+  /* ── exercisePlan ── */
+  const exercisePlanObj = record.exercisePlan ?? formData?.exercisePlan ?? {}
+  const exercises = Array.isArray(exercisePlanObj.exercises) ? exercisePlanObj.exercises : []
+  const homeAdvice = exercisePlanObj.homeAdvice ?? ''
+
+  /* ── followUp ────────────────────────────────────────────────────────────
+     TWO POSSIBLE SHAPES:
+     1. API / record shape  → object:  { nextVisitDate, reviewNotes, continueTreatment, modifications }
+     2. Live form shape     → array:   [{ nextVisitDate, reviewNotes, continueTreatment, modifications }, ...]
+     We normalise to an array so the render is always the same.
+  ──────────────────────────────────────────────────────────────────────── */
+  const rawFollowUp = record.followUp ?? formData?.followUp ?? []
+
+  // ✅ Normalise: if it's an object (API shape), wrap it in an array
+  const followUpEntries = Array.isArray(rawFollowUp)
+    ? rawFollowUp
+    : (Object.keys(rawFollowUp).length > 0 ? [rawFollowUp] : [])
+
+  /* ── treatmentTemplates ── */
+  const treatmentTemplates = Array.isArray(record.treatmentTemplates) ? record.treatmentTemplates : []
+
+  /* ── affected parts ── */
+  const parts = formData?.parts ?? patientData?.parts ?? []
+
   useEffect(() => {
     const fetchDetails = async () => {
       try {
         const doctor = await getDoctorDetails()
         const clinic = await getClinicDetails()
-        console.log("Fetched Doctor Details:", doctor)
-        console.log("Fetched Clinic Details:", clinic)
-
         if (doctor) setDoctorDetails(doctor)
         if (clinic) setClinicDetails(clinic)
-      } catch (e) {
-        console.error('Failed to load doctor/clinic details', e)
-      }
+      } catch (e) { console.error('Failed to load doctor/clinic details', e) }
     }
     fetchDetails()
   }, [])
 
-  // ---------------- PDF helpers ----------------
-  // PDF Render
-  const renderPrescriptionPdfBlob = async () => {
-    console.log("Rendering Prescription PDF with:", { doctorDetails, clinicDetails, formData, patientData })
-    return await pdf(
-      <PrescriptionPDF
-        doctorData={doctorDetails}
-        clicniData={clinicDetails}
-        formData={formData}
-        patientData={patientData}
-      />,
+  /* ── PDF helpers ── */
+  const renderPdfBlob = async () =>
+    await pdf(
+      <PrescriptionPDF doctorData={doctorDetails} clicniData={clinicDetails} formData={formData} patientData={patientData} />
     ).toBlob()
-  }
 
-
-  const blobToBase64 = (blob) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const res = reader.result
-        const base64 = typeof res === 'string' ? res.split(',')[1] : ''
-        resolve(base64)
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(blob)
-    })
+  const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onloadend = () => resolve(typeof r.result === 'string' ? r.result.split(',')[1] : '')
+    r.onerror = reject
+    r.readAsDataURL(blob)
+  })
 
   const downloadBlob = (blob, filename) => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
+    a.href = url; a.download = filename
+    document.body.appendChild(a); a.click(); a.remove()
     URL.revokeObjectURL(url)
   }
 
-  // Package all data + pdf (base64) and send it
-  // Upload prescription
-  const uploadPrescription = async ({ downloadAfter = false } = {}) => {
+  /* ── Save ── */
+  const doSave = async ({ downloadAfter = false } = {}) => {
+    if (!complaintDetails?.trim()) {
+      warning('"Complaint Details" is required to save.', { title: 'Warning' })
+      return false
+    }
+    setSaving(true)
     try {
-      // ✅ 1️⃣ Check diagnosis first
-      const diagnosis = formData?.symptoms?.diagnosis?.trim() || '';
-      if (!diagnosis) {
-        warning('"Diagnosis" is missing. Cannot save or upload the prescription.', { title: 'Warning' });
-        return false;
-      }
-
-      // ✅ 2️⃣ Validate treatment dates (no past dates allowed)
-      const treatmentSchedules = formData?.treatments || {};
-      let hasPastDate = false;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // normalize for date-only comparison
-
-      Object.values(treatmentSchedules).forEach((meta) => {
-        (meta?.dates || []).forEach((d) => {
-          if (d?.date && new Date(d.date) < today) {
-            hasPastDate = true;
-          }
-        });
-      });
-
-      if (hasPastDate) {
-        warning('Please change the date — past dates are not allowed.', { title: 'Warning' });
-        return false; // stop saving
-      }
-
-      console.log("Preparing to upload prescription...");
-      const blob = await renderPrescriptionPdfBlob();
-      console.log("PDF Blob Generated:", blob);
-
-      const base64 = await blobToBase64(blob);
-      console.log("Base64 PDF length:", base64.length);
-
-      const safeName = (patientData?.name || 'Prescription').replace(/[^\w\-]+/g, '_');
-      const filename = `${safeName}.pdf`;
+      const blob = await renderPdfBlob()
+      const base64 = await blobToBase64(blob)
+      const safeName = (patientName || 'Record').replace(/[^\w\-]+/g, '_')
 
       const payload = {
-        bookingId: patientData?.bookingId,
-        clinicName: clinicDetails?.name,
-        customerId: patientData?.customerId,
-        clinicId: clinicDetails?.hospitalId,
-        patientId: patientData?.patientId,
-        doctorId: doctorDetails?.doctorId,
-        symptoms: formData?.symptoms,
-        tests: formData?.tests,
-        treatments: formData?.treatments,
-        followUp: formData?.followUp,
-        prescription: formData?.prescription,
-        prescriptionPdf: [base64],
-        subServiceId: patientData?.subServiceId
-      };
+        bookingId,
+        clinicId,
+        branchId,
 
-      console.log("Final Payload to Upload:", payload);
+        patientInfo: {
+          patientId,
+          name: patientName,
+          mobileNumber: patientMobile,
+          age: patientAge,
+          sex: patientSex,
+        },
 
-      const resp = await createDoctorSaveDetails(payload);
-      console.log("API Response:", resp);
+        complaints: {
+          ...finalComplaints,
+          therapyAnswers, // ✅ correct spelling
+        },
 
+        assessment,
+        diagnosis,
+
+        treatmentPlan: treatmentPlans.length ? treatmentPlans[0] : null,
+
+        // ✅ FIXED (ARRAY)
+        therapySessions: sessions,
+
+        exercisePlan: exercisePlanObj,
+
+        // ✅ FIXED (OBJECT, not array)
+        followUp: followUpEntries[0] || null,
+      }
+      console.log("FINAL PAYLOAD 👉", JSON.stringify(payload, null, 2))
+
+      const resp = await SavePatientPrescription(payload)
       if (resp) {
-        success('Prescription saved successfully!', { title: 'Success' });
+        success('Record saved successfully!', { title: 'Success' })
+        if (downloadAfter) downloadBlob(blob, `${safeName}.pdf`)
+        navigate('/dashboard', { replace: true })
+        return true
       } else {
-        warning('Saved, but got an unexpected response.');
+        warning('Saved, but got an unexpected response.')
+        return false
       }
-
-      if (downloadAfter) {
-        console.log("Downloading PDF file:", filename);
-        downloadBlob(blob, filename);
-      }
-
-      return true;
     } catch (e) {
-      console.error("Upload Prescription Error:", e);
-      error('Failed to generate or send the PDF.', { title: 'Error' });
-      return false;
+      console.error('Save error:', e)
+      error('Failed to save record.', { title: 'Error' })
+      return false
+    } finally {
+      setSaving(false)
     }
-  };
-
-
-
-  // ---------------- Actions ----------------
-  // Actions
-  const onClickSave = () => {
-    console.log("Save button clicked")
-    setPendingAction(ACTIONS.SAVE)
-    setShowTemplateModal(true)
-  }
-
-  const onClickSavePrint = () => {
-    console.log("Save & Print button clicked")
-    setPendingAction(ACTIONS.SAVE_PRINT)
-    setShowTemplateModal(true)
   }
 
   const confirmSaveAsTemplate = async () => {
-    const action = pendingAction
-    console.log("Confirm Save As Template Action:", action)
     setShowTemplateModal(false)
-    try {
-      await onSaveTemplate?.()
-      console.log("Template Saved Successfully")
-      const ok = await uploadPrescription({ downloadAfter: action === ACTIONS.SAVE_PRINT })
-      if (ok) {
-        console.log("Navigation to Dashboard")
-        navigate('/dashboard', { replace: true })
-      }
-    } finally {
-      setPendingAction(null)
-    }
+    // await onSaveTemplate?.()
+    await doSave({ downloadAfter: pendingAction === ACTIONS.SAVE_PRINT })
+    setPendingAction(null)
   }
 
   const skipTemplate = async () => {
-    try {
-      console.log("Preparing to upload prescription...")
-      const blob = await renderPrescriptionPdfBlob()
-      console.log("PDF Blob Generated:", blob)
-
-      const base64 = await blobToBase64(blob)
-      console.log("Base64 PDF length:", base64.length)
-
-      const safeName = (patientData?.name || 'Prescription').replace(/[^\w\-]+/g, '_')
-      const filename = `${safeName}.pdf`
-
-      const payload = {
-        bookingId: patientData?.bookingId,
-        clinicName: clinicDetails?.name,
-        customerId: patientData?.customerId,
-        clinicId: clinicDetails?.hospitalId,
-        patientId: patientData?.patientId,
-        doctorId: doctorDetails?.doctorId,
-        symptoms: formData?.symptoms,
-        tests: formData?.tests,
-        treatments: formData?.treatments,
-        followUp: formData?.followUp,
-        prescription: formData?.prescription,
-        prescriptionPdf: [base64],
-        visitType: patientData?.visitType || "OFFLINE",
-        subServiceId: patientData?.subServiceId
-      }
-      console.log("Final Payload to Upload:", payload)
-
-      const resp = await createDoctorSaveDetails(payload)
-      console.log("API Response:", resp)
-
-      if (resp) {
-        success('Prescription saved successfully!', { title: 'Success' })
-        navigate('/dashboard', { replace: true })
-      } else {
-        warning('Saved, but got an unexpected response.')
-      }
-
-      return true
-    } catch (e) {
-      console.error("Upload Prescription Error:", e)
-      error('Failed to generate or send the PDF.', { title: 'Error' })
-      return false
-    }
+    setShowTemplateModal(false)
+    await doSave({ downloadAfter: pendingAction === ACTIONS.SAVE_PRINT })
+    setPendingAction(null)
   }
 
-  // ---------------- Render ----------------
+  /* ══════════════ RENDER ══════════════ */
   return (
-    <div className="pb-5" style={{ backgroundColor: COLORS.theme }}>
-      <CContainer fluid className="p-0" id="print-area">
-        {/* Patient Info */}
-        <CCard className="shadow-sm mb-3">
-          <CCardHeader className="py-2">
-            <strong style={{ color: COLORS.black }}>Patient Information</strong>
-          </CCardHeader>
-          <CCardBody>
-            <CRow className="g-3">
-              <CCol xs={12} md={4}>
-                <div>
-                  <span className="fw-semibold">Name:</span> {capitalizeEachWord(patientData?.name || '—')}
+    <div style={{ background: LIGHT, minHeight: '100vh', paddingBottom: 100, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
-                </div>
-              </CCol>
-              <CCol xs={12} md={3}>
-                <div>
-                  <span className="fw-semibold">Age / Gender:</span>{' '}
-                  {patientData?.age
-                    ? (patientData.age.toString().toLowerCase().includes("yr") ||
-                      patientData.age.toString().toLowerCase().includes("year")
-                      ? patientData.age
-                      : `${patientData.age} yrs`)
-                    : "—"}
-                  {patientData?.gender ? ` / ${patientData.gender}` : ''}
-                </div>
-              </CCol>
-              <CCol xs={12} md={4}>
-                <div>
-                  <span className="fw-semibold">Mobile Number:</span>{' '}
-                  {patientData?.mobileNumber || '—'}
-                </div>
-              </CCol>
-            </CRow>
-          </CCardBody>
-        </CCard>
+      {/* ── Page header ── */}
+      <div style={{
+        background: 'linear-gradient(135deg,#1a3a5c,#1a5fa8)',
+        padding: '16px 28px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        boxShadow: '0 4px 20px rgba(26,90,168,0.2)', marginBottom: 24,
+      }}>
+        <div>
+          <div style={{ fontSize: 10, color: '#93c5fd', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
+            Review Before Saving
+          </div>
+          <div style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>Physiotherapy Summary</div>
+        </div>
+        {patientName && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.12)', borderRadius: 24, padding: '6px 16px',
+              color: '#fff', fontSize: 13, fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
+              {capitalizeEachWord(patientName)} · {patientAge}yr {patientSex?.charAt(0)}
+            </div>
+            <StatusDot status={overallStatus || patientData?.status} />
+          </div>
+        )}
+      </div>
 
-        {/* Symptoms & Duration */}
-        {(symptomsDetails !== '—' || symptomsDuration !== '—') && (
-          <CCard className="shadow-sm mb-4">
-            <CCardHeader className="py-2">
-              <strong style={{ color: COLORS.black }}>Symptoms & Duration</strong>
-            </CCardHeader>
-            <CCardBody>
-              <CRow className="g-3">
-                <CCol xs={12} md={8}>
-                  <h6 className="mb-2">Symptoms Complaints</h6>
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{symptomsDetails}</div>
-                  <h6 className="mb-2 mt-2">
-                    Doctor Observations <span className="text-body-secondary">(if any)</span>
-                  </h6>
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{doctorObs}</div>
-                </CCol>
-                <CCol xs={12} md={4}>
-                  <h6 className="mb-2">Duration of Symptoms</h6>
-                  <CBadge color="info" className="px-3 py-2">
-                    {symptomsDuration}
-                  </CBadge>
-                </CCol>
-              </CRow>
+      <CContainer fluid style={{ maxWidth: 1100, padding: '0 20px' }}>
 
-              {Array.isArray(attachments) && attachments.length > 0 && (
-                <>
-                  <h6 className="mb-2 mt-4">Previous Reports & Prescriptions</h6>
-                  <FileUploader attachments={attachments} accept=".pdf,image/*" />
-                </>
-              )}
-            </CCardBody>
-          </CCard>
+        {/* ══ 1. PATIENT & BOOKING INFO ══ */}
+        <Section icon="👤" title="Patient & Booking Information">
+          <Grid cols={3}>
+            <Row label="Patient ID" value={patientId} />
+            <Row label="Booking ID" value={bookingId} />
+            <Row label="Name" value={capitalizeEachWord(patientName)} />
+            <Row label="Age / Sex" value={patientAge ? `${patientAge} yrs / ${patientSex}` : ''} />
+            <Row label="Mobile" value={patientMobile} />
+            <Row label="Clinic ID" value={clinicId} />
+            <Row label="Clinic" value={clinicName} />
+            <Row label="Branch ID" value={branchId} />
+            <Row label="Doctor" value={treatmentPlanRaw.doctorName ?? patientData?.doctorName} />
+            <Row label="Doctor ID" value={treatmentPlanRaw.doctorId ?? doctorId} />
+            <Row label="Therapy Type" value={patientData?.subServiceName} />
+            {/* <Row label="Sub Service" value={patientData?.subServiceName} /> */}
+            <Row label="Overall Status" value={overallStatus ?? 'Pending'} />
+         
+          </Grid>
+        </Section>
+
+        {/* ══ 2. COMPLAINTS & SYMPTOMS ══ */}
+        <Section icon="🩺" title="Complaints & Symptoms">
+          <Grid cols={2}>
+            <Row label="Complaint Details" value={complaintDetails} highlight />
+            <Row label="Duration" value={complaintDuration} highlight />
+            <Row label="Pain Assessment Image" value={painAssessmentImage || 'None'} />
+            <Row label="Report Images" value={reportImages.length > 0 ? `${reportImages.length} image(s)` : 'None'} />
+          </Grid>
+          {parts.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Affected Parts:{' '}
+              </span>
+              {parts.map(p => <Chip key={p} label={p} color="#5b21b6" bg="#ede9fe" />)}
+            </div>
+          )}
+
+          {/* Body Part Diagram */}
+          {toImageSrc(partImage) && (
+            <div style={{ marginTop: 16 }}>
+              <div style={{
+                fontWeight: 700, fontSize: '0.8rem', color: '#64748b',
+                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8,
+              }}>
+                Body Part Diagram
+              </div>
+              <div style={{
+                background: '#f0f7ff', borderRadius: 10, overflow: 'hidden',
+                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                border: `1px solid ${BORDER}`, padding: 8, maxWidth: 360,
+              }}>
+                <img
+                  src={toImageSrc(partImage)}
+                  alt="Body Part Diagram"
+                  style={{ maxHeight: 220, maxWidth: '100%', objectFit: 'contain', display: 'block', borderRadius: 8 }}
+                />
+              </div>
+            </div>
+          )}
+          {attachments.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                Attachments
+              </div>
+              <FileUploader attachments={attachments} accept=".pdf,image/*" />
+            </div>
+          )}
+        </Section>
+
+        {/* ══ 3. ASSESSMENT ══ */}
+        {Object.keys(assessment).length > 0 && (
+          <Section icon="📊" title="Assessment">
+            <Grid cols={2}>
+              <Row label="Chief Complaint" value={assessment.chiefComplaint} highlight />
+              <Row label="Pain Scale" value={assessment.painScale} highlight />
+              <Row label="Pain Type" value={assessment.painType} />
+              <Row label="Duration" value={assessment.duration} />
+              <Row label="Onset" value={assessment.onset} />
+              <Row label="Aggravating Factors" value={assessment.aggravatingFactors} />
+              <Row label="Relieving Factors" value={assessment.relievingFactors} />
+              <Row label="Posture" value={assessment.posture} />
+              <Row label="Range of Motion" value={assessment.rangeOfMotion} />
+              <Row label="Special Tests" value={assessment.specialTests} />
+            </Grid>
+            {assessment.observations && (
+              <Row label="Observations" value={assessment.observations} full />
+            )}
+          </Section>
         )}
 
-        {/* Diagnosis */}
-        {diagnosis && (
-          <CCard className="shadow-sm mb-3">
-            <CCardHeader className="py-2">
-              <strong style={{ color: COLORS.black }}>Probable Disease</strong>
-            </CCardHeader>
-            <CCardBody>
-              <div className="fs-6">{diagnosis}</div>
-            </CCardBody>
-          </CCard>
+        {/* ══ 4. DIAGNOSIS ══ */}
+        {Object.keys(diagnosis).length > 0 && (
+          <Section icon="🔍" title="Diagnosis">
+            <Grid cols={2}>
+              <Row label="Physio Diagnosis" value={diagnosis.physioDiagnosis} highlight />
+              <Row label="Affected Area" value={diagnosis.affectedArea} highlight />
+              <Row label="Severity" value={diagnosis.severity} />
+              <Row label="Stage" value={diagnosis.stage} />
+            </Grid>
+            {diagnosis.notes && <Row label="Notes" value={diagnosis.notes} full />}
+          </Section>
         )}
 
-        {/* Medication Table */}
-        {medicines.length > 0 && (
-          <CCard className="shadow-sm mb-3">
-            <CCardHeader className="py-2">
-              <strong style={{ color: COLORS.black }}>Medication Details</strong>
-            </CCardHeader>
-            <CCardBody>
-              <CTable striped hover responsive className="align-middle">
-                <CTableHead>
-                  <CTableRow className="bg-primary text-white">
-                    <CTableHeaderCell>S.No</CTableHeaderCell>
-                    <CTableHeaderCell>Medicine Type</CTableHeaderCell>
-                    <CTableHeaderCell>Medicine</CTableHeaderCell>
-                    <CTableHeaderCell>Dosage</CTableHeaderCell>
-                    <CTableHeaderCell>Duration</CTableHeaderCell>
-                    <CTableHeaderCell>Frequency</CTableHeaderCell>
-                    <CTableHeaderCell>Instructions</CTableHeaderCell>
-                    <CTableHeaderCell>Notes</CTableHeaderCell>
-                    <CTableHeaderCell>Timings</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-
-                <CTableBody>
-                  {medicines.map((med, index) => {
-                    const durationValue = parseInt(med.duration, 10);
-                    const durationUnit =
-                      med.duration_unit && med.duration_unit !== "NA"
-                        ? med.duration_unit.trim()
-                        : "";
-
-                    const displayDuration =
-                      durationValue > 0 && med.durationUnit
-                        ? `${durationValue} ${med.durationUnit}${durationValue > 1 ? "s" : ""}`
-                        : durationValue > 0
-                          ? `${durationValue}`
-                          : "NA";
-
-
-                    const displayFrequency =
-                      med.remindWhen && med.remindWhen !== "NA"
-                        ? med.remindWhen === "Other" && med.others
-                          ? `Other (${med.others})`
-                          : med.remindWhen
-                        : med.others || "NA";
-
-                    const displayTimes =
-                      Array.isArray(med.times) && med.times.filter(Boolean).length > 0
-                        ? med.times.filter(Boolean).join(", ")
-                        : "NA";
-
-                    return (
-                      <CTableRow key={index}>
-                        <CTableDataCell>{index + 1}</CTableDataCell>
-                        <CTableDataCell>{med.medicineType || "NA"}</CTableDataCell>
-                        <CTableDataCell>{med.name || "NA"}</CTableDataCell>
-                        <CTableDataCell>{med.dose || "NA"}</CTableDataCell>
-                        <CTableDataCell>{displayDuration}</CTableDataCell>
-                        <CTableDataCell>{displayFrequency}</CTableDataCell>
-                        <CTableDataCell>{med.food || "NA"}</CTableDataCell>
-                        <CTableDataCell>{med.note || "NA"}</CTableDataCell>
-                        <CTableDataCell>{displayTimes}</CTableDataCell>
-                      </CTableRow>
-                    );
-                  })}
-                </CTableBody>
-              </CTable>
-            </CCardBody>
-          </CCard>
-        )}
-
-
-        {/* Tests */}
-        {(tests.length > 0 || testsReason) && (
-          <CCard className="shadow-sm mb-3">
-            <CCardHeader className="py-2">
-              <strong style={{ color: COLORS.black }}>Investigations</strong>
-            </CCardHeader>
-            <CCardBody>
-              {tests.length > 0 ? (
-                <ul className="mb-2">
-                  {tests.map((t, i) => (
-                    <li key={`test-${i}`}>
-                      <span className="fw-semibold">Recommended Test (Optional): </span>
-                      <span>{typeof t === 'string' ? t : t?.name || '—'}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mb-2">
-                  <span className="fw-semibold">Recommended Test (Optional):</span> NA
-                </p>
-              )}
-
-              {testsReason && (
-                <div className="mt-2">
-                  <div className="text-muted fw-semibold">Reason:{testsReason}</div>
-
-                </div>
-              )}
-            </CCardBody>
-          </CCard>
-        )}
-
-        {/* Treatments */}
-        {treatments.length > 0 && (
-          <CCard className="shadow-sm mb-3">
-            <CCardHeader className="py-2">
-              <strong style={{ color: COLORS.black }}>Procedures</strong>
-            </CCardHeader>
-            <CCardBody>
-              <ul className="mb-2">
-                {treatments.map((t, i) => (
-                  <li key={`treat-${i}`}>
-                    <strong>Selected Treatments: </strong>
-                    {typeof t === "string" ? t : t?.name || "—"}
-                  </li>
-                ))}
-              </ul>
-
-              {treatmentReason ? (
-                <div className="mt-2">
-                  <div className="text-muted">Reason</div>
-                  <div>{treatmentReason}</div>
-                </div>
-              ) : null}
-            </CCardBody>
-          </CCard>
-        )}
-
-        {/* Treatment Schedules */}
-        {treatmentSchedules && Object.keys(treatmentSchedules).length > 0 && (
-          <CCard className="shadow-sm mb-3">
-            <CCardHeader className="py-2">
-              <strong style={{ color: COLORS.black }}>Treatment Schedule</strong>
-            </CCardHeader>
-            <CCardBody>
-              {Object.entries(treatmentSchedules).map(([name, meta]) => (
-                <CCard key={name} className="mb-3 p-2">
-                  <div style={{ fontWeight: 'bold' }}>
-                    {name} — {freqLabel(meta?.frequency)} ({meta?.sittings ?? 0} sittings from{' '}
-                    {meta?.startDate ?? '—'})
-                  </div>
-
-                  <div className="mt-2 table-responsive">
-                    <table className="table table-sm mb-0">
-                      <thead className="table-light">
-                        <tr>
-                          <th style={{ width: "8%", textAlign: "center" }}>S.No</th>
-                          <th style={{ width: "46%", textAlign: "center" }}>Date</th>
-                          <th style={{ width: "46%", textAlign: "center" }}>Sitting</th>
-                          <th style={{ width: "46%", textAlign: "center" }}>Status</th>
-
-
-                        </tr>
-
-                      </thead>
-                      <tbody>
-                        {(meta?.dates || []).map((d, i) => (
-                          <tr key={`${name}-row-${i}`} className="text-center">
-                            <td>{i + 1}</td>
-                            <td>{d?.date ?? '—'}</td>
-                            <td>{d?.sitting ?? '—'}</td>
-                            <td style={{ textAlign: "center" }}>
-                              <span
-                                className={`badge ${d?.status === "Pending"
-                                    ? "bg-warning text-dark"
-                                    : d?.status === "Completed"
-                                      ? "bg-success"
-                                      : d?.status === "Cancelled"
-                                        ? "bg-danger"
-                                        : "bg-secondary"
-                                  }`}
-                              >
-                                {d?.status || "Pending"}
-                              </span>
-                            </td>
-
-
-                          </tr>
-                        ))}
-                      </tbody>
-
-                    </table>
-                  </div>
-
-                  {meta?.reason ? <div className="mt-2">Reason: {meta.reason}</div> : null}
-                </CCard>
-              ))}
-            </CCardBody>
-          </CCard>
-        )}
-
-        {/* Follow-up Plan */}
-        {followUp.durationValue !== 'NA' && (
-          <CCard className="shadow-sm mb-4">
-            <CCardHeader className="py-2">
-              <strong style={{ color: COLORS.black }}>Follow-up Plan</strong>
-            </CCardHeader>
-            <CCardBody>
-              <CCol xs={12} md={6}>
-                <div>
-                  <span className="fw-semibold">Next Follow Up :</span>{' '}
-                  {followUp.durationValue && followUp.durationValue !== 0 ? (
-                    <>
-                      After{' '}
-                      <span>
-                        {followUp.durationValue} {followUp.durationUnit || 'NA'}
+        {/* ══ 5. THERAPY QUESTIONNAIRE ══ */}
+        {therapyGroups.length > 0 && (
+          <Section icon="📋" title="Therapy Questionnaire">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+              {therapyGroups.map(({ category, questions }) => (
+                <div key={category} style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
+                  <div style={{
+                    background: 'linear-gradient(90deg,#f0f7ff,#e8f0fe)',
+                    padding: '7px 14px', fontWeight: 700, fontSize: '0.78rem',
+                    color: A, textTransform: 'capitalize', letterSpacing: '0.06em',
+                    borderBottom: `1px solid ${BORDER}`,
+                  }}>{category}</div>
+                  {questions.map((q, i) => (
+                    <div key={q.questionId ?? i} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '9px 14px', background: i % 2 === 0 ? LIGHT : '#fff',
+                      borderBottom: i < questions.length - 1 ? `1px solid #eef3fa` : 'none',
+                    }}>
+                      <span style={{ fontSize: '0.85rem', color: P, flex: 1, marginRight: 12 }}>
+                        {q.question ?? `Question ${q.questionId}`}
                       </span>
-                      {followUp.date && followUp.date !== '—' && (
-                        <> ({followUp.date})</>
-                      )}
-                    </>
-                  ) : (
-                    'NA'
-                  )}
+                      <AnswerBadge answer={q.answer} />
+                    </div>
+                  ))}
                 </div>
-              </CCol>
+              ))}
+            </div>
+          </Section>
+        )}
 
-              <CCol xs={12}>
-                <div>
-                  <span className="fw-semibold">Follow Up Note:</span>{' '}
-                  <span style={{ whiteSpace: 'pre-wrap' }}>
-                    {followUp.note && followUp.note.trim() !== '' ? followUp.note : 'NA'}
-                  </span>
-                </div>
-              </CCol>
-            </CCardBody>
-          </CCard>
+        {/* ══ 6. TREATMENT PLAN ══ */}
+        {treatmentPlans.length > 0 && (
+          <Section icon="🧑‍⚕️" title="Treatment Plan">
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+                    {['#', 'Doctor', 'Modalities', 'Manual Therapy', 'Duration', 'Frequency', 'Sessions', 'Precautions'].map(h => (
+                      <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {treatmentPlans.map((tp, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
+                      <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap', fontWeight: 600 }}>{tp.doctorName || tp.therapyName || '—'}</td>
+                      <td style={{ padding: '9px 12px', maxWidth: 180 }}>
+                        {Array.isArray(tp.modalities) && tp.modalities.length > 0
+                          ? tp.modalities.map(m => <Chip key={m} label={m} color={A} bg="#dbeafe" />)
+                          : '—'}
+                      </td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{tp.manualTherapy || '—'}</td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{tp.sessionDuration || '—'}</td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{tp.frequency || '—'}</td>
+                      <td style={{ padding: '9px 12px', textAlign: 'center' }}>{tp.totalSessions || '—'}</td>
+                      <td style={{ padding: '9px 12px', maxWidth: 200 }}>
+                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={tp.precautions}>
+                          {tp.precautions || '—'}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        )}
+
+        {/* ══ 7. THERAPY SESSIONS ══ */}
+        {sessions.length > 0 && (
+          <Section icon="🏥" title="Therapy Sessions">
+            {overallStatus && (
+              <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Overall Status:
+                </span>
+                <StatusDot status={overallStatus} />
+              </div>
+            )}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+                    {['#', 'Date', 'Status', 'Modalities Used', 'Exercises Done', 'Patient Response', 'Therapist Notes'].map(h => (
+                      <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sessions.map((s, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
+                      <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{s.sessionDate || '—'}</td>
+                      <td style={{ padding: '9px 12px' }}>
+                        <Chip
+                          label={s.status || 'Pending'}
+                          color={s.status === 'Completed' ? '#065f46' : s.status === 'Cancelled' ? '#991b1b' : '#92400e'}
+                          bg={s.status === 'Completed' ? '#d1fae5' : s.status === 'Cancelled' ? '#fee2e2' : '#fef3c7'}
+                        />
+                      </td>
+                      <td style={{ padding: '9px 12px' }}>
+                        {Array.isArray(s.modalitiesUsed) && s.modalitiesUsed.length > 0
+                          ? s.modalitiesUsed.map(m => <Chip key={m} label={m} color={A} bg="#dbeafe" />)
+                          : '—'}
+                      </td>
+                      <td style={{ padding: '9px 12px' }}>{s.exercisesDone || '—'}</td>
+                      <td style={{ padding: '9px 12px' }}>{s.patientResponse || '—'}</td>
+                      <td style={{ padding: '9px 12px' }}>{s.therapistNotes || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        )}
+
+        {/* ══ 8. EXERCISE PLAN ══ */}
+        {(exercises.length > 0 || homeAdvice) && (
+          <Section icon="🏋️" title="Exercise Plan">
+            {exercises.length > 0 && (
+              <div style={{ overflowX: 'auto', marginBottom: homeAdvice ? 16 : 0 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
+                  <thead>
+                    <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+                      {['#', 'Exercise', 'Sets', 'Reps', 'Duration', 'Instructions', 'Video'].map(h => (
+                        <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {exercises.map((ex, i) => (
+                      <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
+                        <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
+                        <td style={{ padding: '9px 12px', fontWeight: 600 }}>{ex.name || '—'}</td>
+                        <td style={{ padding: '9px 12px', textAlign: 'center' }}>{ex.sets || '—'}</td>
+                        <td style={{ padding: '9px 12px', textAlign: 'center' }}>{ex.reps || '—'}</td>
+                        <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{ex.duration || '—'}</td>
+                        <td style={{ padding: '9px 12px', maxWidth: 220 }}>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>
+                            {ex.instructions || '—'}
+                          </div>
+                        </td>
+                        <td style={{ padding: '9px 12px' }}>
+                          {ex.videoUrl
+                            ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: A, fontWeight: 600, fontSize: '0.78rem' }}>▶ Watch</a>
+                            : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {homeAdvice && <Row label="Home Advice" value={homeAdvice} full highlight />}
+          </Section>
+        )}
+
+        {/* ══ 9. FOLLOW UP ══
+            ✅ FIXED: followUpEntries is always an array now (normalised above).
+            Renders a table if multiple entries, or a simple grid for a single entry.
+        ══ */}
+        {followUpEntries.length > 0 && (
+          <Section icon="📅" title="Follow Up">
+            {followUpEntries.length === 1 ? (
+              /* Single entry → clean grid layout */
+              <Grid cols={2}>
+                <Row label="Next Visit Date" value={followUpEntries[0].nextVisitDate ?? followUpEntries[0].nextFollowUpDate} highlight />
+                <Row label="Continue Treatment" value={followUpEntries[0].continueTreatment} highlight />
+                <Row label="Review Notes" value={followUpEntries[0].reviewNotes ?? followUpEntries[0].followUpNote} />
+                <Row label="Modifications" value={followUpEntries[0].modifications} />
+              </Grid>
+            ) : (
+              /* Multiple entries → table */
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
+                  <thead>
+                    <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+                      {['#', 'Next Visit Date', 'Continue Treatment', 'Review Notes', 'Modifications'].map(h => (
+                        <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {followUpEntries.map((fu, i) => (
+                      <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
+                        <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
+                        <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{fu.nextVisitDate ?? fu.nextFollowUpDate ?? '—'}</td>
+                        <td style={{ padding: '9px 12px', textAlign: 'center' }}>
+                          {fu.continueTreatment
+                            ? <Chip
+                              label={fu.continueTreatment}
+                              color={fu.continueTreatment === 'Yes' ? '#065f46' : '#991b1b'}
+                              bg={fu.continueTreatment === 'Yes' ? '#d1fae5' : '#fee2e2'}
+                            />
+                            : '—'}
+                        </td>
+                        <td style={{ padding: '9px 12px', maxWidth: 240 }}>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={fu.reviewNotes ?? fu.followUpNote}>
+                            {fu.reviewNotes ?? fu.followUpNote ?? '—'}
+                          </div>
+                        </td>
+                        <td style={{ padding: '9px 12px', maxWidth: 200 }}>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={fu.modifications}>
+                            {fu.modifications ?? '—'}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* ══ 10. TREATMENT TEMPLATES ══ */}
+        {treatmentTemplates.length > 0 && (
+          <Section icon="📁" title="Treatment Templates">
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+                    {['#', 'Condition', 'Modalities', 'Manual Therapy', 'Exercises', 'Duration', 'Frequency'].map(h => (
+                      <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {treatmentTemplates.map((t, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
+                      <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
+                      <td style={{ padding: '9px 12px', fontWeight: 600 }}>{t.condition || '—'}</td>
+                      <td style={{ padding: '9px 12px' }}>
+                        {Array.isArray(t.modalities) && t.modalities.length > 0
+                          ? t.modalities.map(m => <Chip key={m} label={m} color={A} bg="#dbeafe" />)
+                          : '—'}
+                      </td>
+                      <td style={{ padding: '9px 12px' }}>{t.manualTherapy || '—'}</td>
+                      <td style={{ padding: '9px 12px' }}>
+                        {Array.isArray(t.exercises) && t.exercises.length > 0
+                          ? t.exercises.map(e => <Chip key={e} label={e} color="#065f46" bg="#d1fae5" />)
+                          : '—'}
+                      </td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{t.duration || '—'}</td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{t.frequency || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
         )}
 
       </CContainer>
 
-      {/* Sticky Bottom Bar */}
-      <div
-        className="position-fixed bottom-0"
-        style={{
-          left: sidebarWidth ? `${sidebarWidth}px` : 0,
-          width: sidebarWidth ? `calc(100vw - ${sidebarWidth}px)` : '100vw',
-          backgroundColor: '#F3f3f7',
-          display: 'flex',
-          justifyContent: 'space-evenly',
-          padding: 12,
-          zIndex: 999,
-        }}
-      >
-        <div className="d-flex gap-2 mx-4 justify-content-between w-75">
+      {/* ══ STICKY BOTTOM BAR ══ */}
+      <div style={{
+        position: 'fixed', bottom: 0,
+        left: sidebarWidth ? `${sidebarWidth}px` : 0,
+        width: sidebarWidth ? `calc(100vw - ${sidebarWidth}px)` : '100vw',
+        background: 'linear-gradient(90deg,#1a3a5c,#1a5fa8)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 28px', zIndex: 999,
+        boxShadow: '0 -4px 20px rgba(26,90,168,0.2)',
+      }}>
+        <Button
+          customColor={COLORS.bgcolor}
+          onClick={() => {
+            setClickedSaveTemplate(true)
+            onSaveTemplate?.()
+            info('Template saved!', { title: 'Template' })
+          }}
+        >
+          {!updateTemplate ? '💾 Save as Template' : '🔄 Update Template'}
+        </Button>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {saving && <CSpinner size="sm" style={{ color: '#fff' }} />}
+          <Button
+            customColor={COLORS.bgcolor}
+            color={COLORS.black}
+            onClick={() => {
+              setPendingAction(ACTIONS.SAVE)
+              clickedSaveTemplate ? doSave() : setShowTemplateModal(true)
+            }}
+            disabled={saving}
+          >
+            ✅ Save
+          </Button>
           <Button
             customColor={COLORS.bgcolor}
             onClick={() => {
-              setClickedSaveTemplate(true)
-              // uploadPrescription({ downloadAfter: false })
-
-              onSaveTemplate?.()
-              info('Template saved. You can now Save or Save & Download.', { title: 'Template' })
+              setPendingAction(ACTIONS.SAVE_PRINT)
+              clickedSaveTemplate ? doSave({ downloadAfter: true }) : setShowTemplateModal(true)
             }}
+            disabled={saving}
           >
-            {!updateTemplate ? 'Save Prescription Template' : 'Update Prescription Template'}
+            📄 Save & Download PDF
           </Button>
-
-          <div className="d-flex gap-2">
-            <Button
-              onClick={() => {
-                setPendingAction(ACTIONS.SAVE)
-                clickedSaveTemplate
-                  ? skipTemplate() // skip modal, proceed
-                  : setShowTemplateModal(true)
-              }}
-              customColor={COLORS.bgcolor} // background color of button
-              color={COLORS.black}
-            >
-              Save
-            </Button>
-
-            <Button
-              customColor={COLORS.bgcolor}
-              onClick={() => {
-                setPendingAction(ACTIONS.SAVE_PRINT)
-                clickedSaveTemplate
-                  ? skipTemplate() // skip modal, proceed with download
-                  : setShowTemplateModal(true)
-              }}
-            >
-              Save & Download PDF
-            </Button>
-          </div>
-
-          {showTemplateModal && !clickedSaveTemplate && (
-            <div
-              style={{ zIndex: 999 }}
-              className="vh-modal-backdrop"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Save as template?"
-            >
-              <div className="vh-modal position-relative p-3">
-                {/* 🔹 X Close Button */}
-                <button
-                  onClick={() => setShowTemplateModal(false)}
-                  style={{
-                    position: "absolute",
-                    top: "8px",
-                    right: "10px",
-                    background: "none",
-                    border: "none",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    color: COLORS.black
-                  }}
-                  aria-label="Close modal"
-                >
-                  ✕
-                </button>
-
-                <h6 className="mb-2 mt-3">Save this as a template?</h6>
-                <p className="muted mb-3">
-                  You can reuse this prescription layout later for faster entry.
-                </p>
-
-                <div className="d-flex gap-2 justify-content-end">
-                  <Button
-                    onClick={() => {
-                      setPendingAction(ACTIONS.SAVE);
-                      skipTemplate(); // just navigate back
-                    }}
-                    customColor={COLORS.bgcolor}
-                    color={COLORS.black}
-                  >
-                    No, just continue
-                  </Button>
-
-                  <Button customColor={COLORS.bgcolor} onClick={confirmSaveAsTemplate}>
-                    Yes, save as template
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
         </div>
       </div>
+
+      {/* ══ TEMPLATE MODAL ══ */}
+      {showTemplateModal && !clickedSaveTemplate && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(26,58,92,0.55)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '28px 32px',
+            maxWidth: 420, width: '90%',
+            boxShadow: '0 8px 40px rgba(26,90,168,0.2)',
+            border: `1px solid ${BORDER}`,
+          }}>
+            <button
+              onClick={() => setShowTemplateModal(false)}
+              style={{ position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#64748b' }}
+            >✕</button>
+            <div style={{ fontSize: 28, marginBottom: 12, textAlign: 'center' }}>📋</div>
+            <h6 style={{ margin: '0 0 8px', color: P, fontWeight: 700, textAlign: 'center' }}>Save as Template?</h6>
+            <p style={{ color: '#64748b', fontSize: '0.88rem', textAlign: 'center', marginBottom: 20 }}>
+              Reuse this layout later for faster entry.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button
+                onClick={skipTemplate}
+                style={{
+                  padding: '9px 22px', borderRadius: 8, cursor: 'pointer',
+                  border: `1.5px solid ${BORDER}`, background: LIGHT,
+                  color: P, fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                }}
+              >No, just save</button>
+              <button
+                onClick={confirmSaveAsTemplate}
+                style={{
+                  padding: '9px 22px', borderRadius: 8, cursor: 'pointer',
+                  border: 'none', background: `linear-gradient(135deg,${P},${A})`,
+                  color: '#fff', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit',
+                }}
+              >Yes, save template</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {snackbar.show && <Snackbar message={snackbar.message} type={snackbar.type} />}
     </div>

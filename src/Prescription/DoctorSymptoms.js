@@ -24,7 +24,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
   const { setUpdateTemplate } = useDoctorContext()
 
   const [doctorObs, setDoctorObs] = useState(seed.doctorObs ?? '')
-  const [diagnosis, setDiagnosis] = useState(seed.diagnosis ?? '')
+  const [complaints, setcomplaints] = useState(seed.complaints ?? '')
   const [duration, setDuration] = useState(patientData?.symptomsDuration ?? '')
   const [attachments, setAttachments] = useState(
     Array.isArray(seed.attachments)
@@ -82,16 +82,16 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
     setModalOpen(true)
   }
 
-  // Update probableSymptoms and keyNotes whenever diagnosis changes
+  // Update probableSymptoms and keyNotes whenever complaints changes
   useEffect(() => {
-    if (!diagnosis) {
+    if (!complaints) {
       setProbableSymptoms('')
       setKeyNotes('')
       return
     }
 
     const matched = diseases.find(
-      (d) => d.diseaseName && d.diseaseName.toLowerCase() === diagnosis.toLowerCase()
+      (d) => d.diseaseName && d.diseaseName.toLowerCase() === complaints.toLowerCase()
     )
 
     if (matched) {
@@ -101,7 +101,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
       setProbableSymptoms('')
       setKeyNotes('')
     }
-  }, [diagnosis, diseases])
+  }, [complaints, diseases])
 
   const mapTemplateToFormData = useMemo(
     () => (t = {}, dx) => {
@@ -156,7 +156,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
         symptoms: {
           symptomDetails: symptomStr,
           doctorObs,
-          diagnosis: dx,
+          complaints: dx,
           duration,
           attachments,
         },
@@ -173,7 +173,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
           treatmentReason,
         },
         followUp,
-        summary: { diagnosis: dx },
+        summary: { complaints: dx },
       }
     },
     [doctorObs, duration, attachments]
@@ -197,14 +197,14 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
   }, [])
 
   useEffect(() => {
-    if (diagnosis && !hasTemplate) {
-      fetchTemplate(diagnosis)
+    if (complaints && !hasTemplate) {
+      fetchTemplate(complaints)
     }
-  }, [diagnosis, hasTemplate, fetchTemplate])
+  }, [complaints, hasTemplate, fetchTemplate])
 
-  const handleDiagnosisChange = async (selected) => {
+  const handlecomplaintsChange = async (selected) => {
     const selectedValue = selected?.value ?? ''
-    setDiagnosis(selectedValue)
+    setcomplaints(selectedValue)
     if (!selectedValue) {
       setHasTemplate(false)
       return
@@ -213,12 +213,12 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
   }
 
   useEffect(() => {
-    const dx = (seed?.diagnosis ?? diagnosis ?? '').trim()
+    const dx = (seed?.complaints ?? complaints ?? '').trim()
     if (dx && !hasTemplate) {
       fetchTemplate(dx)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seed?.diagnosis])
+  }, [seed?.complaints])
 
   const showSnackbar = (message, type) => {
     setSnackbar({ show: true, message, type })
@@ -237,7 +237,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
     success('Template applied successfully!', { title: 'Success' })
 
     const payload = {
-      symptomDetails, doctorObs, diagnosis: dx, duration, attachments, prescription: merged.prescription,
+      symptomDetails, doctorObs, complaints: dx, duration, attachments, prescription: merged.prescription,
       tests: merged.tests,
       treatments: merged.treatments,
       followUp: merged.followUp,
@@ -282,7 +282,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
         setKeyNotes('')
 
         await fetchDiseases()
-        setDiagnosis(name)
+        setcomplaints(name)
       } else {
         info?.(created?.message || "Could not add disease", { title: 'Info' })
       }
@@ -311,7 +311,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
     const payload = {
       symptomDetails,
       doctorObs,
-      diagnosis,
+      complaints,
       duration,
       attachments,
       prescription: templateData.prescription, // include current template medicines
@@ -323,7 +323,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
     onNext?.(payload)
   }
 
-  const canProceed = !!diagnosis && diagnosis.trim() !== ''
+  const canProceed = !!complaints && complaints.trim() !== ''
 
   return (
     <CCard className="border-1 bg-white mb-5" style={{ backgroundColor: 'transparent' }}>
@@ -337,8 +337,8 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
                 <div className="mt-2 d-flex align-items-start gap-2">
                   <div className="flex-grow-1">
                     <Select
-                      value={diagnosis ? { label: diagnosis, value: diagnosis } : null}
-                      onChange={handleDiagnosisChange}
+                      value={complaints ? { label: complaints, value: complaints } : null}
+                      onChange={handlecomplaintsChange}
                       inputValue={inputValue}
                       onInputChange={(val, meta) => {
                         if (meta.action === 'input-change') setInputValue(val)
@@ -346,11 +346,11 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
                       options={options}
                       isClearable
                       components={{ ClearIndicator: ClearInput }}
-                      placeholder="Select diagnosis..."
+                      placeholder="Select complaints..."
                       menuPlacement="bottom"
                       noOptionsMessage={() =>
                         inputValue
-                          ? `No matches. Click Add to create "${inputValue}" as a diagnosis`
+                          ? `No matches. Click Add to create "${inputValue}" as a complaints`
                           : 'Type to search...'
                       }
                       styles={{
@@ -404,7 +404,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
                     onClose={() => setModalOpen(false)}
                     addDisease={addDisease}
                     fetchDiseases={fetchDiseases}
-                    setDiagnosis={setDiagnosis}
+                    setcomplaints={setcomplaints}
                     success={success}
                     info={info}
                     error={error}
@@ -413,7 +413,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
                 </div>
               </div>
 
-              {diagnosis && probableSymptoms && (
+              {complaints && probableSymptoms && (
                 <div className="mt-3">
                   <div>
                     <strong>Category : </strong> <span>{probableSymptoms}</span>

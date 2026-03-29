@@ -1,4 +1,4 @@
-export const ipUrl = 'http://52.66.144.177:9090'
+export const ipUrl = 'http://3.111.28.174:9090'
 export const baseUrl = `${ipUrl}/api/doctors`
 //login
 export const loginEndpoint = 'login'
@@ -10,7 +10,7 @@ export const todayappointmentsbaseUrl = `${ipUrl}/api/doctors/appointments/today
 export const todayfutureappointmentsbaseUrl = `${ipUrl}/api/doctors/getFutureDoctorappointmentsByDoctorId`
 export const appointmentsbaseUrl = `${ipUrl}/api/doctors/appointments/filter`
 export const appointmentsCountbaseUrl = `${ipUrl}/api/doctors/appointments/completed`
-export const savePrescriptionbaseUrl = `${ipUrl}/api/doctors`
+
 
 export const testsbaseUrl = `${ipUrl}/clinic-admin/labtest/getAllLabTests`
 export const labtestsbase = `${ipUrl}/clinic-admin/labtests`
@@ -32,3 +32,10 @@ export const SavingReports = `savereports`
 export const Get_ReportsByBookingId = `getReportByBookingId`
 //doctor slots
 export const getDoctorSlotsEndpoint = `${ipUrl}/clinic-admin/getDoctorslots`
+export const bookingDetailsUrl = `${ipUrl}/clinic-admin/getAllbookingsDetailsByClinicAndBranchId`
+
+export const therapistUrl = `${ipUrl}/clinic-admin/getByTherapistClinicIdAndBranchId`
+
+export const therapyExercisesUrl = `${ipUrl}/clinic-admin/getBytherapyExercisesClinicIdAndBranchId`
+export const savePrescriptionbaseUrl = `${ipUrl}/api/physiotherapy-doctor/physiotherapy-record`
+

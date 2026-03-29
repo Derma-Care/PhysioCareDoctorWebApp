@@ -8,12 +8,13 @@ import DoctorFollowUp from './DoctorFollowUp'
 import VisitHistory from './VisitHistory'
 import Summary from './Summary'
 import DoctorSummary from './DoctorSummary'
-import Tests from './Tests'
 import MultiImageUpload from './ClinicImages'
 import { COLORS } from '../Themes'
 import ReportDetails from '../components/Reports/Reports'
 import ImageGallery from './RetiveImages'
-import Investigations from './Tests'
+import Assessment from './Tests'
+import ExercisePlan from './ExercisePlan'
+import FollowUpnew from './FollowUpnew'
 
 const TabContent = ({
   activeTab,
@@ -29,31 +30,98 @@ const TabContent = ({
   let content = null
 
   switch (activeTab) {
-    case 'Diagnosis':
+    case 'Complaints':
       content = fromDoctorTemplate ? (
-        <DoctorSymptoms seed={formData.symptoms || {}} onNext={onNext} sidebarWidth={260} patientData={patientData} setFormData={setFormData} formData={formData} />
+        <DoctorSymptoms
+          seed={formData.symptoms || {}}
+          onNext={onNext}
+          sidebarWidth={260}
+          patientData={patientData}
+          setFormData={setFormData}
+          formData={formData}
+        />
       ) : (
-        <SymptomsDiseases seed={formData.symptoms || {}} onNext={onNext} sidebarWidth={260} patientData={patientData} setFormData={setFormData} formData={formData} />
+        <SymptomsDiseases
+          seed={formData.symptoms || {}}
+          onNext={onNext}
+          sidebarWidth={260}
+          patientData={patientData}
+          setFormData={setFormData}
+          formData={formData}
+        />
       )
       break
 
-    case 'Investigations':
-      content = <Investigations seed={formData.tests || {}} onNext={onNext} sidebarWidth={260} formData={formData} />
+    case 'Assessment':
+      content = (
+        <Assessment
+          seed={formData.assessment || {}}
+          onNext={onNext}
+          sidebarWidth={260}
+          formData={formData}
+        />
+      )
       break
 
-    case 'Medication':
-      content = <PrescriptionTab seed={formData.prescription || {}} onNext={onNext} formData={formData} />
+    case 'Diagnosis':
+      content = (
+        <PrescriptionTab
+          seed={formData.diagnosis || {}}
+          onNext={onNext}
+          formData={formData}
+        />
+      )
       break
 
-    case 'Procedures':
-      content = <TestsTreatments seed={formData.treatments || {}} onNext={onNext} formData={formData} />
+    case 'TreatmentPlan':
+      content = (
+        <TestsTreatments
+          // ✅ FIXED: treatmentPlans is a top-level array, not formData.treatments
+          seed={formData.treatmentPlans || []}
+          onNext={onNext}
+          formData={formData}
+        />
+      )
       break
 
-    case 'Follow-up':
+    case 'TherapySessions':
       content = fromDoctorTemplate ? (
-        <DoctorFollowUp seed={formData.followUp || {}} onNext={onNext} patientData={patientData} formData={formData} setFormData={setFormData} />
+        <DoctorFollowUp
+          seed={formData.therapySessions || {}}
+          onNext={onNext}
+          patientData={patientData}
+          formData={formData}
+          setFormData={setFormData}
+        />
       ) : (
-        <FollowUp seed={formData.followUp || {}} onNext={onNext} patientData={patientData} formData={formData} setFormData={setFormData} />
+        <FollowUp
+          seed={formData.therapySessions || {}}
+          onNext={onNext}
+          patientData={patientData}
+          formData={formData}
+          setFormData={setFormData}
+        />
+      )
+      break
+
+    case 'ExercisePlan':
+      content = (
+        <ExercisePlan
+          seed={formData.exercisePlan || {}}
+          onNext={onNext}
+          sidebarWidth={260}
+        />
+      )
+      break
+
+    case 'FollowUp':
+      content = (
+        <FollowUpnew
+          // ✅ FIXED: followUp is now an array (set by FollowUpnew's handleNext)
+          seed={Array.isArray(formData.followUp) ? formData.followUp : []}
+          onNext={onNext}
+          sidebarWidth={260}
+        />
       )
       break
 
@@ -72,29 +140,59 @@ const TabContent = ({
 
     case 'Prescription':
       content = fromDoctorTemplate ? (
-        <DoctorSummary onNext={onNext} onSaveTemplate={onSaveTemplate} patientData={patientData} formData={formData} setFormData={setFormData} sidebarWidth={260} />
+        <DoctorSummary
+          onNext={onNext}
+          onSaveTemplate={onSaveTemplate}
+          patientData={patientData}
+          formData={formData}
+          setFormData={setFormData}
+          sidebarWidth={260}
+        />
       ) : (
-        <Summary onNext={onNext} onSaveTemplate={onSaveTemplate} patientData={patientData} formData={formData} sidebarWidth={260} />
+        <Summary
+          onNext={onNext}
+          onSaveTemplate={onSaveTemplate}
+          patientData={patientData}
+          formData={formData}
+          sidebarWidth={260}
+        />
       )
       break
 
     case 'Images':
       content = setImage ? (
-        <MultiImageUpload data={formData} onSubmit={onNext} patientData={patientData} />
+        <MultiImageUpload
+          data={formData}
+          onSubmit={onNext}
+          patientData={patientData}
+        />
       ) : (
-        <ImageGallery data={formData} patientData={patientData} />
+        <ImageGallery
+          data={formData}
+          patientData={patientData}
+        />
       )
       break
 
     case 'Reports':
-      content = <ReportDetails patientData={patientData} formData={formData} show={true} />
+      content = (
+        <ReportDetails
+          patientData={patientData}
+          formData={formData}
+          show={true}
+        />
+      )
       break
 
     default:
       content = null
   }
 
-  return <div style={{ marginTop: '3%', backgroundColor: COLORS.theme }}>{content}</div>
+  return (
+    <div style={{ marginTop: '3%', backgroundColor: COLORS.theme }}>
+      {content}
+    </div>
+  )
 }
 
 export default TabContent

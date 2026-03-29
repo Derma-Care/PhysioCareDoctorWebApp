@@ -1,615 +1,478 @@
-import React, { useEffect, useState } from 'react'
-import {
-  CAlert,
-  CAccordion,
-  CAccordionBody,
-  CAccordionHeader,
-  CAccordionItem,
-  CCol,
-  CFormLabel,
-  CFormSelect,
-  CFormTextarea,
-  CRow,
-  CContainer,
-} from '@coreui/react'
-import Select from 'react-select'
-import GradientTextCard from '../components/GradintColorText'
+import React, { useState, useEffect } from 'react'
+import { CCard, CCardBody, CContainer } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 import { COLORS } from '../Themes'
-import { addTreatmentByHospital, getAllTreatments, getAllTreatmentsByHospital, getTreatmentStatusByVisitId } from '../../src/Auth/Auth'
-import CIcon from '@coreui/icons-react'
-import { cilTrash } from '@coreui/icons'
-import './TestsTreatments.css'
-import CreatableSelect from 'react-select/creatable';
+import { getTherapists, getTodayAppointments } from '../Auth/Auth'
 
-const DEFAULT_CFG = { frequency: 'day', sittings: 1, startDate: '', reason: '' }
+/* ─── Default modality options ──────────────────────────────────────────── */
+const DEFAULT_MODALITIES = [
+  'IFT', 'Ultrasound Therapy', 'Hot Pack', 'Cold Pack',
+  'TENS', 'Laser Therapy', 'Traction', 'Wax Bath',
+]
 
-const TestTreatments = ({ seed = {}, onNext, formData }) => {
-  const [selectedTestTreatments, setSelectedTestTreatments] = useState(
-    seed.selectedTestTreatments ?? [],
+/* ─── Styles ─────────────────────────────────────────────────────────────── */
+const inputStyle = {
+  border: '1.5px solid #b6cfe8',
+  borderRadius: 7,
+  fontSize: '0.875rem',
+  color: '#1a3a5c',
+  backgroundColor: '#f5f9ff',
+  padding: '7px 11px',
+  width: '100%',
+  boxSizing: 'border-box',
+  height: 38,
+  outline: 'none',
+  fontFamily: 'inherit',
+}
+
+const labelStyle = {
+  fontWeight: 700,
+  fontSize: '0.875rem',
+  color: '#1a3a5c',
+  marginBottom: 6,
+  display: 'block',
+}
+
+const gridTwo = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '20px 32px',
+  marginBottom: 20,
+}
+
+const cardStyle = {
+  border: '1px solid #d8e8f5',
+  borderRadius: 14,
+  boxShadow: '0 2px 16px rgba(26,90,168,0.07)',
+}
+
+const cardHeaderStyle = {
+  display: 'flex', alignItems: 'center', gap: 12,
+  marginBottom: 24, borderBottom: '1.5px solid #e3eef8', paddingBottom: 16,
+}
+
+/* ─── Helpers ────────────────────────────────────────────────────────────── */
+const Field = ({ label, children }) => (
+  <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <label style={labelStyle}>{label}</label>
+    {children}
+  </div>
+)
+
+const TextInput = ({ value, onChange, placeholder = '' }) => (
+  <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={inputStyle} />
+)
+
+const Textarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
+  <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows}
+    style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }} />
+)
+
+/* ─── Chip / pill modality picker ───────────────────────────────────────── */
+const ModalityPicker = ({ selected, onChange }) => {
+  const toggle = mod =>
+    onChange(selected.includes(mod) ? selected.filter(m => m !== mod) : [...selected, mod])
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+      {DEFAULT_MODALITIES.map(mod => {
+        const active = selected.includes(mod)
+        return (
+          <button key={mod} type="button" onClick={() => toggle(mod)} style={{
+            padding: '5px 16px', borderRadius: 20, border: '1.5px solid',
+            borderColor: active ? '#1a5fa8' : '#b6cfe8',
+            background: active ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#f5f9ff',
+            color: active ? '#fff' : '#1a3a5c',
+            fontWeight: active ? 700 : 500, fontSize: '0.82rem',
+            cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'inherit',
+          }}>
+            {mod}
+          </button>
+        )
+      })}
+    </div>
   )
-  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
-  const [activeIdx, setActiveIdx] = useState(-1)
-  const [validationErrors, setValidationErrors] = useState({})
-  const [selectedTreatmentOption, setSelectedTreatmentOption] = useState(
-    formData?.symptoms?.diagnosis
-      ? { label: formData.symptoms.diagnosis, value: formData.symptoms.diagnosis }
-      : null
-  )
+}
 
-  const [treatmentConfigs, setTreatmentConfigs] = useState(
-    (seed.selectedTestTreatments || []).reduce((acc, t) => {
-      acc[t] = { ...DEFAULT_CFG }
-      return acc
-    }, {}),
-  )
+/* ─── Empty form state ───────────────────────────────────────────────────── */
+const EMPTY_FORM = {
+  doctorId: '',
+  doctorName: '',
+  therapistId: '',     // ✅ FIXED
+  therapistName: '',   // ✅ FIXED
+  modalities: [],
+  manualTherapy: '',
+  sessionDuration: '',
+  frequency: '',
+  totalSessions: '',
+  precautions: '',
+}
 
-  const [generatedData, setGeneratedData] = useState(
-    seed.generatedData && typeof seed.generatedData === 'object' ? seed.generatedData : {},
-  )
+/* ══════════════════════════════════════════════════════════════════════════
+   COMPONENT
+   TabContent passes: seed={formData.treatmentPlans} (an array)
+   ✅ So seed is the array directly — read as Array.isArray(seed)
+   NOTE: TabContent must pass seed={formData.treatmentPlans || []}
+         not seed={formData.treatments || {}}
+══════════════════════════════════════════════════════════════════════════ */
+const TestTreatments = ({ seed = [], onNext }) => {
 
-  const [treatmentReason, setTreatmentReason] = useState(seed.treatmentReason ?? '')
-  const [initializedFromSeed, setInitializedFromSeed] = useState(false)
-  const [availableTreatments, setAvailableTreatments] = useState([])
+  /* ── Form state ── */
+  const [form,       setForm]       = useState(EMPTY_FORM)
+  const [editingIdx, setEditingIdx] = useState(null)
+  const [therapists, setTherapists] = useState([])
+  const [search,     setSearch]     = useState('')
+  const [showDropdown,      setShowDropdown]      = useState(false)
+  const [loadingTherapists, setLoadingTherapists] = useState(false)
 
-  const showSnackbar = (message, type = 'info') => {
-    setSnackbar({ show: true, message, type })
-    setTimeout(() => setSnackbar({ show: false, message: '', type: '' }), 3000)
-  }
+  /* ── Table rows — ✅ seed is the array directly ── */
+  const [entries, setEntries] = useState(Array.isArray(seed) ? seed : [])
 
-  const hasPendingCards = selectedTestTreatments.some((t) => !generatedData[t])
-  const hasAnyTable = Object.keys(generatedData).length > 0
+  /* ── IDs ── */
+  const [clinicId, setClinicId] = useState('')
+  const [branchId, setBranchId] = useState('')
 
-  // -------------------- FETCH TREATMENTS --------------------
+  /* ── On mount: fetch therapists ── */
   useEffect(() => {
-    const fetchTreatments = async () => {
+    const resolveIdsAndFetchTherapists = async () => {
+      const resolvedClinicId =
+        localStorage.getItem('clinicId') ||
+        localStorage.getItem('hospitalId') ||
+        ''
+
+      if (!resolvedClinicId) return
+
+      setClinicId(resolvedClinicId)
+
       try {
-        const treatments = await getAllTreatmentsByHospital()
-        if (Array.isArray(treatments)) setAvailableTreatments(treatments)
-      } catch (error) {
-        console.error('Error fetching treatments:', error)
+        const appointmentRes = await getTodayAppointments()
+        const appointments = appointmentRes?.data || []
+        const resolvedBranchId = appointments[0]?.branchId || ''
+
+        if (!resolvedBranchId) return
+
+        setBranchId(resolvedBranchId)
+        setLoadingTherapists(true)
+        const therapistData = await getTherapists(resolvedClinicId, resolvedBranchId)
+        setTherapists(Array.isArray(therapistData) ? therapistData : [])
+      } catch (err) {
+        console.error('❌ Error fetching therapists:', err)
+        setTherapists([])
+      } finally {
+        setLoadingTherapists(false)
       }
     }
-    fetchTreatments()
+
+    resolveIdsAndFetchTherapists()
   }, [])
 
-  // -------------------- AUTO ADD RECOMMENDED TREATMENT --------------------
+  /* ✅ FIX: Sync seed — seed is the array directly */
   useEffect(() => {
-    if (
-      formData?.symptoms?.diagnosis &&
-      !selectedTestTreatments.includes(formData.symptoms.diagnosis) &&
-      !generatedData[formData.symptoms.diagnosis]
-    ) {
-      const diag = formData.symptoms.diagnosis
-      setSelectedTestTreatments((prev) => [...prev, diag])
-      setTreatmentConfigs((prev) => ({
-        ...prev,
-        [diag]: { ...DEFAULT_CFG },
-      }))
-    }
-  }, [formData, selectedTestTreatments, generatedData])
+    if (Array.isArray(seed)) setEntries(seed)
+  }, [seed])
 
-  // -------------------- INITIALIZE FROM SEED --------------------
-  useEffect(() => {
-    if (initializedFromSeed) return
+  const set = (field) => (val) => setForm(f => ({ ...f, [field]: val }))
 
-    const fromSeedList = Array.isArray(seed.selectedTestTreatments)
-      ? seed.selectedTestTreatments
-      : []
-    const fromTables =
-      seed.generatedData && typeof seed.generatedData === 'object'
-        ? Object.keys(seed.generatedData)
-        : []
-
-    const merged = Array.from(new Set([...fromSeedList, ...fromTables]))
-
-    setSelectedTestTreatments(merged)
-    setGeneratedData(
-      seed.generatedData && typeof seed.generatedData === 'object' ? seed.generatedData : {},
+  /* ── Filtered therapist list ── */
+  const filteredTherapists = therapists.filter(t => {
+    const q = search.toLowerCase()
+    const selectedLabel = form.therapistId && form.therapistName
+      ? `${form.therapistId} - ${form.therapistName}`.toLowerCase()
+      : ''
+    if (q === selectedLabel) return true
+    return (
+      (t.therapistId || '').toLowerCase().includes(q) ||
+      (t.fullName    || '').toLowerCase().includes(q)
     )
+  })
 
-    setTreatmentConfigs((prev) => {
-      const next = { ...prev }
-      merged.forEach((name) => {
-        if (!next[name]) next[name] = { ...DEFAULT_CFG }
-      })
-      return next
-    })
+  /* ── Add / Update ── */
+  const handleSave = () => {
+    if (!form.therapistName && !form.modalities.length && !form.sessionDuration) return
 
-    setTreatmentReason(seed.treatmentReason ?? '')
-    setInitializedFromSeed(true)
-  }, [seed, initializedFromSeed])
-
-  // -------------------- DROPDOWN LOGIC --------------------
-  // 🔹 Show ONLY the recommended treatment in dropdown (hide others)
-  const diagnosisName = formData?.symptoms?.diagnosis || ''
-  const optionsToShow = diagnosisName
-    ? [diagnosisName] // only recommended one
-    : availableTreatments.map((t) => t.treatmentName)
-
-  // -------------------- ADD / REMOVE --------------------
-  const addTreatment = (value) => {
-    if (!value) return
-    if (selectedTestTreatments.includes(value)) {
-      showSnackbar('Treatment already added', 'warning')
-      return
+    if (editingIdx !== null) {
+      setEntries(prev => prev.map((e, i) => i === editingIdx ? { ...form } : e))
+      setEditingIdx(null)
+    } else {
+      setEntries(prev => [...prev, { ...form }])
     }
-    setSelectedTestTreatments((prev) => [...prev, value])
-    setTreatmentConfigs((prev) => ({ ...prev, [value]: { ...DEFAULT_CFG } }))
+    setForm(EMPTY_FORM)
+    setSearch('')
   }
 
-  const handleAddTreatment = (eOrObj) => {
-    const value = eOrObj?.target?.value
-    addTreatment(value)
-  }
-
-  const removeTreatment = (t) => {
-    setSelectedTestTreatments((prev) => prev.filter((x) => x !== t))
-    setTreatmentConfigs((prev) => {
-      const next = { ...prev }
-      delete next[t]
-      return next
-    })
-    setGeneratedData((prev) => {
-      const next = { ...prev }
-      delete next[t]
-      return next
-    })
-    setSelectedTreatmentOption(null)
-  }
-
-  // -------------------- UPDATE CONFIG --------------------
-  const updateCfg = (t, field, value) => {
-    setTreatmentConfigs((prev) => {
-      const newCfg = {
-        ...prev,
-        [t]: {
-          ...prev[t],
-          [field]: field === 'sittings' ? Number(value || 0) : value,
-        },
-      }
-
-      const errors = []
-      const cfg = newCfg[t]
-
-      if (!cfg.startDate) errors.push('Start date is required')
-      else {
-        const today = new Date()
-        const selected = new Date(cfg.startDate)
-        today.setHours(0, 0, 0, 0)
-        selected.setHours(0, 0, 0, 0)
-        if (selected < today) errors.push('Start date cannot be in the past')
-      }
-
-      if (!cfg.sittings || cfg.sittings < 1) errors.push('Sittings must be at least 1')
-
-      setValidationErrors((prevErrors) => {
-        const next = { ...prevErrors }
-        if (errors.length > 0) next[t] = errors.join('. ')
-        else delete next[t]
-        return next
-      })
-
-      return newCfg
-    })
-  }
-
-  // -------------------- GENERATE SCHEDULE --------------------
-  const generateForTreatment = async (t) => {
-    const cfg = treatmentConfigs[t] || DEFAULT_CFG
-    const { frequency, sittings, startDate, reason } = cfg
-
-    if (!startDate || !sittings || sittings < 1) {
-      showSnackbar(`Please fill start date and sittings for "${t}"`, 'danger')
-      return
+  /* ── Edit ── */
+  const handleEdit = (idx) => {
+    const entry = entries[idx]
+    setForm({ ...entry })
+    setEditingIdx(idx)
+    if (entry.therapistId && entry.therapistName) {
+      setSearch(`${entry.therapistId} - ${entry.therapistName}`)
+    } else {
+      setSearch('')
     }
-
-    const start = new Date(startDate)
-    const dates = Array.from({ length: sittings }, (_, i) => {
-      const next = new Date(start)
-      if (frequency === 'day') next.setDate(start.getDate() + i)
-      if (frequency === 'week') next.setDate(start.getDate() + i * 7)
-      if (frequency === 'month') next.setMonth(start.getMonth() + i)
-      return { date: next.toISOString().split('T')[0], sitting: i + 1 }
-    })
-
-    const newGeneratedData = {
-      ...generatedData,
-      [t]: { frequency, sittings, startDate, reason, dates, bookingId: formData.bookingId },
-    }
-
-    setGeneratedData(newGeneratedData)
-    setTreatmentConfigs((prev) => ({ ...prev, [t]: { ...DEFAULT_CFG } }))
-
-    await updateTreatmentStatuses(newGeneratedData)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // -------------------- UPDATE STATUSES --------------------
-  const updateTreatmentStatuses = async (dataToUpdate) => {
-    try {
-      const updatedData = { ...dataToUpdate }
-
-      for (const treatment of Object.keys(updatedData)) {
-        const meta = updatedData[treatment]
-        if (!meta.bookingId) continue
-
-        const statusData = await getTreatmentStatusByVisitId(formData.patientId, meta.bookingId)
-
-        if (Array.isArray(meta.dates)) {
-          updatedData[treatment].dates = meta.dates.map((d) => {
-            const matched = statusData.find((s) => s.date === d.date)
-            return { ...d, status: matched?.status || 'Pending' }
-          })
-        }
-      }
-
-      setGeneratedData(updatedData)
-    } catch (error) {
-      showSnackbar('Failed to update treatment statuses', 'error')
-      console.error(error)
-    }
+  /* ── Delete ── */
+  const handleDelete = (idx) => {
+    setEntries(prev => prev.filter((_, i) => i !== idx))
+    if (editingIdx === idx) { setForm(EMPTY_FORM); setEditingIdx(null); setSearch('') }
   }
 
-  // -------------------- DELETE SCHEDULE --------------------
-  const deleteSchedule = (t) => {
-    setGeneratedData((prev) => {
-      const next = { ...prev }
-      delete next[t]
-      return next
-    })
-    setSelectedTestTreatments((prev) => prev.filter((x) => x !== t))
-    setTreatmentConfigs((prev) => {
-      const next = { ...prev }
-      delete next[t]
-      return next
-    })
-    showSnackbar(`Removed "${t}"`, 'info')
-  }
+  /* ── Cancel ── */
+  const handleCancel = () => { setForm(EMPTY_FORM); setEditingIdx(null); setSearch('') }
 
-  // -------------------- HANDLE NEXT --------------------
+  /* ── Next — wraps array back into shape PatientAppointmentDetails expects ── */
   const handleNext = () => {
-    const payload = {
-      selectedTestTreatments,
-      generatedData,
-    }
-    console.log(payload)
+    const payload = { treatmentPlans: entries }
+    console.log('🚀 TestTreatments payload:', payload)
     onNext?.(payload)
   }
 
-  // -------------------- PAST DATES CHECK --------------------
-  const hasPastDates = Object.values(generatedData).some((meta) =>
-    meta.dates?.some((d) => new Date(d.date) < new Date(new Date().setHours(0, 0, 0, 0))),
-  )
-
-  const editSchedule = (treatment) => {
-  const meta = generatedData[treatment]
-  setTreatmentConfigs((prev) => ({
-    ...prev,
-    [treatment]: {
-      frequency: meta.frequency,
-      sittings: meta.sittings,
-      startDate: meta.startDate,
-      reason: meta.reason,
-    },
-  }))
-  setGeneratedData((prev) => {
-    const next = { ...prev }
-    delete next[treatment]
-    return next
-  })
-  showSnackbar(`Editing schedule for "${treatment}"`, "info")
-}
-
+  /* ════════════════════════════════════════════════════════════════════════
+     RENDER
+  ════════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="pb-5 treatment-wrapper">
-      {snackbar.show && (
-        <CAlert color={snackbar.type === 'error' ? 'danger' : snackbar.type} className="mb-3">
-          {snackbar.message}
-        </CAlert>
-      )}
+    <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <CContainer fluid className="p-1">
 
-      <CContainer fluid className='p-1'>
-        <CRow className="g-3">
-          {/* Add Treatments */}
-          <CCol md={12} className="g-3" >
-            <CFormLabel>
-              <GradientTextCard text="Recommended Treatments" />
-            </CFormLabel>
-            <CreatableSelect
-              options={availableTreatments.map((t) => ({ label: t.treatmentName, value: t.treatmentName }))}
-              placeholder="Select or add treatments..."
-              value={selectedTreatmentOption}
-              isClearable
-              isSearchable
-              formatCreateLabel={(inputValue) => `Add "${inputValue}"`}
-              onChange={(selected) => {
-                if (!selected) {
-                  setSelectedTreatmentOption(null)
-                  return
-                }
+        {/* ══ FORM CARD ══════════════════════════════════════════════════ */}
+        <CCard className="mb-4" style={cardStyle}>
+          <CCardBody style={{ padding: '28px 32px' }}>
 
-                const pending = selectedTestTreatments.some(t => !generatedData[t])
-                if (pending) {
-                  showSnackbar("You must generate the schedule for existing treatments before adding a new one.", "error")
-                  setSelectedTreatmentOption(null)
-                  return
-                }
+            <div style={cardHeaderStyle}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏥</div>
+              <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>
+                {editingIdx !== null ? `Editing Entry #${editingIdx + 1}` : 'Treatment Plan'}
+              </h5>
+            </div>
 
-                const value = selected.value
-                if (!selectedTestTreatments.includes(value)) {
-                  setSelectedTestTreatments((prev) => [...prev, value])
-                  setTreatmentConfigs((prev) => ({ ...prev, [value]: { ...DEFAULT_CFG } }))
-                }
-
-                setSelectedTreatmentOption(null)
-              }}
-              onCreateOption={async (inputValue) => {
-                if (!inputValue) return
-
-                // ✅ Check for pending tables
-                const pending = selectedTestTreatments.some(t => !generatedData[t])
-                if (pending) {
-                  showSnackbar("Please generate tables for all selected treatments before adding a new one.", "error")
-                  setSelectedTreatmentOption(null)
-                  return
-                }
-
-                const addedTreatment = await addTreatmentByHospital(inputValue)
-                setAvailableTreatments((prev) => [...prev, { treatmentName: addedTreatment }])
-                setSelectedTestTreatments((prev) => [...prev, addedTreatment])
-                setTreatmentConfigs((prev) => ({ ...prev, [addedTreatment]: { ...DEFAULT_CFG } }))
-                setSelectedTreatmentOption(null)
-                showSnackbar(`Added new treatment: ${addedTreatment}`, 'success')
-              }}
-            />
-
-
-          </CCol>
-
-          {/* Selected Treatments + Per-treatment inputs (hide card if table exists) */}
-          <CCol md={12}>
-            <CFormLabel>
-              <GradientTextCard text="Selected Treatments" />
-            </CFormLabel>
-
-            {selectedTestTreatments.length === 0 ? (
-              <div className="text-muted">No treatments selected.</div>
-            ) : (
-              <CCol xl={12} md={12} className="d-flex flex-column gap-3 w-100">
-                {selectedTestTreatments.map((t) => {
-                  // If a table exists for this treatment, don't show its input card
-                  if (generatedData[t]) return null
-
-                  const cfg = treatmentConfigs[t] || DEFAULT_CFG
-                  return (
-                    <div
-                      key={t}
-                      className="p-3 border rounded bg-light"
-                      style={{ display: 'grid', gap: 12 }}
-                    >
-                      <div className="d-flex align-items-center justify-content-between">
-                        <strong>{t}</strong>
-                        <button
-                          className="btn btn-sm btn-link text-danger"
-                          onClick={() => removeTreatment(t)}
-                        >
-                          <CIcon icon={cilTrash} />
-                        </button>
-                      </div>
-
-                      <div className="row g-3">
-                        <div className="col-md-3">
-                          <GradientTextCard text="Frequency" />
-                          <CFormSelect
-                            value={cfg.frequency}
-                            onChange={(e) => updateCfg(t, 'frequency', e.target.value)}
-                          >
-                            <option value="day">Daily</option>
-                            <option value="week">Weekly</option>
-                            <option value="month">Monthly</option>
-                          </CFormSelect>
-                        </div>
-
-                        <div className="col-md-3">
-                          <GradientTextCard text="Sittings" />
-                          <input
-                            type="number"
-                            className="form-control"
-                            min={1}
-                            value={cfg.sittings}
-                            onChange={(e) => updateCfg(t, 'sittings', e.target.value)}
-                          />
-                        </div>
-
-                        <div className="col-md-3">
-                          <GradientTextCard text="Start Date" />
-                          <input
-                            type="date"
-                            className="form-control"
-                            value={cfg.startDate}
-                            min={new Date().toISOString().split("T")[0]} // disables past dates in calendar picker
-                            onChange={(e) => updateCfg(t, "startDate", e.target.value)}
-                          />
-                          {/* Display validation error for this treatment */}
-                          {validationErrors[t] && validationErrors[t].includes("Start date") && (
-                            <div className="text-danger mt-1">
-                              {validationErrors[t]}
-                            </div>
-                          )}
-                        </div>
-                        <div className="col-md-12">
-                          <GradientTextCard text="Reason (for this treatment)" />
-                          <CFormTextarea
-                            rows={2}
-                            value={cfg.reason}
-                            onChange={(e) => updateCfg(t, 'reason', e.target.value)}
-                            placeholder={`Why is "${t}" recommended?`}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mt-2">
-                        <Button
-                          onClick={() => generateForTreatment(t)}
-                          type="button"
-                          size="small"
-                          variant="outline"
-                          sx={{
-                            backgroundColor: COLORS.bgcolor,
-                            color: COLORS.black,
-                            border: "2px solid #000", // add border here
-                          }}
-                        >
-                          Generate Table for {t}
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </CCol>
-            )}
-          </CCol>
-
-          {/* Generated tables */}``
-          {Object.keys(generatedData).length > 0 && (
-            <CCol md={12} className="mt-4">
-              <GradientTextCard text="Treatment Schedule" />
-
-              <CAccordion activeItemKey={activeIdx}>
-                {Object.entries(generatedData).map(([treatment, meta], idx) => (
-                  <CAccordionItem itemKey={idx} key={treatment}>
-                    <CAccordionHeader
-                      onClick={(e) => {
-                        // keep exactly one open; to allow closing the same one, use the toggle line below
-                        e.preventDefault()
-                        setActiveIdx(idx)
-
-                        // If you want toggle behavior (clicking the open one closes it), use this instead:
-                        // setActiveIdx(prev => (prev === idx ? -1 : idx));
+            {/* ── Assign Therapist Dropdown ── */}
+            <div style={{ marginBottom: 20 }}>
+              <Field label="Assign Therapist">
+                <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input
+                      value={search}
+                      onChange={(e) => {
+                        setSearch(e.target.value)
+                        if (form.therapistId) setForm(f => ({ ...f, therapistId: '', therapistName: '' }))
+                        setShowDropdown(true)
                       }}
-                    >
-                      <div className="d-flex align-items-center justify-content-between w-100">
-                        <span>
-                          {treatment} —{' '}
-                          {meta.frequency === 'day'
-                            ? 'Daily'
-                            : meta.frequency === 'week'
-                              ? 'Weekly'
-                              : 'Monthly'}{' '}
-                          ({meta?.sittings ?? 0} sittings from{' '}
-                          {meta?.startDate ?? '—'})
-                        </span>
+                      onFocus={() => setShowDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                      placeholder={
+                        loadingTherapists  ? 'Loading therapists...'
+                        : !clinicId || !branchId ? 'Resolving IDs...'
+                        : therapists.length === 0 ? 'No therapists available'
+                        : 'Search by ID or name...'
+                      }
+                      disabled={loadingTherapists}
+                      style={{
+                        ...inputStyle,
+                        paddingRight: form.therapistId ? 36 : 11,
+                        opacity: loadingTherapists ? 0.6 : 1,
+                        cursor: loadingTherapists ? 'not-allowed' : 'text',
+                        borderColor: form.therapistId ? '#38a169' : '#b6cfe8',
+                        backgroundColor: form.therapistId ? '#f0fff4' : '#f5f9ff',
+                      }}
+                    />
+                    {form.therapistId && (
+                      <button type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          setForm(f => ({ ...f,  therapistId: t.therapistId,therapistName: t.fullName  }))
+                          setSearch('')
+                          setShowDropdown(true)
+                        }}
+                        style={{ position: 'absolute', right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', fontWeight: 700, fontSize: 16, lineHeight: 1, padding: '2px 4px' }}
+                        title="Clear therapist"
+                      >✕</button>
+                    )}
+                  </div>
 
-                        <div className="d-flex align-items-center">
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            className="btn btn-sm btn-outline-secondary mx-2"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              e.preventDefault()
-                              editSchedule(treatment)
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
+                  {form.therapistId && form.therapistName && (
+                    <div style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6, background: '#e6fffa', border: '1px solid #81e6d9', borderRadius: 20, padding: '3px 12px', fontSize: '0.8rem', color: '#234e52', fontWeight: 600 }}>
+                      ✅ {form.therapistId} — {form.therapistName}
+                    </div>
+                  )}
+
+                  {showDropdown && !loadingTherapists && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8, maxHeight: 220, overflowY: 'auto', zIndex: 1000, boxShadow: '0 4px 16px rgba(26,90,168,0.12)', marginTop: 2 }}>
+                      {filteredTherapists.length > 0 ? (
+                        filteredTherapists.map((t, i) => {
+                          const isSelected = form.therapistId === t.therapistId
+                          return (
+                            <div key={i}
+                              onMouseDown={(e) => {
                                 e.preventDefault()
-                                e.stopPropagation()
-                                editSchedule(treatment)
-                              }
-                            }}
-                            aria-label="Edit this table"
-                          >
-                            Edit
-                          </span>
-
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            className="btn btn-sm btn-outline-danger mx-2"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              e.preventDefault()
-                              deleteSchedule(treatment)
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                deleteSchedule(treatment)
-                              }
-                            }}
-                            aria-label="Delete this table"
-                          >
-                            Delete
-                          </span>
-                        </div>
-                      </div>
-                    </CAccordionHeader>
-
-                    <CAccordionBody>
-                      {meta.reason && (
-                        <div className="mb-3">
-                          <strong>Reason:</strong> {meta.reason}
+                                setForm(f => ({ ...f, therapistId: t.therapistId, therapistName: t.fullName }))
+                                setSearch(`${t.therapistId} - ${t.fullName}`)
+                                setShowDropdown(false)
+                              }}
+                              style={{ padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid #eee', transition: 'background 0.15s', background: isSelected ? '#e0f2fe' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                              onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f0f7ff' }}
+                              onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = '#fff' }}
+                            >
+                              <span>
+                                <strong style={{ color: '#1a5fa8' }}>{t.therapistId}</strong>
+                                <span style={{ color: '#1a3a5c' }}> — {t.fullName}</span>
+                              </span>
+                              {isSelected && <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.8rem' }}>✓ Selected</span>}
+                            </div>
+                          )
+                        })
+                      ) : (
+                        <div style={{ padding: '10px 12px', color: '#888', fontSize: '0.85rem' }}>
+                          {therapists.length === 0 ? 'No therapists found for this branch' : 'No match — try a different name'}
                         </div>
                       )}
-                      <table className="table table-bordered">
-                        <thead>
-                          <tr style={{ textAlign: "center" }}>
-                            <th>S.No</th>
-                            <th>Date</th>
-                            <th>Sitting</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {meta.dates.map(({ date, sitting, status }, i) => (
-                            <tr key={i} style={{ textAlign: "center" }}>
-                              <td>{i + 1}</td>
-                              <td>{date}</td>
-                              <td>{sitting}</td>
-                              <td>
-                                <span className={`badge ${status === 'Pending' ? 'bg-warning' : 'bg-success'}`}>
-                                  {status || 'Pending'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </CAccordionBody>
-                    {hasPastDates && (
-                      <div className="text-danger my-2">
-                        ⚠ Some dates in the treatment table are in the past. Please correct them before proceeding.
-                      </div>
-                    )}
-                  </CAccordionItem>
-                ))}
-              </CAccordion>
-            </CCol>
-          )}
-        </CRow>
+                    </div>
+                  )}
+                </div>
+              </Field>
+            </div>
+
+            {/* Modalities */}
+            <div style={{ marginBottom: 20 }}>
+              <Field label="Modalities">
+                <ModalityPicker selected={form.modalities} onChange={set('modalities')} />
+              </Field>
+              {form.modalities.length > 0 && (
+                <div style={{ marginTop: 10, padding: '7px 12px', background: '#f0f7ff', borderRadius: 8, border: '1px solid #c8ddf0', fontSize: '0.82rem', color: '#1a3a5c' }}>
+                  <strong>Selected ({form.modalities.length}):</strong>{' '}{form.modalities.join(' • ')}
+                  <button type="button" onClick={() => set('modalities')([])}
+                    style={{ marginLeft: 12, background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem', padding: 0, fontFamily: 'inherit' }}>
+                    Clear all
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Row 3 — Session Duration | Frequency */}
+            <div style={gridTwo}>
+              <Field label="Session Duration">
+                <TextInput value={form.sessionDuration} onChange={set('sessionDuration')} placeholder="e.g. 30 minutes" />
+              </Field>
+              <Field label="Frequency">
+                <TextInput value={form.frequency} onChange={set('frequency')} placeholder="e.g. 3 times/week" />
+              </Field>
+            </div>
+
+            {/* Row 4 — Total Sessions | Manual Therapy */}
+            <div style={gridTwo}>
+              <Field label="Total Sessions">
+                <TextInput value={form.totalSessions} onChange={set('totalSessions')} placeholder="e.g. 12" />
+              </Field>
+              <Field label="Manual Therapy">
+                <TextInput value={form.manualTherapy} onChange={set('manualTherapy')} placeholder="e.g. Soft tissue mobilization" />
+              </Field>
+            </div>
+
+            {/* Row 5 — Precautions */}
+            <div style={{ marginBottom: 20 }}>
+              <Field label="Precautions">
+                <Textarea value={form.precautions} onChange={set('precautions')} placeholder="e.g. Avoid heavy lifting and sudden movements" rows={3} />
+              </Field>
+            </div>
+
+            {/* Form action buttons */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button type="button" onClick={handleSave} style={{
+                padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
+                color: '#fff', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit',
+              }}>
+                {editingIdx !== null ? '✅ Update Entry' : '➕ Add to Table'}
+              </button>
+              {editingIdx !== null && (
+                <button type="button" onClick={handleCancel} style={{
+                  padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
+                  border: '1.5px solid #b6cfe8', background: '#f5f9ff',
+                  color: '#1a3a5c', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                }}>
+                  Cancel
+                </button>
+              )}
+            </div>
+
+          </CCardBody>
+        </CCard>
+
+        {/* ══ TABLE CARD ═════════════════════════════════════════════════ */}
+        {entries.length > 0 && (
+          <CCard style={cardStyle}>
+            <CCardBody style={{ padding: '24px 32px' }}>
+
+              <div style={cardHeaderStyle}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📋</div>
+                <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>
+                  Treatment Plan Entries ({entries.length})
+                </h5>
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
+                  <thead>
+                    <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+                      {['#', 'Therapy ID', 'Therapy Name', 'Modalities', 'Manual Therapy', 'Duration', 'Frequency', 'Sessions', 'Precautions', 'Actions'].map(h => (
+                        <th key={h} style={{ padding: '10px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {entries.map((e, idx) => (
+                      <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
+                        <td style={{ padding: '10px 12px', fontWeight: 700 }}>{idx + 1}</td>
+                        <td style={{ padding: '10px 12px' }}>{e.therapistId || '—'}</td>
+                        <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{e.therapistName || '—'}</td>
+                        <td style={{ padding: '10px 12px', maxWidth: 180 }}>
+                          {e.modalities?.length > 0
+                            ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                {e.modalities.map(m => (
+                                  <span key={m} style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 12, padding: '2px 10px', fontSize: '0.75rem', fontWeight: 600 }}>{m}</span>
+                                ))}
+                              </div>
+                            : '—'}
+                        </td>
+                        <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{e.manualTherapy || '—'}</td>
+                        <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{e.sessionDuration || '—'}</td>
+                        <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{e.frequency || '—'}</td>
+                        <td style={{ padding: '10px 12px', textAlign: 'center' }}>{e.totalSessions || '—'}</td>
+                        <td style={{ padding: '10px 12px', maxWidth: 200 }}>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.precautions}>
+                            {e.precautions || '—'}
+                          </div>
+                        </td>
+                        <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
+                          <button onClick={() => handleEdit(idx)} style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: '#f0f7ff', color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            ✏️ Edit
+                          </button>
+                          <button onClick={() => handleDelete(idx)} style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            🗑️ Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+            </CCardBody>
+          </CCard>
+        )}
+
       </CContainer>
 
-      <div
-        className="position-fixed bottom-0"
-        style={{
-          left: 0,
-          right: 0,
-          backgroundColor: '#f3f4f7',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 16,
-          padding: 8,
-          zIndex: 999,
-        }}
-      >
-      
-        <Button
-          customColor={COLORS.bgcolor}
-          color={COLORS.black}
-          disabled={hasPendingCards || hasPastDates} // disabled if any past date exists
-          onClick={handleNext}
-        >
+      {/* ── Sticky bottom bar ── */}
+      <div className="position-fixed bottom-0" style={{
+        left: 0, right: 0,
+        background: 'linear-gradient(90deg,#1a3a5c,#1a5fa8)',
+        display: 'flex', justifyContent: 'flex-end',
+        padding: '10px 24px',
+        boxShadow: '0 -2px 16px rgba(26,90,168,0.18)',
+        zIndex: 999,
+      }}>
+        <Button customColor={COLORS.bgcolor} color={COLORS.black} onClick={handleNext}>
           Next
         </Button>
       </div>

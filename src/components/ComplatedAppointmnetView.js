@@ -59,25 +59,29 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
   )
 
   const onNextMap = {
-    Diagnosis: (data) => {
+    Complaints: (data) => {
       setFormData((prev) => ({ ...prev, symptoms: { ...prev.symptoms, ...data } }))
+      goToNext('Complaints')
+    },
+    Assessment: (data) => {
+      setFormData((prev) => ({ ...prev, tests: { ...prev.tests, ...data } }))
+      goToNext('Assessment')
+    },
+    Diagnosis: (data) => {
+      setFormData((prev) => ({ ...prev, prescription: { ...prev.prescription, ...data } }))
       goToNext('Diagnosis')
     },
-    Investigations: (data) => {
-      setFormData((prev) => ({ ...prev, tests: { ...prev.tests, ...data } }))
-      goToNext('Investigations')
-    },
-    Medication: (data) => {
-      setFormData((prev) => ({ ...prev, prescription: { ...prev.prescription, ...data } }))
-      goToNext('Medication')
-    },
-    Procedures: (data) => {
+    TreatmentPlan: (data) => {
       setFormData((prev) => ({ ...prev, treatments: { ...prev.treatments, ...data } }))
-      goToNext('Procedures')
+      goToNext('TreatmentPlan')
     },
-    'Follow-up': (data) => {
+    'TherapySessions': (data) => {
       setFormData((prev) => ({ ...prev, followUp: { ...prev.followUp, ...data } }))
-      goToNext('Follow-up')
+      goToNext('TherapySessions')
+    },
+      'ExercisePlan': (data) => {
+      setFormData((prev) => ({ ...prev, followUp: { ...prev.followUp, ...data } }))
+      goToNext('ExercisePlan')
     },
     Summary: async (data) => {
       const payload = { ...formData, summary: { ...formData.summary, ...data } }
@@ -97,9 +101,9 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
   const counts = useMemo(
     () => ({
-      Investigations: formData?.tests?.selectedTests?.length || 0,
+      Assessment: formData?.tests?.selectedTests?.length || 0,
       Prescription: formData.prescription?.medicines?.length || 0,
-      Procedures: formData.treatments?.selectedTreatments?.length || 0,
+      TreatmentPlan: formData.treatments?.selectedTreatments?.length || 0,
       Images: formData.ClinicImages?.items?.length || 0,
     }),
     [formData],
@@ -107,22 +111,23 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
 const savePrescriptionTemplate = async () => {
   try {
-    const diagnosis = formData.symptoms?.diagnosis?.trim() || ''
+    const complaints = formData.symptoms?.complaints?.trim() || ''
     
-    // if (!diagnosis) {
-    //   alert('Diagnosis is missing. Cannot save template.')
+    // if (!complaints) {
+    //   alert('complaints is missing. Cannot save template.')
     //   return
     // }
 
     const clinicId = localStorage.getItem('hospitalId')
     const template = {
-      clinicId,
-      title: diagnosis,
-      symptoms: diagnosis,
-      tests: formData.tests || [],
-      prescription: formData.prescription || [],
-      treatments: formData.treatments || [],
-      followUp: formData.followUp || '',
+       clinicId,
+        title:        complaints,
+        symptoms:     complaints,
+        tests:        formData.tests        || [],
+        prescription: formData.prescription || [],
+        treatments:   formData.treatments   || [],
+        followUp:     formData.followUp     || {},
+        exercisePlan: formData.exercisePlan || {},
     }
 
     const res = await SavePatientPrescription(template)

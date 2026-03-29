@@ -2,344 +2,166 @@ import React, { useEffect, useRef, useState } from 'react'
 import Button from '../components/CustomButton/CustomButton'
 import './Tests.css'
 import { COLORS } from '../Themes'
-import html2pdf from 'html2pdf.js' // <-- add this import
-import Select from 'react-select'
 import {
   CAlert,
-  CBadge,
-  CButton,
   CCard,
   CCardBody,
-  CCardHeader,
   CCol,
   CForm,
-  CFormLabel,
-  CFormSelect,
-  CFormTextarea,
   CRow,
   CContainer,
 } from '@coreui/react'
-import GradientTextCard from '../components/GradintColorText'
-import { addLabTest, getLabTests } from '../../src/Auth/Auth'
 import { useDoctorContext } from '../Context/DoctorContext'
-import CreatableSelect from 'react-select/creatable'
-/**
- * Props:
- * - onNext?: (payload) => void
- * - sidebarWidth?: number
- * - patientName?: string
- * - doctor?: { name?: string, regNo?: string, clinic?: string, phone?: string }
- */
-const Investigations = ({ seed = {}, onNext, sidebarWidth = 0, formData }) => {
-  const [selectedTests, setSelectedTests] = useState(seed.selectedTests ?? [])
-  const [testReason, setTestReason] = useState(seed.testReason ?? '')
-  const [selectedTestOption, setSelectedTestOption] = useState('')
-  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
+
+/* ─── Static options ───────────────────────────────────────────────────── */
+const PAIN_SCALE_OPTIONS = [
+  { label: 'Select pain scale...', value: '' },
+  ...Array.from({ length: 10 }, (_, i) => ({ label: `${i + 1}/10`, value: `${i + 1}/10` })),
+]
+
+const ONSET_OPTIONS = [
+  { label: 'Select onset...', value: ''         },
+  { label: 'Sudden',          value: 'Sudden'   },
+  { label: 'Gradual',         value: 'Gradual'  },
+  { label: 'Insidious',       value: 'Insidious'},
+]
+
+/* ─── Styles ────────────────────────────────────────────────────────────── */
+const inputStyle = {
+  border: '1.5px solid #b6cfe8',
+  borderRadius: 7,
+  fontSize: '0.875rem',
+  color: '#1a3a5c',
+  backgroundColor: '#f5f9ff',
+  padding: '7px 11px',
+  width: '100%',
+  boxSizing: 'border-box',
+  height: 38,
+  outline: 'none',
+  fontFamily: 'inherit',
+}
+
+const labelStyle = {
+  fontWeight: 700,
+  fontSize: '0.82rem',
+  color: '#1a3a5c',
+  marginBottom: 4,
+  display: 'block',
+  letterSpacing: '0.01em',
+}
+
+const sectionHeaderStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  marginBottom: 14,
+  marginTop: 8,
+  paddingBottom: 8,
+  borderBottom: '1.5px solid #e3eef8',
+}
+
+/* ─── Small helpers ─────────────────────────────────────────────────────── */
+const Field = ({ label, children }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <label style={labelStyle}>{label}</label>
+    {children}
+  </div>
+)
+
+const TextInput = ({ value, onChange, placeholder = '' }) => (
+  <input
+    value={value}
+    onChange={e => onChange(e.target.value)}
+    placeholder={placeholder}
+    style={inputStyle}
+  />
+)
+
+const NativeSelect = ({ value, onChange, options }) => (
+  <select
+    value={value}
+    onChange={e => onChange(e.target.value)}
+    style={{ ...inputStyle, cursor: 'pointer', appearance: 'auto' }}
+  >
+    {options.map(o => (
+      <option key={o.value} value={o.value}>{o.label}</option>
+    ))}
+  </select>
+)
+
+const Textarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
+  <textarea
+    value={value}
+    onChange={e => onChange(e.target.value)}
+    placeholder={placeholder}
+    rows={rows}
+    style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
+  />
+)
+
+const SectionHeader = ({ icon, title, color = '#1a5fa8' }) => (
+  <div style={sectionHeaderStyle}>
+    <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, flexShrink: 0 }} />
+    <h6 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.01em' }}>
+      {icon} {title}
+    </h6>
+  </div>
+)
+
+/* ─── Component ─────────────────────────────────────────────────────────── */
+const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
+  const [chiefComplaint,     setChiefComplaint]     = useState(seed.chiefComplaint     ?? '')
+  const [painScale,          setPainScale]          = useState(seed.painScale          ?? '')
+  const [painType,           setPainType]           = useState(seed.painType           ?? '')
+  const [duration,           setDuration]           = useState(seed.duration           ?? '')
+  const [onset,              setOnset]              = useState(seed.onset              ?? '')
+  const [aggravatingFactors, setAggravatingFactors] = useState(seed.aggravatingFactors ?? '')
+  const [relievingFactors,   setRelievingFactors]   = useState(seed.relievingFactors   ?? '')
+  const [posture,            setPosture]            = useState(seed.posture            ?? '')
+  const [rangeOfMotion,      setRangeOfMotion]      = useState(seed.rangeOfMotion      ?? '')
+  const [specialTests,       setSpecialTests]       = useState(seed.specialTests       ?? '')
+  const [observations,       setObservations]       = useState(seed.observations       ?? '')
+
+  const [snackbar,     setSnackbar]     = useState({ show: false, message: '', type: '' })
   const [isGenerating, setIsGenerating] = useState(false)
-  const [availableTests, setAvailableTests] = useState([])
-  // print container ref
   const printRef = useRef(null)
 
-  const showSnackbar = (message, type) => {
-    setSnackbar({ show: true, message, type })
-    setTimeout(() => setSnackbar({ show: false, message: '', type: '' }), 3000)
-  }
-  const options = availableTests.map((t) => ({ label: t.testName, value: t.testName }))
-  // and filter with t.testName everywhere
+  const { patientData, clinicDetails, doctorDetails } = useDoctorContext()
 
-  const {
-    patientData,
-    doctorId,
-    setTodayAppointments,
-    todayAppointments,
-    clinicDetails,
-    doctorDetails,
-  } = useDoctorContext()
-
-  const handleAddTest = (e) => {
-    const value = e.target.value
-    if (!value) return
-
-    if (selectedTests.includes(value)) {
-      showSnackbar('Test already added', 'warning')
-    } else {
-      setSelectedTests((prev) => [...prev, value])
-      setSelectedTestOption(null) // reset after add
-    }
-  }
-
-  const clearAllTests = () => {
-    setSelectedTests([])
-    setSelectedTestOption(null) // reset dropdown
-  }
-
-
+  /* sync when seed changes */
   useEffect(() => {
-    const fetchTests = async () => {
-      try {
-        const tests = await getLabTests()
-        if (Array.isArray(tests)) {
-          setAvailableTests(tests) // store full objects
-        }
-      } catch (error) {
-        console.error('Error fetching lab tests:', error)
-      }
-    }
-    fetchTests()
-  }, [])
-
-  const handleRemoveTest = (item) => {
-    setSelectedTests((prev) => prev.filter((t) => t !== item))
-    if (selectedTestOption === item) {
-      setSelectedTestOption('')
-    }
-  }
+    const s = seed || {}
+    setChiefComplaint(s.chiefComplaint         ?? '')
+    setPainScale(s.painScale                   ?? '')
+    setPainType(s.painType                     ?? '')
+    setDuration(s.duration                     ?? '')
+    setOnset(s.onset                           ?? '')
+    setAggravatingFactors(s.aggravatingFactors ?? '')
+    setRelievingFactors(s.relievingFactors     ?? '')
+    setPosture(s.posture                       ?? '')
+    setRangeOfMotion(s.rangeOfMotion           ?? '')
+    setSpecialTests(s.specialTests             ?? '')
+    setObservations(s.observations             ?? '')
+  }, [seed])
 
   const handleNext = () => {
-    const payload = { selectedTests, testReason }
+    const payload = {
+      chiefComplaint,
+      painScale,
+      painType,
+      duration,
+      onset,
+      aggravatingFactors,
+      relievingFactors,
+      posture,
+      rangeOfMotion,
+      specialTests,
+      observations,
+    }
+    console.log('🚀 Assessment payload:', payload)
     onNext?.(payload)
   }
 
-  const handlePrint = () => {
-    const today = new Date()
-    const dateStr = today.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
-
-    const testsHtml = selectedTests.length
-      ? `<ul class="test-list">${selectedTests.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul>`
-      : `<p class="muted">No tests selected.</p>`
-
-    const reasonHtml = testReason?.trim()
-      ? `<div class="section">
-         <h3 class="section-title">Reason for Recommendation</h3>
-         <p>${escapeHtml(testReason)}</p>
-       </div>`
-      : ''
-
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Test Report – ${escapeHtml(patientData?.name??'')}</title>
-  <style>
-    :root{
-      --ink:#0f172a;        /* slate-900 */
-      --muted:#6b7280;      /* gray-500 */
-      --line:#e5e7eb;       /* gray-200 */
-      --accent:#2563eb;     /* blue-600 */
-      --accent-soft:#eff6ff;/* blue-50 */
-      --chip:#f1f5f9;       /* slate-100 */
-      --bg:#ffffff;
-    }
-    *{ box-sizing:border-box; }
-    html,body{ margin:0; padding:0; }
-    body{
-      font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      color:var(--ink);
-      background:var(--bg);
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    @page{
-      size: A4;
-      margin: 12mm;
-    }
-    .page{
-      padding: 20px 24px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-    }
-    header{
-      display:flex;
-      align-items:center;
-      gap:16px;
-      padding-bottom:14px;
-      margin-bottom:18px;
-      border-bottom:2px solid var(--line);
-    }
-    .logo{
-      display:flex; align-items:center; justify-content:center;
-      width: 110px; height: 72px;
-   
-     
-     
-      overflow:hidden;
-      flex-shrink:0;
-    }
-    .logo img{
-      max-width: 100%;
-      max-height: 100%;
-      display:block;
-      object-fit: contain;
-    }
-    .clinic-block{
-      display:flex; flex-direction:column; gap:4px;
-    }
-    .clinic-name{
-      font-size: 20px; font-weight: 700; letter-spacing:.2px;
-    }
-    .clinic-meta{
-      font-size: 13px; color:var(--muted);
-    }
-
-    /* Info grid */
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px 24px;
-      margin-bottom: 12px;
-    }
-    .kv{ display:flex; flex-direction:column; }
-    .kv .label{ font-size:12px; color:var(--muted); }
-    .kv .value{ font-size:15px; font-weight:600; padding-top:2px; }
-
-    /* Section */
-    .section{ margin-top:18px; }
-    .section-card{
-      border:1px solid var(--line);
-      border-radius:10px;
-      padding:14px;
-      background:#fff;
-    }
-    .section-title{
-      display:flex; align-items:center; gap:8px;
-      font-size:16px; font-weight:700; margin:0 0 10px 0;
-      color:#111827;
-    }
-    .pill{
-      font-size:12px; font-weight:600; color:#1e293b;
-      background:var(--chip); border:1px solid var(--line);
-      padding:2px 8px; border-radius:999px;
-    }
-
-    /* Tests list as two columns if many */
-    .test-list{
-      margin:0; padding-left:18px;
-      columns: 2; column-gap: 36px;
-    }
-    .test-list li{ break-inside: avoid; padding:2px 0; }
-
-    /* Footer */
-    .footer{
-      margin-top: 22px;
-      padding-top: 12px;
-      border-top:1px solid var(--line);
-      display:flex; justify-content:space-between; gap:12px;
-      font-size:12px; color:var(--muted);
-    }
-
-    /* Print tweaks */
-    @media print{
-      .no-print{ display:none !important; }
-      .page{ border:none; padding:0; }
-      header{ border-color:#d1d5db; }
-      
-    }
-
-    /* Small screens (if user views in new tab before print) */
-    @media screen and (max-width:720px){
-      .grid{ grid-template-columns: 1fr; }
-      .test-list{ columns:1; }
-    }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <header>
-      <div class="logo">
-        ${clinicDetails?.hospitalLogo
-        ? `<img src="data:image/png;base64,${clinicDetails.hospitalLogo}" alt="Hospital Logo" />`
-        : ''
-      }
-      </div>
-      <div class="clinic-block">
-        <div class="clinic-name">${escapeHtml(clinicDetails.name)}</div>
-        <div class="clinic-meta">${escapeHtml(clinicDetails.address)} • ${escapeHtml(clinicDetails.contactNumber)}</div>
-      </div>
-    </header>
-
-    <!-- Patient & Report meta -->
-    <div class="grid">
-      <div class="kv">
-        <div class="label">Patient Name</div>
-        <div class="value">${escapeHtml(patientData?.name??'')}</div>
-      </div>
-      <div class="kv">
-        <div class="label">Date</div>
-        <div class="value">${escapeHtml(dateStr)}</div>
-      </div>
-      <div class="kv">
-        <div class="label">Doctor</div>
-        <div class="value">${escapeHtml(doctorDetails.doctorName)}</div>
-      </div>
-      <div class="kv">
-        <div class="label">Licence No</div>
-        <div class="value"><span  >${escapeHtml(doctorDetails.doctorLicence)}</span></div>
-      </div>
-    </div>
-
-    <!-- Tests -->
-    <div class="section section-card">
-      <h3 class="section-title">Recommended Tests</h3>
-      ${testsHtml}
-    </div>
-
-    <!-- Reason (optional) -->
-    ${reasonHtml
-        ? `<div class="section section-card">
-            
-            ${reasonHtml.replace('<div class="section">', '').replace('</div>', '')}
-         </div>`
-        : ''
-      }
-
-    <div class="footer">
-      <div>Generated on ${escapeHtml(dateStr)}</div>
-      <div>${escapeHtml(clinicDetails.name)}</div>
-    </div>
-<!-- Signature -->
-<div class="signature-block">
-  <div style="text-align:right; margin-top:40px;">
-    <img src="${doctorDetails?.doctorSignature}" 
-         alt="Doctor's Signature"
-         style="max-height:60px;" />
-    <div style="font-size: 12px; color:#374151; margin-top:4px;">
-      Doctor's Signature
-    </div>
-  </div>
-</div>
-    <div class="no-print" style="margin-top: 12px; text-align:right;">
-      <button onclick="window.print()" style="
-        background: var(--accent);
-        color: white; border: 0;
-        padding: 8px 14px; border-radius: 8px;
-        font-weight:600; cursor:pointer;
-      ">Print</button>
-    </div>
-  </div>
-</body>
-</html>
-`
-
-    const win = window.open('', '_blank', 'width=900,height=700')
-    if (!win) {
-      alert('Please allow pop-ups to print.')
-      return
-    }
-    win.document.open()
-    win.document.write(html)
-    win.document.close()
-    win.onload = () => {
-      win.focus()
-      win.print()
-    }
-  }
-
-  // Escapes HTML entities
   function escapeHtml(str) {
     return String(str ?? '')
       .replace(/&/g, '&amp;')
@@ -349,242 +171,306 @@ const Investigations = ({ seed = {}, onNext, sidebarWidth = 0, formData }) => {
       .replace(/'/g, '&#039;')
   }
 
+  /* ── Print ── */
+  const handlePrint = () => {
+    const today   = new Date()
+    const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    const rowHtml = (label, value) =>
+      value
+        ? `<div class="kv"><div class="label">${label}</div><div class="value">${escapeHtml(value)}</div></div>`
+        : ''
 
-  // in Tests.jsx
-  useEffect(() => {
-    const incoming = seed || {}
-    const next = Array.isArray(incoming.selectedTests) ? incoming.selectedTests : []
-    setSelectedTests(next)
-    setTestReason(incoming.testReason ?? incoming.reason ?? '')
-  }, [seed])
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Assessment – ${escapeHtml(patientData?.name ?? '')}</title>
+  <style>
+    :root{ --ink:#0f172a; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb; --bg:#fff; }
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; }
+    body{ font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial; color:var(--ink); background:var(--bg); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    @page{ size:A4; margin:12mm; }
+    .page{ padding:20px 24px; border:1px solid var(--line); border-radius:10px; }
+    header{ display:flex; align-items:center; gap:16px; padding-bottom:14px; margin-bottom:18px; border-bottom:2px solid var(--line); }
+    .logo{ width:110px; height:72px; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .logo img{ max-width:100%; max-height:100%; object-fit:contain; }
+    .clinic-name{ font-size:20px; font-weight:700; }
+    .clinic-meta{ font-size:13px; color:var(--muted); margin-top:4px; }
+    .meta-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 24px; margin-bottom:16px; }
+    .kv{ display:flex; flex-direction:column; margin-bottom:10px; }
+    .kv .label{ font-size:12px; color:var(--muted); }
+    .kv .value{ font-size:14px; font-weight:600; padding-top:2px; }
+    .section-card{ border:1px solid var(--line); border-radius:10px; padding:14px; background:#fff; margin-bottom:14px; }
+    .section-title{ font-size:14px; font-weight:700; margin:0 0 12px 0; color:#1a3a5c; padding-bottom:8px; border-bottom:1px solid var(--line); }
+    .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:4px 24px; }
+    .full{ grid-column:1 / -1; }
+    .footer{ margin-top:22px; padding-top:12px; border-top:1px solid var(--line); display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
+    @media print{ .no-print{ display:none !important; } .page{ border:none; padding:0; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="logo">
+        ${clinicDetails?.hospitalLogo ? `<img src="data:image/png;base64,${clinicDetails.hospitalLogo}" alt="Logo" />` : ''}
+      </div>
+      <div>
+        <div class="clinic-name">${escapeHtml(clinicDetails?.name ?? '')}</div>
+        <div class="clinic-meta">${escapeHtml(clinicDetails?.address ?? '')} • ${escapeHtml(clinicDetails?.contactNumber ?? '')}</div>
+      </div>
+    </header>
 
+    <div class="meta-grid">
+      ${rowHtml('Patient Name', patientData?.name)}
+      ${rowHtml('Date', dateStr)}
+      ${rowHtml('Doctor', doctorDetails?.doctorName)}
+      ${rowHtml('Licence No', doctorDetails?.doctorLicence)}
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">📋 Subjective Assessment</div>
+      <div class="two-col">
+        ${rowHtml('Chief Complaint', chiefComplaint)}
+        ${rowHtml('Pain Scale',      painScale)}
+        ${rowHtml('Pain Type',       painType)}
+        ${rowHtml('Duration',        duration)}
+        ${rowHtml('Onset',           onset)}
+        ${aggravatingFactors ? `<div class="kv full"><div class="label">Aggravating Factors</div><div class="value">${escapeHtml(aggravatingFactors)}</div></div>` : ''}
+        ${relievingFactors   ? `<div class="kv full"><div class="label">Relieving Factors</div><div class="value">${escapeHtml(relievingFactors)}</div></div>` : ''}
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">🔬 Objective / Physical Examination</div>
+      <div class="two-col">
+        ${posture       ? `<div class="kv full"><div class="label">Posture</div><div class="value">${escapeHtml(posture)}</div></div>` : ''}
+        ${rangeOfMotion ? `<div class="kv full"><div class="label">Range of Motion</div><div class="value">${escapeHtml(rangeOfMotion)}</div></div>` : ''}
+        ${specialTests  ? `<div class="kv full"><div class="label">Special Tests</div><div class="value">${escapeHtml(specialTests)}</div></div>` : ''}
+        ${observations  ? `<div class="kv full"><div class="label">Observations</div><div class="value">${escapeHtml(observations)}</div></div>` : ''}
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Generated on ${escapeHtml(dateStr)}</div>
+      <div>${escapeHtml(clinicDetails?.name ?? '')}</div>
+    </div>
+
+    <div style="text-align:right; margin-top:40px;">
+      ${doctorDetails?.doctorSignature ? `<img src="${doctorDetails.doctorSignature}" alt="Signature" style="max-height:60px;" />` : ''}
+      <div style="font-size:12px; color:#374151; margin-top:4px;">Doctor's Signature</div>
+    </div>
+
+    <div class="no-print" style="margin-top:12px; text-align:right;">
+      <button onclick="window.print()" style="background:#2563eb; color:#fff; border:0; padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer;">Print</button>
+    </div>
+  </div>
+</body>
+</html>`
+
+    const win = window.open('', '_blank', 'width=900,height=700')
+    if (!win) { alert('Please allow pop-ups to print.'); return }
+    win.document.open()
+    win.document.write(html)
+    win.document.close()
+    win.onload = () => { win.focus(); win.print() }
+  }
+
+  /* ── render ── */
   return (
-    <div className="tests-wrapper pb-5">
-      {/* Snackbar */}
+    <div className="tests-wrapper pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+
       {snackbar.show && (
-        <CAlert
-          color={snackbar.type === 'error' ? 'danger' : snackbar.type || 'info'}
-          className="mb-2"
-        >
+        <CAlert color={snackbar.type === 'error' ? 'danger' : snackbar.type || 'info'} className="mb-2">
           {snackbar.message}
         </CAlert>
       )}
 
       <CContainer fluid className="p-0">
         <CRow className="g-3">
-          {/* Left: Form area */}
-          <CCol xs={12} lg={12}>
-            <CCard className="h-100">
+          <CCol xs={12}>
+            <CCard className="h-100" style={{ border: '1.5px solid #c8ddf0', borderRadius: 12, boxShadow: '0 4px 24px rgba(26,90,168,0.08)' }}>
               <CCardBody>
+
+                {/* Card header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22, borderBottom: '2px solid #e3eef8', paddingBottom: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🩺</div>
+                  <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.1rem' }}>Assessment</h5>
+                </div>
+
                 <CForm>
-                  {/* Row: Recommended Test (left) + Selected Tests (right) */}
-                  <CRow className="g-3">
-                    {/* Recommended Test */}
-                    <CCol xs={12} md={6}>
-                      <CFormLabel className="label">
-                        <GradientTextCard text={'Recommended Test (Optional)'} />
-                      </CFormLabel>
 
-                      <CreatableSelect
-                        options={availableTests.map((t) => ({ label: t.testName, value: t.testName }))}
-                        placeholder="Select or add tests..."
-                        value={selectedTestOption ? { label: selectedTestOption, value: selectedTestOption } : null}
-                        isClearable
-                        isSearchable
-                        formatCreateLabel={(inputValue) => `Add "${inputValue}"`}
-                        onChange={(selected) => {
-                          if (!selected) {
-                            setSelectedTestOption(null);
-                            return;
-                          }
+                  {/* ── Section 1: Subjective ── */}
+                  <SectionHeader icon="📋" title="Subjective Assessment" color="#2563eb" />
 
-                          const value = selected.value;
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 28px', marginBottom: 16 }}>
 
-                          if (!selectedTests.includes(value)) {
-                            setSelectedTests((prev) => [...prev, value]);
-                          }
-
-                          setSelectedTestOption(null);
-                        }}
-                        onCreateOption={async (inputValue) => {
-                          if (!inputValue) return;
-
-                          // Call your API to add the test
-                          const addedTest = await addLabTest(inputValue);
-
-                          // Update available tests so it shows in dropdown
-                          setAvailableTests((prev) => [...prev, { testName: addedTest }]);
-
-                          // Select the new test
-                          setSelectedTests((prev) => [...prev, addedTest]);
-
-                          // Reset input
-                          setSelectedTestOption(null);
-
-                          showSnackbar(`Added new test: ${addedTest}`, 'success');
-                        }}
+                    <Field label="Chief Complaint">
+                      <TextInput
+                        value={chiefComplaint}
+                        onChange={setChiefComplaint}
+                        placeholder="e.g. Lower back pain"
                       />
+                    </Field>
 
-
-                    </CCol>
-
-                    {/* Selected tests chips */}
-                    <CCol xs={12} md={5}>
-                      <div className="d-flex align-items-center justify-content-between mb-1 p-0">
-                        <GradientTextCard text={'Selected Tests'} />
-                        {/* Clear all button (hidden when empty) */}
-                        {selectedTests.length > 0 && (
-                          <Button
-                            customColor={COLORS.orange}
-                            size="small"
-                            variant="outline"
-                            onClick={clearAllTests}
-                            title="Remove all selected tests"
-                          >
-                            Clear all
-                          </Button>
-                        )}
-                      </div>
-
-                      {selectedTests.length === 0 ? (
-                        <div className="text-body-secondary small">No tests selected yet.</div>
-                      ) : (
-                        <div className="d-flex flex-wrap gap-2">
-                          {selectedTests.map((test) => (
-                            <div
-                              key={test}
-                              className="d-inline-flex align-items-center px-2 py-1 border rounded bg-body-secondary"
-                              style={{ lineHeight: 1 }}
-                            >
-                              {/* Chip text */}
-                              <span className="me-2">{test}</span>
-
-                              {/* Close (remove) button with keyboard support */}
-                              <button
-                                type="button"
-                                aria-label={`Remove ${test}`}
-                                className="btn btn-sm   p-0 text-body"
-                                onClick={() => handleRemoveTest(test)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault()
-                                    handleRemoveTest(test)
-                                  }
-                                }}
-                                title={`Remove ${test}`}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CCol>
-                  </CRow>
-
-                  {/* Reason (full width) */}
-                  <CRow className="g-3 mt-1">
-                    <CCol xs={12}>
-                      <GradientTextCard text={'Reason for Recommendation (Optional)'} />
-
-                      <CFormTextarea
-                        className="mt-2"
-                        rows={5}
-                        value={testReason}
-                        onChange={(e) => setTestReason(e.target.value)}
-                        placeholder="Explain why these tests are recommended…"
+                    <Field label="Pain Scale">
+                      <NativeSelect
+                        value={painScale}
+                        onChange={setPainScale}
+                        options={PAIN_SCALE_OPTIONS}
                       />
-                    </CCol>
-                  </CRow>
+                    </Field>
+
+                    <Field label="Pain Type">
+                      <TextInput
+                        value={painType}
+                        onChange={setPainType}
+                        placeholder="e.g. Sharp and intermittent"
+                      />
+                    </Field>
+
+                    <Field label="Duration">
+                      <TextInput
+                        value={duration}
+                        onChange={setDuration}
+                        placeholder="e.g. 2 weeks"
+                      />
+                    </Field>
+
+                    <Field label="Onset">
+                      <NativeSelect
+                        value={onset}
+                        onChange={setOnset}
+                        options={ONSET_OPTIONS}
+                      />
+                    </Field>
+
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 28px', marginBottom: 24 }}>
+                    <Field label="Aggravating Factors">
+                      <Textarea
+                        value={aggravatingFactors}
+                        onChange={setAggravatingFactors}
+                        placeholder="e.g. Prolonged sitting, bending forward"
+                        rows={3}
+                      />
+                    </Field>
+
+                    <Field label="Relieving Factors">
+                      <Textarea
+                        value={relievingFactors}
+                        onChange={setRelievingFactors}
+                        placeholder="e.g. Rest, hot pack, walking"
+                        rows={3}
+                      />
+                    </Field>
+                  </div>
+
+                  {/* ── Section 2: Objective ── */}
+                  <SectionHeader icon="🔬" title="Objective / Physical Examination" color="#0891b2" />
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 28px' }}>
+
+                    <Field label="Posture">
+                      <Textarea
+                        value={posture}
+                        onChange={setPosture}
+                        placeholder="e.g. Forward head posture, slight lumbar lordosis"
+                        rows={3}
+                      />
+                    </Field>
+
+                    <Field label="Range of Motion">
+                      <Textarea
+                        value={rangeOfMotion}
+                        onChange={setRangeOfMotion}
+                        placeholder="e.g. Restricted lumbar flexion to 60°"
+                        rows={3}
+                      />
+                    </Field>
+
+                    <Field label="Special Tests">
+                      <Textarea
+                        value={specialTests}
+                        onChange={setSpecialTests}
+                        placeholder="e.g. SLR positive at 60 degrees"
+                        rows={3}
+                      />
+                    </Field>
+
+                    <Field label="Observations">
+                      <Textarea
+                        value={observations}
+                        onChange={setObservations}
+                        placeholder="e.g. Muscle tightness in lower back"
+                        rows={3}
+                      />
+                    </Field>
+
+                  </div>
+
                 </CForm>
+
               </CCardBody>
             </CCard>
           </CCol>
         </CRow>
       </CContainer>
 
-      {/* Off-screen printable block (kept as-is for fidelity) */}
+      {/* Off-screen print block */}
       <div
         ref={printRef}
         id="tests-print"
-        style={{
-          position: 'absolute',
-          left: '-99999px',
-          top: 0,
-          width: '794px',
-          background: '#fff',
-          padding: '16px',
-        }}
+        style={{ position: 'absolute', left: '-99999px', top: 0, width: '794px', background: '#fff', padding: '16px' }}
       >
-        <div style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 8, marginBottom: 12 }}>
-          <div style={{ fontWeight: 700, fontSize: 18 }}>{clinicDetails?.clinic || 'Clinic'}</div>
-          <div style={{ fontSize: 13 }}>
-            {clinicDetails?.name || ''} • Reg. No: {clinicDetails?.regNo || ''}
-          </div>
-          <div style={{ fontSize: 13 }}>{clinicDetails?.phone || ''}</div>
-        </div>
-
-        <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
-          <div>
-            <strong>Patient:</strong> {clinicDetails?.patientName || '-'}
-          </div>
-          <div>
-            <strong>Date:</strong>{' '}
-            {new Date().toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-            })}
-          </div>
-        </div>
-
+        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12 }}>{clinicDetails?.name || 'Clinic'}</div>
+        <div><strong>Patient:</strong> {patientData?.name || '-'}</div>
         <div style={{ marginTop: 12 }}>
-          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Recommended Tests</div>
-          {selectedTests?.length ? (
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {selectedTests.map((t) => (
-                <li key={t} style={{ marginBottom: 4, fontSize: 14 }}>
-                  {t}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div style={{ fontSize: 14, color: '#6b7280' }}>No tests selected.</div>
-          )}
-        </div>
-
-        <div style={{ marginTop: 12 }}>
-          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Reason</div>
-          <div style={{ whiteSpace: 'pre-wrap', fontSize: 14 }}>{testReason || '—'}</div>
+          <div><strong>Chief Complaint:</strong>     {chiefComplaint}</div>
+          <div><strong>Pain Scale:</strong>          {painScale}</div>
+          <div><strong>Pain Type:</strong>           {painType}</div>
+          <div><strong>Duration:</strong>            {duration}</div>
+          <div><strong>Onset:</strong>               {onset}</div>
+          <div><strong>Aggravating Factors:</strong> {aggravatingFactors}</div>
+          <div><strong>Relieving Factors:</strong>   {relievingFactors}</div>
+          <div><strong>Posture:</strong>             {posture}</div>
+          <div><strong>Range of Motion:</strong>     {rangeOfMotion}</div>
+          <div><strong>Special Tests:</strong>       {specialTests}</div>
+          <div><strong>Observations:</strong>        {observations}</div>
         </div>
       </div>
 
-      {/* Bottom bar */}
+      {/* Sticky bottom bar */}
       <div
         className="position-fixed bottom-0"
         style={{
-          left: 0,
-          right: 0,
-
-          backgroundColor: '#F3f3f7',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 16,
-          padding: 8,
+          left: 0, right: 0,
+          background: 'linear-gradient(90deg,#1a3a5c,#1a5fa8)',
+          display: 'flex', justifyContent: 'flex-end',
+          gap: 16, padding: '10px 24px',
+          boxShadow: '0 -2px 16px rgba(26,90,168,0.18)',
         }}
       >
-        <div className="d-flex gap-3">
-          <Button customColor={COLORS.bgcolor} style={{ color: COLORS.white }} onClick={handlePrint} disabled={isGenerating}>
-            {isGenerating ? 'Printing…' : 'Print'}
-          </Button>
-          <Button customColor={COLORS.bgcolor} // background color of button
-            color={COLORS.black} onClick={handleNext}>
-            Next
-          </Button>
-        </div>
+        <Button
+          customColor={COLORS.bgcolor}
+          style={{ color: COLORS.white }}
+          onClick={handlePrint}
+          disabled={isGenerating}
+        >
+          {isGenerating ? 'Printing…' : 'Print'}
+        </Button>
+        <Button
+          customColor={COLORS.bgcolor}
+          color={COLORS.black}
+          onClick={handleNext}
+        >
+          Next
+        </Button>
       </div>
     </div>
   )
 }
 
-export default Investigations
+export default Assessment

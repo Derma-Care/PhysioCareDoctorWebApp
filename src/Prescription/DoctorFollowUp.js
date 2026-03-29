@@ -32,7 +32,7 @@ const DoctorFollowUp = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) =>
     const [nextFollowUpDate, setNextFollowUpDate] = useState('')
     const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
     const [userTouched, setUserTouched] = useState(false)
-    // Calculate next follow-up date when duration/unit changes
+    // Calculate next TherapySessions date when duration/unit changes
     useEffect(() => {
         if (!seed) return
         // backend sometimes uses followUpnote, or note
@@ -52,7 +52,7 @@ const DoctorFollowUp = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) =>
         }
     }, [seed])
 
-    // Calculate next follow-up date only if user edits OR we don't have a template date
+    // Calculate next TherapySessions date only if user edits OR we don't have a template date
     useEffect(() => {
         // Only calculate if user has entered a duration AND selected a unit
         if (!durationValue || !durationUnit) {
@@ -100,7 +100,7 @@ const DoctorFollowUp = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) =>
     }
 
     return (
-        <div className="follow-up-wrapper pb-5">
+        <div className="TherapySessions-wrapper pb-5">
             <CContainer fluid className="p-0">
                 <CCard className="shadow-sm">
                     <CCardBody>
@@ -133,7 +133,7 @@ const DoctorFollowUp = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) =>
 
                                     </div>
 
-                                    {/* Next follow-up date */}
+                                    {/* Next TherapySessions date */}
                                     <p className="mb-0 mt-1" style={{ fontSize: 14 }}>
                                         Next Follow Up Date: <span style={{ fontWeight: 600 }}>{nextFollowUpDate}</span>
                                     </p>

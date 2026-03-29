@@ -24,7 +24,10 @@ import {
   labtestsupdatedbase,
   addtreatmentUrl,
   visitHistoryBypatientIdAndBookingId,
-  todayfutureappointmentsbaseUrl
+  todayfutureappointmentsbaseUrl,
+  bookingDetailsUrl,
+  therapistUrl,
+  therapyExercisesUrl
 } from './BaseUrl'
 
 export const postLogin = async (payload, endpoint) => {
@@ -199,7 +202,7 @@ export const SavePatientPrescription = async (prescriptionData) => {
     }
 
     const response = await api.post(
-      `${savePrescriptionbaseUrl}/createDoctorTemplate`,
+      `${savePrescriptionbaseUrl}/create`,
       prescriptionData,
     )
 
@@ -214,25 +217,7 @@ export const SavePatientPrescription = async (prescriptionData) => {
 
 //createDoctorSaveDetails
 
-export const createDoctorSaveDetails = async (prescriptionData) => {
-  try {
-    // ✅ Ensure it's a plain object
-    if (Array.isArray(prescriptionData)) {
-      throw new Error('Expected a single object, but received an array.')
-    }
 
-    const response = await api.post(
-      `${savePrescriptionbaseUrl}/createDoctorSaveDetails`,
-      prescriptionData,
-    )
-
-    const result = response?.data
-    return result?.success ? result.data : null
-  } catch (error) {
-    console.error('❌ Error saving prescription:', error)
-    return null
-  }
-}
 
 //gettemplate
 // {{baseUrlDoctor}}/api/doctors/searchTemplate/Atopic Dermatitis
@@ -921,3 +906,74 @@ export const addOrSearchMedicine = async (medicineName) => {
   }
 };
 
+
+
+
+export const getBookingDetails = async (clinicId, branchId) => {
+  try {
+    const response = await api.get(`${bookingDetailsUrl}/${clinicId}/${branchId}`)
+    return response.data
+  } catch (error) {
+    console.error('❌ Booking API Error:', error)
+    throw error
+  }
+}
+
+
+// ✅ Get Therapists by clinicId & branchId
+export const getTherapists = async (clinicId, branchId) => {
+  try {
+    const response = await api.get(
+      `${therapistUrl}/${clinicId}/${branchId}`
+    )
+
+    console.log("✅ Therapist API:", response.data)
+
+    return response.data?.data || []   // ✅ IMPORTANT
+
+  } catch (error) {
+    console.error("❌ Therapist API Error:", error)
+    return []
+  }
+}
+
+
+
+export const getTherapyExercises = async (clinicId, branchId) => {
+  try {
+    const response = await api.get(`${therapyExercisesUrl}/${clinicId}/${branchId}`)
+    console.log('✅ Therapy Exercises API:', response.data)
+    return response.data?.data || []
+  } catch (error) {
+    console.error('❌ Therapy Exercises API Error:', error)
+    return []
+  }
+}
+
+
+export const createDoctorSaveDetails = async (prescriptionData) => {
+  try {
+    // ✅ Ensure it's a plain object
+    if (!prescriptionData || typeof prescriptionData !== 'object' || Array.isArray(prescriptionData)) {
+      throw new Error('Expected a single object, but received invalid data.')
+    }
+
+    console.log("📦 Sending Payload:", prescriptionData)
+
+    const response = await api.post(
+      `${savePrescriptionbaseUrl}/create`,
+      prescriptionData
+    )
+
+    console.log("✅ API Response:", response.data)
+
+    const result = response?.data
+
+    // ✅ Adjust based on backend response structure
+    return result?.success ? result.data : result
+
+  } catch (error) {
+    console.error('❌ Error saving prescription:', error?.response || error.message)
+    return null
+  }
+}

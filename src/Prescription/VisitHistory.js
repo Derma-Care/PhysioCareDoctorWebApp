@@ -73,7 +73,7 @@ const transformVisit = (visit) => {
 
     if (visit.symptoms.doctorObs)
       symptomsArr.push(`Doctor Observations: ${visit.symptoms.doctorObs}`)
-    // if (visit.symptoms.diagnosis) symptomsArr.push(`Diagnosis: ${visit.symptoms.diagnosis}`)
+    // if (visit.symptoms.complaints) symptomsArr.push(`complaints: ${visit.symptoms.complaints}`)
     if (visit.symptoms.duration) symptomsArr.push(`Duration: ${visit.symptoms.duration}`)
   }
 
@@ -142,7 +142,7 @@ const transformVisit = (visit) => {
     bookingId,
     title: visitNumTitle,
     symptoms: symptomsArr,
-    diagnosis: visit.symptoms?.diagnosis || '',
+    complaints: visit.symptoms?.complaints || '',
     tests: testsArr,
     testsReason,
     treatments: treatmentsArr,
@@ -242,7 +242,7 @@ const VisitHistory = ({ formData, patientData, patientId, doctorId }) => {
 
           <div className="section">
             <h6 className="section-title">Probable Disease</h6>
-            <p className="diagnosis">{v.diagnosis}</p>
+            <p className="complaints">{v.complaints}</p>
           </div>
 
           <div className="vh-inner-accordion">
@@ -321,11 +321,11 @@ const VisitHistory = ({ formData, patientData, patientId, doctorId }) => {
               )}
             </AccordionItem>
 
-         <AccordionItem id={`${v.id}-prescription`} title="Medication Details">
+         <AccordionItem id={`${v.id}-prescription`} title="Diagnosis Details">
   {v.prescription.length > 0 && (
     <CCard className="shadow-sm mb-3">
       <CCardHeader className="py-2">
-        <strong>Medication Details</strong>
+        <strong>Diagnosis Details</strong>
       </CCardHeader>
       <CCardBody>
         <CTable striped hover responsive className="align-middle">

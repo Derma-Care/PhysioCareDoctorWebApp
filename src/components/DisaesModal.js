@@ -15,7 +15,7 @@ const SymptomsModal = ({
   onClose,
   addDisease,
   fetchDiseases,
-  setDiagnosis,
+  setcomplaints,
   success,
   info,
   error,
@@ -55,7 +55,7 @@ const SymptomsModal = ({
 
         await fetchDiseases();
 
-        setDiagnosis(name);
+        setcomplaints(name);
         onClose();
       } else {
         info?.(created?.message || "Could not add disease", { title: "Info" });

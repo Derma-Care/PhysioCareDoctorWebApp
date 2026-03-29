@@ -31,7 +31,7 @@ import { PDFDownloadLink, View, StyleSheet, Text } from '@react-pdf/renderer'
  * Props:
  * - patientData
  * - formData: {
- *    symptoms: { symptomDetails, doctorObs, diagnosis, duration }
+ *    symptoms: { symptomDetails, doctorObs, complaints, duration }
  *    tests: { selectedTests: [{name, reason?}] }
  *    prescription: { medicines: [{ id, medicine, dose, remind, note, duration, time }] }
  *    treatments: { selectedTreatments: [{name, reason?}] }
@@ -156,7 +156,7 @@ const DoctorSummary = ({
   const attachments = formData?.symptoms?.attachments ?? patientData?.attachments ?? '—'
   // const reports = Array.isArray(formData.symptoms.reports) ? patientData?.reports : []
 
-  const diagnosis = formData?.symptoms?.diagnosis ?? formData?.summary?.diagnosis ?? ''
+  const complaints = formData?.symptoms?.complaints ?? formData?.summary?.complaints ?? ''
 
   const tests = Array.isArray(formData?.tests?.selectedTests) ? formData.tests.selectedTests : []
   const testsReason = formData?.tests?.testReason ? formData.tests.testReason : ''
@@ -384,29 +384,29 @@ const DoctorSummary = ({
   return (
     <div className="pb-5" style={{ backgroundColor: COLORS.theme }}>
       <CContainer fluid className="p-0" id="print-area">
-        {diagnosis ||
+        {complaints ||
           tests.length > 0 ||
           treatments.length > 0 ||
           (treatmentSchedules && Object.keys(treatmentSchedules).length > 0) ||
           medicines.length > 0 ||
           followUp.durationValue !== 'NA' ? (
           <>
-            {/* Diagnosis */}
-            {diagnosis && (
+            {/* complaints */}
+            {complaints && (
               <CCard className="shadow-sm mb-3">
                 <CCardHeader className="py-2">
                   <strong>Probable Disease</strong>
                 </CCardHeader>
                 <CCardBody>
-                  <div className="fs-6">{diagnosis}</div>
+                  <div className="fs-6">{complaints}</div>
                 </CCardBody>
               </CCard>
             )}
-            {/* Medication Table */}
+            {/* Diagnosis Table */}
             {medicines.length > 0 && (
               <CCard className="shadow-sm mb-3">
                 <CCardHeader className="py-2">
-                  <strong style={{ color: COLORS.black }}>Medication Details</strong>
+                  <strong style={{ color: COLORS.black }}>Diagnosis Details</strong>
                 </CCardHeader>
                 <CCardBody>
                   <CTable striped hover responsive className="align-middle">
@@ -476,7 +476,7 @@ const DoctorSummary = ({
             {(tests.length > 0 || testsReason) && (
               <CCard className="shadow-sm mb-3">
                 <CCardHeader className="py-2">
-                  <strong style={{ color: COLORS.black }}>Investigations</strong>
+                  <strong style={{ color: COLORS.black }}>Assessment</strong>
                 </CCardHeader>
                 <CCardBody>
                   {tests.length > 0 ? (
@@ -508,7 +508,7 @@ const DoctorSummary = ({
             {treatments.length > 0 && (
               <CCard className="shadow-sm mb-3">
                 <CCardHeader className="py-2">
-                  <strong style={{ color: COLORS.black }}>Procedures</strong>
+                  <strong style={{ color: COLORS.black }}>TreatmentPlan</strong>
                 </CCardHeader>
                 <CCardBody>
                   <ul className="mb-2">
@@ -591,11 +591,11 @@ const DoctorSummary = ({
 
 
 
-            {/* Follow-up Plan */}
+            {/* TherapySessions Plan */}
             {followUp.durationValue !== 'NA' && (
               <CCard className="shadow-sm mb-4">
                 <CCardHeader className="py-2">
-                  <strong style={{ color: COLORS.black }}>Follow-up Plan</strong>
+                  <strong style={{ color: COLORS.black }}>TherapySessions Plan</strong>
                 </CCardHeader>
                 <CCardBody>
                   <CCol xs={12} md={6}>

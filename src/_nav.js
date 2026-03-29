@@ -28,13 +28,13 @@ const _nav = [
     style:{color:COLORS.black},
   },
 
-  {
-    component: CNavItem,
-    name: 'Doctor Template',
-    to: '/doctor-template',
-    icon: <CIcon icon={cilNotes} customClassName="nav-icon" style={{color:COLORS.black}}/>,
-    style:{color:COLORS.black},
-  },
+  // {
+  //   component: CNavItem,
+  //   name: 'Doctor Template',
+  //   to: '/doctor-template',
+  //   icon: <CIcon icon={cilNotes} customClassName="nav-icon" style={{color:COLORS.black}}/>,
+  //   style:{color:COLORS.black},
+  // },
   {
     component: CNavItem,
     name: 'Profile',
