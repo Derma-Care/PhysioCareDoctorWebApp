@@ -88,7 +88,7 @@ const AppSidebar = () => {
     name: patientData?.name || '—',
     age: patientData?.age || '—',
     gender: patientData?.gender || '—',
-    mobile: patientData?.mobileNumber || '—',
+    mobile: patientData?.patientMobileNumber || '—',
     visitType: patientData?.visitType === null
       ? 0
       : patientData?.visitType ?? '—',

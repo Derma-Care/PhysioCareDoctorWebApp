@@ -64,7 +64,7 @@ const AppHeaderDropdown = () => {
 
       <CDropdownMenu className="pt-0" placement="bottom-end">
         {/* Account Section */}
-        <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">Account</CDropdownHeader>
+        {/* <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">Account</CDropdownHeader>
         <CDropdownItem onClick={() => navigate('/updates')}>
           <CIcon icon={cilBell} className="me-2" />
           Updates
@@ -92,7 +92,7 @@ const AppHeaderDropdown = () => {
           <CBadge color="warning" className="ms-2">
             42
           </CBadge>
-        </CDropdownItem>
+        </CDropdownItem> */}
 
         {/* Settings Section */}
         <CDropdownHeader className="bg-body-secondary fw-semibold my-2">Settings</CDropdownHeader>
@@ -100,7 +100,7 @@ const AppHeaderDropdown = () => {
           <CIcon icon={cilUser} className="me-2" />
           Profile
         </CDropdownItem>
-        <CDropdownItem onClick={() => navigate('/settings')}>
+        {/* <CDropdownItem onClick={() => navigate('/settings')}>
           <CIcon icon={cilSettings} className="me-2" />
           Settings
         </CDropdownItem>
@@ -117,7 +117,7 @@ const AppHeaderDropdown = () => {
           <CBadge color="primary" className="ms-2">
             42
           </CBadge>
-        </CDropdownItem>
+        </CDropdownItem> */}
 
         <CDropdownDivider />
 

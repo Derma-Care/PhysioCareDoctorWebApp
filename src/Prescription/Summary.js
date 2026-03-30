@@ -188,10 +188,19 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const therapyGroups = Object.entries(therapyAnswers).map(([cat, qs]) => ({
     category: cat, questions: Array.isArray(qs) ? qs : [],
   }))
-  const attachments = [
-    ...(painAssessmentImage ? [{ url: painAssessmentImage, name: 'Pain Assessment' }] : []),
-    ...reportImages.map((url, i) => ({ url, name: `Report ${i + 1}` })),
-  ]
+ const attachments = [
+  ...(painAssessmentImage
+    ? [{
+        url: toImageSrc(painAssessmentImage),
+        name: 'Pain Assessment',
+      }]
+    : []),
+
+  ...reportImages.map((img, i) => ({
+    url: toImageSrc(img),
+    name: `Report ${i + 1}`,
+  })),
+]
 
   /* ── assessment ── */
   const assessment = record.assessment ?? formData?.assessment ?? {}
@@ -446,7 +455,35 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             </div>
           )}
         </Section>
-
+    {/* ══ 5. THERAPY QUESTIONNAIRE ══ */}
+        {therapyGroups.length > 0 && (
+          <Section icon="📋" title="Therapy Questionnaire">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+              {therapyGroups.map(({ category, questions }) => (
+                <div key={category} style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
+                  <div style={{
+                    background: 'linear-gradient(90deg,#f0f7ff,#e8f0fe)',
+                    padding: '7px 14px', fontWeight: 700, fontSize: '0.78rem',
+                    color: A, textTransform: 'capitalize', letterSpacing: '0.06em',
+                    borderBottom: `1px solid ${BORDER}`,
+                  }}>{category}</div>
+                  {questions.map((q, i) => (
+                    <div key={q.questionId ?? i} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '9px 14px', background: i % 2 === 0 ? LIGHT : '#fff',
+                      borderBottom: i < questions.length - 1 ? `1px solid #eef3fa` : 'none',
+                    }}>
+                      <span style={{ fontSize: '0.85rem', color: P, flex: 1, marginRight: 12 }}>
+                        {q.question ?? `Question ${q.questionId}`}
+                      </span>
+                      <AnswerBadge answer={q.answer} />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
         {/* ══ 3. ASSESSMENT ══ */}
         {Object.keys(assessment).length > 0 && (
           <Section icon="📊" title="Assessment">
@@ -481,35 +518,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           </Section>
         )}
 
-        {/* ══ 5. THERAPY QUESTIONNAIRE ══ */}
-        {therapyGroups.length > 0 && (
-          <Section icon="📋" title="Therapy Questionnaire">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
-              {therapyGroups.map(({ category, questions }) => (
-                <div key={category} style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
-                  <div style={{
-                    background: 'linear-gradient(90deg,#f0f7ff,#e8f0fe)',
-                    padding: '7px 14px', fontWeight: 700, fontSize: '0.78rem',
-                    color: A, textTransform: 'capitalize', letterSpacing: '0.06em',
-                    borderBottom: `1px solid ${BORDER}`,
-                  }}>{category}</div>
-                  {questions.map((q, i) => (
-                    <div key={q.questionId ?? i} style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '9px 14px', background: i % 2 === 0 ? LIGHT : '#fff',
-                      borderBottom: i < questions.length - 1 ? `1px solid #eef3fa` : 'none',
-                    }}>
-                      <span style={{ fontSize: '0.85rem', color: P, flex: 1, marginRight: 12 }}>
-                        {q.question ?? `Question ${q.questionId}`}
-                      </span>
-                      <AnswerBadge answer={q.answer} />
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </Section>
-        )}
+    
 
         {/* ══ 6. TREATMENT PLAN ══ */}
         {treatmentPlans.length > 0 && (
@@ -518,7 +527,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
                 <thead>
                   <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                    {['#', 'Doctor', 'Modalities', 'Manual Therapy', 'Duration', 'Frequency', 'Sessions', 'Precautions'].map(h => (
+                    {['#',  'Modalities', 'Manual Therapy', 'Duration', 'Frequency', 'Sessions', 'Precautions'].map(h => (
                       <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                     ))}
                   </tr>
@@ -527,7 +536,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                   {treatmentPlans.map((tp, i) => (
                     <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
                       <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
-                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap', fontWeight: 600 }}>{tp.doctorName || tp.therapyName || '—'}</td>
+             
                       <td style={{ padding: '9px 12px', maxWidth: 180 }}>
                         {Array.isArray(tp.modalities) && tp.modalities.length > 0
                           ? tp.modalities.map(m => <Chip key={m} label={m} color={A} bg="#dbeafe" />)
@@ -589,7 +598,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                       </td>
                       <td style={{ padding: '9px 12px' }}>{s.exercisesDone || '—'}</td>
                       <td style={{ padding: '9px 12px' }}>{s.patientResponse || '—'}</td>
-                      <td style={{ padding: '9px 12px' }}>{s.therapistNotes || '—'}</td>
+                   
                     </tr>
                   ))}
                 </tbody>

@@ -484,7 +484,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           )}
 
           {/* Diagnosis / Complaints */}
-          <div style={card}>
+          {/* <div style={card}>
             <SLabel text="Diagnosis / Complaints" />
             <Select
               options={options}
@@ -540,23 +540,23 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
                 ✦ Apply Template
               </button>
             )}
-          </div>
+          </div> */}
 
           {/* Probable Symptoms */}
-          {probableSymptoms && (
+          {/* {probableSymptoms && (
             <div style={{ ...card, background: '#F3EEFF', border: '1px solid #DDD0FF' }}>
               <SLabel text="Probable Symptoms" />
               <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.7 }}>{probableSymptoms}</p>
             </div>
-          )}
+          )} */}
 
           {/* Key Notes */}
-          {keyNotes && (
+          {/* {keyNotes && (
             <div style={{ ...card, background: '#FFFBEB', border: '1px solid #FDE68A' }}>
               <SLabel text="Key Notes" />
               <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.7 }}>{keyNotes}</p>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* ════ RIGHT COLUMN ════ */}
@@ -580,7 +580,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           )}
 
           {/* Patient Attachments */}
-          {attachmentImages.length > 0 && (
+          {/* {attachmentImages.length > 0 && (
             <div style={card}>
               <SLabel text="Patient Attachments" />
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, paddingTop: 4 }}>
@@ -611,7 +611,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
                 })}
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Upload New Attachments */}
           <div style={card}>

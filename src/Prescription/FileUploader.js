@@ -173,6 +173,7 @@ const FileUploader = ({ label, attachments = [] }) => {
         !(item instanceof ArrayBuffer)
       ) {
         const raw =
+         item.url ??   // ✅ ADD THIS LINE (IMPORTANT)
           item.data ??
           item.base64 ??
           item.attachments ?? // some backends use this
