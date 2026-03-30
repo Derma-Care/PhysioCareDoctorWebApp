@@ -148,15 +148,19 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   /* ── complaints ── */
   // ── complaints ──
   const complaintsObj = record.complaints ?? {}
-
+console.log("COMPLAINTS OBJECT 👉", complaintsObj)
   const complaintDetails =
     complaintsObj.complaintDetails ?? patientData?.problem ?? ''
 
   const complaintDuration =
     complaintsObj.duration ?? patientData?.symptomsDuration ?? ''
 
-  const selectedTherapy = complaintsObj.selectedTherapy ?? ''
- const painAssessmentImage = complaintsObj.painAssessmentImage ?? ''
+  const selectedTherapy = patientData?.subServiceName ?? complaintsObj.selectedTherapy ?? ''
+  const selectedTherapyId = patientData?.subServiceId ?? complaintsObj.selectedTherapyID ?? ''
+console.log("COMPLAINTS selectedTherapy 👉", selectedTherapy)
+
+ const painAssessmentImage = complaintsObj.partImage ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
+ const painAssessmentImages = complaintsObj.painAssessmentImage
   const partImage = complaintsObj.partImage ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
   const reportImages = Array.isArray(complaintsObj.reportImages)
     ? complaintsObj.reportImages
@@ -177,7 +181,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     duration: complaintDuration,
     theraphyAnswers: therapyAnswers,
     selectedTherapy,
-    selectedTherapyID: complaintsObj.selectedTherapyID || '',
+    selectedTherapyID: selectedTherapyId || '',
     painAssessmentImage,
     reportImages,
   }
@@ -399,7 +403,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           <Grid cols={2}>
             <Row label="Complaint Details" value={complaintDetails} highlight />
             <Row label="Duration" value={complaintDuration} highlight />
-            <Row label="Pain Assessment Image" value={painAssessmentImage || 'None'} />
+            {/* <Row label="Pain Assessment Image" value={painAssessmentImages || 'None'} /> */}
             <Row label="Report Images" value={reportImages.length > 0 ? `${reportImages.length} image(s)` : 'None'} />
           </Grid>
           {parts.length > 0 && (
