@@ -341,7 +341,7 @@ const FollowUp = ({ seed = {}, onNext }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                      {['#', 'Session Date', 'Status', 'Modalities Used', 'Exercises Done', 'Patient Response', 'Therapist Notes', 'Actions'].map(h => (
+                      {['#', 'Session Date', 'Status', 'Modalities Used', 'Exercises Done', 'Patient Response', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
@@ -367,11 +367,11 @@ const FollowUp = ({ seed = {}, onNext }) => {
                           </div>
                         </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>{s.patientResponse || '—'}</td>
-                        <td style={{ padding: '10px 14px', maxWidth: 180 }}>
+                        {/* <td style={{ padding: '10px 14px', maxWidth: 180 }}>
                           <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.therapistNotes}>
                             {s.therapistNotes || '—'}
                           </div>
-                        </td>
+                        </td> */}
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                           <button onClick={() => handleEdit(idx)} style={{
                             marginRight: 6, padding: '4px 12px', borderRadius: 6,
