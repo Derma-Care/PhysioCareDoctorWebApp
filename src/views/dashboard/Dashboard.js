@@ -215,7 +215,7 @@ const Dashboard = () => {
                       <CTableDataCell>{idx + 1}</CTableDataCell>
                       <CTableDataCell>{item.patientId}</CTableDataCell>
                       <CTableDataCell>{capitalizeFirst(item.name)}</CTableDataCell>
-                      <CTableDataCell>{item.mobileNumber}</CTableDataCell>
+                      <CTableDataCell>{item.patientMobileNumber}</CTableDataCell>
                       <CTableDataCell>{item.serviceDate}</CTableDataCell>
                       <CTableDataCell>{item.servicetime}</CTableDataCell>
                       <CTableDataCell>{item.consultationType}</CTableDataCell>
