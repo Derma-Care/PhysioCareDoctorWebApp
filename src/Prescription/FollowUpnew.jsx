@@ -52,9 +52,9 @@ const EMPTY_FORM = {
 // ✅ FIX: Accept seed prop; seed = formData.followUp which is an array (set by handleNext below)
 const FollowUpnew = ({ seed = [], onNext }) => {
 
-  const [form, setForm]           = useState({ ...EMPTY_FORM })
+  const [form, setForm] = useState({ ...EMPTY_FORM })
   // ✅ FIX: Initialize data from seed (seed is the saved array from formData.followUp)
-  const [data, setData]           = useState(Array.isArray(seed) ? seed : [])
+  const [data, setData] = useState(Array.isArray(seed) ? seed : [])
   const [editIndex, setEditIndex] = useState(null)
 
   // ✅ FIX: Sync when seed changes (i.e. when user navigates back to this tab)
@@ -238,13 +238,26 @@ const FollowUpnew = ({ seed = [], onNext }) => {
       </CContainer>
 
       {/* Bottom Button */}
-      <div className="position-fixed bottom-0" style={{
-        left: 0, right: 0, padding: '10px 24px',
-        background: 'linear-gradient(90deg,#1a3a5c,#1a5fa8)',
-        display: 'flex', justifyContent: 'flex-end',
-        boxShadow: '0 -2px 16px rgba(26,90,168,0.18)', zIndex: 999,
-      }}>
-        <Button onClick={handleNext} customColor={COLORS.bgcolor} color={COLORS.black}>
+      <div className="position-fixed bottom-0"
+        style={{
+          left: 0,
+          right: 0,
+          background: '#a5c4d4ff', // ✅ light background
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)', // ✅ soft shadow
+        }}>
+        <Button customColor="#ffffff" // ✅ white button bg
+          color="#7e3a93"       // ✅ purple text
+          onClick={handleNext}
+          style={{
+            borderRadius: '20px',
+            fontWeight: 600,
+            padding: '6px 18px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+          }}>
           Next
         </Button>
       </div>

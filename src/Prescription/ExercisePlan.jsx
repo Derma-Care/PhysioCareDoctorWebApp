@@ -273,8 +273,18 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
               <Field label="Duration">
                 <TextInput value={form.duration} onChange={set('duration')} placeholder="e.g. 10 mins" />
               </Field>
-              <Field label="Thumbnail URL">
-                <TextInput value={form.thumbnail} onChange={set('thumbnail')} placeholder="https://..." />
+              <Field label="Exercise Thumbnail">
+                {form.thumbnail && (
+                  <div style={{ marginTop: '10px' }}>
+                    <img
+                      src={form.thumbnail.startsWith('data:image')
+                        ? form.thumbnail
+                        : `data:image/png;base64,${form.thumbnail}`}
+                      alt="Thumbnail Preview"
+                      style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px' }}
+                    />
+                  </div>
+                )}
               </Field>
             </div>
 
@@ -401,15 +411,26 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       </CContainer>
 
       {/* ── Sticky bottom bar ── */}
-      <div className="position-fixed bottom-0" style={{
-        left: 0, right: 0,
-        background: 'linear-gradient(90deg,#1a3a5c,#1a5fa8)',
-        display: 'flex', justifyContent: 'flex-end',
-        padding: '10px 24px',
-        boxShadow: '0 -2px 16px rgba(26,90,168,0.18)',
-        zIndex: 999,
-      }}>
-        <Button customColor={COLORS.bgcolor} color={COLORS.black} onClick={handleNext}>
+      <div  className="position-fixed bottom-0"
+        style={{
+          left: 0,
+          right: 0,
+          background: '#a5c4d4ff', // ✅ light background
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)', // ✅ soft shadow
+        }}>
+        <Button customColor="#ffffff" // ✅ white button bg
+          color="#7e3a93"       // ✅ purple text
+          onClick={handleNext}
+          style={{
+            borderRadius: '20px',
+            fontWeight: 600,
+            padding: '6px 18px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+          }}>
           Next
         </Button>
       </div>

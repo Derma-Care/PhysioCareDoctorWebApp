@@ -20,10 +20,10 @@ const PAIN_SCALE_OPTIONS = [
 ]
 
 const ONSET_OPTIONS = [
-  { label: 'Select onset...', value: ''         },
-  { label: 'Sudden',          value: 'Sudden'   },
-  { label: 'Gradual',         value: 'Gradual'  },
-  { label: 'Insidious',       value: 'Insidious'},
+  { label: 'Select onset...', value: '' },
+  { label: 'Sudden', value: 'Sudden' },
+  { label: 'Gradual', value: 'Gradual' },
+  { label: 'Insidious', value: 'Insidious' },
 ]
 
 /* ─── Styles ────────────────────────────────────────────────────────────── */
@@ -110,19 +110,19 @@ const SectionHeader = ({ icon, title, color = '#1a5fa8' }) => (
 
 /* ─── Component ─────────────────────────────────────────────────────────── */
 const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
-  const [chiefComplaint,     setChiefComplaint]     = useState(seed.chiefComplaint     ?? '')
-  const [painScale,          setPainScale]          = useState(seed.painScale          ?? '')
-  const [painType,           setPainType]           = useState(seed.painType           ?? '')
-  const [duration,           setDuration]           = useState(seed.duration           ?? '')
-  const [onset,              setOnset]              = useState(seed.onset              ?? '')
+  const [chiefComplaint, setChiefComplaint] = useState(seed.chiefComplaint ?? '')
+  const [painScale, setPainScale] = useState(seed.painScale ?? '')
+  const [painType, setPainType] = useState(seed.painType ?? '')
+  const [duration, setDuration] = useState(seed.duration ?? '')
+  const [onset, setOnset] = useState(seed.onset ?? '')
   const [aggravatingFactors, setAggravatingFactors] = useState(seed.aggravatingFactors ?? '')
-  const [relievingFactors,   setRelievingFactors]   = useState(seed.relievingFactors   ?? '')
-  const [posture,            setPosture]            = useState(seed.posture            ?? '')
-  const [rangeOfMotion,      setRangeOfMotion]      = useState(seed.rangeOfMotion      ?? '')
-  const [specialTests,       setSpecialTests]       = useState(seed.specialTests       ?? '')
-  const [observations,       setObservations]       = useState(seed.observations       ?? '')
+  const [relievingFactors, setRelievingFactors] = useState(seed.relievingFactors ?? '')
+  const [posture, setPosture] = useState(seed.posture ?? '')
+  const [rangeOfMotion, setRangeOfMotion] = useState(seed.rangeOfMotion ?? '')
+  const [specialTests, setSpecialTests] = useState(seed.specialTests ?? '')
+  const [observations, setObservations] = useState(seed.observations ?? '')
 
-  const [snackbar,     setSnackbar]     = useState({ show: false, message: '', type: '' })
+  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
   const [isGenerating, setIsGenerating] = useState(false)
   const printRef = useRef(null)
 
@@ -131,17 +131,17 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   /* sync when seed changes */
   useEffect(() => {
     const s = seed || {}
-    setChiefComplaint(s.chiefComplaint         ?? '')
-    setPainScale(s.painScale                   ?? '')
-    setPainType(s.painType                     ?? '')
-    setDuration(s.duration                     ?? '')
-    setOnset(s.onset                           ?? '')
+    setChiefComplaint(s.chiefComplaint ?? '')
+    setPainScale(s.painScale ?? '')
+    setPainType(s.painType ?? '')
+    setDuration(s.duration ?? '')
+    setOnset(s.onset ?? '')
     setAggravatingFactors(s.aggravatingFactors ?? '')
-    setRelievingFactors(s.relievingFactors     ?? '')
-    setPosture(s.posture                       ?? '')
-    setRangeOfMotion(s.rangeOfMotion           ?? '')
-    setSpecialTests(s.specialTests             ?? '')
-    setObservations(s.observations             ?? '')
+    setRelievingFactors(s.relievingFactors ?? '')
+    setPosture(s.posture ?? '')
+    setRangeOfMotion(s.rangeOfMotion ?? '')
+    setSpecialTests(s.specialTests ?? '')
+    setObservations(s.observations ?? '')
   }, [seed])
 
   const handleNext = () => {
@@ -173,7 +173,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
   /* ── Print ── */
   const handlePrint = () => {
-    const today   = new Date()
+    const today = new Date()
     const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
     const rowHtml = (label, value) =>
       value
@@ -233,22 +233,22 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       <div class="section-title">📋 Subjective Assessment</div>
       <div class="two-col">
         ${rowHtml('Chief Complaint', chiefComplaint)}
-        ${rowHtml('Pain Scale',      painScale)}
-        ${rowHtml('Pain Type',       painType)}
-        ${rowHtml('Duration',        duration)}
-        ${rowHtml('Onset',           onset)}
+        ${rowHtml('Pain Scale', painScale)}
+        ${rowHtml('Pain Type', painType)}
+        ${rowHtml('Duration', duration)}
+        ${rowHtml('Onset', onset)}
         ${aggravatingFactors ? `<div class="kv full"><div class="label">Aggravating Factors</div><div class="value">${escapeHtml(aggravatingFactors)}</div></div>` : ''}
-        ${relievingFactors   ? `<div class="kv full"><div class="label">Relieving Factors</div><div class="value">${escapeHtml(relievingFactors)}</div></div>` : ''}
+        ${relievingFactors ? `<div class="kv full"><div class="label">Relieving Factors</div><div class="value">${escapeHtml(relievingFactors)}</div></div>` : ''}
       </div>
     </div>
 
     <div class="section-card">
       <div class="section-title">🔬 Objective / Physical Examination</div>
       <div class="two-col">
-        ${posture       ? `<div class="kv full"><div class="label">Posture</div><div class="value">${escapeHtml(posture)}</div></div>` : ''}
+        ${posture ? `<div class="kv full"><div class="label">Posture</div><div class="value">${escapeHtml(posture)}</div></div>` : ''}
         ${rangeOfMotion ? `<div class="kv full"><div class="label">Range of Motion</div><div class="value">${escapeHtml(rangeOfMotion)}</div></div>` : ''}
-        ${specialTests  ? `<div class="kv full"><div class="label">Special Tests</div><div class="value">${escapeHtml(specialTests)}</div></div>` : ''}
-        ${observations  ? `<div class="kv full"><div class="label">Observations</div><div class="value">${escapeHtml(observations)}</div></div>` : ''}
+        ${specialTests ? `<div class="kv full"><div class="label">Special Tests</div><div class="value">${escapeHtml(specialTests)}</div></div>` : ''}
+        ${observations ? `<div class="kv full"><div class="label">Observations</div><div class="value">${escapeHtml(observations)}</div></div>` : ''}
       </div>
     </div>
 
@@ -443,32 +443,50 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       </div>
 
       {/* Sticky bottom bar */}
-      <div
-        className="position-fixed bottom-0"
-        style={{
-          left: 0, right: 0,
-          background: 'linear-gradient(90deg,#1a3a5c,#1a5fa8)',
-          display: 'flex', justifyContent: 'flex-end',
-          gap: 16, padding: '10px 24px',
-          boxShadow: '0 -2px 16px rgba(26,90,168,0.18)',
-        }}
-      >
-        <Button
-          customColor={COLORS.bgcolor}
-          style={{ color: COLORS.white }}
-          onClick={handlePrint}
-          disabled={isGenerating}
-        >
-          {isGenerating ? 'Printing…' : 'Print'}
-        </Button>
-        <Button
-          customColor={COLORS.bgcolor}
-          color={COLORS.black}
-          onClick={handleNext}
-        >
-          Next
-        </Button>
-      </div>
+    <div
+  className="position-fixed bottom-0"
+  style={{
+    left: 0,
+    right: 0,
+    background: '#a5c4d4ff',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: 12,
+    padding: '10px 20px',
+    boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
+  }}
+>
+  {/* Print - Secondary */}
+  <Button
+    customColor="#ffffff"
+    style={{
+      color:COLORS.bgcolor,
+      borderRadius: '18px',
+      padding: '6px 16px',
+      fontWeight: 600,
+      border: '1px solid #7e3a93',
+    }}
+    onClick={handlePrint}
+    disabled={isGenerating}
+  >
+    {isGenerating ? 'Printing…' : 'Print'}
+  </Button>
+
+  {/* Next - Primary */}
+  <Button
+    customColor="#ffffff"
+    style={{
+
+      color:COLORS.bgcolor,
+      borderRadius: '18px',
+      padding: '6px 18px',
+      fontWeight: 600,
+    }}
+    onClick={handleNext}
+  >
+    Next
+  </Button>
+</div>
     </div>
   )
 }

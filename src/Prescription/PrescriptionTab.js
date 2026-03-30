@@ -7,16 +7,16 @@ import { useToast } from '../utils/Toaster'
 /* ─── Diagnosis static options ─────────────────────────────────────────── */
 const SEVERITY_OPTIONS = [
   { label: 'Select severity...', value: '' },
-  { label: 'Mild',               value: 'Mild'     },
-  { label: 'Moderate',           value: 'Moderate' },
-  { label: 'Severe',             value: 'Severe'   },
+  { label: 'Mild', value: 'Mild' },
+  { label: 'Moderate', value: 'Moderate' },
+  { label: 'Severe', value: 'Severe' },
 ]
 
 const STAGE_OPTIONS = [
-  { label: 'Select stage...',  value: ''          },
-  { label: 'Acute',            value: 'Acute'     },
-  { label: 'Sub-acute',        value: 'Sub-acute' },
-  { label: 'Chronic',          value: 'Chronic'   },
+  { label: 'Select stage...', value: '' },
+  { label: 'Acute', value: 'Acute' },
+  { label: 'Sub-acute', value: 'Sub-acute' },
+  { label: 'Chronic', value: 'Chronic' },
 ]
 
 /* ─── Diagnosis field styles ────────────────────────────────────────────── */
@@ -89,20 +89,20 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
 
   /* ── Diagnosis state ── */
   const [physioDiagnosis, setPhysioDiagnosis] = useState(seed.diagnosis?.physioDiagnosis ?? '')
-  const [affectedArea,    setAffectedArea]    = useState(seed.diagnosis?.affectedArea    ?? '')
-  const [severity,        setSeverity]        = useState(seed.diagnosis?.severity        ?? '')
-  const [stage,           setStage]           = useState(seed.diagnosis?.stage           ?? '')
-  const [diagNotes,       setDiagNotes]       = useState(seed.diagnosis?.notes           ?? '')
+  const [affectedArea, setAffectedArea] = useState(seed.diagnosis?.affectedArea ?? '')
+  const [severity, setSeverity] = useState(seed.diagnosis?.severity ?? '')
+  const [stage, setStage] = useState(seed.diagnosis?.stage ?? '')
+  const [diagNotes, setDiagNotes] = useState(seed.diagnosis?.notes ?? '')
 
   const { warning } = useToast()
 
   /* Sync if seed changes */
   useEffect(() => {
     setPhysioDiagnosis(seed.diagnosis?.physioDiagnosis ?? '')
-    setAffectedArea(seed.diagnosis?.affectedArea       ?? '')
-    setSeverity(seed.diagnosis?.severity               ?? '')
-    setStage(seed.diagnosis?.stage                     ?? '')
-    setDiagNotes(seed.diagnosis?.notes                 ?? '')
+    setAffectedArea(seed.diagnosis?.affectedArea ?? '')
+    setSeverity(seed.diagnosis?.severity ?? '')
+    setStage(seed.diagnosis?.stage ?? '')
+    setDiagNotes(seed.diagnosis?.notes ?? '')
   }, [seed])
 
   /* ── handleNext ── */
@@ -191,26 +191,31 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
 
       {/* ── BOTTOM ACTION BAR ─────────────────────────────────────────────── */}
       <div
-        className="position-fixed bottom-0 right-0 p-3"
-        style={{ zIndex: 1000, width: '75%', backgroundColor: '#F3f3f7' }}
-      >
-        <div   className="position-fixed bottom-0"
+        className="position-fixed bottom-0"
         style={{
-          left: 0, right: 0,
-          background: 'linear-gradient(90deg,#1a3a5c,#1a5fa8)',
-          display: 'flex', justifyContent: 'flex-end',
-          gap: 16, padding: '10px 24px',
-          boxShadow: '0 -2px 16px rgba(26,90,168,0.18)',
-        }}>
-        
-           <Button
-                    customColor={COLORS.bgcolor}
-                    color={COLORS.black}
-                    onClick={handleNext}
-                  >
-                    Next
-                  </Button>
-        </div>
+          left: 0,
+          right: 0,
+          background: '#a5c4d4ff', // ✅ light background
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)', // ✅ soft shadow
+        }}
+      >
+        <Button
+          customColor="#ffffff" // ✅ white button bg
+          color="#7e3a93"       // ✅ purple text
+          onClick={handleNext}
+          style={{
+            borderRadius: '20px',
+            fontWeight: 600,
+            padding: '6px 18px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+          }}
+        >
+          Next
+        </Button>
       </div>
 
     </div>

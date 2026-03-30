@@ -11,6 +11,7 @@ import { useDoctorContext } from '../Context/DoctorContext'
 import PrescriptionPDF from '../utils/PdfGenerator'
 import { pdf } from '@react-pdf/renderer'
 import { capitalizeEachWord } from '../utils/CaptalZeWord'
+import { color } from 'framer-motion'
 
 /* ─── Design tokens ─────────────────────────────────────────────────────── */
 const P = '#1a3a5c'
@@ -24,7 +25,7 @@ const toImageSrc = (raw) => {
   if (!raw || typeof raw !== 'string') return null
   if (raw.startsWith('http') || raw.startsWith('blob:') || raw.startsWith('/')) return raw
   if (raw.startsWith('data:')) return raw
-  if (raw.startsWith('/9j/'))   return `data:image/jpeg;base64,${raw}`
+  if (raw.startsWith('/9j/')) return `data:image/jpeg;base64,${raw}`
   if (raw.startsWith('iVBOR')) return `data:image/png;base64,${raw}`
   if (raw.startsWith('R0lGO')) return `data:image/gif;base64,${raw}`
   return `data:image/jpeg;base64,${raw}`
@@ -39,13 +40,12 @@ const Section = ({ icon, title, children, accent = false }) => (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
       padding: '12px 20px',
-      background: accent
-        ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)'
-        : 'linear-gradient(135deg,#1a3a5c,#1a5fa8)',
+      backgroundColor: COLORS.bgcolor,
+      color: COLORS.black,
       borderBottom: `1px solid ${BORDER}`,
     }}>
       <span style={{ fontSize: 18 }}>{icon}</span>
-      <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.03em' }}>
+      <span style={{ color: COLORS.black, fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.03em' }}>
         {title}
       </span>
     </div>
@@ -60,7 +60,7 @@ const Row = ({ label, value, full = false, highlight = false }) => (
     padding: highlight ? '8px 12px' : 0,
     background: highlight ? '#f0f7ff' : 'transparent',
     borderRadius: highlight ? 8 : 0,
-    borderLeft: highlight ? '3px solid #1a5fa8' : 'none',
+    borderLeft: highlight ? '3px solid #a5c4d4ff ' : 'none',
   }}>
     <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
       {label}:
@@ -148,7 +148,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   /* ── complaints ── */
   // ── complaints ──
   const complaintsObj = record.complaints ?? {}
-console.log("COMPLAINTS OBJECT 👉", complaintsObj)
+  console.log("COMPLAINTS OBJECT 👉", complaintsObj)
   const complaintDetails =
     complaintsObj.complaintDetails ?? patientData?.problem ?? ''
 
@@ -157,10 +157,10 @@ console.log("COMPLAINTS OBJECT 👉", complaintsObj)
 
   const selectedTherapy = patientData?.subServiceName ?? complaintsObj.selectedTherapy ?? ''
   const selectedTherapyId = patientData?.subServiceId ?? complaintsObj.selectedTherapyID ?? ''
-console.log("COMPLAINTS selectedTherapy 👉", selectedTherapy)
+  console.log("COMPLAINTS selectedTherapy 👉", selectedTherapy)
 
- const painAssessmentImage = complaintsObj.partImage ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
- const painAssessmentImages = complaintsObj.painAssessmentImage
+  const painAssessmentImage = complaintsObj.partImage ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
+  const painAssessmentImages = complaintsObj.painAssessmentImage
   const partImage = complaintsObj.partImage ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
   const reportImages = Array.isArray(complaintsObj.reportImages)
     ? complaintsObj.reportImages
@@ -350,22 +350,22 @@ console.log("COMPLAINTS selectedTherapy 👉", selectedTherapy)
 
       {/* ── Page header ── */}
       <div style={{
-        background: 'linear-gradient(135deg,#1a3a5c,#1a5fa8)',
+        backgroundColor: COLORS.bgcolor,
         padding: '16px 28px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         boxShadow: '0 4px 20px rgba(26,90,168,0.2)', marginBottom: 24,
       }}>
         <div>
-          <div style={{ fontSize: 10, color: '#93c5fd', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
+          <div style={{ fontSize: 10, color: COLORS.black, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
             Review Before Saving
           </div>
-          <div style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>Physiotherapy Summary</div>
+          <div style={{ color: COLORS.black, fontSize: 18, fontWeight: 700 }}>Physiotherapy Summary</div>
         </div>
         {patientName && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
-              background: 'rgba(255,255,255,0.12)', borderRadius: 24, padding: '6px 16px',
-              color: '#fff', fontSize: 13, fontWeight: 600,
+              backgroundColor: "#fff", borderRadius: 24, padding: '6px 16px',
+              color: COLORS.black, fontSize: 13, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
@@ -379,7 +379,7 @@ console.log("COMPLAINTS selectedTherapy 👉", selectedTherapy)
       <CContainer fluid style={{ maxWidth: 1100, padding: '0 20px' }}>
 
         {/* ══ 1. PATIENT & BOOKING INFO ══ */}
-        <Section icon="👤" title="Patient & Booking Information">
+        <Section icon="👤" title="Patient & Booking Information" style={{ backgroundColor: COLORS.bgcolor, color: COLORS.black }}>
           <Grid cols={3}>
             <Row label="Patient ID" value={patientId} />
             <Row label="Booking ID" value={bookingId} />
@@ -394,7 +394,7 @@ console.log("COMPLAINTS selectedTherapy 👉", selectedTherapy)
             <Row label="Therapy Type" value={patientData?.subServiceName} />
             {/* <Row label="Sub Service" value={patientData?.subServiceName} /> */}
             <Row label="Overall Status" value={overallStatus ?? 'Pending'} />
-         
+
           </Grid>
         </Section>
 
@@ -565,7 +565,7 @@ console.log("COMPLAINTS selectedTherapy 👉", selectedTherapy)
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
                 <thead>
                   <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                    {['#', 'Date', 'Status', 'Modalities Used', 'Exercises Done', 'Patient Response', 'Therapist Notes'].map(h => (
+                    {['#', 'Date', 'Status', 'Modalities Used', 'Exercises Done', 'Patient Response'].map(h => (
                       <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                     ))}
                   </tr>
@@ -738,17 +738,36 @@ console.log("COMPLAINTS selectedTherapy 👉", selectedTherapy)
       </CContainer>
 
       {/* ══ STICKY BOTTOM BAR ══ */}
-      <div style={{
-        position: 'fixed', bottom: 0,
-        left: sidebarWidth ? `${sidebarWidth}px` : 0,
-        width: sidebarWidth ? `calc(100vw - ${sidebarWidth}px)` : '100vw',
-        background: 'linear-gradient(90deg,#1a3a5c,#1a5fa8)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 28px', zIndex: 999,
-        boxShadow: '0 -4px 20px rgba(26,90,168,0.2)',
-      }}>
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: sidebarWidth ? `${sidebarWidth}px` : 0,
+          width: sidebarWidth
+            ? `calc(100vw - ${sidebarWidth}px)`
+            : '100vw',
+          background: '#a5c4d4ff', // ✅ light bg
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 24px',
+          zIndex: 999,
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
+        }}
+      >
+        {/* Left Side - Template */}
         <Button
-          customColor={COLORS.bgcolor}
+
+
+          customColor="#ffffff" // ✅ white button bg
+          color="#7e3a93"       // ✅ purple text
+
+          style={{
+            borderRadius: '20px',
+            fontWeight: 600,
+            padding: '6px 18px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+          }}
           onClick={() => {
             setClickedSaveTemplate(true)
             onSaveTemplate?.()
@@ -758,24 +777,51 @@ console.log("COMPLAINTS selectedTherapy 👉", selectedTherapy)
           {!updateTemplate ? '💾 Save as Template' : '🔄 Update Template'}
         </Button>
 
+        {/* Right Side Actions */}
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          {saving && <CSpinner size="sm" style={{ color: '#fff' }} />}
+
+          {saving && (
+            <CSpinner size="sm" style={{ color: '#7e3a93' }} /> // ✅ visible on light bg
+          )}
+
+          {/* Save Button - Primary */}
           <Button
-            customColor={COLORS.bgcolor}
-            color={COLORS.black}
+            customColor="#ffffff" // ✅ white button bg
+            color="#7e3a93"       // ✅ purple text
+
+            style={{
+              borderRadius: '20px',
+              fontWeight: 600,
+              padding: '6px 18px',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            }}
             onClick={() => {
               setPendingAction(ACTIONS.SAVE)
-              clickedSaveTemplate ? doSave() : setShowTemplateModal(true)
+              clickedSaveTemplate
+                ? doSave()
+                : setShowTemplateModal(true)
             }}
             disabled={saving}
           >
             ✅ Save
           </Button>
+
+          {/* Save & Download - Secondary */}
           <Button
-            customColor={COLORS.bgcolor}
+            customColor="#ffffff" // ✅ white button bg
+            color="#7e3a93"       // ✅ purple text
+
+            style={{
+              borderRadius: '20px',
+              fontWeight: 600,
+              padding: '6px 18px',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            }}
             onClick={() => {
               setPendingAction(ACTIONS.SAVE_PRINT)
-              clickedSaveTemplate ? doSave({ downloadAfter: true }) : setShowTemplateModal(true)
+              clickedSaveTemplate
+                ? doSave({ downloadAfter: true })
+                : setShowTemplateModal(true)
             }}
             disabled={saving}
           >

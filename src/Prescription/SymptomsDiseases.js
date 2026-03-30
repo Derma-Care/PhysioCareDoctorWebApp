@@ -70,7 +70,7 @@ const InfoChip = ({ label, value, accent = false }) => (
 const StatusBadge = ({ status }) => {
   const map = {
     Confirmed: { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
-    Pending:   { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
+    Pending: { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
     Cancelled: { bg: '#FEE2E2', color: '#991B1B', border: '#FECACA' },
   }
   const s = map[status] || { bg: '#F3F4F6', color: '#374151', border: '#D1D5DB' }
@@ -164,14 +164,14 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         if (!record) return
         setBookingRecord(record)
 
-        if (isValid(record.problem))           setSymptomDetails(record.problem)
-        if (isValid(record.symptomsDuration))  setDuration(record.symptomsDuration.trim())
+        if (isValid(record.problem)) setSymptomDetails(record.problem)
+        if (isValid(record.symptomsDuration)) setDuration(record.symptomsDuration.trim())
         if (isValid(record.subServiceName)) {
           setComplaints((p) => p || record.subServiceName)
           setSelectedTherapy(record.subServiceName)
         }
-        if (record.partImage)                        setPartImage(record.partImage)
-        if (Array.isArray(record.parts))             setParts(record.parts)
+        if (record.partImage) setPartImage(record.partImage)
+        if (Array.isArray(record.parts)) setParts(record.parts)
         if (record.theraphyAnswers && typeof record.theraphyAnswers === 'object')
           setTheraphyAnswers(record.theraphyAnswers)
         if (Array.isArray(record.attachments) && record.attachments.length > 0) {
@@ -246,10 +246,10 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       symptomDetails, doctorObs, complaints, duration, attachments,
       prescription: templateData.prescription, tests: templateData.tests,
       treatments: templateData.treatments, followUp: templateData.followUp,
-      exercise:templateData.exercise,
+      exercise: templateData.exercise,
       partImage, parts, selectedTherapy, theraphyAnswers, attachmentImages,
     }
-     console.log('🚀 Submitting payload:', payload)
+    console.log('🚀 Submitting payload:', payload)
     onNext?.(payload)
   }
 
@@ -257,26 +257,26 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const mapTemplateToFormData = (t = {}, dx) => {
     const medicines = Array.isArray(t?.prescription?.medicines)
       ? t.prescription.medicines.map((m) => {
-          const dur = m?.duration ? `${m.duration}`.trim() : 'NA'
-          let unit = m?.durationUnit ? m.durationUnit.trim() : ''
-          if (dur !== 'NA' && unit) {
-            const n = parseInt(dur, 10)
-            if (!isNaN(n) && n > 1 && !unit.endsWith('s')) unit = `${unit}s`
-          }
-          return {
-            id: m?.id ?? `tmp-${Date.now()}-${Math.random()}`,
-            medicineType: m?.medicineType?.trim() || 'NA', name: m?.name || '',
-            dose: m?.dose || '', remindWhen: m?.remindWhen || 'Once A Day',
-            others: m?.others || '',
-            duration: dur !== 'NA' && unit ? `${dur} ${unit}` : dur,
-            food: m?.food || '', note: m?.note || '',
-            times: Array.isArray(m?.times)
-              ? m.times.map((t) => `${t}`.trim()).filter(Boolean)
-              : m?.times && typeof m.times === 'string'
-                ? m.times.split(',').map((t) => t.trim()).filter(Boolean)
-                : [],
-          }
-        })
+        const dur = m?.duration ? `${m.duration}`.trim() : 'NA'
+        let unit = m?.durationUnit ? m.durationUnit.trim() : ''
+        if (dur !== 'NA' && unit) {
+          const n = parseInt(dur, 10)
+          if (!isNaN(n) && n > 1 && !unit.endsWith('s')) unit = `${unit}s`
+        }
+        return {
+          id: m?.id ?? `tmp-${Date.now()}-${Math.random()}`,
+          medicineType: m?.medicineType?.trim() || 'NA', name: m?.name || '',
+          dose: m?.dose || '', remindWhen: m?.remindWhen || 'Once A Day',
+          others: m?.others || '',
+          duration: dur !== 'NA' && unit ? `${dur} ${unit}` : dur,
+          food: m?.food || '', note: m?.note || '',
+          times: Array.isArray(m?.times)
+            ? m.times.map((t) => `${t}`.trim()).filter(Boolean)
+            : m?.times && typeof m.times === 'string'
+              ? m.times.split(',').map((t) => t.trim()).filter(Boolean)
+              : [],
+        }
+      })
       : []
     return {
       symptoms: { symptomDetails: typeof t.symptoms === 'string' ? t.symptoms : '', doctorObs, complaints: dx, duration, attachments },
@@ -350,27 +350,58 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
     }}>
 
       {/* ── Header ── */}
-      <div style={{
-        background: 'linear-gradient(135deg,#3D1075 0%,#6C2BD9 100%)',
-        padding: '16px 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        boxShadow: '0 4px 20px rgba(108,43,217,0.2)',
-      }}>
+      <div
+        style={{
+          background: '#a5c4d4ff', // ✅ light background
+          padding: '16px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        }}
+      >
         <div>
-          <div style={{ fontSize: 10, color: '#C4B5FD', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
+          <div
+            style={{
+              fontSize: 10,
+              color: '#7e3a93', // ✅ purple text
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              marginBottom: 2,
+            }}
+          >
             Patient Consultation
           </div>
         </div>
+
         {bk && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              background: 'rgba(255,255,255,0.12)', borderRadius: 24, padding: '6px 16px',
-              color: '#fff', fontSize: 13, fontWeight: 600,
-              display: 'flex', alignItems: 'center', gap: 8,
-            }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ADE80', boxShadow: '0 0 6px #4ADE80' }} />
+            <div
+              style={{
+                background: '#ffffff', // ✅ white pill
+                borderRadius: 24,
+                padding: '6px 16px',
+                color: '#7e3a93', // ✅ text color
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+              }}
+            >
+              <div
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: '#22c55e', // ✅ softer green
+                }}
+              />
               {bk.name} · {bk.age}yr {bk.gender?.charAt(0)}
             </div>
+
             <StatusBadge status={bk.status} />
           </div>
         )}
@@ -645,14 +676,27 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       <div
         className="position-fixed bottom-0"
         style={{
-          left: 0, right: 0,
-          background: 'linear-gradient(90deg,#1a3a5c,#1a5fa8)',
-          display: 'flex', justifyContent: 'flex-end',
-          gap: 16, padding: '10px 24px',
-          boxShadow: '0 -2px 16px rgba(26,90,168,0.18)',
+          left: 0,
+          right: 0,
+          background: '#a5c4d4ff', // ✅ light background
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)', // ✅ soft shadow
         }}
       >
-        <Button customColor={COLORS.bgcolor} color={COLORS.black} onClick={handleNext}>
+        <Button
+          customColor="#ffffff" // ✅ white button bg
+          color="#7e3a93"       // ✅ purple text
+          onClick={handleNext}
+          style={{
+            borderRadius: '20px',
+            fontWeight: 600,
+            padding: '6px 18px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+          }}
+        >
           Next
         </Button>
       </div>
