@@ -38,14 +38,15 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     'Complaints',
     'Assessment',
     'Diagnosis',
-    'TreatmentPlan',
     'TherapySessions',
+    'TreatmentPlan',
+    
     'ExercisePlan',
     'FollowUp',
     'Prescription',
     'History',
     'Reports',
-    'Summary',
+    // 'Summary',
   ]
 
   const [activeTab, setActiveTab] = useState(defaultTab || ALL_TABS[0])

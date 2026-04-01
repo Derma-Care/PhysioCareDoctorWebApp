@@ -122,7 +122,9 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const [complaints, setComplaints] = useState(
     seed.complaints ?? (isValid(patientData?.subServiceName) ? patientData.subServiceName : ''),
   )
-  const [duration, setDuration] = useState(patientData?.symptomsDuration ?? '')
+const [duration, setDuration] = useState(
+  patientData?.symptomsDuration ?? '0 Days'
+)
   const [attachments, setAttachments] = useState(
     Array.isArray(seed.attachments) ? seed.attachments
       : Array.isArray(patientData?.attachments) ? patientData.attachments : [],
@@ -165,7 +167,11 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         setBookingRecord(record)
 
         if (isValid(record.problem)) setSymptomDetails(record.problem)
-        if (isValid(record.symptomsDuration)) setDuration(record.symptomsDuration.trim())
+       if (isValid(record.symptomsDuration)) {
+  setDuration(record.symptomsDuration.trim())
+} else {
+  setDuration('0 Days')
+}
         if (isValid(record.subServiceName)) {
           setComplaints((p) => p || record.subServiceName)
           setSelectedTherapy(record.subServiceName)
@@ -443,7 +449,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
               <div>
                 <SLabel text="Duration" />
                 <input
-                  value={duration}
+                   value={duration || '0 Days'}
                   onChange={(e) => setDuration(e.target.value)}
                   placeholder="e.g. 3 weeks"
                   style={{ ...inputBase, resize: 'none' }}

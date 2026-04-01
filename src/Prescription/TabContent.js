@@ -2,8 +2,8 @@ import React from 'react'
 import PrescriptionTab from './PrescriptionTab'
 import SymptomsDiseases from './SymptomsDiseases'
 import DoctorSymptoms from './DoctorSymptoms'
-import TestsTreatments from './TestsTreatments'
-import FollowUp from './FollowUp'
+import TestsTreatments from './TreatmentPlan'
+import FollowUp from './TherapySessions'
 import DoctorFollowUp from './DoctorFollowUp'
 import VisitHistory from './VisitHistory'
 import Summary from './Summary'
@@ -66,7 +66,7 @@ const TabContent = ({
     case 'Diagnosis':
       content = (
         <PrescriptionTab
-          seed={formData.diagnosis || {}}
+          seed={{ diagnosis: formData.diagnosis || {} }}   // ✅ FIXED  
           onNext={onNext}
           formData={formData}
         />

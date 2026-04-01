@@ -71,10 +71,7 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
       setFormData((prev) => ({ ...prev, prescription: { ...prev.prescription, ...data } }))
       goToNext('Diagnosis')
     },
-    TreatmentPlan: (data) => {
-      setFormData((prev) => ({ ...prev, treatments: { ...prev.treatments, ...data } }))
-      goToNext('TreatmentPlan')
-    },
+   
     'TherapySessions': (data) => {
       setFormData((prev) => ({ ...prev, followUp: { ...prev.followUp, ...data } }))
       goToNext('TherapySessions')

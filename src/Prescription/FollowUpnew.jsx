@@ -39,76 +39,122 @@ const cardStyle = {
   boxShadow: '0 2px 16px rgba(26,90,168,0.07)',
 }
 
+/* ─── Treatment Status options ─────────────────────────────────────────── */
+const STATUS_OPTIONS = ['Active', 'On Hold', 'Completed', 'Discharged']
+
+const STATUS_STYLE = {
+  Active:     { bg: '#f0fff4', border: '#68d391', color: '#276749', icon: '🟢' },
+  'On Hold':  { bg: '#fffbeb', border: '#f6ad55', color: '#7b341e', icon: '🟡' },
+  Completed:  { bg: '#ebf8ff', border: '#63b3ed', color: '#2a4365', icon: '🔵' },
+  Discharged: { bg: '#fff5f5', border: '#fc8181', color: '#742a2a', icon: '🔴' },
+}
+
+/* ─── Visit urgency derived from date ──────────────────────────────────── */
+const getVisitUrgency = (dateStr) => {
+  if (!dateStr) return null
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const visit = new Date(dateStr); visit.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((visit - today) / (1000 * 60 * 60 * 24))
+  if (diffDays < 0)  return { label: 'Overdue',  bg: '#fff5f5', color: '#c53030', border: '#fc8181', icon: '⚠️' }
+  if (diffDays === 0) return { label: 'Today',    bg: '#f0fff4', color: '#276749', border: '#68d391', icon: '📍' }
+  if (diffDays <= 3)  return { label: 'Very Soon', bg: '#fffbeb', color: '#7b341e', border: '#f6ad55', icon: '🔔' }
+  if (diffDays <= 7)  return { label: 'This Week', bg: '#ebf8ff', color: '#2a4365', border: '#63b3ed', icon: '📅' }
+  return               { label: 'Upcoming',  bg: '#f5f0ff', color: '#44337a', border: '#b794f4', icon: '🗓️' }
+}
+
+/* ─── Empty form ────────────────────────────────────────────────────────── */
 const EMPTY_FORM = {
-  nextVisitDate: '',
-  reviewNotes: '',
-  continueTreatment: '',
-  modifications: '',
+  nextVisitDate:     '',
+  treatmentStatus:   '',
+  reviewNotes:       '',
+  modifications:     '',
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
-// ✅ FIX: Accept seed prop; seed = formData.followUp which is an array (set by handleNext below)
 const FollowUpnew = ({ seed = [], onNext }) => {
 
-  const [form, setForm] = useState({ ...EMPTY_FORM })
-  // ✅ FIX: Initialize data from seed (seed is the saved array from formData.followUp)
-  const [data, setData] = useState(Array.isArray(seed) ? seed : [])
+  const [form,      setForm]      = useState({ ...EMPTY_FORM })
+  const [data,      setData]      = useState(Array.isArray(seed) ? seed : [])
   const [editIndex, setEditIndex] = useState(null)
+  const [dupError,  setDupError]  = useState(false)
 
-  // ✅ FIX: Sync when seed changes (i.e. when user navigates back to this tab)
   useEffect(() => {
-    if (Array.isArray(seed)) {
-      setData(seed)
-    }
+    if (Array.isArray(seed)) setData(seed)
   }, [seed])
 
-  const set = field => val => setForm(prev => ({ ...prev, [field]: val }))
+  const set = field => val => {
+    setDupError(false)
+    setForm(prev => ({ ...prev, [field]: val }))
+  }
+
+  /* ── Derived values ── */
+  const urgency     = getVisitUrgency(form.nextVisitDate)
+  const isActive    = form.treatmentStatus === 'Active'
+  const statusStyle = STATUS_STYLE[form.treatmentStatus] || null
+
+  /* ── Duplicate check ── */
+  const isDuplicate = (entry, excludeIdx = null) =>
+    data.some((e, i) => {
+      if (i === excludeIdx) return false
+      return (
+        (e.nextVisitDate   || '') === (entry.nextVisitDate   || '') &&
+        (e.treatmentStatus || '').toLowerCase() === (entry.treatmentStatus || '').toLowerCase() &&
+        (e.reviewNotes     || '').trim().toLowerCase() === (entry.reviewNotes     || '').trim().toLowerCase() &&
+        (e.modifications   || '').trim().toLowerCase() === (entry.modifications   || '').trim().toLowerCase()
+      )
+    })
 
   /* ── Save / Update ── */
   const handleSave = () => {
     if (!form.nextVisitDate) return
 
+    if (isDuplicate(form, editIndex !== null ? editIndex : null)) {
+      setDupError(true)
+      return
+    }
+
     if (editIndex !== null) {
-      const updated = [...data]
-      updated[editIndex] = { ...form }
-      setData(updated)
+      setData(prev => prev.map((e, i) => i === editIndex ? { ...form } : e))
       setEditIndex(null)
     } else {
       setData(prev => [...prev, { ...form }])
     }
-
     setForm({ ...EMPTY_FORM })
+    setDupError(false)
   }
 
   const handleEdit = (index) => {
     setForm({ ...data[index] })
     setEditIndex(index)
+    setDupError(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleDelete = (index) => {
     setData(prev => prev.filter((_, i) => i !== index))
-    if (editIndex === index) { setForm({ ...EMPTY_FORM }); setEditIndex(null) }
+    if (editIndex === index) { setForm({ ...EMPTY_FORM }); setEditIndex(null); setDupError(false) }
   }
 
-  const handleCancel = () => { setForm({ ...EMPTY_FORM }); setEditIndex(null) }
+  const handleCancel = () => { setForm({ ...EMPTY_FORM }); setEditIndex(null); setDupError(false) }
 
-  /* ── Next ── */
   const handleNext = () => {
     const payload = { followUp: data }
     console.log('🚀 FollowUp Payload:', payload)
     onNext?.(payload)
   }
 
+  /* ─── Render ─────────────────────────────────────────────────────────── */
   return (
     <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <CContainer fluid className="p-1">
 
-        {/* FORM CARD */}
+        {/* ══ FORM CARD ═════════════════════════════════════════════════ */}
         <CCard className="mb-4" style={cardStyle}>
           <CCardBody style={{ padding: '28px 32px' }}>
 
+            {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, borderBottom: '1.5px solid #e3eef8', paddingBottom: 16 }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📅</div>
               <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>
@@ -116,7 +162,17 @@ const FollowUpnew = ({ seed = [], onNext }) => {
               </h5>
             </div>
 
+            {/* Duplicate error */}
+            {dupError && (
+              <div style={{ marginBottom: 16, padding: '10px 16px', borderRadius: 8, background: '#fff5f5', border: '1.5px solid #fc8181', color: '#c53030', fontWeight: 600, fontSize: '0.875rem' }}>
+                ⚠️ Duplicate entry detected. This follow-up record already exists.
+              </div>
+            )}
+
+            {/* Row 1 — Next Visit Date + Treatment Status */}
             <div style={gridTwo}>
+
+              {/* Next Visit Date */}
               <div>
                 <label style={labelStyle}>Next Visit Date</label>
                 <input
@@ -125,43 +181,87 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                   onChange={e => set('nextVisitDate')(e.target.value)}
                   style={inputStyle}
                 />
+                {/* Visit urgency badge */}
+                {urgency && (
+                  <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, background: urgency.bg, border: `1px solid ${urgency.border}`, borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', color: urgency.color, fontWeight: 700 }}>
+                    {urgency.icon} {urgency.label}
+                  </div>
+                )}
               </div>
 
+              {/* Treatment Status (replaces Continue Treatment) */}
               <div>
-                <label style={labelStyle}>Continue Treatment</label>
-                <select
-                  value={form.continueTreatment}
-                  onChange={e => set('continueTreatment')(e.target.value)}
-                  style={{ ...inputStyle, cursor: 'pointer', appearance: 'auto' }}
-                >
-                  <option value="">Select</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
+                <label style={labelStyle}>Treatment Status</label>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
+                  {STATUS_OPTIONS.map(s => {
+                    const active = form.treatmentStatus === s
+                    const st = STATUS_STYLE[s]
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => set('treatmentStatus')(s)}
+                        style={{
+                          padding: '5px 14px', borderRadius: 20, border: `1.5px solid`,
+                          borderColor: active ? st.border : '#b6cfe8',
+                          background: active ? st.bg : '#f5f9ff',
+                          color: active ? st.color : '#64748b',
+                          fontWeight: active ? 700 : 500,
+                          fontSize: '0.8rem', cursor: 'pointer',
+                          transition: 'all 0.15s', fontFamily: 'inherit',
+                        }}
+                      >
+                        {st.icon} {s}
+                      </button>
+                    )
+                  })}
+                </div>
+                {/* Status badge confirmation */}
+                {statusStyle && (
+                  <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, background: statusStyle.bg, border: `1px solid ${statusStyle.border}`, borderRadius: 8, padding: '4px 12px', fontSize: '0.78rem', color: statusStyle.color, fontWeight: 700 }}>
+                    {statusStyle.icon} Status: <strong>{form.treatmentStatus}</strong>
+                    {isActive && <span style={{ marginLeft: 4, opacity: 0.8 }}>— Modifications enabled</span>}
+                  </div>
+                )}
               </div>
+
             </div>
 
-            <div style={gridTwo}>
+            {/* Row 2 — Review Notes + Modifications (conditional) */}
+            <div style={{ ...gridTwo, gridTemplateColumns: isActive ? '1fr 1fr' : '1fr' }}>
+
               <div>
                 <label style={labelStyle}>Review Notes</label>
                 <textarea
                   value={form.reviewNotes}
                   onChange={e => set('reviewNotes')(e.target.value)}
-                  style={{ ...inputStyle, height: 80, resize: 'vertical' }}
+                  placeholder="e.g. Patient showing improvement in mobility"
+                  style={{ ...inputStyle, height: 90, resize: 'vertical' }}
                 />
               </div>
 
-              <div>
-                <label style={labelStyle}>Modifications</label>
-                <textarea
-                  value={form.modifications}
-                  onChange={e => set('modifications')(e.target.value)}
-                  style={{ ...inputStyle, height: 80, resize: 'vertical' }}
-                />
-              </div>
+              {/* Modifications — only when Active */}
+              {isActive && (
+                <div style={{ animation: 'fadeIn 0.2s ease' }}>
+                  <label style={labelStyle}>
+                    Modifications
+                    <span style={{ marginLeft: 8, fontSize: '0.75rem', fontWeight: 500, color: '#276749', background: '#f0fff4', border: '1px solid #68d391', borderRadius: 10, padding: '1px 8px' }}>
+                      Active only
+                    </span>
+                  </label>
+                  <textarea
+                    value={form.modifications}
+                    onChange={e => set('modifications')(e.target.value)}
+                    placeholder="e.g. Increase resistance, add balance exercises"
+                    style={{ ...inputStyle, height: 90, resize: 'vertical' }}
+                  />
+                </div>
+              )}
+
             </div>
 
-            <div style={{ display: 'flex', gap: 12 }}>
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
               <button onClick={handleSave} style={{
                 padding: '8px 24px', borderRadius: 8, border: 'none',
                 background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
@@ -170,7 +270,6 @@ const FollowUpnew = ({ seed = [], onNext }) => {
               }}>
                 {editIndex !== null ? '✅ Update' : '➕ Add'}
               </button>
-
               {editIndex !== null && (
                 <button onClick={handleCancel} style={{
                   padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
@@ -185,7 +284,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
           </CCardBody>
         </CCard>
 
-        {/* TABLE CARD */}
+        {/* ══ TABLE CARD ════════════════════════════════════════════════ */}
         {data.length > 0 && (
           <CCard style={cardStyle}>
             <CCardBody style={{ padding: '24px 32px' }}>
@@ -199,34 +298,47 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                      {['#', 'Next Visit Date', 'Review Notes', 'Continue Treatment', 'Modifications', 'Actions'].map(h => (
+                      {['#', 'Next Visit Date', 'Urgency', 'Treatment Status', 'Review Notes', 'Modifications', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {/* ✅ FIX: was using undefined `idx`, now correctly uses `i` */}
-                    {data.map((item, i) => (
-                      <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
-                        <td style={{ padding: '10px 14px', fontWeight: 700 }}>{i + 1}</td>
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>{item.nextVisitDate || '—'}</td>
-                        <td style={{ padding: '10px 14px' }}>{item.reviewNotes || '—'}</td>
-                        <td style={{ padding: '10px 14px', textAlign: 'center' }}>{item.continueTreatment || '—'}</td>
-                        <td style={{ padding: '10px 14px' }}>{item.modifications || '—'}</td>
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          <button onClick={() => handleEdit(i)} style={{
-                            marginRight: 6, padding: '4px 12px', borderRadius: 6,
-                            border: '1.5px solid #1a5fa8', background: '#f0f7ff',
-                            color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit',
-                          }}>✏️ Edit</button>
-                          <button onClick={() => handleDelete(i)} style={{
-                            padding: '4px 12px', borderRadius: 6,
-                            border: '1.5px solid #e53e3e', background: '#fff5f5',
-                            color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit',
-                          }}>🗑️ Delete</button>
-                        </td>
-                      </tr>
-                    ))}
+                    {data.map((item, i) => {
+                      const u  = getVisitUrgency(item.nextVisitDate)
+                      const st = STATUS_STYLE[item.treatmentStatus]
+                      return (
+                        <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
+                          <td style={{ padding: '10px 14px', fontWeight: 700 }}>{i + 1}</td>
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>{item.nextVisitDate || '—'}</td>
+                          <td style={{ padding: '10px 14px' }}>
+                            {u
+                              ? <span style={{ background: u.bg, color: u.color, border: `1px solid ${u.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700, whiteSpace: 'nowrap' }}>{u.icon} {u.label}</span>
+                              : '—'}
+                          </td>
+                          <td style={{ padding: '10px 14px' }}>
+                            {st
+                              ? <span style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700, whiteSpace: 'nowrap' }}>{st.icon} {item.treatmentStatus}</span>
+                              : '—'}
+                          </td>
+                          <td style={{ padding: '10px 14px', maxWidth: 180 }}>
+                            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.reviewNotes}>
+                              {item.reviewNotes || '—'}
+                            </div>
+                          </td>
+                          <td style={{ padding: '10px 14px', maxWidth: 180 }}>
+                            {item.treatmentStatus === 'Active'
+                              ? <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.modifications}>{item.modifications || '—'}</div>
+                              : <span style={{ color: '#a0aec0', fontSize: '0.78rem', fontStyle: 'italic' }}>N/A</span>
+                            }
+                          </td>
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                            <button onClick={() => handleEdit(i)} style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: '#f0f7ff', color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
+                            <button onClick={() => handleDelete(i)} style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️ Delete</button>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -239,29 +351,18 @@ const FollowUpnew = ({ seed = [], onNext }) => {
 
       {/* Bottom Button */}
       <div className="position-fixed bottom-0"
-        style={{
-          left: 0,
-          right: 0,
-          background: '#a5c4d4ff', // ✅ light background
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 16,
-          padding: '10px 24px',
-          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)', // ✅ soft shadow
-        }}>
-        <Button customColor="#ffffff" // ✅ white button bg
-          color="#7e3a93"       // ✅ purple text
+        style={{ left: 0, right: 0, background: '#a5c4d4ff', display: 'flex', justifyContent: 'flex-end', gap: 16, padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)' }}>
+        <Button
+          customColor="#ffffff"
+          color="#7e3a93"
           onClick={handleNext}
-          style={{
-            borderRadius: '20px',
-            fontWeight: 600,
-            padding: '6px 18px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-          }}>
+          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
+        >
           Next
         </Button>
       </div>
 
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }`}</style>
     </div>
   )
 }

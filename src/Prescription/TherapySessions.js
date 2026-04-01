@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 import { COLORS } from '../Themes'
@@ -10,24 +10,18 @@ const MODALITY_OPTIONS = [
   'TENS', 'Laser Therapy', 'Traction', 'Wax Bath',
 ]
 
-const STATUS_OPTIONS = ['Completed', 'Pending', 'Cancelled']
+const DURATION_UNIT_OPTIONS = ['mins', 'hrs']
 
 const OVERALL_STATUS_OPTIONS = ['Completed', 'In Progress', 'Pending', 'Cancelled']
 
-const PATIENT_RESPONSE_OPTIONS = [
-  { label: 'Select response...', value: '' },
-  { label: 'Pain reduced slightly', value: 'Pain reduced slightly' },
-  { label: 'Improved flexibility',  value: 'Improved flexibility'  },
-  { label: 'No change',             value: 'No change'             },
-  { label: 'Good',                  value: 'Good'                  },
-  { label: 'Fair',                  value: 'Fair'                  },
-  { label: 'Poor',                  value: 'Poor'                  },
-]
-
 const EMPTY_SESSION = {
-  sessionDate: '', status: 'Pending',
-  modalitiesUsed: [], exercisesDone: '',
-  patientResponse: '', therapistNotes: '',
+  sessionDate: '',
+  durationValue: '',
+  durationUnit: 'mins',
+  modalitiesUsed: [],
+  exercisesDone: [],       // ← now an array for multi-select
+  patientResponse: '',
+  therapistNotes: '',
 }
 
 /* ─── Styles ─────────────────────────────────────────────────────────────── */
@@ -73,12 +67,6 @@ const TextInput = ({ value, onChange, placeholder = '', type = 'text' }) => (
     placeholder={placeholder} style={inputStyle} />
 )
 
-const Textarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
-  <textarea value={value} onChange={e => onChange(e.target.value)}
-    placeholder={placeholder} rows={rows}
-    style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }} />
-)
-
 const NativeSelect = ({ value, onChange, options }) => (
   <select value={value} onChange={e => onChange(e.target.value)}
     style={{ ...inputStyle, cursor: 'pointer', appearance: 'auto' }}>
@@ -89,6 +77,172 @@ const NativeSelect = ({ value, onChange, options }) => (
     ))}
   </select>
 )
+
+/* ─── Duration Field (number + unit combo) ───────────────────────────────── */
+const DurationField = ({ durationValue, durationUnit, onValueChange, onUnitChange }) => (
+  <div style={{ display: 'flex', gap: 8 }}>
+    <input
+      type="number"
+      min="0"
+      value={durationValue}
+      onChange={e => onValueChange(e.target.value)}
+      placeholder="e.g. 30"
+      style={{ ...inputStyle, flex: 2 }}
+    />
+    <select
+      value={durationUnit}
+      onChange={e => onUnitChange(e.target.value)}
+      style={{ ...inputStyle, flex: 1, cursor: 'pointer', appearance: 'auto' }}
+    >
+      {DURATION_UNIT_OPTIONS.map(u => (
+        <option key={u} value={u}>{u}</option>
+      ))}
+    </select>
+  </div>
+)
+
+/* ─── Multi-Select with Search ──────────────────────────────────────────── */
+const MultiSelectSearch = ({ selected = [], onChange, options = [], loading = false }) => {
+  const [search, setSearch] = useState('')
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef(null)
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = e => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const filtered = options.filter(o =>
+    o.label.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const toggle = val => {
+    if (selected.includes(val)) {
+      onChange(selected.filter(v => v !== val))
+    } else {
+      onChange([...selected, val])
+    }
+  }
+
+  const removeTag = val => onChange(selected.filter(v => v !== val))
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+      {/* Input box showing tags + search */}
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{
+          ...inputStyle,
+          height: 'auto',
+          minHeight: 38,
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: 4,
+          cursor: 'text',
+          padding: '4px 10px',
+        }}
+      >
+        {selected.map(val => (
+          <span key={val} style={{
+            background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
+            color: '#fff',
+            borderRadius: 12,
+            padding: '2px 8px',
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+          }}>
+            {val}
+            <span
+              onClick={e => { e.stopPropagation(); removeTag(val) }}
+              style={{ cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', lineHeight: 1 }}
+            >×</span>
+          </span>
+        ))}
+        <input
+          type="text"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          placeholder={selected.length === 0 ? (loading ? 'Loading...' : 'Search & select exercises...') : ''}
+          style={{
+            border: 'none', outline: 'none', background: 'transparent',
+            fontSize: '0.875rem', color: '#1a3a5c', fontFamily: 'inherit',
+            flex: 1, minWidth: 120, padding: '2px 0',
+          }}
+          onClick={e => e.stopPropagation()}
+        />
+      </div>
+
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position: 'absolute', zIndex: 1000, top: '100%', left: 0, right: 0,
+          background: '#fff', border: '1.5px solid #b6cfe8', borderRadius: 8,
+          boxShadow: '0 4px 16px rgba(26,90,168,0.13)',
+          maxHeight: 200, overflowY: 'auto', marginTop: 4,
+        }}>
+          {loading ? (
+            <div style={{ padding: '10px 14px', color: '#6b7280', fontSize: '0.85rem' }}>Loading exercises...</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: '10px 14px', color: '#6b7280', fontSize: '0.85rem' }}>No exercises found</div>
+          ) : (
+            filtered.map(o => {
+              const isSelected = selected.includes(o.value)
+              return (
+                <div
+                  key={o.value}
+                  onMouseDown={e => { e.preventDefault(); toggle(o.value) }}
+                  style={{
+                    padding: '8px 14px', cursor: 'pointer', fontSize: '0.875rem',
+                    color: isSelected ? '#1a5fa8' : '#1a3a5c',
+                    background: isSelected ? '#f0f7ff' : 'transparent',
+                    fontWeight: isSelected ? 700 : 400,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    transition: 'background 0.12s',
+                  }}
+                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f5f9ff' }}
+                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent' }}
+                >
+                  <span style={{
+                    width: 16, height: 16, borderRadius: 4,
+                    border: `2px solid ${isSelected ? '#1a5fa8' : '#b6cfe8'}`,
+                    background: isSelected ? '#1a5fa8' : 'transparent',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    {isSelected && <span style={{ color: '#fff', fontSize: '0.7rem', lineHeight: 1 }}>✓</span>}
+                  </span>
+                  {o.label}
+                </div>
+              )
+            })
+          )}
+          {selected.length > 0 && (
+            <div
+              onMouseDown={e => { e.preventDefault(); onChange([]); setSearch('') }}
+              style={{
+                padding: '8px 14px', cursor: 'pointer', fontSize: '0.8rem',
+                color: '#e53e3e', fontWeight: 700, borderTop: '1px solid #f0f0f0',
+              }}
+            >
+              ✕ Clear all selected
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 /* ─── Chip modality picker ───────────────────────────────────────────────── */
 const ModalityPicker = ({ selected, onChange }) => {
@@ -131,27 +285,23 @@ const StatusBadge = ({ status }) => {
 
 /* ══════════════════════════════════════════════════════════════════════════
    COMPONENT
-   TabContent passes: seed={formData.therapySessions}
-   So seed = { overallStatus, sessions } — NOT seed.therapySessions.xxx
 ══════════════════════════════════════════════════════════════════════════ */
 const FollowUp = ({ seed = {}, onNext }) => {
 
-  // ✅ FIX: seed IS already the therapySessions object, read directly
   const [overallStatus, setOverallStatus] = useState(seed.overallStatus ?? 'Pending')
   const [sessions,      setSessions]      = useState(Array.isArray(seed.sessions) ? seed.sessions : [])
   const [form,          setForm]          = useState({ ...EMPTY_SESSION })
   const [editingIdx,    setEditingIdx]    = useState(null)
-// ✅ NEW STATES
+
   const [exerciseLibrary, setExerciseLibrary] = useState([])
-  const [loadingLibrary, setLoadingLibrary] = useState(false)
-  const [clinicId, setClinicId] = useState('')
-  const [branchId, setBranchId] = useState('')
-  // ✅ FIX: useEffect also reads flat — no more seed.therapySessions wrapper
+  const [loadingLibrary,  setLoadingLibrary]  = useState(false)
+
   useEffect(() => {
     setOverallStatus(seed.overallStatus ?? 'In Progress')
     setSessions(Array.isArray(seed.sessions) ? seed.sessions : [])
   }, [seed])
- /* ─── API CALL (Exercises) ───────────────── */
+
+  /* ─── API CALL (Exercises) ───────────────── */
   useEffect(() => {
     const resolveIdsAndFetchExercises = async () => {
       const resolvedClinicId =
@@ -164,8 +314,6 @@ const FollowUp = ({ seed = {}, onNext }) => {
         return
       }
 
-      setClinicId(resolvedClinicId)
-
       try {
         const appointmentRes = await getTodayAppointments()
         const appointments = appointmentRes?.data || []
@@ -176,19 +324,10 @@ const FollowUp = ({ seed = {}, onNext }) => {
           return
         }
 
-        setBranchId(resolvedBranchId)
-
         setLoadingLibrary(true)
-
         const data = await getTherapyExercises(resolvedClinicId, resolvedBranchId)
-
-        console.log('📦 Exercises API:', data)
-
-        // ✅ IMPORTANT FIX
         const list = Array.isArray(data) ? data : data?.data || []
-
         setExerciseLibrary(list)
-
       } catch (err) {
         console.error('❌ Error fetching exercises:', err)
         setExerciseLibrary([])
@@ -200,7 +339,7 @@ const FollowUp = ({ seed = {}, onNext }) => {
     resolveIdsAndFetchExercises()
   }, [])
 
-  /* ─── Convert API → Dropdown ───────────────── */
+  /* ─── Exercise options for MultiSelect ─── */
   const exerciseOptions = exerciseLibrary.map(item => ({
     label: item.exerciseName || item.name || item.exercise_name || 'Unknown',
     value: item.exerciseName || item.name || item.exercise_name || '',
@@ -235,7 +374,6 @@ const FollowUp = ({ seed = {}, onNext }) => {
 
   /* ── Next ── */
   const handleNext = () => {
-    // Wrap back into the shape PatientAppointmentDetails expects
     const payload = { therapySessions: { overallStatus, sessions } }
     console.log('🚀 FollowUp payload:', payload)
     onNext?.(payload)
@@ -253,13 +391,18 @@ const FollowUp = ({ seed = {}, onNext }) => {
           <CCardBody style={{ padding: '28px 32px' }}>
             {cardHeader('📋', editingIdx !== null ? `Editing Session #${editingIdx + 1}` : 'Add Therapy Session')}
 
-            {/* Row 1 — Session Date | Status */}
+            {/* Row 1 — Session Date | Duration */}
             <div style={gridTwo}>
               <Field label="Session Date">
                 <TextInput type="date" value={form.sessionDate} onChange={set('sessionDate')} />
               </Field>
-              <Field label="Status">
-                <NativeSelect value={form.status} onChange={set('status')} options={STATUS_OPTIONS} />
+              <Field label="Duration">
+                <DurationField
+                  durationValue={form.durationValue}
+                  durationUnit={form.durationUnit}
+                  onValueChange={set('durationValue')}
+                  onUnitChange={set('durationUnit')}
+                />
               </Field>
             </div>
 
@@ -282,22 +425,20 @@ const FollowUp = ({ seed = {}, onNext }) => {
             {/* Row 2 — Patient Response | Exercises Done */}
             <div style={gridTwo}>
               <Field label="Patient Response">
-                <NativeSelect value={form.patientResponse} onChange={set('patientResponse')} options={PATIENT_RESPONSE_OPTIONS} />
+                <TextInput
+                  value={form.patientResponse}
+                  onChange={set('patientResponse')}
+                  placeholder="Describe patient's response..."
+                />
               </Field>
-             <Field label="Exercises Done">
-  <NativeSelect
-    value={form.exercisesDone}
-    onChange={set('exercisesDone')}
-    options={[
-      { label: loadingLibrary ? 'Loading...' : 'Select Exercise...', value: '' },
-
-      ...exerciseLibrary.map(item => ({
-        label: item.exerciseName || item.name || item.exercise_name || 'Unknown',
-        value: item.exerciseName || item.name || item.exercise_name || '',
-      }))
-    ]}
-  />
-</Field>
+              <Field label="Exercises Done">
+                <MultiSelectSearch
+                  selected={form.exercisesDone}
+                  onChange={set('exercisesDone')}
+                  options={exerciseOptions}
+                  loading={loadingLibrary}
+                />
+              </Field>
             </div>
 
             {/* Form action buttons */}
@@ -329,19 +470,13 @@ const FollowUp = ({ seed = {}, onNext }) => {
             <CCardBody style={{ padding: '24px 32px' }}>
               {cardHeader('🗓️', `Therapy Sessions (${sessions.length})`)}
 
-              {/* Overall Status */}
-              <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-                <label style={{ ...labelStyle, marginBottom: 0, whiteSpace: 'nowrap' }}>Overall Status:</label>
-                <div style={{ width: 220 }}>
-                  <NativeSelect value={overallStatus} onChange={setOverallStatus} options={OVERALL_STATUS_OPTIONS} />
-                </div>
-              </div>
+              
 
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                      {['#', 'Session Date', 'Status', 'Modalities Used', 'Exercises Done', 'Patient Response', 'Actions'].map(h => (
+                      {['#', 'Session Date', 'Duration', 'Modalities Used', 'Exercises Done', 'Patient Response', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
@@ -351,7 +486,10 @@ const FollowUp = ({ seed = {}, onNext }) => {
                       <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
                         <td style={{ padding: '10px 14px', fontWeight: 700 }}>{idx + 1}</td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>{s.sessionDate || '—'}</td>
-                        <td style={{ padding: '10px 14px' }}><StatusBadge status={s.status} /></td>
+                        {/* Duration column */}
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                          {s.durationValue ? `${s.durationValue} ${s.durationUnit}` : '—'}
+                        </td>
                         <td style={{ padding: '10px 14px', maxWidth: 180 }}>
                           {s.modalitiesUsed?.length > 0
                             ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -361,17 +499,21 @@ const FollowUp = ({ seed = {}, onNext }) => {
                               </div>
                             : '—'}
                         </td>
+                        {/* Exercises Done — multi values */}
+                        <td style={{ padding: '10px 14px', maxWidth: 200 }}>
+                          {Array.isArray(s.exercisesDone) && s.exercisesDone.length > 0
+                            ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                {s.exercisesDone.map(ex => (
+                                  <span key={ex} style={{ background: '#d1fae5', color: '#065f46', borderRadius: 12, padding: '2px 8px', fontSize: '0.75rem', fontWeight: 600 }}>{ex}</span>
+                                ))}
+                              </div>
+                            : (typeof s.exercisesDone === 'string' && s.exercisesDone) ? s.exercisesDone : '—'}
+                        </td>
                         <td style={{ padding: '10px 14px', maxWidth: 160 }}>
-                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.exercisesDone}>
-                            {s.exercisesDone || '—'}
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.patientResponse}>
+                            {s.patientResponse || '—'}
                           </div>
                         </td>
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>{s.patientResponse || '—'}</td>
-                        {/* <td style={{ padding: '10px 14px', maxWidth: 180 }}>
-                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.therapistNotes}>
-                            {s.therapistNotes || '—'}
-                          </div>
-                        </td> */}
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                           <button onClick={() => handleEdit(idx)} style={{
                             marginRight: 6, padding: '4px 12px', borderRadius: 6,
@@ -398,24 +540,18 @@ const FollowUp = ({ seed = {}, onNext }) => {
       {/* ── Sticky bottom bar ── */}
       <div className="position-fixed bottom-0"
         style={{
-          left: 0,
-          right: 0,
-          background: '#a5c4d4ff', // ✅ light background
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 16,
-          padding: '10px 24px',
-          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)', // ✅ soft shadow
+          left: 0, right: 0,
+          background: '#a5c4d4ff',
+          display: 'flex', justifyContent: 'flex-end',
+          gap: 16, padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
         }}>
-        <Button   customColor="#ffffff" // ✅ white button bg
-          color="#7e3a93"       // ✅ purple text
+        <Button
+          customColor="#ffffff"
+          color="#7e3a93"
           onClick={handleNext}
-          style={{
-            borderRadius: '20px',
-            fontWeight: 600,
-            padding: '6px 18px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-          }}>
+          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
+        >
           Next
         </Button>
       </div>
