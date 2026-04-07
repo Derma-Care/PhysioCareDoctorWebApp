@@ -36,20 +36,22 @@ const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [futureAppointments, setFutureAppointments] = useState([]);
-  const allBranches = doctorDetails?.branches || [];
 
-  // Fetch today's appointments
+  // ✅ Fix 1: Removed `allBranches` variable — it was a new array ref on every render
+  //    which caused useCallback to recreate fetchAppointments on every render
+
+  // ✅ Fix 2: useCallback now depends on doctorDetails?.id (primitive) instead of allBranches (object)
   const fetchAppointments = useCallback(async () => {
     try {
       const response = await getTodayAppointments();
       if (response.statusCode === 200) {
         setTodayAppointments(response.data);
-        setBranches(allBranches);
+        setBranches(doctorDetails?.branches || []); // read directly inside fn
       }
     } catch (error) {
       console.error('❌ Error fetching appointments:', error);
     }
-  }, [allBranches, setTodayAppointments]);
+  }, [doctorDetails?.id, setTodayAppointments]); // ✅ stable primitive dep
 
   // Fetch future appointments (for calendar modal)
   const fetchFutureAppointments = useCallback(async () => {
@@ -66,17 +68,20 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Auto-refresh today's appointments every 60s
+  // ✅ Fix 3: useEffect depends on doctorDetails?.id (primitive) not the whole object
+  //    This ensures the effect only re-runs when the doctor actually changes
   useEffect(() => {
+    if (!doctorDetails) return;
+
     setPatientData(null);
-    fetchAppointments(); // immediate
+    fetchAppointments(); // called once when doctorDetails is ready
 
     const interval = setInterval(() => {
-      fetchAppointments()
-    }, 10000)
+      fetchAppointments();
+    }, 10000);
 
-    return () => clearInterval(interval)
-  }, [doctorDetails])
+    return () => clearInterval(interval);
+  }, [doctorDetails?.id]); // ✅ API called once on mount, then every 10s only
 
   // Filter patients by type & branch
   const filteredPatients = todayAppointments.filter((item) => {
@@ -97,11 +102,12 @@ const Dashboard = () => {
     return acc;
   }, {});
 
- const handleCalendarClick = (appointment) => {
-    if (!appointment) return
-    setPatientData(appointment)
-    navigate(`/tab-content/${appointment.patientId}`, { state: { patient: appointment } })
-  }
+  const handleCalendarClick = (appointment) => {
+    if (!appointment) return;
+    setPatientData(appointment);
+    navigate(`/tab-content/${appointment.patientId}`, { state: { patient: appointment } });
+  };
+
   return (
     <div className="container-fluid mt-3">
       <h5 className="mb-4" style={{ fontSize: SIZES.medium, color: COLORS.black }}>
@@ -281,7 +287,7 @@ const Dashboard = () => {
           }
           defaultBookedSlots={[]}
           handleClick={handleCalendarClick}
-          fetchAppointments={fetchFutureAppointments} // refresh inside modal
+          fetchAppointments={fetchFutureAppointments}
         />
       )}
     </div>
