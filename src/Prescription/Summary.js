@@ -13,9 +13,9 @@ import { pdf } from '@react-pdf/renderer'
 import { capitalizeEachWord } from '../utils/CaptalZeWord'
 
 /* ─── Design tokens ─────────────────────────────────────────────────────── */
-const P = '#1a3a5c'
-const A = '#1a5fa8'
-const LIGHT = '#f5f9ff'
+const P      = '#1a3a5c'
+const A      = '#1a5fa8'
+const LIGHT  = '#f5f9ff'
 const BORDER = '#d8e8f5'
 
 /* ─── Tiny helpers ───────────────────────────────────────────────────────── */
@@ -25,7 +25,7 @@ const toImageSrc = (raw) => {
   if (!raw || typeof raw !== 'string') return null
   if (raw.startsWith('http') || raw.startsWith('blob:') || raw.startsWith('/')) return raw
   if (raw.startsWith('data:')) return raw
-  if (raw.startsWith('/9j/')) return `data:image/jpeg;base64,${raw}`
+  if (raw.startsWith('/9j/'))  return `data:image/jpeg;base64,${raw}`
   if (raw.startsWith('iVBOR')) return `data:image/png;base64,${raw}`
   if (raw.startsWith('R0lGO')) return `data:image/gif;base64,${raw}`
   return `data:image/jpeg;base64,${raw}`
@@ -108,7 +108,7 @@ const AnswerBadge = ({ answer }) => {
   )
 }
 
-/* ─── Visit urgency (FollowUp) ──────────────────────────────────────────── */
+/* ─── Visit urgency ─────────────────────────────────────────────────────── */
 const FOLLOWUP_STATUS_STYLE = {
   Active:     { bg: '#f0fff4', border: '#68d391', color: '#276749', icon: '🟢' },
   'On Hold':  { bg: '#fffbeb', border: '#f6ad55', color: '#7b341e', icon: '🟡' },
@@ -128,23 +128,15 @@ const getVisitUrgency = (dateStr) => {
   return                     { label: 'Upcoming',  bg: '#f5f0ff', color: '#44337a', border: '#b794f4', icon: '🗓️' }
 }
 
-/* ─── Duration formatter (ExercisePlan) ────────────────────────────────── */
-const formatDuration = (val, unit) => {
-  const num = parseFloat(val)
-  if (!num || num <= 0) return '—'
-  if (unit === 'hrs') return num === 1 ? '1 hr' : `${num} hrs`
-  return num < 60 ? `${num} min` : `${Math.floor(num / 60)} hr${num % 60 ? ` ${num % 60} min` : ''}`
-}
-
 /* ══════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
 const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formData = {}, fromPage }) => {
   const { doctorDetails, setDoctorDetails, setClinicDetails, clinicDetails, updateTemplate } = useDoctorContext()
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving]     = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [pendingAction, setPendingAction] = useState(null)
+  const [pendingAction, setPendingAction]         = useState(null)
   const [clickedSaveTemplate, setClickedSaveTemplate] = useState(false)
   const navigate = useNavigate()
   const { success, error, info, warning } = useToast()
@@ -158,34 +150,49 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const branchId   = record.branchId   ?? patientData?.branchId   ?? ''
   const clinicName = clinicDetails?.name ?? patientData?.clinicName ?? ''
   const doctorId   = doctorDetails?.doctorId ?? patientData?.doctorId ?? ''
+  const doctorName = doctorDetails?.name ?? doctorDetails?.fullName ?? patientData?.doctorName ?? ''
 
-  /* ── patientInfo ── */
+  /* ── patientInfo — resolve from multiple possible locations ── */
   const patientInfo   = record.patientInfo ?? {}
   const patientId     = patientInfo.patientId    ?? patientData?.patientId    ?? ''
-  const patientName   = patientInfo.name         ?? patientData?.name         ?? ''
+  // ✅ patientName: check patientInfo first, then patientData (multiple field names)
+  const patientName   =
+    patientInfo.patientName  ??
+    patientData?.patientName ??
+    patientData?.name        ??
+    patientData?.fullName    ??
+    ''
   const patientMobile = patientInfo.mobileNumber ?? patientData?.mobileNumber ?? patientData?.patientMobileNumber ?? ''
   const patientAge    = patientInfo.age  ?? patientData?.age  ?? ''
   const patientSex    = patientInfo.sex  ?? patientData?.sex  ?? patientData?.gender ?? ''
 
   /* ── complaints ── */
-  const complaintsObj     = record.complaints ?? {}
-  const complaintDetails  = complaintsObj.complaintDetails  ?? patientData?.problem ?? ''
+  const complaintsObj     = record.complaints ?? record.symptoms ?? {}
+  const complaintDetails  = complaintsObj.complaintDetails  ?? complaintsObj.symptomDetails ?? patientData?.problem ?? ''
   const complaintDuration = complaintsObj.duration          ?? patientData?.symptomsDuration ?? ''
   const selectedTherapy   = patientData?.subServiceName     ?? complaintsObj.selectedTherapy ?? ''
+  const selectedTherapyID = patientData?.subServiceId       ?? complaintsObj.selectedTherapyID ?? ''
   const painAssessmentImage = complaintsObj.partImage ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
-  const partImage         = complaintsObj.partImage  ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
-  const reportImages      = Array.isArray(complaintsObj.reportImages) ? complaintsObj.reportImages : []
-  const therapyAnswers    = complaintsObj.theraphyAnswers ?? formData?.theraphyAnswers ?? patientData?.theraphyAnswers ?? {}
-  const finalComplaints   = {
-    ...complaintsObj,
-    complaintDetails, duration: complaintDuration,
-    theraphyAnswers: therapyAnswers, selectedTherapy,
-    selectedTherapyID: patientData?.subServiceId ?? complaintsObj.selectedTherapyID ?? '',
-    painAssessmentImage, reportImages,
+  const partImage           = complaintsObj.partImage ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
+  const reportImages        = Array.isArray(complaintsObj.reportImages)      ? complaintsObj.reportImages
+                            : Array.isArray(complaintsObj.attachmentImages) ? complaintsObj.attachmentImages
+                            : []
+  const therapyAnswers = complaintsObj.theraphyAnswers ?? formData?.theraphyAnswers ?? patientData?.theraphyAnswers ?? {}
+
+  const finalComplaints = {
+    complaintDetails,
+    duration:          complaintDuration,
+    selectedTherapy,
+    selectedTherapyID,
+    painAssessmentImage,
+    reportImages,
+    theraphyAnswers:   therapyAnswers,
   }
+
   const therapyGroups = Object.entries(therapyAnswers).map(([cat, qs]) => ({
     category: cat, questions: Array.isArray(qs) ? qs : [],
   }))
+
   const attachments = [
     ...(painAssessmentImage ? [{ url: toImageSrc(painAssessmentImage), name: 'Pain Assessment' }] : []),
     ...reportImages.map((img, i) => ({ url: toImageSrc(img), name: `Report ${i + 1}` })),
@@ -194,44 +201,51 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   /* ── assessment ── */
   const assessment = record.assessment ?? formData?.assessment ?? {}
 
-  /* ── diagnosis — diagnosisRows array from PrescriptionTab ── */
+  /* ── diagnosis ── */
   const diagnosisObj  = record.diagnosis ?? formData?.diagnosis ?? {}
-  const diagnosisRows = Array.isArray(diagnosisObj.diagnosisRows) ? diagnosisObj.diagnosisRows : []
+  const diagnosisRows = Array.isArray(diagnosisObj.diagnosisRows)
+    ? diagnosisObj.diagnosisRows
+    : diagnosisObj.physioDiagnosis
+      ? [diagnosisObj]
+      : []
 
-  /* ── treatmentPlans — array from TreatmentPlan.jsx ──
-     Each entry: { therapistId, therapistName, manualTherapy,
-                   frequencyCount, frequencyUnit, precautions }           */
-  const treatmentPlanRaw = record.treatmentPlan ?? {}
-  const treatmentPlans   = Object.keys(treatmentPlanRaw).length > 0
-    ? [treatmentPlanRaw]
-    : (Array.isArray(formData?.treatmentPlans) ? formData.treatmentPlans : [])
-
-  /* ── therapySessions — from TherapySessions/FollowUp.jsx ──
-     Shape: { overallStatus, sessions: [...] }
-     Each session: { sessionDate, durationValue, durationUnit,
-                     modalitiesUsed[], exercisesDone[], patientResponse, therapistNotes } */
+  /* ── therapySessions ── */
   const therapySessionsObj = record.therapySessions ?? formData?.therapySessions ?? {}
   const overallStatus      = therapySessionsObj.overallStatus ?? ''
-  const sessions           = Array.isArray(therapySessionsObj.sessions) ? therapySessionsObj.sessions : []
+  const sessionsList       = Array.isArray(therapySessionsObj.sessions) ? therapySessionsObj.sessions : []
 
-  /* ── exercisePlan — from ExercisePlan.jsx ──
-     Shape: { exercises: [...], homeAdvice }
-     Each exercise: { name, sets, reps, durationValue, durationUnit,
-                      instructions, videoUrl, thumbnail }                  */
+  /* ── treatmentPlan ── */
+  const firstSession = sessionsList[0] ?? {}
+  const treatmentPlanDisplay = {
+    doctorId:      doctorId,
+    doctorName:    doctorName,
+    therapistId:   firstSession.therapistId   ?? therapySessionsObj.therapistId   ?? '',
+    therapistName: firstSession.therapistName ?? therapySessionsObj.therapistName ?? '',
+    manualTherapy: firstSession.manualTherapy ?? therapySessionsObj.manualTherapy ?? '',
+    precautions:   firstSession.precautions   ?? therapySessionsObj.precautions   ?? '',
+  }
+
+  /* ── exercisePlan ──
+     PatientAppointmentDetails saves both `exercises` (for seed) and
+     `homeExercises` (for payload). Prefer homeExercises, fall back to exercises.
+  ── */
   const exercisePlanObj = record.exercisePlan ?? formData?.exercisePlan ?? {}
-  const exercises       = Array.isArray(exercisePlanObj.exercises) ? exercisePlanObj.exercises : []
+  const homeExercises   = Array.isArray(exercisePlanObj.homeExercises) ? exercisePlanObj.homeExercises
+                        : Array.isArray(exercisePlanObj.exercises)     ? exercisePlanObj.exercises
+                        : []
   const homeAdvice      = exercisePlanObj.homeAdvice ?? ''
 
-  /* ── followUp — from FollowUpnew.jsx ──
-     Shape: array of { nextVisitDate, treatmentStatus, reviewNotes, modifications } */
-  const rawFollowUp     = record.followUp ?? formData?.followUp ?? []
-  const followUpEntries = Array.isArray(rawFollowUp)
-    ? rawFollowUp
-    : (Object.keys(rawFollowUp).length > 0 ? [rawFollowUp] : [])
+  /* ── followUp ── */
+  const followUpObj = record.followUp ?? formData?.followUp ?? {}
+  const followUpEntry = Array.isArray(followUpObj)
+    ? (followUpObj[0] ?? {})
+    : (typeof followUpObj === 'object' ? followUpObj : {})
 
-  /* ── treatmentTemplates ── */
+  const parts              = formData?.parts ?? record.symptoms?.parts ?? patientData?.parts ?? []
   const treatmentTemplates = Array.isArray(record.treatmentTemplates) ? record.treatmentTemplates : []
-  const parts              = formData?.parts ?? patientData?.parts ?? []
+
+  /* ── Today's date helper ── */
+  const todayStr = () => new Date().toISOString().split('T')[0]
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -264,30 +278,98 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     URL.revokeObjectURL(url)
   }
 
+  /* ── Build final payload ── */
+  const buildPayload = () => {
+    const firstDiag = diagnosisRows[0] ?? {}
+
+    return {
+      bookingId,
+      clinicId,
+      branchId,
+      overallStatus: overallStatus || 'Pending',
+      createdAt:     todayStr(),
+      updatedAt:     '',
+
+      patientInfo: {
+        patientId,
+        patientName,
+        mobileNumber: patientMobile,
+        age:          patientAge,
+        sex:          patientSex,
+      },
+
+      complaints: {
+        complaintDetails:     finalComplaints.complaintDetails,
+        painAssessmentImage:  finalComplaints.painAssessmentImage,
+        reportImages:         finalComplaints.reportImages,
+        selectedTherapy:      finalComplaints.selectedTherapy,
+        selectedTherapyID:    finalComplaints.selectedTherapyID,
+        duration:             finalComplaints.duration,
+        theraphyAnswers:      finalComplaints.theraphyAnswers,
+      },
+
+      assessment: {
+        chiefComplaint:     assessment.chiefComplaint     ?? '',
+        painScale:          assessment.painScale          ?? '',
+        painType:           assessment.painType           ?? '',
+        duration:           assessment.duration           ?? '',
+        onset:              assessment.onset              ?? '',
+        aggravatingFactors: assessment.aggravatingFactors ?? '',
+        relievingFactors:   assessment.relievingFactors   ?? '',
+        posture:            assessment.posture            ?? '',
+        rangeOfMotion:      assessment.rangeOfMotion      ?? '',
+        specialTests:       assessment.specialTests       ?? '',
+        observations:       assessment.observations       ?? '',
+      },
+
+      diagnosis: {
+        physioDiagnosis: firstDiag.physioDiagnosis ?? '',
+        affectedArea:    firstDiag.affectedArea    ?? '',
+        severity:        firstDiag.severity        ?? '',
+        stage:           firstDiag.stage           ?? '',
+        notes:           firstDiag.notes           ?? '',
+      },
+
+      treatmentPlan: {
+        doctorId,
+        doctorName,
+        therapistId:   treatmentPlanDisplay.therapistId,
+        therapistName: treatmentPlanDisplay.therapistName,
+        manualTherapy: treatmentPlanDisplay.manualTherapy,
+        precautions:   treatmentPlanDisplay.precautions,
+      },
+
+      therapySessions: sessionsList,
+
+      exercisePlan: {
+        homeAdvice,
+        homeExercises,
+      },
+
+      followUp: {
+        nextVisitDate: followUpEntry.nextVisitDate ?? '',
+        reviewNotes:   followUpEntry.reviewNotes   ?? '',
+        modifications: followUpEntry.modifications ?? '',
+      },
+
+      treatmentTemplates,
+    }
+  }
+
   /* ── Save ── */
   const doSave = async ({ downloadAfter = false } = {}) => {
-    if (!complaintDetails?.trim()) {
+    if (!finalComplaints.complaintDetails?.trim()) {
       warning('"Complaint Details" is required to save.', { title: 'Warning' })
       return false
     }
     setSaving(true)
     try {
-      const blob    = await renderPdfBlob()
-      const base64  = await blobToBase64(blob)
-      const safeName = (patientName || 'Record').replace(/[^\w\-]+/g, '_')
+      const blob      = await renderPdfBlob()
+      const base64    = await blobToBase64(blob)
+      const safeName  = (patientName || 'Record').replace(/[^\w\-]+/g, '_')
+      const payload   = buildPayload()
 
-      const payload = {
-        bookingId, clinicId, branchId,
-        patientInfo: { patientId, name: patientName, mobileNumber: patientMobile, age: patientAge, sex: patientSex },
-        complaints:  { ...finalComplaints, therapyAnswers },
-        assessment,
-        diagnosis:   diagnosisObj,
-        treatmentPlan: treatmentPlans.length ? treatmentPlans[0] : null,
-        therapySessions: sessions,
-        exercisePlan: exercisePlanObj,
-        followUp: followUpEntries[0] || null,
-      }
-      console.log('FINAL PAYLOAD 👉', JSON.stringify(payload, null, 2))
+      console.log('🚀 FINAL SAVE PAYLOAD 👉', JSON.stringify(payload, null, 2))
 
       const resp = await SavePatientPrescription(payload)
       if (resp) {
@@ -336,7 +418,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
               {capitalizeEachWord(patientName)} · {patientAge}yr {patientSex?.charAt(0)}
             </div>
-            <StatusDot status={overallStatus || patientData?.status} />
+            <StatusDot status={overallStatus || patientData?.status || 'Pending'} />
           </div>
         )}
       </div>
@@ -354,10 +436,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             <Row label="Clinic ID"       value={clinicId} />
             <Row label="Clinic"          value={clinicName} />
             <Row label="Branch ID"       value={branchId} />
-            <Row label="Doctor"          value={treatmentPlanRaw.doctorName ?? patientData?.doctorName} />
-            <Row label="Doctor ID"       value={treatmentPlanRaw.doctorId   ?? doctorId} />
+            <Row label="Doctor"          value={doctorName} />
+            <Row label="Doctor ID"       value={doctorId} />
             <Row label="Therapy Type"    value={patientData?.subServiceName} />
-            <Row label="Overall Status"  value={overallStatus ?? 'Pending'} />
+            <Row label="Overall Status"  value={overallStatus || 'Pending'} />
           </Grid>
         </Section>
 
@@ -366,6 +448,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           <Grid cols={2}>
             <Row label="Complaint Details" value={complaintDetails} highlight />
             <Row label="Duration"          value={complaintDuration} highlight />
+            <Row label="Selected Therapy"  value={selectedTherapy} />
             <Row label="Report Images"     value={reportImages.length > 0 ? `${reportImages.length} image(s)` : 'None'} />
           </Grid>
           {parts.length > 0 && (
@@ -428,7 +511,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           </Section>
         )}
 
-        {/* ══ 5. DIAGNOSIS — diagnosisRows[] from PrescriptionTab ══ */}
+        {/* ══ 5. DIAGNOSIS ══ */}
         {diagnosisRows.length > 0 && (
           <Section icon="🔍" title="Diagnosis">
             <div style={{ overflowX: 'auto' }}>
@@ -442,7 +525,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                 </thead>
                 <tbody>
                   {diagnosisRows.map((d, i) => {
-                    const sevColor = { Mild: ['#e6f4ea','#2e7d32'], Moderate: ['#fff3e0','#e65100'], Severe: ['#fdecea','#c62828'] }
+                    const sevColor  = { Mild: ['#e6f4ea','#2e7d32'], Moderate: ['#fff3e0','#e65100'], Severe: ['#fdecea','#c62828'] }
                     const stagColor = { Acute: ['#fdecea','#c62828'], 'Sub-acute': ['#fff8e1','#f57f17'], Chronic: ['#e8eaf6','#283593'] }
                     const [sBg, sFg] = sevColor[d.severity]  || ['#f3f4f6','#374151']
                     const [tBg, tFg] = stagColor[d.stage]    || ['#f3f4f6','#374151']
@@ -467,52 +550,22 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           </Section>
         )}
 
-        {/* ══ 6. TREATMENT PLAN — from TreatmentPlan.jsx ══
-            Fields: therapistId, therapistName, manualTherapy,
-                    frequencyCount, frequencyUnit, precautions             */}
-        {treatmentPlans.length > 0 && (
+        {/* ══ 6. TREATMENT PLAN ══ */}
+        {(treatmentPlanDisplay.therapistId || treatmentPlanDisplay.therapistName) && (
           <Section icon="🧑‍⚕️" title="Treatment Plan">
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
-                <thead>
-                  <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                    {['#', 'Therapist ID', 'Therapist Name', 'Manual Therapy', 'Frequency', 'Precautions'].map(h => (
-                      <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {treatmentPlans.map((tp, i) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
-                      <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
-                      <td style={{ padding: '9px 12px' }}>{tp.therapistId   || '—'}</td>
-                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap', fontWeight: 600 }}>{tp.therapistName || '—'}</td>
-                      <td style={{ padding: '9px 12px' }}>{tp.manualTherapy || '—'}</td>
-                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
-                        {tp.frequencyCount
-                          ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 12, padding: '3px 10px', fontSize: '0.78rem', fontWeight: 700 }}>
-                              {tp.frequencyCount}× / {tp.frequencyUnit || 'Week'}
-                            </span>
-                          : '—'}
-                      </td>
-                      <td style={{ padding: '9px 12px', maxWidth: 200 }}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={tp.precautions}>
-                          {tp.precautions || '—'}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Grid cols={2}>
+              <Row label="Doctor ID"      value={treatmentPlanDisplay.doctorId} />
+              <Row label="Doctor Name"    value={treatmentPlanDisplay.doctorName} />
+              <Row label="Therapist ID"   value={treatmentPlanDisplay.therapistId} />
+              <Row label="Therapist Name" value={treatmentPlanDisplay.therapistName} highlight />
+              <Row label="Manual Therapy" value={treatmentPlanDisplay.manualTherapy} />
+              <Row label="Precautions"    value={treatmentPlanDisplay.precautions} />
+            </Grid>
           </Section>
         )}
 
-        {/* ══ 7. THERAPY SESSIONS — from TherapySessions/FollowUp.jsx ══
-            Fields per session: sessionDate, durationValue, durationUnit,
-                                modalitiesUsed[], exercisesDone[],
-                                patientResponse, therapistNotes            */}
-        {sessions.length > 0 && (
+        {/* ══ 7. THERAPY SESSIONS — Video column REMOVED ══ */}
+        {sessionsList.length > 0 && (
           <Section icon="🏥" title="Therapy Sessions">
             {overallStatus && (
               <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -520,108 +573,130 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                 <StatusDot status={overallStatus} />
               </div>
             )}
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
-                <thead>
-                  <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                    {['#', 'Session Date', 'Duration', 'Modalities Used', 'Exercises Done', 'Patient Response', 'Therapist Notes'].map(h => (
-                      <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map((s, i) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
-                      <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
-                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{s.sessionDate || '—'}</td>
-                      {/* durationValue + durationUnit from TherapySessions tab */}
-                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
-                        {s.durationValue
-                          ? <span style={{ background: '#f0f7ff', color: '#1a3a5c', borderRadius: 8, padding: '2px 9px', fontWeight: 600, fontSize: '0.78rem' }}>
-                              ⏱ {s.durationValue} {s.durationUnit || 'mins'}
-                            </span>
-                          : '—'}
-                      </td>
-                      {/* modalitiesUsed[] */}
-                      <td style={{ padding: '9px 12px', maxWidth: 180 }}>
-                        {Array.isArray(s.modalitiesUsed) && s.modalitiesUsed.length > 0
-                          ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                              {s.modalitiesUsed.map(m => <Chip key={m} label={m} color={A} bg="#dbeafe" />)}
-                            </div>
-                          : '—'}
-                      </td>
-                      {/* exercisesDone[] — array */}
-                      <td style={{ padding: '9px 12px', maxWidth: 200 }}>
-                        {Array.isArray(s.exercisesDone) && s.exercisesDone.length > 0
-                          ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                              {s.exercisesDone.map(ex => <Chip key={ex} label={ex} color="#065f46" bg="#d1fae5" />)}
-                            </div>
-                          : (typeof s.exercisesDone === 'string' && s.exercisesDone) ? s.exercisesDone : '—'}
-                      </td>
-                      <td style={{ padding: '9px 12px', maxWidth: 160 }}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.patientResponse}>
-                          {s.patientResponse || '—'}
-                        </div>
-                      </td>
-                      {/* therapistNotes field from EMPTY_SESSION */}
-                      <td style={{ padding: '9px 12px', maxWidth: 160 }}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.therapistNotes}>
-                          {s.therapistNotes || '—'}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {sessionsList.map((sess, si) => (
+              <div key={si} style={{ marginBottom: si < sessionsList.length - 1 ? 24 : 0 }}>
+                {/* Session header */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12, padding: '10px 16px', background: '#f0f7ff', borderRadius: 10, border: `1px solid ${BORDER}`, alignItems: 'center' }}>
+                  {sess.programName && (
+                    <span style={{ background: '#dbeafe', color: A, borderRadius: 20, padding: '3px 12px', fontSize: '0.8rem', fontWeight: 700 }}>
+                      {sess.serviceType === 'package' ? '📦' : '🎯'} {sess.programName}
+                    </span>
+                  )}
+                  {sess.serviceType && (
+                    <span style={{ background: sess.serviceType === 'package' ? '#fef3c7' : '#d1fae5', color: sess.serviceType === 'package' ? '#92400e' : '#065f46', borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', fontWeight: 700, textTransform: 'capitalize' }}>
+                      {sess.serviceType}
+                    </span>
+                  )}
+                  {sess.therapistName && <Chip label={`👤 ${sess.therapistName}`} color={P} bg="#f0f7ff" />}
+                  {sess.totalTherapyIds > 0 && <Chip label={`${sess.totalTherapyIds} therapies`} color="#065f46" bg="#d1fae5" />}
+                </div>
+
+                {/* Modalities */}
+                {Array.isArray(sess.modalitiesUsed) && sess.modalitiesUsed.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 8 }}>Modalities:</span>
+                    {sess.modalitiesUsed.map(m => <Chip key={m} label={m} color={A} bg="#dbeafe" />)}
+                  </div>
+                )}
+
+                {/* therapyData table — NO Video column */}
+                {Array.isArray(sess.therapyData) && sess.therapyData.length > 0 && (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
+                      <thead>
+                        <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+                          {['Therapy', 'Exercise Name', 'Session', 'Sets', 'Reps', 'Frequency', 'Notes'].map(h => (
+                            <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sess.therapyData.flatMap((therapy, ti) =>
+                          Array.isArray(therapy.exercises) && therapy.exercises.length > 0
+                            ? therapy.exercises.map((ex, ei) => (
+                                <tr key={`${ti}-${ei}`} style={{ background: (ti + ei) % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
+                                  {ei === 0 ? (
+                                    <td rowSpan={therapy.exercises.length} style={{ padding: '9px 12px', fontWeight: 700, color: A, verticalAlign: 'middle', borderRight: `1px solid ${BORDER}`, background: '#f0f7ff' }}>
+                                      {therapy.therapyName || '—'}
+                                    </td>
+                                  ) : null}
+                                  <td style={{ padding: '9px 12px', fontWeight: 600 }}>{ex.name || '—'}</td>
+                                  <td style={{ padding: '9px 12px', textAlign: 'center' }}>{dash(ex.session)}</td>
+                                  <td style={{ padding: '9px 12px', textAlign: 'center' }}>
+                                    {ex.sets ? <span style={{ background: '#dbeafe', color: A, borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span> : '—'}
+                                  </td>
+                                  <td style={{ padding: '9px 12px', textAlign: 'center' }}>
+                                    {ex.repetitions ? <span style={{ background: '#dbeafe', color: A, borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.repetitions}</span> : '—'}
+                                  </td>
+                                  {/* ── Frequency (was video) ── */}
+                                  <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
+                                    {ex.frequency
+                                      ? <span style={{ background: '#f0f7ff', color: P, borderRadius: 8, padding: '2px 8px', fontWeight: 600, fontSize: '0.78rem' }}>📆 {ex.frequency}</span>
+                                      : '—'}
+                                  </td>
+                                  <td style={{ padding: '9px 12px', maxWidth: 160 }}>
+                                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.notes}>{ex.notes || '—'}</div>
+                                  </td>
+                                </tr>
+                              ))
+                            : [(
+                                <tr key={`${ti}-empty`} style={{ background: LIGHT, borderBottom: `1px solid ${BORDER}` }}>
+                                  <td style={{ padding: '9px 12px', fontWeight: 700, color: A }}>{therapy.therapyName || '—'}</td>
+                                  <td colSpan={6} style={{ padding: '9px 12px', color: '#94a3b8', fontStyle: 'italic' }}>No exercises</td>
+                                </tr>
+                              )]
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Extra session details */}
+                <Grid cols={2} style={{ marginTop: 12 }}>
+                  {sess.patientResponse && <Row label="Patient Response" value={sess.patientResponse} />}
+                  {sess.manualTherapy   && <Row label="Manual Therapy"   value={sess.manualTherapy} />}
+                  {sess.precautions     && <Row label="Precautions"       value={sess.precautions} />}
+                </Grid>
+              </div>
+            ))}
           </Section>
         )}
 
-        {/* ══ 8. EXERCISE PLAN — from ExercisePlan.jsx ══
-            Fields per exercise: name, sets, reps, durationValue,
-                                 durationUnit, instructions, videoUrl, thumbnail */}
-        {(exercises.length > 0 || homeAdvice) && (
+        {/* ══ 8. EXERCISE PLAN ══ */}
+        {(homeExercises.length > 0 || homeAdvice) && (
           <Section icon="🏋️" title="Exercise Plan">
-            {exercises.length > 0 && (
+            {homeExercises.length > 0 && (
               <div style={{ overflowX: 'auto', marginBottom: homeAdvice ? 16 : 0 }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                      {['#', 'Exercise', 'Sets', 'Reps', 'Duration', 'Instructions', 'Video', 'Thumbnail'].map(h => (
+                      {/* ── No Video column, Frequency replaces Duration ── */}
+                      {['#', 'Exercise', 'Sets', 'Reps', 'Frequency', 'Instructions', 'Thumbnail'].map(h => (
                         <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {exercises.map((ex, i) => (
+                    {homeExercises.map((ex, i) => (
                       <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
                         <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
                         <td style={{ padding: '9px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>{ex.name || '—'}</td>
                         <td style={{ padding: '9px 12px', textAlign: 'center' }}>
-                          {ex.sets
-                            ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span>
-                            : '—'}
+                          {ex.sets ? <span style={{ background: '#dbeafe', color: A, borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span> : '—'}
                         </td>
                         <td style={{ padding: '9px 12px', textAlign: 'center' }}>
-                          {ex.reps
-                            ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.reps}</span>
-                            : '—'}
+                          {ex.reps ? <span style={{ background: '#dbeafe', color: A, borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.reps}</span> : '—'}
                         </td>
-                        {/* durationValue + durationUnit from ExercisePlan tab */}
+                        {/* ── Frequency ── */}
                         <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
-                          <span style={{ background: '#f0f7ff', color: '#1a3a5c', borderRadius: 8, padding: '2px 9px', fontWeight: 600, fontSize: '0.78rem' }}>
-                            ⏱ {formatDuration(ex.durationValue, ex.durationUnit)}
-                          </span>
+                          {ex.frequency
+                            ? <span style={{ background: '#f0f7ff', color: P, borderRadius: 8, padding: '2px 9px', fontWeight: 600, fontSize: '0.78rem' }}>📆 {ex.frequency}</span>
+                            : '—'}
                         </td>
                         <td style={{ padding: '9px 12px', maxWidth: 220 }}>
                           <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>
                             {ex.instructions || '—'}
                           </div>
-                        </td>
-                        <td style={{ padding: '9px 12px' }}>
-                          {ex.videoUrl
-                            ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: A, fontWeight: 600, fontSize: '0.78rem' }}>▶ Watch</a>
-                            : '—'}
                         </td>
                         <td style={{ padding: '9px 12px' }}>
                           {ex.thumbnail
@@ -638,62 +713,31 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           </Section>
         )}
 
-        {/* ══ 9. FOLLOW UP — from FollowUpnew.jsx ══
-            Fields: nextVisitDate, treatmentStatus, reviewNotes, modifications */}
-        {followUpEntries.length > 0 && (
+        {/* ══ 9. FOLLOW UP ══ */}
+        {(followUpEntry.nextVisitDate || followUpEntry.reviewNotes) && (
           <Section icon="📅" title="Follow Up">
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
-                <thead>
-                  <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                    {['#', 'Next Visit Date', 'Urgency', 'Treatment Status', 'Review Notes', 'Modifications'].map(h => (
-                      <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {followUpEntries.map((fu, i) => {
-                    const urgency  = getVisitUrgency(fu.nextVisitDate)
-                    const st       = FOLLOWUP_STATUS_STYLE[fu.treatmentStatus]
-                    return (
-                      <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
-                        <td style={{ padding: '9px 12px', fontWeight: 700 }}>{i + 1}</td>
-                        {/* nextVisitDate */}
-                        <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{fu.nextVisitDate || '—'}</td>
-                        {/* urgency derived from nextVisitDate */}
-                        <td style={{ padding: '9px 12px' }}>
-                          {urgency
-                            ? <span style={{ background: urgency.bg, color: urgency.color, border: `1px solid ${urgency.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                {urgency.icon} {urgency.label}
-                              </span>
-                            : '—'}
-                        </td>
-                        {/* treatmentStatus */}
-                        <td style={{ padding: '9px 12px' }}>
-                          {st
-                            ? <span style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                {st.icon} {fu.treatmentStatus}
-                              </span>
-                            : dash(fu.treatmentStatus)}
-                        </td>
-                        {/* reviewNotes */}
-                        <td style={{ padding: '9px 12px', maxWidth: 220 }}>
-                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={fu.reviewNotes}>
-                            {fu.reviewNotes || '—'}
-                          </div>
-                        </td>
-                        {/* modifications — only meaningful when Active */}
-                        <td style={{ padding: '9px 12px', maxWidth: 180 }}>
-                          {fu.treatmentStatus === 'Active'
-                            ? <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={fu.modifications}>{fu.modifications || '—'}</div>
-                            : <span style={{ color: '#a0aec0', fontSize: '0.78rem', fontStyle: 'italic' }}>N/A</span>}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <Grid cols={2}>
+              <Row label="Next Visit Date"  value={followUpEntry.nextVisitDate} highlight />
+              <Row label="Treatment Status" value={followUpEntry.treatmentStatus} />
+              <Row label="Review Notes"     value={followUpEntry.reviewNotes} highlight />
+              <Row label="Modifications"    value={followUpEntry.modifications} />
+            </Grid>
+            {followUpEntry.nextVisitDate && (() => {
+              const urgency = getVisitUrgency(followUpEntry.nextVisitDate)
+              const st      = FOLLOWUP_STATUS_STYLE[followUpEntry.treatmentStatus]
+              return urgency ? (
+                <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ background: urgency.bg, color: urgency.color, border: `1px solid ${urgency.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700 }}>
+                    {urgency.icon} {urgency.label}
+                  </span>
+                  {st && (
+                    <span style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700 }}>
+                      {st.icon} {followUpEntry.treatmentStatus}
+                    </span>
+                  )}
+                </div>
+              ) : null
+            })()}
           </Section>
         )}
 
@@ -725,8 +769,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                           ? t.exercises.map(e => <Chip key={e} label={e} color="#065f46" bg="#d1fae5" />)
                           : '—'}
                       </td>
-                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{t.duration   || '—'}</td>
-                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{t.frequency  || '—'}</td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{t.duration  || '—'}</td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{t.frequency || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -785,7 +829,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       {/* ══ TEMPLATE MODAL ══ */}
       {showTemplateModal && !clickedSaveTemplate && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(26,58,92,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: '28px 32px', maxWidth: 420, width: '90%', boxShadow: '0 8px 40px rgba(26,90,168,0.2)', border: `1px solid ${BORDER}` }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '28px 32px', maxWidth: 420, width: '90%', boxShadow: '0 8px 40px rgba(26,90,168,0.2)', border: `1px solid ${BORDER}`, position: 'relative' }}>
             <button onClick={() => setShowTemplateModal(false)} style={{ position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#64748b' }}>✕</button>
             <div style={{ fontSize: 28, marginBottom: 12, textAlign: 'center' }}>📋</div>
             <h6 style={{ margin: '0 0 8px', color: P, fontWeight: 700, textAlign: 'center' }}>Save as Template?</h6>

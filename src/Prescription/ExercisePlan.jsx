@@ -6,7 +6,7 @@ import { getTherapyExercises, getTodayAppointments } from '../Auth/Auth'
 
 /* ─── Empty exercise entry ───────────────────────────────────────────────── */
 const EMPTY_EXERCISE = {
-  name: '', sets: '', reps: '', durationValue: '', durationUnit: 'mins',
+  name: '', sets: '', reps: '', frequency: '',
   instructions: '', videoUrl: '', thumbnail: '',
 }
 
@@ -23,13 +23,13 @@ const labelStyle = {
   marginBottom: 6, display: 'block',
 }
 
-const gridTwo = {
-  display: 'grid', gridTemplateColumns: '1fr 1fr',
+const gridThree = {
+  display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
   gap: '16px 28px', marginBottom: 16,
 }
 
-const gridThree = {
-  display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+const gridTwo = {
+  display: 'grid', gridTemplateColumns: '1fr 1fr',
   gap: '16px 28px', marginBottom: 16,
 }
 
@@ -91,105 +91,9 @@ const NumberInput = ({ value, onChange, min = 1, max, placeholder }) => {
           backgroundColor: error ? '#fff5f5' : value && !error ? '#f0fff4' : '#f5f9ff',
         }}
       />
-      {value && !error && (
-        <span style={{ marginTop: 4, fontSize: '0.75rem', color: '#276749', fontWeight: 600 }}>
-          ✓ Valid
-        </span>
-      )}
+
     </Field>
   )
-}
-
-/* ─── Duration — number input + mins / hrs toggle ───────────────────────── */
-const DurationInput = ({ value, unit, onValueChange, onUnitChange }) => {
-  const [touched, setTouched] = useState(false)
-  const num = parseFloat(value)
-  const maxVal = unit === 'hrs' ? 24 : 300
-  const error = touched && value !== '' && (isNaN(num) || num <= 0 || num > maxVal)
-    ? `Enter a value between 1–${maxVal} ${unit}`
-    : null
-
-  // Summary label
-  const summary = !error && value && num > 0
-    ? unit === 'hrs'
-      ? num === 1 ? '1 hr' : `${num} hrs`
-      : num < 60 ? `${num} min` : `${Math.floor(num / 60)} hr${num % 60 ? ` ${num % 60} min` : ''}`
-    : null
-
-  return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-        {/* Number input */}
-        <input
-          type="number"
-          value={value}
-          min={1}
-          max={maxVal}
-          placeholder={unit === 'hrs' ? 'e.g. 1' : 'e.g. 30'}
-          onBlur={() => setTouched(true)}
-          onChange={e => {
-            const raw = e.target.value
-            if (raw === '' || /^\d*\.?\d*$/.test(raw)) onValueChange(raw)
-          }}
-          style={{
-            ...inputStyle,
-            borderRadius: '7px 0 0 7px',
-            borderRight: 'none',
-            flex: 1,
-            borderColor: error ? '#fc8181' : value && !error ? '#68d391' : '#b6cfe8',
-            backgroundColor: error ? '#fff5f5' : value && !error ? '#f0fff4' : '#f5f9ff',
-          }}
-        />
-
-        {/* Toggle: mins / hrs */}
-        {['mins', 'hrs'].map((u, i, arr) => {
-          const active = unit === u
-          const isFirst = i === 0
-          const isLast  = i === arr.length - 1
-          return (
-            <button
-              key={u}
-              type="button"
-              onClick={() => { onUnitChange(u); onValueChange('') }}
-              style={{
-                height: 38, padding: '0 14px',
-                border: '1.5px solid',
-                borderLeft: isFirst ? '1.5px solid' : 'none',
-                borderColor: active ? '#1a5fa8' : '#b6cfe8',
-                borderRadius: isLast ? '0 7px 7px 0' : 0,
-                background: active ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#f5f9ff',
-                color: active ? '#fff' : '#64748b',
-                fontWeight: active ? 700 : 500,
-                fontSize: '0.82rem', cursor: 'pointer',
-                fontFamily: 'inherit', whiteSpace: 'nowrap',
-                transition: 'all 0.15s',
-              }}
-            >
-              {u}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Error or summary */}
-      {error && (
-        <span style={{ marginTop: 4, display: 'block', fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>⚠ {error}</span>
-      )}
-      {summary && (
-        <div style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 5, background: '#f0f7ff', border: '1px solid #c8ddf0', borderRadius: 8, padding: '3px 10px', fontSize: '0.78rem', color: '#1a3a5c', fontWeight: 700 }}>
-          ⏱ {summary}
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ─── Duration formatter for table ─────────────────────────────────────── */
-const formatDuration = (val, unit) => {
-  const num = parseFloat(val)
-  if (!num || num <= 0) return '—'
-  if (unit === 'hrs') return num === 1 ? '1 hr' : `${num} hrs`
-  return num < 60 ? `${num} min` : `${Math.floor(num / 60)} hr${num % 60 ? ` ${num % 60} min` : ''}`
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -197,22 +101,22 @@ const formatDuration = (val, unit) => {
 ══════════════════════════════════════════════════════════════════════════ */
 const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
-  const [exercises,       setExercises]       = useState(Array.isArray(seed.exercises) ? seed.exercises : [])
-  const [homeAdvice,      setHomeAdvice]      = useState(seed.homeAdvice ?? '')
-  const [form,            setForm]            = useState({ ...EMPTY_EXERCISE })
-  const [editingIdx,      setEditingIdx]      = useState(null)
+  const [exercises, setExercises] = useState(Array.isArray(seed.exercises) ? seed.exercises : [])
+  const [homeAdvice, setHomeAdvice] = useState(seed.homeAdvice ?? '')
+  const [form, setForm] = useState({ ...EMPTY_EXERCISE })
+  const [editingIdx, setEditingIdx] = useState(null)
 
   const [exerciseLibrary, setExerciseLibrary] = useState([])
-  const [loadingLibrary,  setLoadingLibrary]  = useState(false)
-  const [search,          setSearch]          = useState('')
-  const [showDropdown,    setShowDropdown]    = useState(false)
+  const [loadingLibrary, setLoadingLibrary] = useState(false)
+  const [search, setSearch] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       const clinicId = localStorage.getItem('clinicId') || localStorage.getItem('hospitalId') || ''
       if (!clinicId) return
       try {
-        const res      = await getTodayAppointments()
+        const res = await getTodayAppointments()
         const branchId = res?.data?.[0]?.branchId || ''
         if (!branchId) return
         setLoadingLibrary(true)
@@ -237,6 +141,7 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   const addedNames = new Set(
     exercises.filter((_, i) => i !== editingIdx).map(e => e.name?.trim().toLowerCase())
   )
+
   const filteredLibrary = exerciseLibrary.filter(ex => {
     const n = (ex.name || '').trim().toLowerCase()
     return n.includes(search.toLowerCase()) && !addedNames.has(n)
@@ -285,52 +190,84 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                 <div style={{ position: 'relative' }}>
                   <input
                     value={search || form.name}
-                    onChange={e => { setSearch(e.target.value); set('name')(e.target.value); setShowDropdown(true) }}
+                    onChange={e => {
+                      setSearch(e.target.value)
+                      set('name')(e.target.value)
+                      setShowDropdown(true)
+                    }}
                     onFocus={() => setShowDropdown(true)}
                     onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                    placeholder={loadingLibrary ? 'Loading exercises...' : exerciseLibrary.length > 0 ? 'Search or type exercise name...' : 'Type exercise name...'}
+                    placeholder={
+                      loadingLibrary
+                        ? 'Loading exercises...'
+                        : exerciseLibrary.length > 0
+                          ? 'Search or type exercise name...'
+                          : 'Type exercise name...'
+                    }
                     style={inputStyle}
                   />
+
+                  {/* ── Dropdown ── */}
                   {showDropdown && !loadingLibrary && filteredLibrary.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8, maxHeight: 220, overflowY: 'auto', zIndex: 1000, boxShadow: '0 4px 16px rgba(26,90,168,0.12)' }}>
+                    <div style={{
+                      position: 'absolute', top: '100%', left: 0, right: 0,
+                      background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8,
+                      maxHeight: 260, overflowY: 'auto', zIndex: 1000,
+                      boxShadow: '0 4px 16px rgba(26,90,168,0.12)',
+                    }}>
                       {filteredLibrary.map((ex, i) => {
                         const exName = ex.name || ''
+                        const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
+                        const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
+                        // session = number of sessions (maps to our "sets" field if sets is 0)
+                        const exSession = ex.session ? String(ex.session) : ''
+                        const exFreq = ex.frequency || ''
+                        const exNotes = ex.notes || ''
+                        const exVideo = ex.video || ''
+                        const exImage = ex.image || ''
                         const isSelected = form.name === exName
+
                         return (
-                          <div key={i}
+                          <div
+                            key={i}
                             onMouseDown={() => {
-                              // Parse duration from API string e.g. "30 min" or "1 hr"
-                              let apiVal = '', apiUnit = 'mins'
-                              if (ex.duration) {
-                                const hm = ex.duration.match(/(\d+\.?\d*)\s*h/i)
-                                const mm = ex.duration.match(/(\d+\.?\d*)\s*m/i)
-                                if (hm) { apiVal = hm[1]; apiUnit = 'hrs' }
-                                else if (mm) { apiVal = mm[1]; apiUnit = 'mins' }
-                              }
                               setForm(f => ({
                                 ...f,
-                                name:          exName,
-                                durationValue: apiVal  || f.durationValue,
-                                durationUnit:  apiUnit || f.durationUnit,
-                                sets:          ex.session   || f.sets,
-                                reps:          ex.frequency || f.reps,
-                                instructions:  ex.notes     || f.instructions,
-                                videoUrl:      ex.video     || f.videoUrl,
-                                thumbnail:     ex.image     || f.thumbnail,
+                                name: exName,
+                                // Prefer explicit sets/repetitions from API; fall back to session
+                                sets: exSets || exSession || f.sets,
+                                reps: exReps || f.reps,
+                                frequency: exFreq || f.frequency,
+                                instructions: exNotes || f.instructions,
+                                videoUrl: exVideo || f.videoUrl,
+                                thumbnail: exImage || f.thumbnail,
                               }))
-                              setSearch(exName); setShowDropdown(false)
+                              setSearch(exName)
+                              setShowDropdown(false)
                             }}
-                            style={{ padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid #eee', background: isSelected ? '#e0f2fe' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                            style={{
+                              padding: '9px 12px', cursor: 'pointer',
+                              borderBottom: '1px solid #eee',
+                              background: isSelected ? '#e0f2fe' : '#fff',
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            }}
                             onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f0f7ff' }}
                             onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isSelected ? '#e0f2fe' : '#fff' }}
                           >
                             <div>
                               <strong style={{ color: '#1a5fa8', fontSize: '0.88rem' }}>{exName}</strong>
                               <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
-                                {[ex.duration && `⏱ ${ex.duration}`, ex.session && `🔁 ${ex.session} sets`, ex.frequency && `🔄 ${ex.frequency} reps`].filter(Boolean).join('  ·  ')}
+                                {[
+                                  exSets && `🔁 ${exSets} sets`,
+                                  exReps && `🔄 ${exReps} reps`,
+                                  exFreq && `📆 ${exFreq}`,
+                                  exSession && `🗓 ${exSession} session(s)`,
+                                ].filter(Boolean).join('  ·  ')}
                               </div>
                             </div>
-                            {isSelected && <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.78rem' }}>✓</span>}
+                            {isSelected && (
+                              <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.78rem' }}>✓</span>
+                            )}
                           </div>
                         )
                       })}
@@ -340,10 +277,10 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
               </Field>
             </div>
 
-            {/* ── Sets | Reps | Duration ── */}
+            {/* ── Sets | Reps | Frequency ── */}
             <div style={gridThree}>
 
-              {/* Sets — number input with validation */}
+              {/* Sets */}
               <div>
                 <label style={labelStyle}>Sets</label>
                 <NumberInput
@@ -354,7 +291,7 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                 />
               </div>
 
-              {/* Reps — number input with validation */}
+              {/* Reps */}
               <div>
                 <label style={labelStyle}>Reps</label>
                 <NumberInput
@@ -365,15 +302,22 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                 />
               </div>
 
-              {/* Duration — value + mins/hrs toggle */}
+              {/* Frequency — free-text, e.g. "2 time/ day" */}
               <div>
-                <label style={labelStyle}>Duration</label>
-                <DurationInput
-                  value={form.durationValue}
-                  unit={form.durationUnit}
-                  onValueChange={set('durationValue')}
-                  onUnitChange={set('durationUnit')}
-                />
+                <label style={labelStyle}>Frequency</label>
+                <Field>
+                  <input
+                    value={form.frequency}
+                    onChange={e => set('frequency')(e.target.value)}
+                    placeholder="e.g. 2 time/ day"
+                    style={{
+                      ...inputStyle,
+                      borderColor: form.frequency ? '#68d391' : '#b6cfe8',
+                      backgroundColor: form.frequency ? '#f0fff4' : '#f5f9ff',
+                    }}
+                  />
+
+                </Field>
               </div>
 
             </div>
@@ -385,7 +329,11 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                   <label style={labelStyle}>Exercise Thumbnail</label>
                   <div style={{ marginTop: 6 }}>
                     <img
-                      src={form.thumbnail.startsWith('data:image') ? form.thumbnail : `data:image/png;base64,${form.thumbnail}`}
+                      src={
+                        form.thumbnail.startsWith('data:image')
+                          ? form.thumbnail
+                          : `data:image/png;base64,${form.thumbnail}`
+                      }
                       alt="Thumbnail Preview"
                       style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #c8ddf0' }}
                     />
@@ -407,17 +355,37 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <label style={labelStyle}>Instructions</label>
-                <Textarea value={form.instructions} onChange={set('instructions')}
-                  placeholder="e.g. Lie on back and tilt pelvis upward" rows={3} />
+                <Textarea
+                  value={form.instructions}
+                  onChange={set('instructions')}
+                  placeholder="e.g. Lie on back and tilt pelvis upward"
+                  rows={3}
+                />
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: 12 }}>
-              <button type="button" onClick={handleSave} style={{ padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit' }}>
+              <button
+                type="button"
+                onClick={handleSave}
+                style={{
+                  padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
+                  color: '#fff', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit',
+                }}
+              >
                 {editingIdx !== null ? '✅ Update Exercise' : '➕ Add Exercise'}
               </button>
               {editingIdx !== null && (
-                <button type="button" onClick={handleCancel} style={{ padding: '8px 24px', borderRadius: 8, cursor: 'pointer', border: '1.5px solid #b6cfe8', background: '#f5f9ff', color: '#1a3a5c', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit' }}>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  style={{
+                    padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
+                    border: '1.5px solid #b6cfe8', background: '#f5f9ff',
+                    color: '#1a3a5c', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                  }}
+                >
                   Cancel
                 </button>
               )}
@@ -435,43 +403,85 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                      {['#', 'Name', 'Sets', 'Reps', 'Duration', 'Instructions', 'Video', 'Thumbnail', 'Actions'].map(h => (
+                      {['#', 'Name', 'Sets', 'Reps', 'Frequency', 'Instructions', 'Video', 'Thumbnail', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {exercises.map((ex, idx) => (
-                      <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
+                      <tr
+                        key={idx}
+                        style={{ backgroundColor: idx % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}
+                      >
                         <td style={{ padding: '10px 14px', fontWeight: 700 }}>{idx + 1}</td>
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 600 }}>{ex.name || '—'}</td>
+
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                          {ex.name || '—'}
+                        </td>
+
                         <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                           {ex.sets
                             ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span>
                             : '—'}
                         </td>
+
                         <td style={{ padding: '10px 14px', textAlign: 'center' }}>
-                          {ex.reps
-                            ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.reps}</span>
+                          {ex.reps !== '' && ex.reps !== null && ex.reps !== undefined
+                            ? <span
+                              style={{
+                                background: '#dbeafe',
+                                color: '#1a5fa8',
+                                borderRadius: 10,
+                                padding: '2px 9px',
+                                fontWeight: 700,
+                                fontSize: '0.78rem'
+                              }}
+                            >
+                              🔄 {ex.reps}
+                            </span>
                             : '—'}
                         </td>
+
+                        {/* ── Frequency column ── */}
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          <span style={{ background: '#f0f7ff', color: '#1a3a5c', borderRadius: 8, padding: '2px 9px', fontWeight: 600, fontSize: '0.78rem' }}>
-                            ⏱ {formatDuration(ex.durationValue, ex.durationUnit)}
-                          </span>
+                          {ex.frequency
+                            ? <span style={{ background: '#f0f7ff', color: '#1a3a5c', borderRadius: 8, padding: '2px 9px', fontWeight: 600, fontSize: '0.78rem' }}>📆 {ex.frequency}</span>
+                            : '—'}
                         </td>
+
                         <td style={{ padding: '10px 14px', maxWidth: 200 }}>
-                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>{ex.instructions || '—'}</div>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>
+                            {ex.instructions || '—'}
+                          </div>
                         </td>
+
                         <td style={{ padding: '10px 14px' }}>
-                          {ex.videoUrl ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem' }}>▶ Watch</a> : '—'}
+                          {ex.videoUrl
+                            ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem' }}>▶ Watch</a>
+                            : '—'}
                         </td>
+
                         <td style={{ padding: '10px 14px' }}>
-                          {ex.thumbnail ? <img src={ex.thumbnail} alt={ex.name} style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 6, border: '1px solid #c8ddf0' }} onError={e => { e.target.style.display = 'none' }} /> : '—'}
+                          {ex.thumbnail
+                            ? <img
+                              src={ex.thumbnail}
+                              alt={ex.name}
+                              style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 6, border: '1px solid #c8ddf0' }}
+                              onError={e => { e.target.style.display = 'none' }}
+                            />
+                            : '—'}
                         </td>
+
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          <button onClick={() => handleEdit(idx)} style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: '#f0f7ff', color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
-                          <button onClick={() => handleDelete(idx)} style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️ Delete</button>
+                          <button
+                            onClick={() => handleEdit(idx)}
+                            style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: '#f0f7ff', color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
+                          >✏️ Edit</button>
+                          <button
+                            onClick={() => handleDelete(idx)}
+                            style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
+                          >🗑️ Delete</button>
                         </td>
                       </tr>
                     ))}
@@ -488,18 +498,32 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
             <CardHeader emoji="🏠" title="Home Advice" />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <label style={labelStyle}>Home Advice</label>
-              <Textarea value={homeAdvice} onChange={setHomeAdvice}
-                placeholder="e.g. Maintain correct posture and do exercises daily" rows={4} />
+              <Textarea
+                value={homeAdvice}
+                onChange={setHomeAdvice}
+                placeholder="e.g. Maintain correct posture and do exercises daily"
+                rows={4}
+              />
             </div>
           </CCardBody>
         </CCard>
 
       </CContainer>
 
-      <div className="position-fixed bottom-0"
-        style={{ left: 0, right: 0, background: '#a5c4d4ff', display: 'flex', justifyContent: 'flex-end', gap: 16, padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)' }}>
-        <Button customColor="#ffffff" color="#7e3a93" onClick={handleNext}
-          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+      {/* ══ STICKY BOTTOM BAR ══ */}
+      <div
+        className="position-fixed bottom-0"
+        style={{
+          left: 0, right: 0, background: '#a5c4d4ff',
+          display: 'flex', justifyContent: 'flex-end', gap: 16,
+          padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
+        }}
+      >
+        <Button
+          customColor="#ffffff" color="#7e3a93"
+          onClick={handleNext}
+          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
+        >
           Next
         </Button>
       </div>
@@ -509,4 +533,4 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   )
 }
 
-export default ExercisePlan 
+export default ExercisePlan

@@ -113,7 +113,9 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   const [chiefComplaint, setChiefComplaint] = useState(seed.chiefComplaint ?? '')
   const [painScale, setPainScale] = useState(seed.painScale ?? '')
   const [painType, setPainType] = useState(seed.painType ?? '')
-  const [duration, setDuration] = useState(seed.duration ?? '')
+  const [durationValue, setDurationValue] = useState('')
+  const [durationUnit, setDurationUnit] = useState('day')
+  const [duration, setDuration] = useState('')
   const [onset, setOnset] = useState(seed.onset ?? '')
   const [aggravatingFactors, setAggravatingFactors] = useState(seed.aggravatingFactors ?? '')
   const [relievingFactors, setRelievingFactors] = useState(seed.relievingFactors ?? '')
@@ -129,27 +131,33 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   const { patientData, clinicDetails, doctorDetails } = useDoctorContext()
 
   /* sync when seed changes */
-  useEffect(() => {
-    const s = seed || {}
-    setChiefComplaint(s.chiefComplaint ?? '')
-    setPainScale(s.painScale ?? '')
-    setPainType(s.painType ?? '')
-    setDuration(s.duration ?? '')
-    setOnset(s.onset ?? '')
-    setAggravatingFactors(s.aggravatingFactors ?? '')
-    setRelievingFactors(s.relievingFactors ?? '')
-    setPosture(s.posture ?? '')
-    setRangeOfMotion(s.rangeOfMotion ?? '')
-    setSpecialTests(s.specialTests ?? '')
-    setObservations(s.observations ?? '')
-  }, [seed])
+ useEffect(() => {
+  const s = seed || {}
+
+  if (s.duration) {
+    const parts = s.duration.split(' ')
+    setDurationValue(parts[0] || '')
+    setDurationUnit(parts[1]?.replace('s', '') || 'day')
+  }
+
+  setChiefComplaint(s.chiefComplaint ?? '')
+  setPainScale(s.painScale ?? '')
+  setPainType(s.painType ?? '')
+  setOnset(s.onset ?? '')
+  setAggravatingFactors(s.aggravatingFactors ?? '')
+  setRelievingFactors(s.relievingFactors ?? '')
+  setPosture(s.posture ?? '')
+  setRangeOfMotion(s.rangeOfMotion ?? '')
+  setSpecialTests(s.specialTests ?? '')
+  setObservations(s.observations ?? '')
+}, [seed])
 
   const handleNext = () => {
     const payload = {
       chiefComplaint,
       painScale,
       painType,
-      duration,
+       duration: finalDuration, // ✅ ONLY duration goes
       onset,
       aggravatingFactors,
       relievingFactors,
@@ -331,13 +339,26 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                     </Field>
 
                     <Field label="Duration">
-                      <TextInput
-                        value={duration}
-                        onChange={setDuration}
-                        placeholder="e.g. 2 weeks"
-                      />
-                    </Field>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          type="number"
+                          value={durationValue}
+                          onChange={(e) => setDurationValue(e.target.value)}
+                          placeholder="Value"
+                          style={{ ...inputStyle, flex: 1 }}
+                        />
 
+                        <select
+                          value={durationUnit}
+                          onChange={(e) => setDurationUnit(e.target.value)}
+                          style={{ ...inputStyle, flex: 1 }}
+                        >
+                          <option value="day">Day</option>
+                          <option value="week">Week</option>
+                          <option value="month">Month</option>
+                        </select>
+                      </div>
+                    </Field>
                     <Field label="Onset">
                       <NativeSelect
                         value={onset}
@@ -443,50 +464,50 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       </div>
 
       {/* Sticky bottom bar */}
-    <div
-  className="position-fixed bottom-0"
-  style={{
-    left: 0,
-    right: 0,
-    background: '#a5c4d4ff',
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: 12,
-    padding: '10px 20px',
-    boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
-  }}
->
-  {/* Print - Secondary */}
-  <Button
-    customColor="#ffffff"
-    style={{
-      color:COLORS.bgcolor,
-      borderRadius: '18px',
-      padding: '6px 16px',
-      fontWeight: 600,
-      border: '1px solid #7e3a93',
-    }}
-    onClick={handlePrint}
-    disabled={isGenerating}
-  >
-    {isGenerating ? 'Printing…' : 'Print'}
-  </Button>
+      <div
+        className="position-fixed bottom-0"
+        style={{
+          left: 0,
+          right: 0,
+          background: '#a5c4d4ff',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 12,
+          padding: '10px 20px',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
+        }}
+      >
+        {/* Print - Secondary */}
+        <Button
+          customColor="#ffffff"
+          style={{
+            color: COLORS.bgcolor,
+            borderRadius: '18px',
+            padding: '6px 16px',
+            fontWeight: 600,
+            border: '1px solid #7e3a93',
+          }}
+          onClick={handlePrint}
+          disabled={isGenerating}
+        >
+          {isGenerating ? 'Printing…' : 'Print'}
+        </Button>
 
-  {/* Next - Primary */}
-  <Button
-    customColor="#ffffff"
-    style={{
+        {/* Next - Primary */}
+        <Button
+          customColor="#ffffff"
+          style={{
 
-      color:COLORS.bgcolor,
-      borderRadius: '18px',
-      padding: '6px 18px',
-      fontWeight: 600,
-    }}
-    onClick={handleNext}
-  >
-    Next
-  </Button>
-</div>
+            color: COLORS.bgcolor,
+            borderRadius: '18px',
+            padding: '6px 18px',
+            fontWeight: 600,
+          }}
+          onClick={handleNext}
+        >
+          Next
+        </Button>
+      </div>
     </div>
   )
 }

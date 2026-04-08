@@ -22,8 +22,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     symptoms:        {},
     assessment:      {},
     diagnosis:       {},
-    treatmentPlans:  [],
-    therapySessions: {},
+    therapySessions: {},   // { overallStatus, sessions[] }
     exercisePlan:    { exercises: [], homeAdvice: '' },
     followUp:        {},
     prescription:    {},
@@ -34,19 +33,17 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
   const { success, info } = useToast()
 
+  // ── TreatmentPlan tab REMOVED ──────────────────────────────────────────
   const ALL_TABS = tabs || [
     'Complaints',
     'Assessment',
     'Diagnosis',
     'TherapySessions',
-    'TreatmentPlan',
-    
     'ExercisePlan',
     'FollowUp',
     'Prescription',
     'History',
     'Reports',
-    // 'Summary',
   ]
 
   const [activeTab, setActiveTab] = useState(defaultTab || ALL_TABS[0])
@@ -74,11 +71,28 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   }, [ALL_TABS])
 
   // ── mergeAndLog ───────────────────────────────────────────────────────────
-  // Merges the tab's patch into formData (keeping ALL previous tabs' data)
-  // and logs both what this tab sent AND the full running total.
   const mergeAndLog = useCallback((tabName, patch) => {
     setFormData(prev => {
-      const next = { ...prev, ...patch }
+      const deepMerge = (target, source) => {
+        const result = { ...target }
+        Object.keys(source).forEach(key => {
+          if (
+            source[key] !== null &&
+            typeof source[key] === 'object' &&
+            !Array.isArray(source[key]) &&
+            target[key] !== null &&
+            typeof target[key] === 'object' &&
+            !Array.isArray(target[key])
+          ) {
+            result[key] = deepMerge(target[key], source[key])
+          } else {
+            result[key] = source[key]
+          }
+        })
+        return result
+      }
+
+      const next = deepMerge(prev, patch)
 
       console.group(`📦 [${tabName}] Next → accumulated formData:`)
       console.log('This tab patch  ➜', patch)
@@ -92,7 +106,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   // ── onNextMap ─────────────────────────────────────────────────────────────
   const onNextMap = {
 
-    // ── Complaints (SymptomsDiseases) ─────────────────────────────────────
+    // ── Complaints ────────────────────────────────────────────────────────
     Complaints: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Complaints'); return }
 
@@ -111,7 +125,6 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
         },
       }
 
-      // If a template was applied, carry those sections forward too
       if (data.prescription?.medicines?.length)
         patch.prescription = { medicines: data.prescription.medicines }
 
@@ -144,8 +157,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
       mergeAndLog('Complaints', patch)
       goToNext('Complaints')
-    }
-    ,
+    },
 
     // ── Assessment ────────────────────────────────────────────────────────
     Assessment: (data = {}) => {
@@ -171,17 +183,23 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Assessment')
     },
 
-    // ── Diagnosis (PrescriptionTab) ───────────────────────────────────────
+    // ── Diagnosis ─────────────────────────────────────────────────────────
     Diagnosis: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Diagnosis'); return }
 
       const patch = {
         diagnosis: {
-          physioDiagnosis: data.diagnosis?.physioDiagnosis ?? '',
-          affectedArea:    data.diagnosis?.affectedArea    ?? '',
-          severity:        data.diagnosis?.severity        ?? '',
-          stage:           data.diagnosis?.stage           ?? '',
-          notes:           data.diagnosis?.notes           ?? '',
+          diagnosisRows: Array.isArray(data.diagnosis?.diagnosisRows)
+            ? data.diagnosis.diagnosisRows
+            : [
+                {
+                  physioDiagnosis: data.diagnosis?.physioDiagnosis ?? '',
+                  affectedArea:    data.diagnosis?.affectedArea    ?? '',
+                  severity:        data.diagnosis?.severity        ?? '',
+                  stage:           data.diagnosis?.stage           ?? '',
+                  notes:           data.diagnosis?.notes           ?? '',
+                },
+              ],
         },
       }
 
@@ -189,27 +207,56 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Diagnosis')
     },
 
-    // ── TreatmentPlan (TestTreatments) ────────────────────────────────────
-    TreatmentPlan: (data = {}) => {
-      if (!data || typeof data !== 'object') { goToNext('TreatmentPlan'); return }
-
-      const patch = {
-        treatmentPlans: Array.isArray(data.treatmentPlans) ? data.treatmentPlans : [],
-      }
-
-      mergeAndLog('TreatmentPlan', patch)
-      goToNext('TreatmentPlan')
-    },
-
     // ── TherapySessions ───────────────────────────────────────────────────
     TherapySessions: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('TherapySessions'); return }
 
+      const programObj = data.selectedProgramObj ?? {}
+
+      const sessionEntry = {
+        programId:       data.selectedProgramId ?? programObj?.id ?? programObj?._id ?? programObj?.programId ?? '',
+        programName:     programObj?.programName ?? programObj?.name ?? programObj?.title ?? '',
+        clinicId:        localStorage.getItem('clinicId') || localStorage.getItem('hospitalId') || '',
+        branchId:        programObj?.branchId ?? '',
+        totalTherapyIds: Array.isArray(data.selectedTherapies) ? data.selectedTherapies.length : 0,
+        serviceType:     data.mode ?? 'program',
+        therapyData:     Array.isArray(data.selectedTherapies)
+          ? data.selectedTherapies.map(t => ({
+              therapyId:   t.therapyId   ?? '',
+              therapyName: t.therapyName ?? '',
+              exercises:   Array.isArray(t.exercises)
+                ? t.exercises.map(ex => ({
+                    therapyExercisesId: ex.therapyExercisesId ?? ex._id ?? ex.id ?? '',
+                    name:               ex.exerciseName ?? ex.name ?? ex.exercise_name ?? '',
+                    session:            String(ex.sessions ?? ex.session ?? ''),
+                    frequency:          ex.frequencyCount
+                      ? `${ex.frequencyCount} times/${(ex.frequencyUnit ?? 'day').toLowerCase()}`
+                      : ex.frequency ?? '',
+                    notes:              ex.notes ?? ex.instructions ?? '',
+                    sets:               Number(ex.sets)        || 0,
+                    repetitions:        Number(ex.reps ?? ex.repetitions) || 0,
+                    // ── video intentionally excluded from therapy sessions ──
+                    totalPrice:         ex.totalPrice ?? ex.price ?? 0,
+                  }))
+                : [],
+            }))
+          : [],
+        therapistId:     data.therapistId     ?? '',
+        therapistName:   data.therapistName   ?? '',
+        modalitiesUsed:  data.modalitiesUsed  ?? [],
+        patientResponse: data.patientResponse ?? '',
+        manualTherapy:   data.manualTherapy   ?? '',
+        precautions:     data.precautions     ?? '',
+      }
+
       const patch = {
         therapySessions: {
-          overallStatus: data.therapySessions?.overallStatus ?? '',
-          sessions: Array.isArray(data.therapySessions?.sessions)
-            ? data.therapySessions.sessions : [],
+          overallStatus: data.overallStatus ?? '',
+          sessions:      [sessionEntry],
+          therapistId:   data.therapistId   ?? '',
+          therapistName: data.therapistName ?? '',
+          manualTherapy: data.manualTherapy ?? '',
+          precautions:   data.precautions   ?? '',
         },
       }
 
@@ -218,14 +265,34 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     },
 
     // ── ExercisePlan ──────────────────────────────────────────────────────
+    // data shape from ExercisePlan.handleNext():
+    //   { exercisePlan: { exercises: [...], homeAdvice: '' } }
+    // each exercise: { name, sets, reps, frequency, instructions, videoUrl, thumbnail }
     ExercisePlan: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('ExercisePlan'); return }
 
+      const rawExercises = Array.isArray(data.exercisePlan?.exercises)
+        ? data.exercisePlan.exercises
+        : []
+
       const patch = {
         exercisePlan: {
-          exercises:  Array.isArray(data.exercisePlan?.exercises)
-            ? data.exercisePlan.exercises : [],
-          homeAdvice: data.exercisePlan?.homeAdvice ?? '',
+          homeAdvice:    data.exercisePlan?.homeAdvice ?? data.homeAdvice ?? '',
+          // ── Keep the same key ("exercises") that ExercisePlan component
+          //    reads from seed — so switching tabs never clears the list ──
+          exercises:     rawExercises,
+          // ── Also store as homeExercises for Summary/payload ──
+          homeExercises: rawExercises.map(ex => ({
+            id:           ex.id           ?? ex._id ?? '',
+            name:         ex.name         ?? '',
+            sets:         String(ex.sets  ?? ''),
+            reps:         String(ex.reps  ?? ''),
+            // ── frequency is now a free-text field, e.g. "2 time/ day" ──
+            frequency:    ex.frequency    ?? '',
+            instructions: ex.instructions ?? '',
+            videoUrl:     ex.videoUrl     ?? '',
+            thumbnail:    ex.thumbnail    ?? '',
+          })),
         },
       }
 
@@ -233,22 +300,26 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('ExercisePlan')
     },
 
-    // ── FollowUp (DoctorFollowUp) ─────────────────────────────────────────
- FollowUp: (data = {}) => {
-  if (!data || typeof data !== 'object') {
-    goToNext('FollowUp')
-    return
-  }
+    // ── FollowUp ──────────────────────────────────────────────────────────
+    FollowUp: (data = {}) => {
+      if (!data || typeof data !== 'object') { goToNext('FollowUp'); return }
 
-  const patch = {
-    followUp: Array.isArray(data.followUp)
-      ? data.followUp
-      : [],
-  }
+      const entries = Array.isArray(data.followUp) ? data.followUp : []
+      const first   = entries[0] ?? {}
 
-  mergeAndLog('FollowUp', patch)
-  goToNext('FollowUp')
-},
+      const patch = {
+        followUp: {
+          nextVisitDate:   first.nextVisitDate   ?? '',
+          reviewNotes:     first.reviewNotes     ?? '',
+          modifications:   first.modifications   ?? '',
+          treatmentStatus: first.treatmentStatus ?? '',
+        },
+        followUpEntries: entries,
+      }
+
+      mergeAndLog('FollowUp', patch)
+      goToNext('FollowUp')
+    },
 
     // ── Prescription ──────────────────────────────────────────────────────
     Prescription: (data = {}) => {
@@ -270,34 +341,24 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     // ── History ───────────────────────────────────────────────────────────
     History: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('History'); return }
-
-      const patch = { history: { ...data } }
-
-      mergeAndLog('History', patch)
+      mergeAndLog('History', { history: { ...data } })
       goToNext('History')
     },
 
     // ── Reports / Images ──────────────────────────────────────────────────
     Reports: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Reports'); return }
-
-      const patch = { ClinicImages: { ...data } }
-
-      mergeAndLog('Reports', patch)
+      mergeAndLog('Reports', { ClinicImages: { ...data } })
       goToNext('Reports')
     },
 
     Images: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Images'); return }
-
-      const patch = { ClinicImages: { ...data } }
-
-      mergeAndLog('Images', patch)
+      mergeAndLog('Images', { ClinicImages: { ...data } })
       goToNext('Images')
     },
 
-    // ── Summary — FINAL combined payload ──────────────────────────────────
-    // formData already has ALL tabs accumulated — just add summary on top
+    // ── Summary ───────────────────────────────────────────────────────────
     Summary: (data = {}) => {
       setFormData(prev => {
         const finalPayload = {
@@ -309,7 +370,6 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
         console.log('symptoms        :', finalPayload.symptoms)
         console.log('assessment      :', finalPayload.assessment)
         console.log('diagnosis       :', finalPayload.diagnosis)
-        console.log('treatmentPlans  :', finalPayload.treatmentPlans)
         console.log('therapySessions :', finalPayload.therapySessions)
         console.log('exercisePlan    :', finalPayload.exercisePlan)
         console.log('followUp        :', finalPayload.followUp)

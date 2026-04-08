@@ -2,7 +2,6 @@ import React from 'react'
 import PrescriptionTab from './PrescriptionTab'
 import SymptomsDiseases from './SymptomsDiseases'
 import DoctorSymptoms from './DoctorSymptoms'
-import TestsTreatments from './TreatmentPlan'
 import FollowUp from './TherapySessions'
 import DoctorFollowUp from './DoctorFollowUp'
 import VisitHistory from './VisitHistory'
@@ -15,6 +14,7 @@ import ImageGallery from './RetiveImages'
 import Assessment from './Tests'
 import ExercisePlan from './ExercisePlan'
 import FollowUpnew from './FollowUpnew'
+import TherapySession from './TreatmentPlan'  // TherapySessions component
 
 const TabContent = ({
   activeTab,
@@ -66,25 +66,18 @@ const TabContent = ({
     case 'Diagnosis':
       content = (
         <PrescriptionTab
-          seed={{ diagnosis: formData.diagnosis || {} }}   // ✅ FIXED  
+          seed={{ diagnosis: formData.diagnosis || {} }}
           onNext={onNext}
           formData={formData}
         />
       )
       break
 
-    case 'TreatmentPlan':
-      content = (
-        <TestsTreatments
-          // ✅ FIXED: treatmentPlans is a top-level array, not formData.treatments
-          seed={formData.treatmentPlans || []}
-          onNext={onNext}
-          formData={formData}
-        />
-      )
-      break
+    // ── TreatmentPlan tab REMOVED ──────────────────────────────────────────
 
     case 'TherapySessions':
+      // Pass previously saved therapySessions data as seed so switching
+      // tabs does NOT clear what the user already filled in.
       content = fromDoctorTemplate ? (
         <DoctorFollowUp
           seed={formData.therapySessions || {}}
@@ -94,7 +87,7 @@ const TabContent = ({
           setFormData={setFormData}
         />
       ) : (
-        <FollowUp
+        <TherapySession
           seed={formData.therapySessions || {}}
           onNext={onNext}
           patientData={patientData}
@@ -117,7 +110,6 @@ const TabContent = ({
     case 'FollowUp':
       content = (
         <FollowUpnew
-          // ✅ FIXED: followUp is now an array (set by FollowUpnew's handleNext)
           seed={Array.isArray(formData.followUp) ? formData.followUp : []}
           onNext={onNext}
           sidebarWidth={260}
