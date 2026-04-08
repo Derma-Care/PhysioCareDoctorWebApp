@@ -601,7 +601,7 @@ const TherapySession = ({ seed = {}, onNext }) => {
   const updateExercises = (name, updated) =>
     setTherapyState(prev => ({ ...prev, [name]: { ...prev[name], exercises: updated } }))
 
-  const allChecked   = therapyLibrary.length > 0 && therapyLibrary.every(t => therapyState[t.therapyName]?.checked)
+  const allChecked   = selectedProgramObj?.therophyData?.length > 0 && therapyLibrary.every(t => therapyState[t.therapyName]?.checked)
   const checkedCount = therapyLibrary.filter(t => therapyState[t.therapyName]?.checked).length
 
   const toggleAll = () => {
@@ -768,19 +768,19 @@ const TherapySession = ({ seed = {}, onNext }) => {
             )}
 
             {/* Selected program has no therapies */}
-            {selectedProgramId && !loadingPrograms && therapyLibrary.length === 0 && (
+            {selectedProgramId && !loadingPrograms && selectedProgramObj?.therophyData?.length > 0 && (
               <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
-                No therapies found in the selected {mode}.
+                {/* No therapies found in the selected {mode}. */}
               </div>
             )}
 
             {/* Therapies list */}
-            {selectedProgramId && !loadingPrograms && therapyLibrary.length > 0 && (
+            {selectedProgramId && !loadingPrograms && selectedProgramObj?.therophyData?.length > 0 && (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7' }}>
-                  <span style={{ fontSize: '0.83rem', color: '#4a6a8a', fontWeight: 600 }}>
+                  {/* <span style={{ fontSize: '0.83rem', color: '#4a6a8a', fontWeight: 600 }}>
                     {checkedCount} of {therapyLibrary.length} therapies selected
-                  </span>
+                  </span> */}
                   <button type="button" onClick={toggleAll} style={{
                     padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1a5fa8',
                     background: allChecked ? '#1a5fa8' : '#f0f7ff',
@@ -791,21 +791,24 @@ const TherapySession = ({ seed = {}, onNext }) => {
                   </button>
                 </div>
 
-                {therapyLibrary.map(({ therapyName }) => {
-                  const state = therapyState[therapyName]
-                  if (!state) return null
-                  return (
-                    <TherapyBlock
-                      key={therapyName}
-                      therapy={therapyName}
-                      checked={state.checked}
-                      onToggle={() => toggleTherapy(therapyName)}
-                      exercises={state.exercises}
-                      onUpdateExercises={updated => updateExercises(therapyName, updated)}
-                      loading={loadingExercises}
-                    />
-                  )
-                })}
+              {selectedProgramObj?.therophyData?.map((therapy, index) => (
+  <TherapyBlock
+    key={therapy.id || index}
+    therapy={therapy.therapyName}
+    checked={true}
+    onToggle={() => {}}
+    exercises={(therapy.exercises || []).map(ex => ({
+      ...ex,
+      sessions: ex.session ?? '',
+      sets: ex.sets ?? '',
+      reps: ex.repetitions ?? '',
+      frequencyCount: ex.frequency ?? '',
+      frequencyUnit: 'Day'
+    }))}
+    onUpdateExercises={() => {}}
+    loading={loadingExercises}
+  />
+))}
               </>
             )}
           </CCardBody>

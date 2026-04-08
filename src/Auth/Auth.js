@@ -811,10 +811,12 @@ export const getPrograms = async () => {
 // ✅ Get single program detail by programId (for therophy[] data)
 export const getProgramById = async (clinicId, branchId, programId) => {
   try {
-    const response = await api.get(`${programUrl}/${clinicId}/${branchId}/${programId}`)
+    const response = await api.post(`${programUrl}/${clinicId}/${branchId}/${programId}`)
+
     console.log('✅ getProgramById API:', response.data)
-    const raw = response.data?.data ?? response.data ?? null
-    return Array.isArray(raw) ? raw[0] ?? null : raw
+
+    return response?.data?.data ?? null
+
   } catch (error) {
     console.error('❌ getProgramById API Error:', error)
     throw error

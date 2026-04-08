@@ -54,7 +54,7 @@ export const therapistUrl = `${ipUrl}/clinic-admin/getByTherapistClinicIdAndBran
 export const therapyExercisesUrl = `${ipUrl}/clinic-admin/getBytherapyExercisesClinicIdAndBranchId`
 
 // ✅ Programs (by clinicId & branchId)
-export const programUrl = `${ipUrl}/clinic-admin/program/getBycIdAndbId`
+export const programUrl = `${ipUrl}/clinic-admin/program/getBycIdAndbIdAndId`
 
 // ✅ Programs — getAll
 export const programAllUrl = `${ipUrl}/clinic-admin/program/getAll`
