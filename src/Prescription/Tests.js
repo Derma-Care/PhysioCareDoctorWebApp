@@ -152,23 +152,29 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   setObservations(s.observations ?? '')
 }, [seed])
 
-  const handleNext = () => {
-    const payload = {
-      chiefComplaint,
-      painScale,
-      painType,
-       duration: finalDuration, // ✅ ONLY duration goes
-      onset,
-      aggravatingFactors,
-      relievingFactors,
-      posture,
-      rangeOfMotion,
-      specialTests,
-      observations,
-    }
-    console.log('🚀 Assessment payload:', payload)
-    onNext?.(payload)
+const handleNext = () => {
+  const finalDuration =
+    durationValue && durationUnit
+      ? `${durationValue} ${durationUnit}${durationValue > 1 ? 's' : ''}`
+      : ''
+
+  const payload = {
+    chiefComplaint,
+    painScale,
+    painType,
+    duration: finalDuration, // ✅ FIXED
+    onset,
+    aggravatingFactors,
+    relievingFactors,
+    posture,
+    rangeOfMotion,
+    specialTests,
+    observations,
   }
+
+  console.log('🚀 Assessment payload:', payload)
+  onNext?.(payload)
+}
 
   function escapeHtml(str) {
     return String(str ?? '')

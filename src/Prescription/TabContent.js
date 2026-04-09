@@ -14,7 +14,7 @@ import ImageGallery from './RetiveImages'
 import Assessment from './Tests'
 import ExercisePlan from './ExercisePlan'
 import FollowUpnew from './FollowUpnew'
-import TherapySession from './TreatmentPlan'  // TherapySessions component
+import TherapySession from './TreatmentPlan'
 
 const TabContent = ({
   activeTab,
@@ -27,6 +27,18 @@ const TabContent = ({
   fromDoctorTemplate,
   setImage,
 }) => {
+
+  // ── KEY FIX ──────────────────────────────────────────────────────────────
+  // Each tab sends a partial payload. This wrapper merges it into formData
+  // BEFORE calling the real onNext, so navigating back always shows the data.
+  const handleNext = (payload) => {
+    if (setFormData) {
+      setFormData(prev => ({ ...prev, ...payload }))
+    }
+    onNext?.(payload)
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   let content = null
 
   switch (activeTab) {
@@ -34,7 +46,7 @@ const TabContent = ({
       content = fromDoctorTemplate ? (
         <DoctorSymptoms
           seed={formData.symptoms || {}}
-          onNext={onNext}
+          onNext={handleNext}
           sidebarWidth={260}
           patientData={patientData}
           setFormData={setFormData}
@@ -43,7 +55,7 @@ const TabContent = ({
       ) : (
         <SymptomsDiseases
           seed={formData.symptoms || {}}
-          onNext={onNext}
+          onNext={handleNext}
           sidebarWidth={260}
           patientData={patientData}
           setFormData={setFormData}
@@ -56,7 +68,7 @@ const TabContent = ({
       content = (
         <Assessment
           seed={formData.assessment || {}}
-          onNext={onNext}
+          onNext={handleNext}
           sidebarWidth={260}
           formData={formData}
         />
@@ -67,21 +79,17 @@ const TabContent = ({
       content = (
         <PrescriptionTab
           seed={{ diagnosis: formData.diagnosis || {} }}
-          onNext={onNext}
+          onNext={handleNext}
           formData={formData}
         />
       )
       break
 
-    // ── TreatmentPlan tab REMOVED ──────────────────────────────────────────
-
     case 'TherapySessions':
-      // Pass previously saved therapySessions data as seed so switching
-      // tabs does NOT clear what the user already filled in.
       content = fromDoctorTemplate ? (
         <DoctorFollowUp
           seed={formData.therapySessions || {}}
-          onNext={onNext}
+          onNext={handleNext}
           patientData={patientData}
           formData={formData}
           setFormData={setFormData}
@@ -89,7 +97,7 @@ const TabContent = ({
       ) : (
         <TherapySession
           seed={formData.therapySessions || {}}
-          onNext={onNext}
+          onNext={handleNext}
           patientData={patientData}
           formData={formData}
           setFormData={setFormData}
@@ -101,7 +109,7 @@ const TabContent = ({
       content = (
         <ExercisePlan
           seed={formData.exercisePlan || {}}
-          onNext={onNext}
+          onNext={handleNext}
           sidebarWidth={260}
         />
       )
@@ -111,7 +119,7 @@ const TabContent = ({
       content = (
         <FollowUpnew
           seed={Array.isArray(formData.followUp) ? formData.followUp : []}
-          onNext={onNext}
+          onNext={handleNext}
           sidebarWidth={260}
         />
       )
@@ -121,7 +129,7 @@ const TabContent = ({
       content = (
         <VisitHistory
           seed={formData.history || {}}
-          onNext={onNext}
+          onNext={handleNext}
           patientId={patientData?.patientId || formData.patientId}
           doctorId={patientData?.doctorId || formData.doctorId}
           patientData={patientData}
@@ -133,7 +141,7 @@ const TabContent = ({
     case 'Prescription':
       content = fromDoctorTemplate ? (
         <DoctorSummary
-          onNext={onNext}
+          onNext={handleNext}
           onSaveTemplate={onSaveTemplate}
           patientData={patientData}
           formData={formData}
@@ -142,7 +150,7 @@ const TabContent = ({
         />
       ) : (
         <Summary
-          onNext={onNext}
+          onNext={handleNext}
           onSaveTemplate={onSaveTemplate}
           patientData={patientData}
           formData={formData}
@@ -155,7 +163,7 @@ const TabContent = ({
       content = setImage ? (
         <MultiImageUpload
           data={formData}
-          onSubmit={onNext}
+          onSubmit={handleNext}
           patientData={patientData}
         />
       ) : (

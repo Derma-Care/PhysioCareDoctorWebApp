@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
-import { getTodayAppointments } from '../Auth/Auth' // ← your existing API function
+import { getTodayAppointments } from '../Auth/Auth'
 
 /* ─── Styles ───────────────────────────────────────────────────────────── */
 const inputStyle = {
@@ -39,17 +39,33 @@ const cardStyle = {
   boxShadow: '0 2px 16px rgba(26,90,168,0.07)',
 }
 
-/* ─── Treatment Status options ─────────────────────────────────────────── */
-const STATUS_OPTIONS = ['Active', 'On Hold', 'Completed', 'Discharged']
+/* ─── Colour palette ─────────────────────────────────────────────────── */
+const STATUS_PALETTE = [
+  { bg: '#f0fff4', border: '#68d391', color: '#276749', icon: '🟢' },
+  { bg: '#fffbeb', border: '#f6ad55', color: '#7b341e', icon: '🟡' },
+  { bg: '#ebf8ff', border: '#63b3ed', color: '#2a4365', icon: '🔵' },
+  { bg: '#fff5f5', border: '#fc8181', color: '#742a2a', icon: '🔴' },
+  { bg: '#f5f0ff', border: '#b794f4', color: '#44337a', icon: '🟣' },
+  { bg: '#fffff0', border: '#f6e05e', color: '#744210', icon: '🟠' },
+]
 
-const STATUS_STYLE = {
-  Active:     { bg: '#f0fff4', border: '#68d391', color: '#276749', icon: '🟢' },
-  'On Hold':  { bg: '#fffbeb', border: '#f6ad55', color: '#7b341e', icon: '🟡' },
-  Completed:  { bg: '#ebf8ff', border: '#63b3ed', color: '#2a4365', icon: '🔵' },
-  Discharged: { bg: '#fff5f5', border: '#fc8181', color: '#742a2a', icon: '🔴' },
+const statusStyleCache = {}
+let paletteIndex = 0
+
+const getStatusStyle = (status) => {
+  if (!status) return null
+  const key = status.trim().toLowerCase()
+  if (!statusStyleCache[key]) {
+    statusStyleCache[key] = STATUS_PALETTE[paletteIndex % STATUS_PALETTE.length]
+    paletteIndex++
+  }
+  return statusStyleCache[key]
 }
 
-/* ─── Visit urgency derived from date ──────────────────────────────────── */
+/* ─── Statuses that hide Modifications ───────────────────────────────── */
+const HIDE_MODIFICATIONS_FOR = ['confirmed', 'completed']
+
+/* ─── Visit urgency ──────────────────────────────────────────────────── */
 const getVisitUrgency = (dateStr) => {
   if (!dateStr) return null
   const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -62,7 +78,6 @@ const getVisitUrgency = (dateStr) => {
   return               { label: 'Upcoming',  bg: '#f5f0ff', color: '#44337a', border: '#b794f4', icon: '🗓️' }
 }
 
-/* ─── Empty form ────────────────────────────────────────────────────────── */
 const EMPTY_FORM = {
   nextVisitDate:   '',
   treatmentStatus: '',
@@ -70,57 +85,96 @@ const EMPTY_FORM = {
   modifications:   '',
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════
    COMPONENT
-   Props:
-     seed      – array of existing follow-up records
-     bookingId – booking ID to match against API response
-     onNext    – callback with { followUp: data }
-══════════════════════════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════════════════ */
 const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
 
   const [form,          setForm]          = useState({ ...EMPTY_FORM })
   const [data,          setData]          = useState(Array.isArray(seed) ? seed : [])
   const [editIndex,     setEditIndex]     = useState(null)
   const [dupError,      setDupError]      = useState(false)
-  const [bookingStatus, setBookingStatus] = useState('')   // ← from API
+  const [bookingStatus, setBookingStatus] = useState('')
+  const [statusOptions, setStatusOptions] = useState([])
   const [apiLoading,    setApiLoading]    = useState(false)
+  const [apiError,      setApiError]      = useState('')
 
-  /* ══ Fetch booking status from API ══════════════════════════════════════ */
+  /* ══ Fetch ══════════════════════════════════════════════════════════ */
   useEffect(() => {
     const fetchStatus = async () => {
       setApiLoading(true)
+      setApiError('')
+
       try {
         const result = await getTodayAppointments()
 
-        if (result.statusCode === 200 && Array.isArray(result.data)) {
-          // Find the booking that matches the passed bookingId
-          const matched = result.data.find(b => b.bookingId === bookingId)
+        console.log('📦 Full API result:', result)
+        console.log('🔍 bookingId prop received:', bookingId)
+
+        if (result.statusCode === 200 && Array.isArray(result.data) && result.data.length > 0) {
+
+          // Log all bookingIds from API for comparison
+          console.log('📋 All bookingIds from API:',
+            result.data.map(b => ({ id: b.bookingId, status: b.status }))
+          )
+
+          // Match with strict string comparison
+          const matched = result.data.find(
+            b => String(b.bookingId).trim() === String(bookingId).trim()
+          )
+
+          console.log('🎯 Matched booking:', matched)
 
           if (matched?.status) {
-            setBookingStatus(matched.status)  // e.g. "Confirmed"
-            console.log('✅ Booking status fetched:', matched.status)
+            const s = matched.status.trim()
+            setBookingStatus(s)
+            setStatusOptions([s])
+
+            // ✅ Auto-select the status in the form so table always shows it
+            setForm(prev => ({ ...prev, treatmentStatus: s }))
+
+            console.log('✅ Status auto-selected:', s)
+
           } else {
-            console.warn('⚠️ No matching booking found for bookingId:', bookingId)
+            // Fallback: show ALL unique statuses from all bookings
+            console.warn('⚠️ No match for bookingId:', bookingId, '— using all statuses as fallback')
+            const allStatuses = [
+              ...new Set(result.data.map(b => b.status?.trim()).filter(Boolean))
+            ]
+            setStatusOptions(allStatuses)
+
+            // Auto-select first available status as fallback
+            if (allStatuses.length > 0) {
+              setBookingStatus(allStatuses[0])
+              setForm(prev => ({ ...prev, treatmentStatus: allStatuses[0] }))
+              console.log('⚠️ Fallback status auto-selected:', allStatuses[0])
+            }
           }
+
+        } else {
+          console.error('❌ API returned empty or error:', result)
+          setApiError(`API error: ${result.message || 'No data returned'}`)
         }
-      } catch (error) {
-        console.error('❌ Failed to fetch booking status:', error)
+
+      } catch (err) {
+        console.error('❌ Fetch exception:', err)
+        setApiError('Failed to load status. Please refresh.')
       } finally {
         setApiLoading(false)
       }
     }
 
-    if (bookingId) {
-      fetchStatus()
-    }
+    fetchStatus()
   }, [bookingId])
 
-  /* ── TRUE when booking status is "Confirmed" ── */
-  const isConfirmed = bookingStatus?.trim() === 'Confirmed'
+  /* ── Modifications logic ─────────────────────────────────────────── */
+  const apiStatusNorm      = bookingStatus.toLowerCase()
+  const selectedStatusNorm = (form.treatmentStatus || '').trim().toLowerCase()
 
-  /* ── TRUE only when Active AND not Confirmed — gates Modifications UI ── */
-  const isActive = form.treatmentStatus === 'Active' && !isConfirmed
+  const hideModifications  = HIDE_MODIFICATIONS_FOR.includes(apiStatusNorm) ||
+                             HIDE_MODIFICATIONS_FOR.includes(selectedStatusNorm)
+
+  const showModifications  = selectedStatusNorm === 'active' && !hideModifications
 
   useEffect(() => {
     if (Array.isArray(seed)) setData(seed)
@@ -132,9 +186,8 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
   }
 
   const urgency     = getVisitUrgency(form.nextVisitDate)
-  const statusStyle = STATUS_STYLE[form.treatmentStatus] || null
+  const statusStyle = getStatusStyle(form.treatmentStatus)
 
-  /* ── Duplicate check ── */
   const isDuplicate = (entry, excludeIdx = null) =>
     data.some((e, i) => {
       if (i === excludeIdx) return false
@@ -146,18 +199,26 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
       )
     })
 
-  /* ── Save / Update ── */
   const handleSave = () => {
     if (!form.nextVisitDate) return
     if (isDuplicate(form, editIndex ?? null)) { setDupError(true); return }
 
+    const entryToSave = {
+      ...form,
+      modifications: showModifications ? form.modifications : '',
+    }
+
     if (editIndex !== null) {
-      setData(prev => prev.map((e, i) => i === editIndex ? { ...form } : e))
+      setData(prev => prev.map((e, i) => i === editIndex ? entryToSave : e))
       setEditIndex(null)
     } else {
-      setData(prev => [...prev, { ...form }])
+      setData(prev => [...prev, entryToSave])
     }
-    setForm({ ...EMPTY_FORM })
+    setForm(prev => ({
+      ...EMPTY_FORM,
+      // ✅ Keep treatmentStatus populated after save so pills stay selected
+      treatmentStatus: bookingStatus || prev.treatmentStatus,
+    }))
     setDupError(false)
   }
 
@@ -170,10 +231,18 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
 
   const handleDelete = (index) => {
     setData(prev => prev.filter((_, i) => i !== index))
-    if (editIndex === index) { setForm({ ...EMPTY_FORM }); setEditIndex(null); setDupError(false) }
+    if (editIndex === index) {
+      setForm({ ...EMPTY_FORM, treatmentStatus: bookingStatus })
+      setEditIndex(null)
+      setDupError(false)
+    }
   }
 
-  const handleCancel = () => { setForm({ ...EMPTY_FORM }); setEditIndex(null); setDupError(false) }
+  const handleCancel = () => {
+    setForm({ ...EMPTY_FORM, treatmentStatus: bookingStatus })
+    setEditIndex(null)
+    setDupError(false)
+  }
 
   const handleNext = () => {
     const payload = { followUp: data }
@@ -181,30 +250,25 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
     onNext?.(payload)
   }
 
-  /* ── Table headers: hide "Modifications" column when Confirmed ── */
   const tableHeaders = [
-    '#',
-    'Next Visit Date',
-    'Urgency',
-    'Treatment Status',
-    'Review Notes',
-    ...(!isConfirmed ? ['Modifications'] : []),
+    '#', 'Next Visit Date', 'Urgency', 'Treatment Status', 'Review Notes',
+    ...(!hideModifications ? ['Modifications'] : []),
     'Actions',
   ]
 
-  /* ─── Render ─────────────────────────────────────────────────────────── */
+  /* ─── Render ──────────────────────────────────────────────────────── */
   return (
     <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <CContainer fluid className="p-1">
 
-        {/* ══ API Loading indicator ════════════════════════════════════ */}
-        {apiLoading && (
-          <div style={{ marginBottom: 12, padding: '8px 16px', borderRadius: 8, background: '#ebf8ff', border: '1px solid #63b3ed', color: '#2a4365', fontSize: '0.82rem', fontWeight: 600 }}>
-            ⏳ Loading booking details...
+        {/* API error banner */}
+        {apiError && (
+          <div style={{ marginBottom: 12, padding: '10px 16px', borderRadius: 8, background: '#fff5f5', border: '1.5px solid #fc8181', color: '#c53030', fontWeight: 600, fontSize: '0.82rem' }}>
+            ❌ {apiError}
           </div>
         )}
 
-        {/* ══ FORM CARD ═════════════════════════════════════════════════ */}
+        {/* ══ FORM CARD ═══════════════════════════════════════════════ */}
         <CCard className="mb-4" style={cardStyle}>
           <CCardBody style={{ padding: '28px 32px' }}>
 
@@ -215,19 +279,15 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
                 {editIndex !== null ? `Editing Entry #${editIndex + 1}` : 'Follow Up'}
               </h5>
 
-              {/* ── Show lock badge ONLY when Confirmed ── */}
-              {isConfirmed && (
-                <span style={{
-                  marginLeft: 'auto', fontSize: '0.78rem', fontWeight: 700,
-                  background: '#ebf8ff', border: '1px solid #63b3ed', color: '#2a4365',
-                  borderRadius: 20, padding: '3px 12px',
-                }}>
-                  🔒 Confirmed — Modifications hidden
+              {/* Lock badge */}
+              {hideModifications && bookingStatus && (
+                <span style={{ marginLeft: 'auto', fontSize: '0.78rem', fontWeight: 700, background: '#ebf8ff', border: '1px solid #63b3ed', color: '#2a4365', borderRadius: 20, padding: '3px 12px' }}>
+                  🔒 {bookingStatus} — Modifications hidden
                 </span>
               )}
             </div>
 
-            {/* Duplicate error banner */}
+            {/* Duplicate error */}
             {dupError && (
               <div style={{ marginBottom: 16, padding: '10px 16px', borderRadius: 8, background: '#fff5f5', border: '1.5px solid #fc8181', color: '#c53030', fontWeight: 600, fontSize: '0.875rem' }}>
                 ⚠️ Duplicate entry detected. This follow-up record already exists.
@@ -253,49 +313,61 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
                 )}
               </div>
 
-              {/* Treatment Status */}
+              {/* Treatment Status pills */}
               <div>
                 <label style={labelStyle}>Treatment Status</label>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
-                  {STATUS_OPTIONS.map(s => {
-                    const active = form.treatmentStatus === s
-                    const st = STATUS_STYLE[s]
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => set('treatmentStatus')(s)}
-                        style={{
-                          padding: '5px 14px', borderRadius: 20, border: '1.5px solid',
-                          borderColor: active ? st.border : '#b6cfe8',
-                          background:  active ? st.bg    : '#f5f9ff',
-                          color:       active ? st.color : '#64748b',
-                          fontWeight:  active ? 700      : 500,
-                          fontSize: '0.8rem', cursor: 'pointer',
-                          transition: 'all 0.15s', fontFamily: 'inherit',
-                        }}
-                      >
-                        {st.icon} {s}
-                      </button>
-                    )
-                  })}
-                </div>
 
-                {/* Status badge */}
-                {statusStyle && (
-                  <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, background: statusStyle.bg, border: `1px solid ${statusStyle.border}`, borderRadius: 8, padding: '4px 12px', fontSize: '0.78rem', color: statusStyle.color, fontWeight: 700 }}>
-                    {statusStyle.icon} Status: <strong>{form.treatmentStatus}</strong>
-                    {isActive && (
-                      <span style={{ marginLeft: 4, opacity: 0.8 }}>— Modifications enabled</span>
-                    )}
+                {apiLoading ? (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
+                    {[1, 2, 3].map(n => (
+                      <div key={n} style={{ width: 90, height: 34, borderRadius: 20, background: '#e2e8f0', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                    ))}
+                  </div>
+
+                ) : statusOptions.length > 0 ? (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
+                    {statusOptions.map(s => {
+                      const active = form.treatmentStatus === s
+                      const st     = getStatusStyle(s)
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => set('treatmentStatus')(s)}
+                          style={{
+                            padding: '5px 14px', borderRadius: 20, border: '1.5px solid',
+                            borderColor: active ? st.border : '#b6cfe8',
+                            background:  active ? st.bg    : '#f5f9ff',
+                            color:       active ? st.color : '#64748b',
+                            fontWeight:  active ? 700      : 500,
+                            fontSize: '0.8rem', cursor: 'pointer',
+                            transition: 'all 0.15s', fontFamily: 'inherit',
+                          }}
+                        >
+                          {st.icon} {s}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                ) : (
+                  <div style={{ fontSize: '0.82rem', color: '#e53e3e', fontStyle: 'italic', marginTop: 6, fontWeight: 600 }}>
+                    ⚠️ Could not load status — check console.
                   </div>
                 )}
+
+                {/* Selected status badge */}
+                {/* {statusStyle && (
+                  <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, background: statusStyle.bg, border: `1px solid ${statusStyle.border}`, borderRadius: 8, padding: '4px 12px', fontSize: '0.78rem', color: statusStyle.color, fontWeight: 700 }}>
+                    {statusStyle.icon} Status: <strong>{form.treatmentStatus}</strong>
+                    {showModifications && <span style={{ marginLeft: 4, opacity: 0.8 }}>— Modifications enabled</span>}
+                  </div>
+                )} */}
               </div>
             </div>
 
             {/* Row 2 — Review Notes + Modifications */}
-            <div style={{ ...gridTwo, gridTemplateColumns: isActive ? '1fr 1fr' : '1fr' }}>
-
+            <div style={{ ...gridTwo, gridTemplateColumns: showModifications ? '1fr 1fr' : '1fr' }}>
               <div>
                 <label style={labelStyle}>Review Notes</label>
                 <textarea
@@ -306,8 +378,7 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
                 />
               </div>
 
-              {/* Modifications: hidden when Confirmed OR not Active */}
-              {isActive && (
+              {showModifications && (
                 <div style={{ animation: 'fadeIn 0.2s ease' }}>
                   <label style={labelStyle}>
                     Modifications
@@ -325,22 +396,13 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
               )}
             </div>
 
-            {/* Action Buttons */}
+            {/* Buttons */}
             <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-              <button onClick={handleSave} style={{
-                padding: '8px 24px', borderRadius: 8, border: 'none',
-                background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
-                color: '#fff', fontWeight: 700, fontSize: '0.875rem',
-                cursor: 'pointer', fontFamily: 'inherit',
-              }}>
+              <button onClick={handleSave} style={{ padding: '8px 24px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit' }}>
                 {editIndex !== null ? '✅ Update' : '➕ Add'}
               </button>
               {editIndex !== null && (
-                <button onClick={handleCancel} style={{
-                  padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
-                  border: '1.5px solid #b6cfe8', background: '#f5f9ff',
-                  color: '#1a3a5c', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
-                }}>
+                <button onClick={handleCancel} style={{ padding: '8px 24px', borderRadius: 8, cursor: 'pointer', border: '1.5px solid #b6cfe8', background: '#f5f9ff', color: '#1a3a5c', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit' }}>
                   Cancel
                 </button>
               )}
@@ -349,16 +411,14 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
           </CCardBody>
         </CCard>
 
-        {/* ══ TABLE CARD ════════════════════════════════════════════════ */}
+        {/* ══ TABLE CARD ══════════════════════════════════════════════ */}
         {data.length > 0 && (
           <CCard style={cardStyle}>
             <CCardBody style={{ padding: '24px 32px' }}>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, borderBottom: '1.5px solid #e3eef8', paddingBottom: 16 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📋</div>
-                <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>
-                  Follow Up List ({data.length})
-                </h5>
+                <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>Follow Up List ({data.length})</h5>
               </div>
 
               <div style={{ overflowX: 'auto' }}>
@@ -373,7 +433,7 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
                   <tbody>
                     {data.map((item, i) => {
                       const u  = getVisitUrgency(item.nextVisitDate)
-                      const st = STATUS_STYLE[item.treatmentStatus]
+                      const st = getStatusStyle(item.treatmentStatus)
                       return (
                         <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
                           <td style={{ padding: '10px 14px', fontWeight: 700 }}>{i + 1}</td>
@@ -384,9 +444,14 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
                               : '—'}
                           </td>
                           <td style={{ padding: '10px 14px' }}>
-                            {st
-                              ? <span style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700, whiteSpace: 'nowrap' }}>{st.icon} {item.treatmentStatus}</span>
-                              : '—'}
+                            {/* ✅ Always show status badge — fallback to bookingStatus if item has none */}
+                            {(() => {
+                              const displayStatus = item.treatmentStatus || bookingStatus
+                              const s = getStatusStyle(displayStatus)
+                              return s
+                                ? <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700, whiteSpace: 'nowrap' }}>{s.icon} {displayStatus}</span>
+                                : '—'
+                            })()}
                           </td>
                           <td style={{ padding: '10px 14px', maxWidth: 180 }}>
                             <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.reviewNotes}>
@@ -394,10 +459,10 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
                             </div>
                           </td>
 
-                          {/* Modifications column: hidden when Confirmed */}
-                          {!isConfirmed && (
+                          {/* Modifications column — hidden for Confirmed / Completed */}
+                          {!hideModifications && (
                             <td style={{ padding: '10px 14px', maxWidth: 180 }}>
-                              {item.treatmentStatus === 'Active'
+                              {(item.treatmentStatus || bookingStatus || '').toLowerCase() === 'active'
                                 ? <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.modifications}>{item.modifications || '—'}</div>
                                 : <span style={{ color: '#a0aec0', fontSize: '0.78rem', fontStyle: 'italic' }}>N/A</span>
                               }
@@ -414,29 +479,23 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
                   </tbody>
                 </table>
               </div>
-
             </CCardBody>
           </CCard>
         )}
 
       </CContainer>
 
-      {/* ── Fixed Bottom Bar ── */}
-      <div
-        className="position-fixed bottom-0"
-        style={{ left: 0, right: 0, background: '#a5c4d4ff', display: 'flex', justifyContent: 'flex-end', gap: 16, padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)' }}
-      >
-        <Button
-          customColor="#ffffff"
-          color="#7e3a93"
-          onClick={handleNext}
-          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
-        >
+      {/* Fixed Bottom Bar */}
+      <div className="position-fixed bottom-0" style={{ left: 0, right: 0, background: '#a5c4d4ff', display: 'flex', justifyContent: 'flex-end', gap: 16, padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)' }}>
+        <Button customColor="#ffffff" color="#7e3a93" onClick={handleNext} style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
           Next
         </Button>
       </div>
 
-      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse  { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+      `}</style>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Button from '../components/CustomButton/CustomButton'
 import { COLORS } from '../Themes'
 import { CCard, CCardBody } from '@coreui/react'
@@ -19,7 +19,7 @@ const STAGE_OPTIONS = [
   { label: 'Chronic', value: 'Chronic' },
 ]
 
-/* ─── Diagnosis field styles ────────────────────────────────────────────── */
+/* ─── Styles ─────────────────────────────────────────────────────────── */
 const diagInputStyle = {
   border: '1.5px solid #b6cfe8',
   borderRadius: 7,
@@ -87,22 +87,37 @@ const DiagTextarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
 ══════════════════════════════════════════════════════════════════════════ */
 const PrescriptionTab = ({ seed = {}, onNext }) => {
 
-  /* ── Diagnosis state ── */
+  /* ── State ── */
   const [physioDiagnosis, setPhysioDiagnosis] = useState(seed.diagnosis?.physioDiagnosis ?? '')
-  const [affectedArea, setAffectedArea] = useState(seed.diagnosis?.affectedArea ?? '')
-  const [severity, setSeverity] = useState(seed.diagnosis?.severity ?? '')
-  const [stage, setStage] = useState(seed.diagnosis?.stage ?? '')
-  const [diagNotes, setDiagNotes] = useState(seed.diagnosis?.notes ?? '')
+  const [affectedArea, setAffectedArea]       = useState(seed.diagnosis?.affectedArea ?? '')
+  const [severity, setSeverity]               = useState(seed.diagnosis?.severity ?? '')
+  const [stage, setStage]                     = useState(seed.diagnosis?.stage ?? '')
+  const [diagNotes, setDiagNotes]             = useState(seed.diagnosis?.notes ?? '')
 
   const { warning } = useToast()
 
-  /* Sync if seed changes */
+  /* ─────────────────────────────────────────────────────────────────────
+     KEY FIX: use a ref to track the previous seed reference.
+     Only re-sync when the seed reference actually changes AND the new
+     seed carries real diagnosis data — this prevents a parent re-render
+     (e.g. after onNext fires) from wiping fields that the user just filled.
+  ───────────────────────────────────────────────────────────────────── */
+  const seedRef = useRef(null)
+
   useEffect(() => {
-    setPhysioDiagnosis(seed.diagnosis?.physioDiagnosis ?? '')
-    setAffectedArea(seed.diagnosis?.affectedArea ?? '')
-    setSeverity(seed.diagnosis?.severity ?? '')
-    setStage(seed.diagnosis?.stage ?? '')
-    setDiagNotes(seed.diagnosis?.notes ?? '')
+    // Skip if seed reference hasn't changed
+    if (seed === seedRef.current) return
+    seedRef.current = seed
+
+    // Only overwrite if the incoming seed actually carries diagnosis values
+    // (guards against the parent passing a fresh empty `{}` after Next)
+    if (!seed?.diagnosis) return
+
+    setPhysioDiagnosis(seed.diagnosis.physioDiagnosis ?? '')
+    setAffectedArea(seed.diagnosis.affectedArea ?? '')
+    setSeverity(seed.diagnosis.severity ?? '')
+    setStage(seed.diagnosis.stage ?? '')
+    setDiagNotes(seed.diagnosis.notes ?? '')
   }, [seed])
 
   /* ── handleNext ── */
@@ -132,6 +147,7 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
         style={{ border: '1.5px solid #c8ddf0', borderRadius: 12, boxShadow: '0 4px 24px rgba(26,90,168,0.08)' }}
       >
         <CCardBody>
+
           {/* Section header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, borderBottom: '2px solid #e3eef8', paddingBottom: 12 }}>
             <div style={{ width: 34, height: 34, borderRadius: 8, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>📝</div>
@@ -187,7 +203,6 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
 
         </CCardBody>
       </CCard>
-      {/* ── END DIAGNOSIS SECTION ─────────────────────────────────────────── */}
 
       {/* ── BOTTOM ACTION BAR ─────────────────────────────────────────────── */}
       <div
@@ -195,17 +210,17 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
         style={{
           left: 0,
           right: 0,
-          background: '#a5c4d4ff', // ✅ light background
+          background: '#a5c4d4ff',
           display: 'flex',
           justifyContent: 'flex-end',
           gap: 16,
           padding: '10px 24px',
-          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)', // ✅ soft shadow
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
         }}
       >
         <Button
-          customColor="#ffffff" // ✅ white button bg
-          color="#7e3a93"       // ✅ purple text
+          customColor="#ffffff"
+          color="#7e3a93"
           onClick={handleNext}
           style={{
             borderRadius: '20px',
