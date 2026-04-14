@@ -28,7 +28,14 @@ import {
   therapistUrl,
   therapyExercisesUrl,
   programUrl,
-  programAllUrl,   // ✅ new
+  programAllUrl,
+  therapyUrl,
+  exerciseUrl,
+  packageUrl,
+  programUrlId,
+  therapyUrlId,
+  exerciseUrlId,
+  packageUrlId,   // ✅ new
 } from './BaseUrl'
 
 export const postLogin = async (payload, endpoint) => {
@@ -781,7 +788,32 @@ export const createDoctorSaveDetails = async (prescriptionData) => {
   }
 }
 
+// =============================
+// ✅ Get packages by clinicId & branchId
+export const getPackagesByBranch = async (clinicId, branchId) => {
+  try {
+    const response = await api.get(`${packageUrl}/${clinicId}/${branchId}`)
+    console.log('✅ Packages by Branch API:', response.data)
+    const raw = response.data?.data ?? response.data ?? []
+    return Array.isArray(raw) ? raw : []
+  } catch (error) {
+    console.error('❌ Packages by Branch API Error:', error)
+    return []
+  }
+}
 
+export const getPackagesByBranchAndId = async (clinicId, branchId, packagesId) => {
+  try {
+    const response = await api.get(`${packageUrlId}/${clinicId}/${branchId}/${packagesId}`)
+    console.log('✅ Packages by Branch API:', response.data)
+    const raw = response.data?.data ?? response.data ?? []
+    return Array.isArray(raw) ? raw : []
+  } catch (error) {
+    console.error('❌ Packages by Branch API Error:', error)
+    return []
+  }
+}
+// ===============================
 // ✅ Get programs by clinicId & branchId
 export const getProgramsByBranch = async (clinicId, branchId) => {
   try {
@@ -794,6 +826,68 @@ export const getProgramsByBranch = async (clinicId, branchId) => {
     return []
   }
 }
+export const getProgramsByBranchAndId = async (clinicId, branchId, programId) => {
+  try {
+    const response = await api.post(`${programUrlId}/${clinicId}/${branchId}/${programId}`)
+    console.log('✅ Programs by Branch API:', response.data)
+    const raw = response.data?.data ?? response.data ?? []
+    return Array.isArray(raw) ? raw : []
+  } catch (error) {
+    console.error('❌ Programs by Branch API Error:', error)
+    return []
+  }
+}
+// ==============================
+// ✅ Get therapies by clinicId & branchId
+export const getTherapiesByBranch = async (clinicId, branchId) => {
+  try {
+    const response = await api.get(`${therapyUrl}/${clinicId}/${branchId}`)
+    console.log('✅ Therapies by Branch API:', response.data)
+    const raw = response.data?.data ?? response.data ?? []
+    return Array.isArray(raw) ? raw : []
+  } catch (error) {
+    console.error('❌ Therapies by Branch API Error:', error)
+    return []
+  }
+}
+export const getTherapiesByBranchAndId = async (clinicId, branchId, therapyId) => {
+  try {
+    const response = await api.get(`${therapyUrlId}/${therapyId}/${clinicId}/${branchId}`)
+    console.log('✅ Therapies by Branch API:', response.data)
+    const raw = response.data?.data ?? response.data ?? []
+    return Array.isArray(raw) ? raw : []
+  } catch (error) {
+    console.error('❌ Therapies by Branch API Error:', error)
+    return []
+  }
+}
+// =`=============================
+
+// ✅ Get exercises by clinicId & branchId
+export const getExercisesByBranch = async (clinicId, branchId) => {
+  try {
+    const response = await api.get(`${exerciseUrl}/${clinicId}/${branchId}`)
+    console.log('✅ Exercises by Branch API:', response.data)
+    const raw = response.data?.data ?? response.data ?? []
+    return Array.isArray(raw) ? raw : []
+  } catch (error) {
+    console.error('❌ Exercises by Branch API Error:', error)
+    return []
+  }
+}
+
+export const getExercisesByBranchAndIdAndId = async (clinicId, branchId, exerciseId) => {
+  try {
+    const response = await api.get(`${exerciseUrlId}/${clinicId}/${branchId}/${exerciseId}`)
+    console.log('✅ Exercises by Branch API:', response.data)
+    const raw = response.data?.data ?? response.data ?? []
+    return Array.isArray(raw) ? raw : []
+  } catch (error) {
+    console.error('❌ Exercises by Branch API Error:', error)
+    return []
+  }
+}
+// =============================
 
 // ✅ Get all programs (fallback)
 export const getPrograms = async () => {
@@ -808,17 +902,17 @@ export const getPrograms = async () => {
   }
 }
 
-// ✅ Get single program detail by programId (for therophy[] data)
-export const getProgramById = async (clinicId, branchId, programId) => {
-  try {
-    const response = await api.post(`${programUrl}/${clinicId}/${branchId}/${programId}`)
+// // ✅ Get single program detail by programId (for therophy[] data)
+// export const getProgramById = async (clinicId, branchId, programId) => {
+//   try {
+//     const response = await api.post(`${programUrl}/${clinicId}/${branchId}/${programId}`)
 
-    console.log('✅ getProgramById API:', response.data)
+//     console.log('✅ getProgramById API:', response.data)
 
-    return response?.data?.data ?? null
+//     return response?.data?.data ?? null
 
-  } catch (error) {
-    console.error('❌ getProgramById API Error:', error)
-    throw error
-  }
-}
+//   } catch (error) {
+//     console.error('❌ getProgramById API Error:', error)
+//     throw error
+//   }
+// }

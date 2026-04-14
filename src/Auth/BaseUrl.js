@@ -54,7 +54,17 @@ export const therapistUrl = `${ipUrl}/clinic-admin/getByTherapistClinicIdAndBran
 export const therapyExercisesUrl = `${ipUrl}/clinic-admin/getBytherapyExercisesClinicIdAndBranchId`
 
 // ✅ Programs (by clinicId & branchId)
-export const programUrl = `${ipUrl}/clinic-admin/program/getBycIdAndbIdAndId`
+export const programUrl = `${ipUrl}/clinic-admin/program/getBycIdAndbId`
+export const programUrlId = `${ipUrl}/clinic-admin/program/getBycIdAndbIdAndId`
+
+export const packageUrl = `${ipUrl}/clinic-admin/getPackageByClinicIdAndBranchId`
+export const packageUrlId = `${ipUrl}/clinic-admin/getPackageWithProgramsByUsingClinicIdBranchIdAndPackageId`
+
+export const therapyUrl = `${ipUrl}/clinic-admin/getByTherapyServiceClinicIdAndBranchId`
+export const therapyUrlId = `${ipUrl}/clinic-admin/getTherapyServiceWithExercises`
+
+export const exerciseUrl = `${ipUrl}/clinic-admin/getBytherapyExercisesClinicIdAndBranchId`
+export const exerciseUrlId = `${ipUrl}/clinic-admin/getBytherapyExercisesClinicIdAndBranchIdAndtherapyExercisesId`
 
 // ✅ Programs — getAll
 export const programAllUrl = `${ipUrl}/clinic-admin/program/getAll`
