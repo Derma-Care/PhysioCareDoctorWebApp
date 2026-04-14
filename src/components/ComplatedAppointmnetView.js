@@ -8,6 +8,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useDoctorContext } from '../Context/DoctorContext'
 import { SavePatientPrescription } from '../Auth/Auth'
 import { useToast } from '../utils/Toaster'
+import Investigation from '../Prescription/Investigation'
 
 const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = false }) => {
   const { id } = useParams()
@@ -42,6 +43,7 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
   const [formData, setFormData] = useState({
     symptoms: {},
     tests: {},
+    investigation: {},
     prescription: {},
     treatments: {},
     followUp: {},
@@ -71,14 +73,18 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
       setFormData((prev) => ({ ...prev, prescription: { ...prev.prescription, ...data } }))
       goToNext('Diagnosis')
     },
-   
-    'TherapySessions': (data) => {
-      setFormData((prev) => ({ ...prev, followUp: { ...prev.followUp, ...data } }))
-      goToNext('TherapySessions')
+    Investigation: (data) => {
+      setFormData((prev) => ({ ...prev, investigation: { ...prev.investigation, ...data } }))
+      goToNext('Investigation')
     },
-      'ExercisePlan': (data) => {
+
+    Plan: (data) => {
       setFormData((prev) => ({ ...prev, followUp: { ...prev.followUp, ...data } }))
-      goToNext('ExercisePlan')
+      goToNext('Plan')
+    },
+    HomePlan: (data) => {
+      setFormData((prev) => ({ ...prev, followUp: { ...prev.followUp, ...data } }))
+      goToNext('HomePlan')
     },
     Summary: async (data) => {
       const payload = { ...formData, summary: { ...formData.summary, ...data } }
@@ -106,42 +112,43 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
     [formData],
   )
 
-const savePrescriptionTemplate = async () => {
-  try {
-    const complaints = formData.symptoms?.complaints?.trim() || ''
-    
-    // if (!complaints) {
-    //   alert('complaints is missing. Cannot save template.')
-    //   return
-    // }
+  const savePrescriptionTemplate = async () => {
+    try {
+      const complaints = formData.symptoms?.complaints?.trim() || ''
 
-    const clinicId = localStorage.getItem('hospitalId')
-    const template = {
-       clinicId,
-        title:        complaints,
-        symptoms:     complaints,
-        tests:        formData.tests        || [],
+      // if (!complaints) {
+      //   alert('complaints is missing. Cannot save template.')
+      //   return
+      // }
+
+      const clinicId = localStorage.getItem('hospitalId')
+      const template = {
+        clinicId,
+        title: complaints,
+        symptoms: complaints,
+        tests: formData.tests || [],
+        investigation: formData.investigation || {}, // ✅ FIXED
         prescription: formData.prescription || [],
-        treatments:   formData.treatments   || [],
-        followUp:     formData.followUp     || {},
+        treatments: formData.treatments || [],
+        followUp: formData.followUp || {},
         exercisePlan: formData.exercisePlan || {},
-    }
+      }
 
-    const res = await SavePatientPrescription(template)
-    console.log('✅ Saved template response:', res)
+      const res = await SavePatientPrescription(template)
+      console.log('✅ Saved template response:', res)
 
-    if (res.status === 200) {
-      success(`${res.message || 'Prescription Template saved successfully to server!'}`, {
-        title: 'Success',
-      })
-    } else {
-      info(`${res.message || 'A prescription template updated successfully'}`, { title: 'Info' })
+      if (res.status === 200) {
+        success(`${res.message || 'Prescription Template saved successfully to server!'}`, {
+          title: 'Success',
+        })
+      } else {
+        info(`${res.message || 'A prescription template updated successfully'}`, { title: 'Info' })
+      }
+    } catch (error) {
+      console.error('❌ Error saving template:', error)
+      alert('Failed to save prescription template. Please try again.')
     }
-  } catch (error) {
-    console.error('❌ Error saving template:', error)
-    alert('Failed to save prescription template. Please try again.')
   }
-}
 
 
   return (

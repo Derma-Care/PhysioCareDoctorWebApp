@@ -99,7 +99,7 @@ const NumberInput = ({ value, onChange, min = 1, max, placeholder }) => {
 /* ══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
-const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
+const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
   const [exercises, setExercises] = useState(Array.isArray(seed.exercises) ? seed.exercises : [])
   const [homeAdvice, setHomeAdvice] = useState(seed.homeAdvice ?? '')
@@ -533,4 +533,4 @@ const ExercisePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   )
 }
 
-export default ExercisePlan
+export default HomePlan

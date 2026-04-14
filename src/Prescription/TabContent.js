@@ -12,9 +12,11 @@ import { COLORS } from '../Themes'
 import ReportDetails from '../components/Reports/Reports'
 import ImageGallery from './RetiveImages'
 import Assessment from './Tests'
-import ExercisePlan from './ExercisePlan'
+
 import FollowUpnew from './FollowUpnew'
 import TherapySession from './TreatmentPlan'
+import HomePlan from './ExercisePlan'
+import Investigation from './Investigation'
 
 const TabContent = ({
   activeTab,
@@ -84,8 +86,17 @@ const TabContent = ({
         />
       )
       break
-
-    case 'TherapySessions':
+    case 'Investigation':
+      content = (
+        <Investigation
+          seed={formData.investigation || {}}
+          onNext={handleNext}
+          formData={formData}
+          setFormData={setFormData}
+        />
+      )
+      break
+    case 'Plan':
       content = fromDoctorTemplate ? (
         <DoctorFollowUp
           seed={formData.therapySessions || {}}
@@ -105,9 +116,9 @@ const TabContent = ({
       )
       break
 
-    case 'ExercisePlan':
+    case 'HomePlan':
       content = (
-        <ExercisePlan
+        <HomePlan
           seed={formData.exercisePlan || {}}
           onNext={handleNext}
           sidebarWidth={260}

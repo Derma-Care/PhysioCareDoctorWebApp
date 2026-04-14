@@ -38,8 +38,9 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     'Complaints',
     'Assessment',
     'Diagnosis',
-    'TherapySessions',
-    'ExercisePlan',
+    'Investigation',
+    'Plan',
+    'HomePlan',
     'FollowUp',
     'Prescription',
     'History',
@@ -207,9 +208,9 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Diagnosis')
     },
 
-    // ── TherapySessions ───────────────────────────────────────────────────
-    TherapySessions: (data = {}) => {
-      if (!data || typeof data !== 'object') { goToNext('TherapySessions'); return }
+    // ── Plan ───────────────────────────────────────────────────
+    Plan: (data = {}) => {
+      if (!data || typeof data !== 'object') { goToNext('Plan'); return }
 
       const programObj = data.selectedProgramObj ?? {}
 
@@ -260,16 +261,16 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
         },
       }
 
-      mergeAndLog('TherapySessions', patch)
-      goToNext('TherapySessions')
+      mergeAndLog('Plan', patch)
+      goToNext('Plan')
     },
 
-    // ── ExercisePlan ──────────────────────────────────────────────────────
-    // data shape from ExercisePlan.handleNext():
+    // ── HomePlan ──────────────────────────────────────────────────────
+    // data shape from HomePlan.handleNext():
     //   { exercisePlan: { exercises: [...], homeAdvice: '' } }
     // each exercise: { name, sets, reps, frequency, instructions, videoUrl, thumbnail }
-    ExercisePlan: (data = {}) => {
-      if (!data || typeof data !== 'object') { goToNext('ExercisePlan'); return }
+    HomePlan: (data = {}) => {
+      if (!data || typeof data !== 'object') { goToNext('HomePlan'); return }
 
       const rawExercises = Array.isArray(data.exercisePlan?.exercises)
         ? data.exercisePlan.exercises
@@ -278,7 +279,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       const patch = {
         exercisePlan: {
           homeAdvice:    data.exercisePlan?.homeAdvice ?? data.homeAdvice ?? '',
-          // ── Keep the same key ("exercises") that ExercisePlan component
+          // ── Keep the same key ("exercises") that HomePlan component
           //    reads from seed — so switching tabs never clears the list ──
           exercises:     rawExercises,
           // ── Also store as homeExercises for Summary/payload ──
@@ -296,8 +297,8 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
         },
       }
 
-      mergeAndLog('ExercisePlan', patch)
-      goToNext('ExercisePlan')
+      mergeAndLog('HomePlan', patch)
+      goToNext('HomePlan')
     },
 
     // ── FollowUp ──────────────────────────────────────────────────────────

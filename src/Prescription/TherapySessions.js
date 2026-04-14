@@ -7,7 +7,6 @@ import {
   getTherapists,
   getProgramsByBranch,
   getPrograms,
-
   getProgramsByBranchAndId,
 } from '../Auth/Auth'
 
@@ -17,6 +16,38 @@ const MODALITY_OPTIONS = [
   'TENS', 'Laser Therapy', 'Traction', 'Wax Bath',
 ]
 const FREQ_UNITS = ['Day', 'Week', 'Month']
+
+/* ─── Mode Config ────────────────────────────────────────────────────────── */
+const MODE_CONFIG = {
+  package: {
+    label: 'Package',
+    emoji: '📦',
+    selectorLabel: 'Select Package',
+    sectionTitle: 'Package — Programs, Therapies & Exercises',
+    sectionSubtitleEmpty: 'Select a package',
+  },
+  program: {
+    label: 'Program',
+    emoji: '🎯',
+    selectorLabel: 'Select Program',
+    sectionTitle: 'Program — Therapies & Exercises',
+    sectionSubtitleEmpty: 'Select a program',
+  },
+  therapy: {
+    label: 'Therapy',
+    emoji: '💊',
+    selectorLabel: 'Select Therapy',
+    sectionTitle: 'Therapy — Exercises',
+    sectionSubtitleEmpty: 'Select a therapy',
+  },
+  exercise: {
+    label: 'Exercise',
+    emoji: '🏋️',
+    selectorLabel: 'Select Exercises',
+    sectionTitle: 'Exercise — All Exercises',
+    sectionSubtitleEmpty: 'All exercises shown below',
+  },
+}
 
 /* ─── Frequency Parser ───────────────────────────────────────────────────── */
 const parseFrequency = (raw) => {
@@ -35,6 +66,11 @@ const parseFrequency = (raw) => {
     if (str.includes(key)) { unit = val; break }
   }
   return { count, unit }
+}
+
+const buildFrequencyString = (count, unit) => {
+  if (!count) return ''
+  return `${count} times/${unit.toLowerCase()}`
 }
 
 /* ─── Styles ─────────────────────────────────────────────────────────────── */
@@ -97,7 +133,6 @@ const RadioBtn = ({ label, emoji, value, active, onClick }) => (
     {emoji} {label}
   </button>
 )
-
 
 /* ─── Modality Picker ────────────────────────────────────────────────────── */
 const ModalityPicker = ({ selected, onChange }) => {
@@ -180,14 +215,15 @@ const TherapistSearch = ({ therapists, loading, value, name, onChange }) => {
   )
 }
 
-/* ─── Program Dropdown ───────────────────────────────────────────────────── */
-const getName = p => p.programName || p.name || p.title || `Program ${p.id ?? ''}`
-const getId = p => String(p.id || p._id || p.programId || '')
+/* ─── Program/Package Dropdown ───────────────────────────────────────────── */
+const getName = p => p.programName || p.packageName || p.name || p.title || `Item ${p.id ?? ''}`
+const getId = p => String(p.id || p._id || p.programId || p.packageId || '')
 
 const ProgramDropdown = ({ programs, loading, value, onChange, mode }) => {
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState(false)
 
+  const cfg = MODE_CONFIG[mode] || MODE_CONFIG.program
   const selectedObj = programs.find(p => getId(p) === value)
 
   useEffect(() => {
@@ -201,10 +237,10 @@ const ProgramDropdown = ({ programs, loading, value, onChange, mode }) => {
   const clear = () => { onChange(null, null); setSearch(''); setOpen(true) }
 
   const placeholder = loading
-    ? `Loading ${mode}s...`
+    ? `Loading ${cfg.label.toLowerCase()}s...`
     : !programs.length
-      ? `No ${mode}s available`
-      : `Search or select a ${mode}...`
+      ? `No ${cfg.label.toLowerCase()}s available`
+      : cfg.selectorLabel
 
   return (
     <div style={{ position: 'relative', maxWidth: 460 }}>
@@ -234,7 +270,7 @@ const ProgramDropdown = ({ programs, loading, value, onChange, mode }) => {
 
       {value && selectedObj && (
         <div style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6, background: '#eef5ff', border: '1px solid #a8c6f0', borderRadius: 20, padding: '3px 12px', fontSize: '0.8rem', color: '#1a3a5c', fontWeight: 600 }}>
-          {mode === 'program' ? '🎯' : '📦'} {getName(selectedObj)}
+          {cfg.emoji} {getName(selectedObj)}
         </div>
       )}
 
@@ -251,7 +287,7 @@ const ProgramDropdown = ({ programs, loading, value, onChange, mode }) => {
                 onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = '#f0f7ff' }}
                 onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isSel ? '#ddeeff' : '#fff' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span>{mode === 'program' ? '🎯' : '📦'}</span>
+                  <span>{cfg.emoji}</span>
                   <span style={{ color: '#1a3a5c', fontSize: '0.88rem', fontWeight: isSel ? 700 : 500 }}>{label}</span>
                 </span>
                 {isSel && <span style={{ color: '#1a5fa8', fontWeight: 700, fontSize: '0.8rem' }}>✓</span>}
@@ -259,7 +295,7 @@ const ProgramDropdown = ({ programs, loading, value, onChange, mode }) => {
             )
           }) : (
             <div style={{ padding: '12px 14px', color: '#94a3b8', fontSize: '0.85rem' }}>
-              No {mode}s match your search
+              No {cfg.label.toLowerCase()}s match your search
             </div>
           )}
         </div>
@@ -267,32 +303,6 @@ const ProgramDropdown = ({ programs, loading, value, onChange, mode }) => {
     </div>
   )
 }
-
-/* ─── Always-Editable Number Cell ────────────────────────────────────────── */
-const NumCell = ({ value, onChange }) => (
-  <input type="number" min="0" value={value ?? ''}
-    onChange={e => onChange(e.target.value)}
-    style={{ width: 64, textAlign: 'center', fontFamily: 'inherit', border: '1.5px solid #1a5fa8', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none' }}
-    onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(26,95,168,0.15)' }}
-    onBlur={e => { e.target.style.boxShadow = 'none' }}
-  />
-)
-
-/* ─── Always-Editable Frequency Cell ─────────────────────────────────────── */
-const FreqCell = ({ count, unit, onCountChange, onUnitChange }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-    <input type="number" min="0" value={count ?? ''} placeholder="0"
-      onChange={e => onCountChange(e.target.value)}
-      style={{ width: 50, textAlign: 'center', border: '1.5px solid #1a5fa8', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit' }}
-      onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(26,95,168,0.15)' }}
-      onBlur={e => { e.target.style.boxShadow = 'none' }}
-    />
-    <select value={unit ?? 'Day'} onChange={e => onUnitChange(e.target.value)}
-      style={{ border: '1.5px solid #1a5fa8', borderRadius: 6, padding: '4px 6px', fontSize: '0.78rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
-      {FREQ_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-    </select>
-  </div>
-)
 
 /* ─── Exercise Checkbox ──────────────────────────────────────────────────── */
 const ExerciseCheckbox = ({ checked, onChange }) => (
@@ -310,8 +320,52 @@ const ExerciseCheckbox = ({ checked, onChange }) => (
   </div>
 )
 
-/* ─── Exercise Table ─────────────────────────────────────────────────────── */
+/* ─── Editable Cell ──────────────────────────────────────────────────────── */
+const EditableCell = ({ value, onChange, type = 'text', width = 80, placeholder = '' }) => (
+  <input
+    type={type}
+    min={type === 'number' ? '0' : undefined}
+    value={value ?? ''}
+    onChange={e => onChange(e.target.value)}
+    placeholder={placeholder}
+    style={{
+      width, textAlign: type === 'number' ? 'center' : 'left',
+      fontFamily: 'inherit', border: '1.5px solid #1a5fa8',
+      borderRadius: 6, padding: '4px 6px', fontSize: '0.82rem',
+      color: '#1a3a5c', background: '#fff', outline: 'none',
+      boxSizing: 'border-box',
+    }}
+    onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(26,95,168,0.15)' }}
+    onBlur={e => { e.target.style.boxShadow = 'none' }}
+  />
+)
+
+/* ─── Frequency Cell ─────────────────────────────────────────────────────── */
+const FreqCell = ({ count, unit, onCountChange, onUnitChange }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+    <input type="number" min="0" value={count ?? ''} placeholder="0"
+      onChange={e => onCountChange(e.target.value)}
+      style={{ width: 50, textAlign: 'center', border: '1.5px solid #1a5fa8', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit' }}
+      onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(26,95,168,0.15)' }}
+      onBlur={e => { e.target.style.boxShadow = 'none' }}
+    />
+    <select value={unit ?? 'Day'} onChange={e => onUnitChange(e.target.value)}
+      style={{ border: '1.5px solid #1a5fa8', borderRadius: 6, padding: '4px 6px', fontSize: '0.78rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
+      {FREQ_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+    </select>
+  </div>
+)
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EXERCISE TABLE — columns: ✓ | # | Name(read-only) | Session | Frequency | Notes | Sets | Reps
+══════════════════════════════════════════════════════════════════════════ */
 const ExerciseTable = ({ exercises, onUpdate }) => {
+  if (!exercises || exercises.length === 0) return (
+    <div style={{ padding: '14px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '0.83rem', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1', marginTop: 8 }}>
+      No exercises available
+    </div>
+  )
+
   const setField = (idx, field, val) =>
     onUpdate(exercises.map((ex, i) => i === idx ? { ...ex, [field]: val } : ex))
 
@@ -324,16 +378,10 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
     onUpdate(exercises.map(ex => ({ ...ex, _checked: next })))
   }
 
-  if (!exercises || exercises.length === 0) return (
-    <div style={{ padding: '14px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '0.83rem', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1', marginTop: 8 }}>
-      No exercises available for this therapy
-    </div>
-  )
-
   const checkedCount = exercises.filter(ex => ex._checked !== false).length
 
-  const TH = ({ children, center }) => (
-    <th style={{ padding: '9px 10px', textAlign: center ? 'center' : 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem' }}>{children}</th>
+  const TH = ({ children, center, width }) => (
+    <th style={{ padding: '9px 10px', textAlign: center ? 'center' : 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem', width: width || 'auto' }}>{children}</th>
   )
   const TD = ({ children, style = {} }) => (
     <td style={{ padding: '7px 10px', verticalAlign: 'middle', ...style }}>{children}</td>
@@ -341,6 +389,7 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
 
   return (
     <div style={{ overflowX: 'auto', marginTop: 10 }}>
+      {/* Selection summary bar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         marginBottom: 8, padding: '5px 10px',
@@ -364,7 +413,8 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: '#1a3a5c' }}>
         <thead>
           <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-            <TH center>
+            {/* Header checkbox */}
+            <TH center width={32}>
               <div onClick={toggleAll} style={{
                 width: 16, height: 16, borderRadius: 3, cursor: 'pointer',
                 border: `2px solid ${allChecked ? '#fff' : 'rgba(255,255,255,0.6)'}`,
@@ -374,12 +424,13 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
                 {allChecked && <span style={{ color: '#fff', fontSize: '0.6rem', lineHeight: 1, fontWeight: 900 }}>✓</span>}
               </div>
             </TH>
-            <TH>#</TH>
-            <TH>Exercise Name</TH>
-            <TH center>Sessions</TH>
-            <TH center>Sets</TH>
-            <TH center>Reps</TH>
-            <TH>Frequency</TH>
+            <TH width={30}>#</TH>
+            <TH width={140}>Exercise Name</TH>
+            <TH center width={80}>Session</TH>
+            <TH width={140}>Frequency</TH>
+            <TH width={160}>Notes</TH>
+            <TH center width={70}>Sets</TH>
+            <TH center width={70}>Reps</TH>
           </tr>
         </thead>
         <tbody>
@@ -387,28 +438,37 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
             const isChecked = ex._checked !== false
             return (
               <tr key={idx} style={{
-                backgroundColor: !isChecked ? '#f0f0f0' : idx % 2 === 0 ? '#f5f9ff' : '#fff',
+                backgroundColor: isChecked ? (idx % 2 === 0 ? '#f5f9ff' : '#fff') : '#f7f7f7',
                 borderBottom: '1px solid #e3eef8',
-                opacity: isChecked ? 1 : 0.5,
+                opacity: isChecked ? 1 : 0.45,
                 transition: 'all 0.18s',
-                display: isChecked ? 'table-row' : 'none',
               }}>
+                {/* Checkbox */}
                 <TD style={{ textAlign: 'center', width: 32 }}>
                   <ExerciseCheckbox checked={isChecked} onChange={() => toggleExercise(idx)} />
                 </TD>
-                <TD style={{ fontWeight: 700, color: '#1a5fa8' }}>{idx + 1}</TD>
-                <TD style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#1a3a5c' }}>
-                  {ex.exerciseName || ex.name || ex.exercise_name || '—'}
+                {/* Row number */}
+                <TD style={{ fontWeight: 700, color: '#1a5fa8', width: 30 }}>{idx + 1}</TD>
+                {/* Name — read-only */}
+                <TD style={{ fontWeight: 600, color: '#1a3a5c', whiteSpace: 'nowrap' }}>
+                  <span style={{
+                    display: 'inline-block', padding: '4px 10px',
+                    background: '#eef5ff', borderRadius: 6,
+                    border: '1px solid #c8ddf0', fontSize: '0.82rem',
+                    color: '#1a3a5c', fontWeight: 600,
+                  }}>
+                    {ex.name || ex.exerciseName || ex.exercise_name || '—'}
+                  </span>
                 </TD>
+                {/* Session — editable */}
                 <TD style={{ textAlign: 'center' }}>
-                  <NumCell value={ex.sessions} onChange={v => setField(idx, 'sessions', v)} />
+                  <EditableCell
+                    type="number" width={64}
+                    value={ex.session}
+                    onChange={v => setField(idx, 'session', v)}
+                  />
                 </TD>
-                <TD style={{ textAlign: 'center' }}>
-                  <NumCell value={ex.sets} onChange={v => setField(idx, 'sets', v)} />
-                </TD>
-                <TD style={{ textAlign: 'center' }}>
-                  <NumCell value={ex.reps} onChange={v => setField(idx, 'reps', v)} />
-                </TD>
+                {/* Frequency — editable (count + unit) */}
                 <TD>
                   <FreqCell
                     count={ex.frequencyCount} unit={ex.frequencyUnit}
@@ -416,32 +476,36 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
                     onUnitChange={v => setField(idx, 'frequencyUnit', v)}
                   />
                 </TD>
+                {/* Notes — editable */}
+                <TD>
+                  <EditableCell
+                    type="text" width={150}
+                    value={ex.notes}
+                    placeholder="Add notes..."
+                    onChange={v => setField(idx, 'notes', v)}
+                  />
+                </TD>
+                {/* Sets — editable */}
+                <TD style={{ textAlign: 'center' }}>
+                  <EditableCell
+                    type="number" width={60}
+                    value={ex.sets}
+                    onChange={v => setField(idx, 'sets', v)}
+                  />
+                </TD>
+                {/* Reps (repetitions) — editable */}
+                <TD style={{ textAlign: 'center' }}>
+                  <EditableCell
+                    type="number" width={60}
+                    value={ex.repetitions ?? ex.reps}
+                    onChange={v => setField(idx, 'repetitions', v)}
+                  />
+                </TD>
               </tr>
             )
           })}
         </tbody>
       </table>
-
-      {exercises.some(ex => ex._checked === false) && (
-        <div style={{ marginTop: 10, padding: '8px 12px', background: '#fdf4f4', border: '1px dashed #f5c6c6', borderRadius: 8 }}>
-          <span style={{ fontSize: '0.75rem', color: '#9b5555', fontWeight: 700, marginRight: 8 }}>Hidden exercises:</span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-            {exercises.map((ex, idx) => {
-              if (ex._checked !== false) return null
-              const name = ex.exerciseName || ex.name || ex.exercise_name || `Exercise ${idx + 1}`
-              return (
-                <button key={idx} type="button" onClick={() => toggleExercise(idx)} title="Click to re-enable"
-                  style={{ padding: '3px 10px', borderRadius: 12, border: '1.5px solid #f5c6c6', background: '#fff0f0', color: '#9b5555', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#ffe0e0'; e.currentTarget.style.borderColor = '#e53e3e' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#fff0f0'; e.currentTarget.style.borderColor = '#f5c6c6' }}>
-                  <span style={{ fontSize: '0.7rem' }}>＋</span> {name}
-                </button>
-              )
-            })}
-          </div>
-          <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: '#b07a7a' }}>Click any hidden exercise to re-enable it</p>
-        </div>
-      )}
     </div>
   )
 }
@@ -463,10 +527,10 @@ const TherapyBlock = ({ therapy, checked, onToggle, exercises, onUpdateExercises
               const active = exercises.filter(ex => ex._checked !== false).length
               return `${active} / ${total} exercise${total !== 1 ? 's' : ''}`
             })()
-            : 'Hidden'}
+            : 'Collapsed'}
         </span>
       }
-      <span style={{ fontSize: '0.8rem', color: checked ? '#1a5fa8' : '#b0c4d8', transform: checked ? 'rotate(0deg)' : 'rotate(-90deg)', display: 'inline-block' }}>▼</span>
+      <span style={{ fontSize: '0.8rem', color: checked ? '#1a5fa8' : '#b0c4d8', transform: checked ? 'rotate(0deg)' : 'rotate(-90deg)', display: 'inline-block', transition: 'transform 0.2s' }}>▼</span>
     </div>
     {checked && (
       <div style={{ padding: '4px 18px 16px' }}>
@@ -479,16 +543,32 @@ const TherapyBlock = ({ therapy, checked, onToggle, exercises, onUpdateExercises
   </div>
 )
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Helper — normalise an exercise from any source into the table row shape
+────────────────────────────────────────────────────────────────────────── */
+const normaliseExercise = (ex) => {
+  const freq = parseFrequency(ex.frequency ?? ex.frequencyCount)
+  return {
+    ...ex,
+    name: ex.name || ex.exerciseName || ex.exercise_name || '',
+    session: ex.session ?? ex.sessions ?? '',
+    sets: ex.sets ?? '',
+    repetitions: ex.repetitions ?? ex.reps ?? '',
+    notes: ex.notes ?? '',
+    frequencyCount: freq.count,
+    frequencyUnit: freq.unit,
+    _checked: true,
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
-   seed = formData.therapySessions (persisted between tab switches)
 ══════════════════════════════════════════════════════════════════════════ */
 const TherapySession = ({ seed = {}, onNext }) => {
 
-  // ── Restore previously saved session (from first session entry) ──────────
   const savedSession = Array.isArray(seed.sessions) ? (seed.sessions[0] ?? {}) : {}
 
-  /* ── Mode — restored from seed ── */
+  /* ── Mode ── */
   const [mode, setMode] = useState(savedSession.serviceType ?? seed.mode ?? 'program')
 
   /* ── Clinic / Branch IDs ── */
@@ -499,11 +579,10 @@ const TherapySession = ({ seed = {}, onNext }) => {
   /* ── Therapists ── */
   const [therapists, setTherapists] = useState([])
   const [loadingTherapists, setLoadingTherapists] = useState(false)
-  // Restore from seed
   const [therapistId, setTherapistId] = useState(savedSession.therapistId ?? seed.therapistId ?? '')
   const [therapistName, setTherapistName] = useState(savedSession.therapistName ?? seed.therapistName ?? '')
 
-  /* ── Programs ── */
+  /* ── Programs / Packages list ── */
   const [programs, setPrograms] = useState([])
   const [loadingPrograms, setLoadingPrograms] = useState(false)
 
@@ -512,31 +591,28 @@ const TherapySession = ({ seed = {}, onNext }) => {
   const [loadingAllExercises, setLoadingAllExercises] = useState(false)
   const exercisesFetchedRef = useRef(false)
 
-  /* ── Selected program — restore from seed ── */
+  /* ── Selected program/package ── */
   const [selectedProgramId, setSelectedProgramId] = useState(savedSession.programId ?? seed.selectedProgramId ?? null)
   const [selectedProgramObj, setSelectedProgramObj] = useState(null)
   const [loadingProgramDetail, setLoadingProgramDetail] = useState(false)
 
-  /* ── Therapy library built from program.therophy[] ── */
+  /* ── Therapy library (program.therophy[] path) ── */
   const [therapyLibrary, setTherapyLibrary] = useState([])
+  const [therapyState, setTherapyState] = useState({})       // therophy[] path
+  const [therophyDataState, setTherophyDataState] = useState({}) // therophyData[] path
 
-  /* ── Therapy state ── */
-  const [therapyState, setTherapyState] = useState({})
-  const [therophyDataState, setTherophyDataState] = useState({})
+  /* ── Therapy mode state  ── */
+  // key = therapyName, value = { checked, exercises[] }
+  const [therapyModeState, setTherapyModeState] = useState({})
 
-  /* ── Session Details — restored from seed ── */
+  /* ── Exercise mode state ── */
+  const [exerciseModeList, setExerciseModeList] = useState([])
+
+  /* ── Session Details ── */
   const [modalitiesUsed, setModalitiesUsed] = useState(savedSession.modalitiesUsed ?? seed.modalitiesUsed ?? [])
   const [patientResponse, setPatientResponse] = useState(savedSession.patientResponse ?? seed.patientResponse ?? '')
   const [manualTherapy, setManualTherapy] = useState(savedSession.manualTherapy ?? seed.manualTherapy ?? '')
   const [precautions, setPrecautions] = useState(savedSession.precautions ?? seed.precautions ?? '')
-  const [selectedPackageId, setSelectedPackageId] = useState(null)
-  const [selectedPackageObj, setSelectedPackageObj] = useState(null)
-
-  const [selectedTherapy, setSelectedTherapy] = useState(null)
-  /* ── Restore previously selected therapies from seed into state ──────────
-     This runs once after programs/exercises are loaded; it re-populates
-     therapyState / therophyDataState so the user's selections are visible. ── */
-  const seedRestoredRef = useRef(false)
 
   /* ────────────────────────────────────────────────────────────────────────
      STEP 1 — Resolve clinicId & branchId
@@ -561,7 +637,6 @@ const TherapySession = ({ seed = {}, onNext }) => {
   ──────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!idsReady) return
-
     const fetchTherapistsAndPrograms = async () => {
       setLoadingTherapists(true)
       setLoadingPrograms(true)
@@ -570,16 +645,13 @@ const TherapySession = ({ seed = {}, onNext }) => {
           getTherapists(clinicId, branchId),
           branchId ? getProgramsByBranch(clinicId, branchId) : Promise.resolve([]),
         ])
-
         const tList = therapistData.status === 'fulfilled'
           ? (Array.isArray(therapistData.value) ? therapistData.value : [])
           : []
         setTherapists(tList)
-
         let pList = branchPrograms.status === 'fulfilled'
           ? (Array.isArray(branchPrograms.value) ? branchPrograms.value : [])
           : []
-
         if (!pList.length) {
           try {
             const allPrograms = await getPrograms()
@@ -594,25 +666,11 @@ const TherapySession = ({ seed = {}, onNext }) => {
         setLoadingPrograms(false)
       }
     }
-
     fetchTherapistsAndPrograms()
-  }, [idsReady, clinicId, branchId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [idsReady, clinicId, branchId]) // eslint-disable-line
 
   /* ────────────────────────────────────────────────────────────────────────
-     STEP 2b — If seed has a selectedProgramId, re-fetch program detail
-               so therapies are restored after tab switch
-  ──────────────────────────────────────────────────────────────────────── */
-  // useEffect(() => {
-  //   if (!idsReady || !selectedProgramId || selectedProgramObj || loadingProgramDetail) return
-  //   setLoadingProgramDetail(true)
-  //   getProgramsByBranchAndId(clinicId, branchId, selectedProgramId)
-  //     .then(detail => { if (detail) setSelectedProgramObj(detail) })
-  //     .catch(err => console.error('❌ re-fetch program detail error:', err))
-  //     .finally(() => setLoadingProgramDetail(false))
-  // }, [idsReady, selectedProgramId, clinicId, branchId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  /* ────────────────────────────────────────────────────────────────────────
-     STEP 3 — Pre-fetch ALL exercises for this branch (cached)
+     STEP 3 — Pre-fetch ALL exercises (cached)
   ──────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!idsReady || exercisesFetchedRef.current) return
@@ -631,7 +689,26 @@ const TherapySession = ({ seed = {}, onNext }) => {
       }
     }
     fetchAllExercises()
-  }, [idsReady, clinicId, branchId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [idsReady, clinicId, branchId]) // eslint-disable-line
+
+  /* ────────────────────────────────────────────────────────────────────────
+     STEP 3b — When allExercises loads, populate therapy + exercise mode states
+  ──────────────────────────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (!allExercises.length) return
+
+    // Therapy mode: group by therapyName
+    const grouped = {}
+    allExercises.forEach(ex => {
+      const key = ex.therapyName || ex.theraphyName || 'Unknown Therapy'
+      if (!grouped[key]) grouped[key] = { checked: true, exercises: [] }
+      grouped[key].exercises.push(normaliseExercise(ex))
+    })
+    setTherapyModeState(grouped)
+
+    // Exercise mode: flat list
+    setExerciseModeList(allExercises.map(normaliseExercise))
+  }, [allExercises])
 
   /* ────────────────────────────────────────────────────────────────────────
      STEP 4a — When program selected: build therapy library from therophy[]
@@ -644,10 +721,8 @@ const TherapySession = ({ seed = {}, onNext }) => {
     }
     const therapies = selectedProgramObj?.therophyData ?? []
     if (!therapies.length) { setTherapyLibrary([]); setTherapyState({}); return }
-
     const lib = therapies.map(t => ({ therapyId: t.theraphyId, therapyName: t.theraphyName }))
     setTherapyLibrary(lib)
-
     const initState = {}
     lib.forEach(({ therapyName }) => {
       initState[therapyName] = { checked: true, exercises: [] }
@@ -660,25 +735,14 @@ const TherapySession = ({ seed = {}, onNext }) => {
   ──────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!selectedProgramObj?.therophyData?.length) { setTherophyDataState({}); return }
-
     const init = {}
     selectedProgramObj.therophyData.forEach((therapy, idx) => {
-      const key = therapy.id || therapy.therapyName || index
+      const key = therapy.therapyName || String(idx)
       init[key] = {
         checked: true,
-        exercises: (therapy.exercises || []).map(ex => {
-          const freq = parseFrequency(ex.frequency)
-          return {
-            ...ex,
-            exerciseName: ex.exerciseName || ex.name || ex.exercise_name || '',
-            sessions: ex.session ?? ex.sessions ?? '',
-            sets: ex.sets ?? '',
-            reps: ex.repetitions ?? ex.reps ?? '',
-            frequencyCount: freq.count,
-            frequencyUnit: freq.unit,
-            _checked: true,
-          }
-        }),
+        therapyId: therapy.therapyId || therapy.id,
+        therapyName: therapy.therapyName,
+        exercises: (therapy.exercises || []).map(normaliseExercise),
       }
     })
     setTherophyDataState(init)
@@ -698,40 +762,33 @@ const TherapySession = ({ seed = {}, onNext }) => {
         })
         updated[therapyName] = {
           ...(updated[therapyName] || { checked: true }),
-          exercises: matched.map(ex => {
-            const freq = parseFrequency(ex.frequency ?? ex.frequencyCount)
-            return {
-              ...ex,
-              sessions: ex.sessions ?? '',
-              sets: ex.sets ?? '',
-              reps: ex.reps ?? '',
-              frequencyCount: freq.count,
-              frequencyUnit: freq.unit,
-              _checked: true,
-            }
-          }),
+          exercises: matched.map(normaliseExercise),
         }
       })
       return updated
     })
   }, [therapyLibrary, allExercises, loadingAllExercises])
 
-  /* ── Therapy helpers (therophy[] path) ── */
+  /* ─── Therapy helpers (therophy[] path) ── */
   const toggleTherapy = name =>
     setTherapyState(prev => ({ ...prev, [name]: { ...prev[name], checked: !prev[name].checked } }))
   const updateExercises = (name, updated) =>
     setTherapyState(prev => ({ ...prev, [name]: { ...prev[name], exercises: updated } }))
 
-  /* ── Therapy helpers (therophyData[] path) ── */
+  /* ─── Therapy helpers (therophyData[] path) ── */
   const toggleTherophyData = key =>
     setTherophyDataState(prev => ({ ...prev, [key]: { ...prev[key], checked: !prev[key].checked } }))
   const updateTherophyDataExercises = (key, updated) =>
     setTherophyDataState(prev => ({ ...prev, [key]: { ...prev[key], exercises: updated } }))
 
-  /* ── Select All helpers ── */
+  /* ─── Therapy mode helpers ── */
+  const toggleTherapyMode = key =>
+    setTherapyModeState(prev => ({ ...prev, [key]: { ...prev[key], checked: !prev[key].checked } }))
+  const updateTherapyModeExercises = (key, updated) =>
+    setTherapyModeState(prev => ({ ...prev, [key]: { ...prev[key], exercises: updated } }))
+
+  /* ─── Select All helpers ── */
   const hasTherophyData = (selectedProgramObj?.therophyData?.length ?? 0) > 0
-  console.log("selectedProgramObj:", selectedProgramObj)
-  console.log("therophyData:", selectedProgramObj?.therophyData)
   const tdKeys = Object.keys(therophyDataState)
   const tdAllChecked = tdKeys.length > 0 && tdKeys.every(k => therophyDataState[k]?.checked)
   const tdCheckedCnt = tdKeys.filter(k => therophyDataState[k]?.checked).length
@@ -751,7 +808,7 @@ const TherapySession = ({ seed = {}, onNext }) => {
     }
   }
 
-  /* ── Mode change ── */
+  /* ─── Mode change ── */
   const handleModeChange = val => {
     setMode(val)
     setSelectedProgramId(null)
@@ -761,10 +818,10 @@ const TherapySession = ({ seed = {}, onNext }) => {
     setTherophyDataState({})
   }
 
-  /* ── Program selection ── */
+  /* ─── Program/Package selection ── */
   const handleProgramChange = async (id, obj) => {
     if (!id) {
-      setSelectedProgramId(id)
+      setSelectedProgramId(null)
       setSelectedProgramObj(null)
       setTherapyLibrary([])
       setTherapyState({})
@@ -788,62 +845,220 @@ const TherapySession = ({ seed = {}, onNext }) => {
     }
   }
 
-  /* ── Next — builds payload matching required API structure ── */
-  const handleNext = () => {
-    let selectedTherapies = []
+  /* ──────────────────────────────────────────────────────────────────────────
+     BUILD PAYLOAD — mode-specific structures
+  ────────────────────────────────────────────────────────────────────────── */
+  const buildPayload = () => {
+    const commonSession = { patientResponse, manualTherapy, precautions, modalitiesUsed }
 
-    if (hasTherophyData) {
-      selectedTherapies = (selectedProgramObj?.therophyData ?? [])
-        .filter((therapy, idx) => {
-          const key = therapy.therapyName || String(idx)
-          return therophyDataState[key]?.checked
-        })
-        .map((therapy, idx) => {
-          const key = therapy.therapyName || String(idx)
+    if (mode === 'package') {
+      // Package payload
+      const selectedTherapies = hasTherophyData
+        ? (selectedProgramObj?.therophyData ?? [])
+          .filter((t, idx) => therophyDataState[t.therapyName || String(idx)]?.checked)
+          .map((t, idx) => {
+            const key = t.therapyName || String(idx)
+            const exs = (therophyDataState[key]?.exercises || []).filter(ex => ex._checked !== false)
+            return {
+              therapyId: t.therapyId || t.id,
+              therapyName: t.therapyName,
+              totalPrice: t.totalPrice ?? 0,
+              exercises: exs.map(ex => ({
+                therapyExercisesId: ex.therapyExercisesId || ex._id || '',
+                name: ex.name || ex.exerciseName || '',
+                session: ex.session ?? '',
+                frequency: buildFrequencyString(ex.frequencyCount, ex.frequencyUnit),
+                notes: ex.notes ?? '',
+                sets: Number(ex.sets) || 0,
+                repetitions: Number(ex.repetitions) || 0,
+                videoUrl: ex.videoUrl ?? '',
+                totalPrice: ex.totalPrice ?? 0,
+              })),
+            }
+          })
+        : []
+
+      return {
+        therapySessions: [{
+          packageId: getId(selectedProgramObj) || selectedProgramId,
+          packageName: getName(selectedProgramObj) || '',
+          serviceType: 'package',
+          totalPrice: selectedProgramObj?.totalPrice ?? 0,
+          programs: [{
+            programId: selectedProgramObj?.programId || selectedProgramId,
+            programName: selectedProgramObj?.programName || getName(selectedProgramObj) || '',
+            totalPrice: selectedProgramObj?.totalPrice ?? 0,
+            therapyData: selectedTherapies,
+          }],
+          ...commonSession,
+          therapistId,
+          therapistName,
+        }],
+      }
+    }
+
+    if (mode === 'program') {
+      // Program payload
+      const selectedTherapies = hasTherophyData
+        ? (selectedProgramObj?.therophyData ?? [])
+          .filter((t, idx) => therophyDataState[t.therapyName || String(idx)]?.checked)
+          .map((t, idx) => {
+            const key = t.therapyName || String(idx)
+            const exs = (therophyDataState[key]?.exercises || []).filter(ex => ex._checked !== false)
+            return {
+              therapyId: t.therapyId || t.id,
+              therapyName: t.therapyName,
+              totalPrice: t.totalPrice ?? 0,
+              exercises: exs.map(ex => ({
+                therapyExercisesId: ex.therapyExercisesId || ex._id || '',
+                name: ex.name || ex.exerciseName || '',
+                session: ex.session ?? '',
+                frequency: buildFrequencyString(ex.frequencyCount, ex.frequencyUnit),
+                notes: ex.notes ?? '',
+                sets: Number(ex.sets) || 0,
+                repetitions: Number(ex.repetitions) || 0,
+                videoUrl: ex.videoUrl ?? '',
+                totalPrice: ex.totalPrice ?? 0,
+              })),
+            }
+          })
+        : therapyLibrary
+          .filter(t => therapyState[t.therapyName]?.checked)
+          .map(t => ({
+            therapyId: t.therapyId,
+            therapyName: t.therapyName,
+            totalPrice: 0,
+            exercises: (therapyState[t.therapyName]?.exercises || [])
+              .filter(ex => ex._checked !== false)
+              .map(ex => ({
+                therapyExercisesId: ex.therapyExercisesId || ex._id || '',
+                name: ex.name || ex.exerciseName || '',
+                session: ex.session ?? '',
+                frequency: buildFrequencyString(ex.frequencyCount, ex.frequencyUnit),
+                notes: ex.notes ?? '',
+                sets: Number(ex.sets) || 0,
+                repetitions: Number(ex.repetitions) || 0,
+                videoUrl: ex.videoUrl ?? '',
+                totalPrice: ex.totalPrice ?? 0,
+              })),
+          }))
+
+      return {
+        therapySessions: [{
+          programId: getId(selectedProgramObj) || selectedProgramId,
+          programName: getName(selectedProgramObj) || '',
+          serviceType: 'program',
+          totalPrice: selectedProgramObj?.totalPrice ?? 0,
+          therapyData: selectedTherapies,
+          ...commonSession,
+          therapistId,
+          therapistName,
+        }],
+      }
+    }
+
+    if (mode === 'therapy') {
+      // Therapy payload
+      const tmKeys = Object.keys(therapyModeState)
+      const therapySessions = tmKeys
+        .filter(k => therapyModeState[k]?.checked)
+        .map(k => {
+          const tm = therapyModeState[k]
+          const firstEx = allExercises.find(e => (e.therapyName || e.theraphyName) === k)
           return {
-            therapyId: therapy.therapyId || therapy.id,
-            therapyName: therapy.therapyName,
-            exercises: (therophyDataState[key]?.exercises || []).filter(ex => ex._checked !== false),
+            therapyId: firstEx?.therapyId || firstEx?.theraphyId || '',
+            therapyName: k,
+            serviceType: 'therapy',
+            totalPrice: 0,
+            exercises: (tm.exercises || [])
+              .filter(ex => ex._checked !== false)
+              .map(ex => ({
+                therapyExercisesId: ex.therapyExercisesId || ex._id || '',
+                name: ex.name || ex.exerciseName || '',
+                session: ex.session ?? '',
+                frequency: buildFrequencyString(ex.frequencyCount, ex.frequencyUnit),
+                notes: ex.notes ?? '',
+                sets: Number(ex.sets) || 0,
+                repetitions: Number(ex.repetitions) || 0,
+                videoUrl: ex.videoUrl ?? '',
+                totalPrice: ex.totalPrice ?? 0,
+              })),
           }
         })
-    } else {
-      selectedTherapies = therapyLibrary
-        .filter(t => therapyState[t.therapyName]?.checked)
-        .map(t => ({
-          therapyId: t.therapyId,
-          therapyName: t.therapyName,
-          exercises: (therapyState[t.therapyName]?.exercises || []).filter(ex => ex._checked !== false),
-        }))
+
+      return {
+        therapySessions: [{
+          serviceType: 'therapy',
+          therapyData: therapySessions,
+          ...commonSession,
+          therapistId,
+          therapistName,
+        }],
+      }
     }
 
-    const payload = {
-      // serviceType is "program" or "package" based on the selected radio
-      mode,
-      serviceType: mode,   // ← explicitly named for clarity in parent
-      therapistId,
-      therapistName,
-      selectedProgramId,
-      selectedProgramObj,
-      selectedTherapies,
-      modalitiesUsed,
-      patientResponse,
-      manualTherapy,
-      precautions,
+    if (mode === 'exercise') {
+      // Exercise payload
+      return {
+        therapySessions: [{
+          serviceType: 'exercise',
+          totalPrice: 0,
+          exercises: exerciseModeList
+            .filter(ex => ex._checked !== false)
+            .map(ex => ({
+              therapyExercisesId: ex.therapyExercisesId || ex._id || '',
+              name: ex.name || ex.exerciseName || '',
+              session: ex.session ?? '',
+              frequency: buildFrequencyString(ex.frequencyCount, ex.frequencyUnit),
+              notes: ex.notes ?? '',
+              sets: Number(ex.sets) || 0,
+              repetitions: Number(ex.repetitions) || 0,
+              videoUrl: ex.videoUrl ?? '',
+              totalPrice: ex.totalPrice ?? 0,
+            })),
+          ...commonSession,
+          therapistId,
+          therapistName,
+        }],
+      }
     }
 
-    console.log('🚀 TherapySession payload:', payload)
+    return {}
+  }
+
+  const handleNext = () => {
+    const payload = buildPayload()
+    console.log('🚀 TherapySession payload:', JSON.stringify(payload, null, 2))
     onNext?.(payload)
   }
 
-  /* ── Derived flags ── */
+  /* ─── Derived flags ── */
   const loadingExercises = loadingAllExercises || loadingProgramDetail
   const loadingAnything = loadingPrograms || loadingAllExercises || loadingProgramDetail
   const initPending = !clinicId
-  const showTherapies =
-    (mode === 'program' && selectedProgramId) ||
-    (mode === 'package' && selectedPackageId) ||
-    (mode === 'therapy') ||
-    (mode === 'exercise')
+  const cfg = MODE_CONFIG[mode] || MODE_CONFIG.program
+
+  /* ─── Section subtitle ── */
+  const getSectionSubtitle = () => {
+    if (mode === 'program') {
+      if (!selectedProgramId) return cfg.sectionSubtitleEmpty
+      return `${checkedCount} / ${totalCount} therapies selected`
+    }
+    if (mode === 'package') {
+      if (!selectedProgramId) return cfg.sectionSubtitleEmpty
+      return 'Programs & therapies loaded'
+    }
+    if (mode === 'therapy') {
+      const tmKeys = Object.keys(therapyModeState)
+      const tmChecked = tmKeys.filter(k => therapyModeState[k]?.checked).length
+      return loadingAllExercises ? 'Loading therapies...' : `${tmChecked} / ${tmKeys.length} therapies selected`
+    }
+    if (mode === 'exercise') {
+      const checked = exerciseModeList.filter(ex => ex._checked !== false).length
+      return loadingAllExercises ? 'Loading exercises...' : `${checked} / ${exerciseModeList.length} exercises selected`
+    }
+    return ''
+  }
 
   /* ════════════════════════════════════════════════════════════════════════
      RENDER
@@ -858,7 +1073,7 @@ const TherapySession = ({ seed = {}, onNext }) => {
           </div>
         )}
 
-        {/* ══ 1. SESSION TYPE + PROGRAM SELECTOR ═══════════════════════ */}
+        {/* ══ 1. SESSION TYPE + SELECTOR ══════════════════════════════════ */}
         <CCard style={cardStyle}>
           <CCardBody style={{ padding: '22px 28px' }}>
             <SectionHeader emoji="⚙️" title="Session Type" />
@@ -866,80 +1081,29 @@ const TherapySession = ({ seed = {}, onNext }) => {
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               <RadioBtn label="Package" emoji="📦" value="package" active={mode === 'package'} onClick={handleModeChange} />
               <RadioBtn label="Program" emoji="🎯" value="program" active={mode === 'program'} onClick={handleModeChange} />
-              <RadioBtn label="Therapy" emoji="📦" value="therapy" active={mode === 'therapy'} onClick={handleModeChange} />
-              <RadioBtn label="Exercise" emoji="📦" value="exercise" active={mode === 'exercise'} onClick={handleModeChange} />
+              <RadioBtn label="Therapy" emoji="💊" value="therapy" active={mode === 'therapy'} onClick={handleModeChange} />
+              <RadioBtn label="Exercise" emoji="🏋️" value="exercise" active={mode === 'exercise'} onClick={handleModeChange} />
             </div>
 
-            <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1.5px solid #e3eef8' }}>
-              <Field label={mode === 'program' ? 'Select Program' : 'Select Package'}>
-                <ProgramDropdown
-                  programs={programs}
-                  loading={loadingPrograms}
-                  value={selectedProgramId}
-                  onChange={handleProgramChange}
-                  mode={mode}
-                />
-                {mode === 'package' && (
-                  <>
-                    <ProgramDropdown
-                      programs={programs}
-                      value={selectedPackageId}
-                      onChange={(id, obj) => {
-                        setSelectedPackageId(id)
-                        setSelectedPackageObj(obj)
-                      }}
-                      mode="package"
-                    />
-
-                    {/* Show programs inside package */}
-                    {selectedPackageObj?.programs?.map((prog, i) => (
-                      <div key={i}>
-                        <h6>{prog.programName}</h6>
-
-                        {prog.therophyData?.map((therapy, idx) => (
-                          <TherapyBlock
-                            key={idx}
-                            therapy={therapy.therapyName}
-                            checked={true}
-                            onToggle={() => { }}
-                            exercises={therapy.exercises || []}
-                            onUpdateExercises={() => { }}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </>
-                )}
-                {mode === 'therapy' && (
-                  <>
-                    {[...new Set(allExercises.map(e => e.therapyName))].map((therapy, i) => (
-                      <TherapyBlock
-                        key={i}
-                        therapy={therapy}
-                        checked={true}
-                        onToggle={() => setSelectedTherapy(therapy)}
-                        exercises={allExercises.filter(e => e.therapyName === therapy)}
-                        onUpdateExercises={() => { }}
-                      />
-                    ))}
-                  </>
-                )}
-                {mode === 'exercise' && (
-                  <ExerciseTable
-                    exercises={allExercises.map(ex => ({
-                      ...ex,
-                      _checked: true
-                    }))}
-                    onUpdate={() => { }}
+            {/* Show selector only for package and program modes */}
+            {(mode === 'package' || mode === 'program') && (
+              <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1.5px solid #e3eef8' }}>
+                <Field label={cfg.selectorLabel}>
+                  <ProgramDropdown
+                    programs={programs}
+                    loading={loadingPrograms}
+                    value={selectedProgramId}
+                    onChange={handleProgramChange}
+                    mode={mode}
                   />
+                </Field>
+                {!loadingPrograms && !initPending && programs.length === 0 && (
+                  <p style={{ marginTop: 8, fontSize: '0.8rem', color: '#94a3b8' }}>
+                    No {cfg.label.toLowerCase()}s found for this branch.
+                  </p>
                 )}
-              </Field>
-              {!loadingPrograms && !initPending && programs.length === 0 && (
-                <p style={{ marginTop: 8, fontSize: '0.8rem', color: '#94a3b8' }}>
-                  No {mode} found for this branch.
-                </p>
-              )}
-            </div>
+              </div>
+            )}
           </CCardBody>
         </CCard>
 
@@ -961,89 +1125,224 @@ const TherapySession = ({ seed = {}, onNext }) => {
         <CCard style={cardStyle}>
           <CCardBody style={{ padding: '22px 28px' }}>
             <SectionHeader
-              emoji={mode === 'program' ? '🎯' : '📦'}
-              title={mode === 'program' ? 'Program — Therapies & Exercises' : 'Package — Therapies & Exercises'}
-              subtitle={
-                mode === 'program'
-                  ? selectedProgramId
-                    ? `${checkedCount} / ${totalCount} therapies selected`
-                    : 'Select program'
-                  : mode === 'package'
-                    ? selectedPackageId
-                      ? 'Programs & therapies loaded'
-                      : 'Select package'
-                    : mode === 'therapy'
-                      ? 'Select therapies'
-                      : 'Select exercises'
-              }
+              emoji={cfg.emoji}
+              title={cfg.sectionTitle}
+              subtitle={getSectionSubtitle()}
             />
 
-            {!selectedProgramId && !loadingAnything && (
-              <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
-                <div style={{ fontSize: '2rem', marginBottom: 10 }}>{mode === 'program' ? '🎯' : '📦'}</div>
-                Please select a {mode} above to load its therapies and exercises.
-              </div>
-            )}
-
-            {(loadingPrograms || loadingProgramDetail) && (
-              <div style={{ padding: '28px', textAlign: 'center', color: '#6b9fc7', fontSize: '0.9rem' }}>
-                <div style={{ fontSize: '1.6rem', marginBottom: 10 }}>⏳</div>
-                {loadingPrograms ? `Loading ${mode}s…` : 'Loading program details…'}
-              </div>
-            )}
-
-            {!showTherapies && (
+            {/* ── PROGRAM MODE ─────────────────────────────────────── */}
+            {mode === 'program' && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7' }}>
-                  <span style={{ fontSize: '0.83rem', color: '#4a6a8a', fontWeight: 600 }}>
-                    {checkedCount} of {totalCount} therapies selected
-                  </span>
-                  <button type="button" onClick={toggleAll} style={{
-                    padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1a5fa8',
-                    background: allChecked ? '#1a5fa8' : '#f0f7ff',
-                    color: allChecked ? '#fff' : '#1a5fa8',
-                    fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit',
-                  }}>
-                    {allChecked ? '☑ Deselect All' : '☐ Select All'}
-                  </button>
-                </div>
+                {!selectedProgramId && !loadingAnything && (
+                  <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: 10 }}>🎯</div>
+                    Please select a program above to load its therapies and exercises.
+                  </div>
+                )}
 
-                {hasTherophyData && selectedProgramObj.therophyData.map((therapy, index) => {
-                  const key = therapy.therapyName || String(index)
-                  const ts = therophyDataState[key] || { checked: true, exercises: [] }
-                  return (
-                    <TherapyBlock
-                      key={therapy.id || index}
-                      therapy={therapy.therapyName}
-                      checked={ts.checked}
-                      onToggle={() => toggleTherophyData(key)}
-                      exercises={ts.exercises}
-                      onUpdateExercises={updated => updateTherophyDataExercises(key, updated)}
-                      loading={loadingExercises}
-                    />
-                  )
-                })}
+                {(loadingPrograms || loadingProgramDetail) && (
+                  <div style={{ padding: '28px', textAlign: 'center', color: '#6b9fc7', fontSize: '0.9rem' }}>
+                    <div style={{ fontSize: '1.6rem', marginBottom: 10 }}>⏳</div>
+                    {loadingPrograms ? 'Loading programs…' : 'Loading program details…'}
+                  </div>
+                )}
 
-                {!hasTherophyData && therapyLibrary.map((t, index) => (
-                  <TherapyBlock
-                    key={t.therapyId || index}
-                    therapy={t.therapyName}
-                    checked={therapyState[t.therapyName]?.checked ?? true}
-                    onToggle={() => toggleTherapy(t.therapyName)}
-                    exercises={therapyState[t.therapyName]?.exercises || []}
-                    onUpdateExercises={updated => updateExercises(t.therapyName, updated)}
-                    loading={loadingExercises}
-                  />
-                ))}
+                {selectedProgramId && !loadingProgramDetail && (hasTherophyData || therapyLibrary.length > 0) && (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7' }}>
+                      <span style={{ fontSize: '0.83rem', color: '#4a6a8a', fontWeight: 600 }}>
+                        {checkedCount} of {totalCount} therapies selected
+                      </span>
+                      <button type="button" onClick={toggleAll} style={{
+                        padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1a5fa8',
+                        background: allChecked ? '#1a5fa8' : '#f0f7ff',
+                        color: allChecked ? '#fff' : '#1a5fa8',
+                        fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit',
+                      }}>
+                        {allChecked ? '☑ Deselect All' : '☐ Select All'}
+                      </button>
+                    </div>
+
+                    {hasTherophyData && selectedProgramObj.therophyData.map((therapy, index) => {
+                      const key = therapy.therapyName || String(index)
+                      const ts = therophyDataState[key] || { checked: true, exercises: [] }
+                      return (
+                        <TherapyBlock
+                          key={therapy.id || index}
+                          therapy={therapy.therapyName}
+                          checked={ts.checked}
+                          onToggle={() => toggleTherophyData(key)}
+                          exercises={ts.exercises}
+                          onUpdateExercises={updated => updateTherophyDataExercises(key, updated)}
+                          loading={loadingExercises}
+                        />
+                      )
+                    })}
+
+                    {!hasTherophyData && therapyLibrary.map((t, index) => (
+                      <TherapyBlock
+                        key={t.therapyId || index}
+                        therapy={t.therapyName}
+                        checked={therapyState[t.therapyName]?.checked ?? true}
+                        onToggle={() => toggleTherapy(t.therapyName)}
+                        exercises={therapyState[t.therapyName]?.exercises || []}
+                        onUpdateExercises={updated => updateExercises(t.therapyName, updated)}
+                        loading={loadingExercises}
+                      />
+                    ))}
+                  </>
+                )}
               </>
             )}
 
-            {/* {selectedProgramId && !loadingAnything && hasTherophyData === false && (
-              <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
-                <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>🔍</div>
-                No therapies found in the selected {mode}.
-              </div>
-            )} */}
+            {/* ── PACKAGE MODE ─────────────────────────────────────── */}
+            {mode === 'package' && (
+              <>
+                {!selectedProgramId && !loadingAnything && (
+                  <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: 10 }}>📦</div>
+                    Please select a package above to load its programs, therapies and exercises.
+                  </div>
+                )}
+
+                {loadingProgramDetail && (
+                  <div style={{ padding: '28px', textAlign: 'center', color: '#6b9fc7', fontSize: '0.9rem' }}>
+                    <div style={{ fontSize: '1.6rem', marginBottom: 10 }}>⏳</div>
+                    Loading package details…
+                  </div>
+                )}
+
+                {selectedProgramId && !loadingProgramDetail && (
+                  <>
+                    {/* If package has programs[] */}
+                    {selectedProgramObj?.programs?.map((prog, pIdx) => (
+                      <div key={pIdx} style={{ marginBottom: 20 }}>
+                        <div style={{ padding: '10px 16px', background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', borderRadius: '10px 10px 0 0', color: '#fff', fontWeight: 700, fontSize: '0.95rem' }}>
+                          🎯 {prog.programName}
+                        </div>
+                        <div style={{ border: '1.5px solid #c8ddf0', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px 14px' }}>
+                          {prog.therophyData?.map((therapy, tIdx) => {
+                            const key = `${pIdx}-${therapy.therapyName || tIdx}`
+                            const ts = therophyDataState[key] || { checked: true, exercises: (therapy.exercises || []).map(normaliseExercise) }
+                            return (
+                              <TherapyBlock
+                                key={tIdx}
+                                therapy={therapy.therapyName}
+                                checked={ts.checked}
+                                onToggle={() => toggleTherophyData(key)}
+                                exercises={ts.exercises}
+                                onUpdateExercises={updated => updateTherophyDataExercises(key, updated)}
+                                loading={false}
+                              />
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Fallback: if package itself has therophyData */}
+                    {!selectedProgramObj?.programs?.length && hasTherophyData && (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7' }}>
+                          <span style={{ fontSize: '0.83rem', color: '#4a6a8a', fontWeight: 600 }}>
+                            {checkedCount} of {totalCount} therapies selected
+                          </span>
+                          <button type="button" onClick={toggleAll} style={{ padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: allChecked ? '#1a5fa8' : '#f0f7ff', color: allChecked ? '#fff' : '#1a5fa8', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            {allChecked ? '☑ Deselect All' : '☐ Select All'}
+                          </button>
+                        </div>
+                        {selectedProgramObj.therophyData.map((therapy, index) => {
+                          const key = therapy.therapyName || String(index)
+                          const ts = therophyDataState[key] || { checked: true, exercises: [] }
+                          return (
+                            <TherapyBlock key={index} therapy={therapy.therapyName} checked={ts.checked}
+                              onToggle={() => toggleTherophyData(key)} exercises={ts.exercises}
+                              onUpdateExercises={updated => updateTherophyDataExercises(key, updated)} loading={false} />
+                          )
+                        })}
+                      </>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+
+            {/* ── THERAPY MODE ─────────────────────────────────────── */}
+            {mode === 'therapy' && (
+              <>
+                {loadingAllExercises && (
+                  <div style={{ padding: '28px', textAlign: 'center', color: '#6b9fc7', fontSize: '0.9rem' }}>
+                    <div style={{ fontSize: '1.6rem', marginBottom: 10 }}>⏳</div>
+                    Loading therapies…
+                  </div>
+                )}
+                {!loadingAllExercises && Object.keys(therapyModeState).length === 0 && (
+                  <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: 10 }}>💊</div>
+                    No therapies found.
+                  </div>
+                )}
+                {!loadingAllExercises && Object.keys(therapyModeState).length > 0 && (
+                  <>
+                    {/* Select all bar */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7' }}>
+                      <span style={{ fontSize: '0.83rem', color: '#4a6a8a', fontWeight: 600 }}>
+                        {Object.keys(therapyModeState).filter(k => therapyModeState[k]?.checked).length} of {Object.keys(therapyModeState).length} therapies selected
+                      </span>
+                      <button type="button"
+                        onClick={() => {
+                          const tmKeys = Object.keys(therapyModeState)
+                          const tmAllChecked = tmKeys.every(k => therapyModeState[k]?.checked)
+                          setTherapyModeState(prev => {
+                            const u = { ...prev }
+                            tmKeys.forEach(k => { u[k] = { ...u[k], checked: !tmAllChecked } })
+                            return u
+                          })
+                        }}
+                        style={{ padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: Object.keys(therapyModeState).every(k => therapyModeState[k]?.checked) ? '#1a5fa8' : '#f0f7ff', color: Object.keys(therapyModeState).every(k => therapyModeState[k]?.checked) ? '#fff' : '#1a5fa8', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {Object.keys(therapyModeState).every(k => therapyModeState[k]?.checked) ? '☑ Deselect All' : '☐ Select All'}
+                      </button>
+                    </div>
+                    {Object.entries(therapyModeState).map(([therapyName, ts], idx) => (
+                      <TherapyBlock
+                        key={idx}
+                        therapy={therapyName}
+                        checked={ts.checked}
+                        onToggle={() => toggleTherapyMode(therapyName)}
+                        exercises={ts.exercises || []}
+                        onUpdateExercises={updated => updateTherapyModeExercises(therapyName, updated)}
+                        loading={false}
+                      />
+                    ))}
+                  </>
+                )}
+              </>
+            )}
+
+            {/* ── EXERCISE MODE ─────────────────────────────────────── */}
+            {mode === 'exercise' && (
+              <>
+                {loadingAllExercises && (
+                  <div style={{ padding: '28px', textAlign: 'center', color: '#6b9fc7', fontSize: '0.9rem' }}>
+                    <div style={{ fontSize: '1.6rem', marginBottom: 10 }}>⏳</div>
+                    Loading exercises…
+                  </div>
+                )}
+                {!loadingAllExercises && exerciseModeList.length === 0 && (
+                  <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: 10 }}>🏋️</div>
+                    No exercises found.
+                  </div>
+                )}
+                {!loadingAllExercises && exerciseModeList.length > 0 && (
+                  <ExerciseTable
+                    exercises={exerciseModeList}
+                    onUpdate={setExerciseModeList}
+                  />
+                )}
+              </>
+            )}
+
           </CCardBody>
         </CCard>
 
