@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { CCard, CCardBody, CContainer, CForm } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 
-/* ─── Styles (Same as HomePlan) ───────────────────────────── */
+/* ─── Styles ───────────────────────────────────────────────────────────── */
 const inputStyle = {
   border: '1.5px solid #b6cfe8',
   borderRadius: 7,
@@ -25,7 +25,6 @@ const labelStyle = {
   display: 'block',
 }
 
-/* ─── Reusable Field Wrapper ───────────────────────────── */
 const Field = ({ label, children }) => (
   <div style={{ display: 'flex', flexDirection: 'column' }}>
     <label style={labelStyle}>{label}</label>
@@ -33,21 +32,31 @@ const Field = ({ label, children }) => (
   </div>
 )
 
-/* ─── Component ─────────────────────────────────────────── */
-const Investigation = ({ seed = {}, onNext, setFormData }) => {
-  const [tests, setTests] = useState('')
-  const [notes, setNotes] = useState('')
+/* ══════════════════════════════════════════════════════════════════════════
+   COMPONENT
+══════════════════════════════════════════════════════════════════════════ */
+const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
+  const [tests, setTests]       = useState(seed.tests ?? '')
+  const [notes, setNotes]       = useState(seed.notes ?? '')
   const [aiOutput, setAiOutput] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]       = useState('')
+
+  // ── Seed sync (same ref-guard pattern as PrescriptionTab / Diagnosis) ──
+  const seedRef = useRef(null)
 
   useEffect(() => {
-    if (seed) {
-      setTests(seed.tests || '')
-      setNotes(seed.notes || '')
-    }
+    if (seed === seedRef.current) return
+    seedRef.current = seed
+
+    // Only overwrite when seed actually carries investigation data
+    if (!seed || (!seed.tests && !seed.notes)) return
+
+    setTests(seed.tests ?? '')
+    setNotes(seed.notes ?? '')
   }, [seed])
 
+  // ── AI prompt builder ──────────────────────────────────────────────────
   const buildPrompt = () => {
     const lines = [
       tests && `Tests requested: ${tests}`,
@@ -103,12 +112,22 @@ ${lines.join('\n')}`
     }
   }
 
+  // ── handleNext — FIX: build payload then call onNext ──────────────────
   const handleNext = () => {
-    const payload = { investigation: { tests, notes } }
-    setFormData?.((prev) => ({ ...prev, ...payload }))
+    const payload = {
+      investigation: { tests, notes },
+    }
+
+    // Keep formData in sync so navigating back never clears fields
+    setFormData?.((prev) => ({
+      ...prev,
+      investigation: { tests, notes },
+    }))
+
     onNext?.(payload)
   }
 
+  /* ── RENDER ─────────────────────────────────────────────────────────── */
   return (
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <CContainer fluid className="p-0">
@@ -116,44 +135,23 @@ ${lines.join('\n')}`
           <CCardBody style={{ padding: '24px 28px' }}>
 
             {/* Header */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                marginBottom: 20,
-                borderBottom: '1.5px solid #e3eef8',
-                paddingBottom: 12,
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 18,
-                  color: '#fff',
-                }}
-              >
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              marginBottom: 20, borderBottom: '1.5px solid #e3eef8', paddingBottom: 12,
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 18, color: '#fff',
+              }}>
                 🔬
               </div>
-              <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700 }}>
-                Investigation
-              </h5>
+              <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700 }}>Investigation</h5>
             </div>
 
             <CForm>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '16px 28px',
-                }}
-              >
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 28px' }}>
 
                 {/* Tests */}
                 <Field label="Tests">
@@ -165,7 +163,7 @@ ${lines.join('\n')}`
                   />
                 </Field>
 
-                {/* Notes */}
+                {/* Notes — full width */}
                 <div style={{ gridColumn: '1 / -1' }}>
                   <Field label="Notes">
                     <textarea
@@ -173,58 +171,39 @@ ${lines.join('\n')}`
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Additional notes about the investigation"
                       rows={4}
-                      style={{
-                        ...inputStyle,
-                        height: 'auto',
-                        resize: 'vertical',
-                        lineHeight: 1.5,
-                      }}
+                      style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
                     />
                   </Field>
                 </div>
               </div>
 
+              {/* AI Generate button */}
+              <div style={{ marginTop: 14 }}>
+                
+              </div>
+
               {/* AI Output */}
               {aiOutput && (
-                <div
-                  style={{
-                    marginTop: 16,
-                    padding: 12,
-                    background: '#f0f6ff',
-                    border: '1px solid #c8ddf0',
-                    borderRadius: 8,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      background: '#dbeafe',
-                      color: '#1e40af',
-                      borderRadius: 20,
-                      padding: '2px 8px',
-                    }}
-                  >
-                    AI
-                  </span>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 13,
-                      lineHeight: 1.7,
-                      whiteSpace: 'pre-wrap',
-                      color: '#1a3a5c',
-                    }}
-                  >
+                <div style={{
+                  marginTop: 16, padding: 12,
+                  background: '#f0f6ff', border: '1px solid #c8ddf0', borderRadius: 8,
+                }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700,
+                    background: '#dbeafe', color: '#1e40af',
+                    borderRadius: 20, padding: '2px 8px',
+                  }}>AI</span>
+                  <div style={{
+                    marginTop: 6, fontSize: 13, lineHeight: 1.7,
+                    whiteSpace: 'pre-wrap', color: '#1a3a5c',
+                  }}>
                     {aiOutput}
                   </div>
                 </div>
               )}
 
               {error && (
-                <p style={{ color: '#c0392b', fontSize: 12, marginTop: 6 }}>
-                  {error}
-                </p>
+                <p style={{ color: '#c0392b', fontSize: 12, marginTop: 6 }}>{error}</p>
               )}
             </CForm>
           </CCardBody>
@@ -235,12 +214,9 @@ ${lines.join('\n')}`
       <div
         className="position-fixed bottom-0"
         style={{
-          left: 0,
-          right: 0,
+          left: 0, right: 0,
           background: '#a5c4d4',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 16,
+          display: 'flex', justifyContent: 'flex-end', gap: 16,
           padding: '10px 24px',
           boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
         }}
@@ -249,12 +225,7 @@ ${lines.join('\n')}`
           customColor="#ffffff"
           color="#7e3a93"
           onClick={handleNext}
-          style={{
-            borderRadius: '20px',
-            fontWeight: 600,
-            padding: '6px 18px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-          }}
+          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
         >
           Next
         </Button>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react'
+import React, { useCallback, useMemo, useEffect, useState } from 'react'
 import TabContent from '../Prescription/TabContent'
 import Snackbar from '../components/Snackbar'
 import AppSidebar from './AppSidebar'
@@ -10,8 +10,8 @@ import { SavePatientPrescription, getInProgressDetails } from '../Auth/Auth'
 import { useToast } from '../utils/Toaster'
 
 const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = false }) => {
-  const { id } = useParams()
-  const { state } = useLocation()
+  const { id }      = useParams()
+  const { state }   = useLocation()
   const { patientData } = useDoctorContext()
 
   const [patient, setPatient] = useState(patientData || state?.patient || null)
@@ -22,18 +22,26 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     symptoms:        {},
     assessment:      {},
     diagnosis:       {},
-    therapySessions: {},   // { overallStatus, sessions[] }
+    investigation:   {},
+    therapySessions: {},
     exercisePlan:    { exercises: [], homeAdvice: '' },
     followUp:        {},
     prescription:    {},
     history:         {},
     ClinicImages:    {},
     summary:         {},
+    // top-level background fields (from Complaints tab)
+    previousInjuries:   '',
+    currentMedications: '',
+    allergies:          '',
+    occupation:         '',
+    insuranceProvider:  '',
+    activityLevels:     [],
+    patientPain:        '',
   })
 
   const { success, info } = useToast()
 
-  // ── TreatmentPlan tab REMOVED ──────────────────────────────────────────
   const ALL_TABS = tabs || [
     'Complaints',
     'Assessment',
@@ -71,35 +79,34 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     if (i > -1 && i < ALL_TABS.length - 1) setActiveTab(ALL_TABS[i + 1])
   }, [ALL_TABS])
 
+  // ── deepMerge helper ──────────────────────────────────────────────────────
+  const deepMerge = (target, source) => {
+    const result = { ...target }
+    Object.keys(source).forEach(key => {
+      if (
+        source[key] !== null &&
+        typeof source[key] === 'object' &&
+        !Array.isArray(source[key]) &&
+        target[key] !== null &&
+        typeof target[key] === 'object' &&
+        !Array.isArray(target[key])
+      ) {
+        result[key] = deepMerge(target[key], source[key])
+      } else {
+        result[key] = source[key]
+      }
+    })
+    return result
+  }
+
   // ── mergeAndLog ───────────────────────────────────────────────────────────
   const mergeAndLog = useCallback((tabName, patch) => {
     setFormData(prev => {
-      const deepMerge = (target, source) => {
-        const result = { ...target }
-        Object.keys(source).forEach(key => {
-          if (
-            source[key] !== null &&
-            typeof source[key] === 'object' &&
-            !Array.isArray(source[key]) &&
-            target[key] !== null &&
-            typeof target[key] === 'object' &&
-            !Array.isArray(target[key])
-          ) {
-            result[key] = deepMerge(target[key], source[key])
-          } else {
-            result[key] = source[key]
-          }
-        })
-        return result
-      }
-
       const next = deepMerge(prev, patch)
-
       console.group(`📦 [${tabName}] Next → accumulated formData:`)
       console.log('This tab patch  ➜', patch)
       console.log('Full formData   ➜', next)
       console.groupEnd()
-
       return next
     })
   }, [])
@@ -124,6 +131,14 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           theraphyAnswers:  data.theraphyAnswers  ?? {},
           attachmentImages: data.attachmentImages ?? [],
         },
+        // ── Patient background — stored at TOP LEVEL for Summary payload ──
+        previousInjuries:   data.previousInjuries   ?? '',
+        currentMedications: data.currentMedications ?? '',
+        allergies:          data.allergies           ?? '',
+        occupation:         data.occupation          ?? '',
+        insuranceProvider:  data.insuranceProvider   ?? '',
+        activityLevels:     Array.isArray(data.activityLevels) ? data.activityLevels : [],
+        patientPain:        data.patientPain         ?? '',
       }
 
       if (data.prescription?.medicines?.length)
@@ -166,6 +181,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
       const patch = {
         assessment: {
+          // Subjective
           chiefComplaint:     data.chiefComplaint     ?? '',
           painScale:          data.painScale          ?? '',
           painType:           data.painType           ?? '',
@@ -173,11 +189,48 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           onset:              data.onset              ?? '',
           aggravatingFactors: data.aggravatingFactors ?? '',
           relievingFactors:   data.relievingFactors   ?? '',
-          posture:            data.posture            ?? '',
-          rangeOfMotion:      data.rangeOfMotion      ?? '',
-          specialTests:       data.specialTests       ?? '',
           observations:       data.observations       ?? '',
+
+          // Functional Assessment
+          difficultiesIn:      Array.isArray(data.difficultiesIn) ? data.difficultiesIn : [],
+          otherDifficulty:     data.otherDifficulty     ?? '',
+          dailyLivingAffected: data.dailyLivingAffected ?? '',
+
+          // Physical Examination
+          postureAssessment: Array.isArray(data.postureAssessment) ? data.postureAssessment : [],
+          postureDeviations: data.postureDeviations ?? '',
+          romStatus:         Array.isArray(data.romStatus) ? data.romStatus : [],
+          romRestricted:     data.romRestricted ?? '',
+          romJoints:         data.romJoints     ?? '',
+          muscleStrength:    Array.isArray(data.muscleStrength) ? data.muscleStrength : [],
+          muscleWeakness:    data.muscleWeakness   ?? '',
+          neurologicalSigns: Array.isArray(data.neurologicalSigns) ? data.neurologicalSigns : [],
+
+          // Objective / additional
+          posture:            data.posture       ?? '',
+          rangeOfMotion:      data.rangeOfMotion ?? '',
+          specialTests:       data.specialTests  ?? '',
+
+          // Pain classification (may be set here if not from Complaints)
+          patientPain:        data.patientPain   ?? '',
+
+          // Chronic Pain
+          painTriggers:       data.painTriggers    ?? '',
+          chronicRelieving:   data.chronicRelieving ?? '',
+
+          // Sports Rehab
+          typeOfSport:         data.typeOfSport         ?? '',
+          recurringInjuries:   data.recurringInjuries   ?? '',
+          returnToSportGoals:  data.returnToSportGoals  ?? '',
+
+          // Neuro Rehab
+          neuroDiagnosis: data.neuroDiagnosis ?? '',
+          neuroOnset:     data.neuroOnset     ?? '',
+          mobilityStatus: data.mobilityStatus ?? '',
+          cognitiveStatus:data.cognitiveStatus ?? '',
         },
+        // Also store patientPain at top level if set in Assessment (overrides only if not already set from Complaints)
+        ...(data.patientPain ? { patientPain: data.patientPain } : {}),
       }
 
       mergeAndLog('Assessment', patch)
@@ -208,7 +261,22 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Diagnosis')
     },
 
-    // ── Plan ───────────────────────────────────────────────────
+    // ── Investigation ─────────────────────────────────────────────────────
+    Investigation: (data = {}) => {
+      if (!data || typeof data !== 'object') { goToNext('Investigation'); return }
+
+      const patch = {
+        investigation: {
+          tests: data.investigation?.tests ?? data.tests ?? '',
+          notes: data.investigation?.notes ?? data.notes ?? '',
+        },
+      }
+
+      mergeAndLog('Investigation', patch)
+      goToNext('Investigation')
+    },
+
+    // ── Plan ──────────────────────────────────────────────────────────────
     Plan: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Plan'); return }
 
@@ -236,7 +304,6 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
                     notes:              ex.notes ?? ex.instructions ?? '',
                     sets:               Number(ex.sets)        || 0,
                     repetitions:        Number(ex.reps ?? ex.repetitions) || 0,
-                    // ── video intentionally excluded from therapy sessions ──
                     totalPrice:         ex.totalPrice ?? ex.price ?? 0,
                   }))
                 : [],
@@ -265,30 +332,22 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Plan')
     },
 
-    // ── HomePlan ──────────────────────────────────────────────────────
-    // data shape from HomePlan.handleNext():
-    //   { exercisePlan: { exercises: [...], homeAdvice: '' } }
-    // each exercise: { name, sets, reps, frequency, instructions, videoUrl, thumbnail }
+    // ── HomePlan ──────────────────────────────────────────────────────────
     HomePlan: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('HomePlan'); return }
 
       const rawExercises = Array.isArray(data.exercisePlan?.exercises)
-        ? data.exercisePlan.exercises
-        : []
+        ? data.exercisePlan.exercises : []
 
       const patch = {
         exercisePlan: {
           homeAdvice:    data.exercisePlan?.homeAdvice ?? data.homeAdvice ?? '',
-          // ── Keep the same key ("exercises") that HomePlan component
-          //    reads from seed — so switching tabs never clears the list ──
           exercises:     rawExercises,
-          // ── Also store as homeExercises for Summary/payload ──
           homeExercises: rawExercises.map(ex => ({
             id:           ex.id           ?? ex._id ?? '',
             name:         ex.name         ?? '',
             sets:         String(ex.sets  ?? ''),
             reps:         String(ex.reps  ?? ''),
-            // ── frequency is now a free-text field, e.g. "2 time/ day" ──
             frequency:    ex.frequency    ?? '',
             instructions: ex.instructions ?? '',
             videoUrl:     ex.videoUrl     ?? '',
@@ -368,17 +427,34 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
         }
 
         console.group('🏁 ═══════════ FINAL PAYLOAD (Summary) ═══════════')
-        console.log('symptoms        :', finalPayload.symptoms)
-        console.log('assessment      :', finalPayload.assessment)
-        console.log('diagnosis       :', finalPayload.diagnosis)
-        console.log('therapySessions :', finalPayload.therapySessions)
-        console.log('exercisePlan    :', finalPayload.exercisePlan)
-        console.log('followUp        :', finalPayload.followUp)
-        console.log('prescription    :', finalPayload.prescription)
-        console.log('history         :', finalPayload.history)
-        console.log('ClinicImages    :', finalPayload.ClinicImages)
-        console.log('summary         :', finalPayload.summary)
-        console.log('── COMPLETE OBJECT ──────────────────────────────────')
+        console.log('symptoms            :', finalPayload.symptoms)
+        console.log('assessment          :', finalPayload.assessment)
+        console.log('diagnosis           :', finalPayload.diagnosis)
+        console.log('investigation       :', finalPayload.investigation)
+        console.log('therapySessions     :', finalPayload.therapySessions)
+        console.log('exercisePlan        :', finalPayload.exercisePlan)
+        console.log('followUp            :', finalPayload.followUp)
+        console.log('prescription        :', finalPayload.prescription)
+        console.log('history             :', finalPayload.history)
+        console.log('ClinicImages        :', finalPayload.ClinicImages)
+        console.log('previousInjuries    :', finalPayload.previousInjuries)
+        console.log('currentMedications  :', finalPayload.currentMedications)
+        console.log('allergies           :', finalPayload.allergies)
+        console.log('occupation          :', finalPayload.occupation)
+        console.log('insuranceProvider   :', finalPayload.insuranceProvider)
+        console.log('activityLevels      :', finalPayload.activityLevels)
+        console.log('patientPain         :', finalPayload.patientPain)
+        // Assessment nested fields
+        console.log('assessment.difficultiesIn    :', finalPayload.assessment?.difficultiesIn)
+        console.log('assessment.postureAssessment :', finalPayload.assessment?.postureAssessment)
+        console.log('assessment.muscleStrength    :', finalPayload.assessment?.muscleStrength)
+        console.log('assessment.neurologicalSigns :', finalPayload.assessment?.neurologicalSigns)
+        console.log('assessment.patientPain       :', finalPayload.assessment?.patientPain)
+        console.log('assessment.painTriggers      :', finalPayload.assessment?.painTriggers)
+        console.log('assessment.typeOfSport       :', finalPayload.assessment?.typeOfSport)
+        console.log('assessment.neuroDiagnosis    :', finalPayload.assessment?.neuroDiagnosis)
+        console.log('summary             :', finalPayload.summary)
+        console.log('── COMPLETE OBJECT ─────────────────────────────────')
         console.log(finalPayload)
         console.groupEnd()
 
@@ -407,13 +483,14 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
       const template = {
         clinicId,
-        title:        complaints,
-        symptoms:     complaints,
-        tests:        formData.tests        || [],
-        prescription: formData.prescription || [],
-        treatments:   formData.treatments   || [],
-        followUp:     formData.followUp     || {},
-        exercisePlan: formData.exercisePlan || {},
+        title:         complaints,
+        symptoms:      complaints,
+        tests:         formData.tests         || [],
+        prescription:  formData.prescription  || [],
+        treatments:    formData.treatments    || [],
+        followUp:      formData.followUp      || {},
+        exercisePlan:  formData.exercisePlan  || {},
+        investigation: formData.investigation || {},
       }
 
       const res = await SavePatientPrescription(template)

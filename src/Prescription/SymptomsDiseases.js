@@ -1,19 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  CRow, CCol, CCard, CCardBody, CForm,
-  CFormTextarea, CFormInput, CImage, CSpinner, CBadge,
-} from '@coreui/react'
-import Select, { components } from 'react-select'
+import { CSpinner } from '@coreui/react'
 import FileUploader from './FileUploader'
 import Button from '../components/CustomButton/CustomButton'
 import Snackbar from '../components/Snackbar'
-import { COLORS } from '../Themes'
-import GradientTextCard from '../components/GradintColorText'
 import { useToast } from '../utils/Toaster'
-import {
-  getDoctorSaveDetails, getAllDiseases, addDisease,
-  getAdImagesView, getBookingDetails,
-} from '../Auth/Auth'
+import { getBookingDetails } from '../Auth/Auth'
 import { useDoctorContext } from '../Context/DoctorContext'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -50,27 +41,10 @@ const SLabel = ({ text }) => (
   </div>
 )
 
-const InfoChip = ({ label, value, accent = false }) => (
-  <div style={{
-    background: accent ? '#F3EEFF' : '#F9FAFB',
-    border: `1px solid ${accent ? '#DDD0FF' : '#E5E7EB'}`,
-    borderRadius: 10, padding: '8px 14px', minWidth: 0,
-  }}>
-    <div style={{
-      fontSize: 10, color: '#9CA3AF', fontWeight: 600,
-      textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2,
-    }}>{label}</div>
-    <div style={{
-      fontSize: 13, fontWeight: 600,
-      color: accent ? '#5B21B6' : '#111827', wordBreak: 'break-word',
-    }}>{value}</div>
-  </div>
-)
-
 const StatusBadge = ({ status }) => {
   const map = {
     Confirmed: { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
-    Pending: { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
+    Pending:   { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
     Cancelled: { bg: '#FEE2E2', color: '#991B1B', border: '#FECACA' },
   }
   const s = map[status] || { bg: '#F3F4F6', color: '#374151', border: '#D1D5DB' }
@@ -114,43 +88,42 @@ const inputBase = {
   boxSizing: 'border-box', resize: 'vertical',
 }
 
+const readonlyChip = {
+  background: '#F3EEFF', border: '1px solid #DDD0FF',
+  borderRadius: 10, padding: '10px 14px',
+  fontSize: 13, fontWeight: 700, color: '#5B21B6',
+}
+
 // ─── main component ──────────────────────────────────────────────────────────
 const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
 
   const [symptomDetails, setSymptomDetails] = useState(seed.symptomDetails ?? patientData?.problem ?? '')
-  const [doctorObs, setDoctorObs] = useState(seed.doctorObs ?? '')
-  const [complaints, setComplaints] = useState(
-    seed.complaints ?? (isValid(patientData?.subServiceName) ? patientData.subServiceName : ''),
-  )
-  const [duration, setDuration] = useState(
-    patientData?.symptomsDuration ?? '0 Days'
-  )
+  const [duration, setDuration] = useState(patientData?.symptomsDuration ?? '0 Days')
   const [attachments, setAttachments] = useState(
     Array.isArray(seed.attachments) ? seed.attachments
       : Array.isArray(patientData?.attachments) ? patientData.attachments : [],
   )
-  const [diseases, setDiseases] = useState([])
-  const [tplLoading, setTplLoading] = useState(false)
-  const [probableSymptoms, setProbableSymptoms] = useState('')
-  const [keyNotes, setKeyNotes] = useState('')
-  const [templateData, setTemplateData] = useState({
-    symptoms: '', tests: {}, prescription: {}, treatments: {}, followUp: {}, summary: {},
-  })
-  const [inputValue, setInputValue] = useState('')
-  const [adding, setAdding] = useState(false)
-  const [hasTemplate, setHasTemplate] = useState(false)
-  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
 
-  const [bookingRecord, setBookingRecord] = useState(null)
   const [loadingBooking, setLoadingBooking] = useState(false)
+  const [bookingRecord, setBookingRecord] = useState(null)
   const [partImage, setPartImage] = useState('')
   const [theraphyAnswers, setTheraphyAnswers] = useState({})
   const [selectedTherapy, setSelectedTherapy] = useState('')
   const [parts, setParts] = useState([])
   const [attachmentImages, setAttachmentImages] = useState([])
 
-  const { setUpdateTemplate } = useDoctorContext()
-  const { success, error, info } = useToast()
+  // Complaint / background fields
+  const [previousInjuries, setPreviousInjuries] = useState('')
+  const [currentMedications, setCurrentMedications] = useState('')
+  const [allergies, setAllergies] = useState('')
+  const [occupation, setOccupation] = useState('')
+  const [insuranceProvider, setInsuranceProvider] = useState('')
+  const [activityLevels, setActivityLevels] = useState([])
+  const [patientPain, setPatientPain] = useState('')          // ← NEW
+
+  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
+
+  const { error } = useToast()
 
   // ── fetch booking ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -167,19 +140,24 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         setBookingRecord(record)
 
         if (isValid(record.problem)) setSymptomDetails(record.problem)
-        if (isValid(record.symptomsDuration)) {
-          setDuration(record.symptomsDuration.trim())
-        } else {
-          setDuration('0 Days')
-        }
-        if (isValid(record.subServiceName)) {
-          setComplaints((p) => p || record.subServiceName)
-          setSelectedTherapy(record.subServiceName)
-        }
+        if (isValid(record.symptomsDuration)) setDuration(record.symptomsDuration.trim())
+        else setDuration('0 Days')
+        if (isValid(record.subServiceName)) setSelectedTherapy(record.subServiceName)
         if (record.partImage) setPartImage(record.partImage)
         if (Array.isArray(record.parts)) setParts(record.parts)
         if (record.theraphyAnswers && typeof record.theraphyAnswers === 'object')
           setTheraphyAnswers(record.theraphyAnswers)
+
+        // Complaint / background fields
+        if (isValid(record.previousInjuries)) setPreviousInjuries(record.previousInjuries)
+        if (isValid(record.currentMedications)) setCurrentMedications(record.currentMedications)
+        if (isValid(record.allergies)) setAllergies(record.allergies)
+        if (isValid(record.occupation)) setOccupation(record.occupation)
+        if (isValid(record.insuranceProvider)) setInsuranceProvider(record.insuranceProvider)
+        if (Array.isArray(record.activityLevels) && record.activityLevels.length > 0)
+          setActivityLevels(record.activityLevels)
+        if (isValid(record.patientPain)) setPatientPain(record.patientPain)  // ← NEW
+
         if (Array.isArray(record.attachments) && record.attachments.length > 0) {
           setAttachmentImages(record.attachments)
           setAttachments((prev) => {
@@ -200,152 +178,19 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
     run()
   }, [patientData?.clinicId, patientData?.branchId, patientData?.bookingId])
 
-  // ── fetch diseases ────────────────────────────────────────────────────────
-  const fetchDiseases = async () => {
-    try {
-      const data = (await getAllDiseases()) || []
-      setDiseases(data.map((d) => ({
-        diseaseName: d.diseaseName || '', probableSymptoms: d.probableSymptoms || '',
-        notes: d.notes || '', hospitalId: d.hospitalId,
-      })))
-    } catch (e) { console.error('❌ Disease fetch failed:', e) }
-  }
-  useEffect(() => { fetchDiseases() }, [])
-
-  // ── probable symptoms / key notes ─────────────────────────────────────────
-  useEffect(() => {
-    if (!complaints) { setProbableSymptoms(''); setKeyNotes(''); return }
-    const matched = diseases.find((d) => d.diseaseName?.toLowerCase() === complaints.toLowerCase())
-    if (matched) { setProbableSymptoms(matched.probableSymptoms || ''); setKeyNotes(matched.notes || '') }
-    else { setProbableSymptoms(''); setKeyNotes('') }
-  }, [complaints, diseases])
-
-  // ── fetch template ────────────────────────────────────────────────────────
-  const fetchTemplate = async (dx) => {
-    if (!dx) return
-    setTplLoading(true)
-    try {
-      const res = await getDoctorSaveDetails(dx)
-      const raw = res?.data ?? res
-      const item = Array.isArray(raw) ? raw[0] : raw
-      setTemplateData(item || {})
-      setHasTemplate(!!item)
-    } catch (e) { setHasTemplate(false) }
-    finally { setTplLoading(false) }
-  }
-
-  const handleComplaintsChange = async (selected) => {
-    const val = selected?.value ?? ''
-    setComplaints(val)
-    if (!val) { setHasTemplate(false); return }
-    await fetchTemplate(val)
-  }
-
-  useEffect(() => {
-    const dx = (seed?.complaints ?? complaints ?? '').trim()
-    if (dx && !hasTemplate) fetchTemplate(dx)
-  }, [seed?.complaints])
-
   // ── handleNext ────────────────────────────────────────────────────────────
   const handleNext = () => {
     const payload = {
-      symptomDetails, doctorObs, complaints, duration, attachments,
-      prescription: templateData.prescription, tests: templateData.tests,
-      treatments: templateData.treatments, followUp: templateData.followUp,
-      exercise: templateData.exercise,
+      symptomDetails, duration, attachments,
       partImage, parts, selectedTherapy, theraphyAnswers, attachmentImages,
+      previousInjuries, currentMedications, allergies,
+      occupation, insuranceProvider, activityLevels,
+      patientPain,                                             // ← NEW
     }
-    console.log('🚀 Submitting payload:', payload)
     onNext?.(payload)
   }
 
-  // ── applyTemplate ─────────────────────────────────────────────────────────
-  const mapTemplateToFormData = (t = {}, dx) => {
-    const medicines = Array.isArray(t?.prescription?.medicines)
-      ? t.prescription.medicines.map((m) => {
-        const dur = m?.duration ? `${m.duration}`.trim() : 'NA'
-        let unit = m?.durationUnit ? m.durationUnit.trim() : ''
-        if (dur !== 'NA' && unit) {
-          const n = parseInt(dur, 10)
-          if (!isNaN(n) && n > 1 && !unit.endsWith('s')) unit = `${unit}s`
-        }
-        return {
-          id: m?.id ?? `tmp-${Date.now()}-${Math.random()}`,
-          medicineType: m?.medicineType?.trim() || 'NA', name: m?.name || '',
-          dose: m?.dose || '', remindWhen: m?.remindWhen || 'Once A Day',
-          others: m?.others || '',
-          duration: dur !== 'NA' && unit ? `${dur} ${unit}` : dur,
-          food: m?.food || '', note: m?.note || '',
-          times: Array.isArray(m?.times)
-            ? m.times.map((t) => `${t}`.trim()).filter(Boolean)
-            : m?.times && typeof m.times === 'string'
-              ? m.times.split(',').map((t) => t.trim()).filter(Boolean)
-              : [],
-        }
-      })
-      : []
-    return {
-      symptoms: { symptomDetails: typeof t.symptoms === 'string' ? t.symptoms : '', doctorObs, complaints: dx, duration, attachments },
-      tests: { selectedTests: Array.isArray(t?.tests?.selectedTests) ? t.tests.selectedTests : [], testReason: t?.tests?.testReason ?? '' },
-      prescription: { medicines },
-      treatments: {
-        generatedData: t?.treatments?.generatedData ?? {},
-        selectedTestTreatments: t?.treatments?.selectedTestTreatments ?? t?.treatments?.selectedTreatment ?? [],
-        treatmentReason: t?.treatments?.reason ?? '',
-      },
-      followUp: {
-        durationValue: t?.followUp?.durationValue ?? '', durationUnit: t?.followUp?.durationUnit ?? '',
-        nextFollowUpDate: t?.followUp?.nextFollowUpDate ?? '',
-        followUpNote: t?.followUp?.followUpnote ?? t?.followUp?.followUpNote ?? '',
-      },
-      summary: { complaints: dx },
-    }
-  }
-
-  const applyTemplate = (dx) => {
-    const merged = mapTemplateToFormData(templateData, dx)
-    setFormData?.((prev) => ({ ...prev, ...merged, __templateApplied: { dx, at: Date.now() } }))
-    setUpdateTemplate?.(true)
-    success?.('Template applied successfully!', { title: 'Success' })
-    onNext?.({ symptomDetails, doctorObs, complaints: dx, duration, attachments, ...merged })
-  }
-
-  // ── select options ────────────────────────────────────────────────────────
-  const options = useMemo(
-    () => diseases.map((d) => ({ label: d.diseaseName, value: d.diseaseName })),
-    [diseases],
-  )
-  const canShowAdd =
-    inputValue.trim() &&
-    !options.some((o) => (o?.value || '').toLowerCase() === inputValue.trim().toLowerCase())
-
-  const handleAddClick = async () => {
-    const name = inputValue.trim()
-    if (!name || adding) return
-    setAdding(true)
-    try {
-      const created = await addDisease({
-        diseaseName: name, probableSymptoms: probableSymptoms.trim(), notes: keyNotes.trim(),
-      })
-      if (created) {
-        success?.(`Saved "${name}" to diagnoses`, { title: 'Success' })
-        setInputValue(''); setProbableSymptoms(''); setKeyNotes('')
-        await fetchDiseases()
-        setComplaints(name)
-      } else { info?.(created?.message || 'Could not add disease', { title: 'Info' }) }
-    } catch (e) { error?.('Could not add disease. Please try again.') }
-    finally { setAdding(false) }
-  }
-
-  const ClearInput = (props) => (
-    <components.ClearIndicator {...props}>
-      <span style={{ cursor: 'pointer', color: '#6C2BD9', fontWeight: 'bold' }}
-        onClick={() => props.clearValue()}>✕</span>
-    </components.ClearIndicator>
-  )
-
   const therapyGroups = useMemo(() => flattenTherapyAnswers(theraphyAnswers), [theraphyAnswers])
-
   const bk = bookingRecord
 
   // ─── render ───────────────────────────────────────────────────────────────
@@ -356,58 +201,29 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
     }}>
 
       {/* ── Header ── */}
-      <div
-        style={{
-          background: '#a5c4d4ff', // ✅ light background
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        }}
-      >
-        <div>
-          <div
-            style={{
-              fontSize: 10,
-              color: '#7e3a93', // ✅ purple text
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginBottom: 2,
-            }}
-          >
-            Patient Consultation
-          </div>
+      <div style={{
+        background: '#a5c4d4ff', padding: '16px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+      }}>
+        <div style={{
+          fontSize: 10, color: '#7e3a93', fontWeight: 700,
+          letterSpacing: '0.1em', textTransform: 'uppercase',
+        }}>
+          Patient Consultation
         </div>
 
         {bk && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                background: '#ffffff', // ✅ white pill
-                borderRadius: 24,
-                padding: '6px 16px',
-                color: '#7e3a93', // ✅ text color
-                fontSize: 13,
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-              }}
-            >
-              <div
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: '#22c55e', // ✅ softer green
-                }}
-              />
+            <div style={{
+              background: '#ffffff', borderRadius: 24, padding: '6px 16px',
+              color: '#7e3a93', fontSize: 13, fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />
               {bk.name} · {bk.age}yr {bk.gender?.charAt(0)}
             </div>
-
             <StatusBadge status={bk.status} />
           </div>
         )}
@@ -430,17 +246,100 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         {/* ════ LEFT COLUMN ════ */}
         <div>
 
-          {/* Complaint Details */}
+          {/* ── Complaint Details ── */}
           <div style={card}>
             <SLabel text="Complaint Details" />
+
+            {/* Main complaint textarea */}
             <textarea
               rows={4} value={symptomDetails}
               onChange={(e) => setSymptomDetails(e.target.value)}
               placeholder="Describe patient's main complaint…"
-              style={inputBase}
+              style={{ ...inputBase, marginBottom: 14 }}
               onFocus={(e) => (e.target.style.borderColor = '#6C2BD9')}
               onBlur={(e) => (e.target.style.borderColor = '#E5D9FF')}
             />
+
+            {/* Patient Pain */}
+            <div style={{ marginBottom: 14 }}>
+              <SLabel text="Patient Pain" />
+              <input
+                value={patientPain}
+                onChange={(e) => setPatientPain(e.target.value)}
+                placeholder="e.g. chronic pain, acute pain…"
+                style={{ ...inputBase, resize: 'none' }}
+                onFocus={(e) => (e.target.style.borderColor = '#6C2BD9')}
+                onBlur={(e) => (e.target.style.borderColor = '#E5D9FF')}
+              />
+            </div>
+
+            {/* Previous Injuries + Current Medications */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div>
+                <SLabel text="Previous Injuries" />
+                <input
+                  value={previousInjuries}
+                  onChange={(e) => setPreviousInjuries(e.target.value)}
+                  placeholder="e.g. none"
+                  style={{ ...inputBase, resize: 'none' }}
+                  onFocus={(e) => (e.target.style.borderColor = '#6C2BD9')}
+                  onBlur={(e) => (e.target.style.borderColor = '#E5D9FF')}
+                />
+              </div>
+              <div>
+                <SLabel text="Current Medications" />
+                <input
+                  value={currentMedications}
+                  onChange={(e) => setCurrentMedications(e.target.value)}
+                  placeholder="e.g. none"
+                  style={{ ...inputBase, resize: 'none' }}
+                  onFocus={(e) => (e.target.style.borderColor = '#6C2BD9')}
+                  onBlur={(e) => (e.target.style.borderColor = '#E5D9FF')}
+                />
+              </div>
+            </div>
+
+            {/* Allergies + Occupation */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div>
+                <SLabel text="Allergies" />
+                <input
+                  value={allergies}
+                  onChange={(e) => setAllergies(e.target.value)}
+                  placeholder="e.g. none"
+                  style={{ ...inputBase, resize: 'none' }}
+                  onFocus={(e) => (e.target.style.borderColor = '#6C2BD9')}
+                  onBlur={(e) => (e.target.style.borderColor = '#E5D9FF')}
+                />
+              </div>
+              <div>
+                <SLabel text="Occupation" />
+                <input
+                  value={occupation}
+                  onChange={(e) => setOccupation(e.target.value)}
+                  placeholder="e.g. worker"
+                  style={{ ...inputBase, resize: 'none' }}
+                  onFocus={(e) => (e.target.style.borderColor = '#6C2BD9')}
+                  onBlur={(e) => (e.target.style.borderColor = '#E5D9FF')}
+                />
+              </div>
+            </div>
+
+            {/* Activity Levels chips (read-only display) */}
+            {activityLevels.length > 0 && (
+              <div>
+                <SLabel text="Activity Levels" />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {activityLevels.map((lvl) => (
+                    <span key={lvl} style={{
+                      background: '#EDE9FE', color: '#5B21B6',
+                      border: '1px solid #DDD6FE', borderRadius: 20,
+                      padding: '4px 12px', fontSize: 12, fontWeight: 700,
+                    }}>{lvl}</span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Duration + Therapy side-by-side */}
@@ -460,13 +359,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
               {isValid(selectedTherapy || bk?.subServiceName) && (
                 <div>
                   <SLabel text="Selected Therapy" />
-                  <div style={{
-                    background: '#F3EEFF', border: '1px solid #DDD0FF',
-                    borderRadius: 10, padding: '10px 14px',
-                    fontSize: 13, fontWeight: 700, color: '#5B21B6',
-                  }}>
-                    {selectedTherapy || bk?.subServiceName}
-                  </div>
+                  <div style={readonlyChip}>{selectedTherapy || bk?.subServiceName}</div>
                 </div>
               )}
             </div>
@@ -489,80 +382,19 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
             </div>
           )}
 
-          {/* Diagnosis / Complaints */}
-          {/* <div style={card}>
-            <SLabel text="Diagnosis / Complaints" />
-            <Select
-              options={options}
-              value={complaints ? { label: complaints, value: complaints } : null}
-              onChange={handleComplaintsChange}
-              onInputChange={(v) => setInputValue(v)}
-              inputValue={inputValue}
-              isClearable
-              placeholder="Search or select diagnosis…"
-              components={{ ClearIndicator: ClearInput }}
-              styles={{
-                control: (base) => ({
-                  ...base, borderRadius: 10, borderColor: '#E5D9FF',
-                  boxShadow: 'none', fontSize: 14,
-                  '&:hover': { borderColor: '#6C2BD9' },
-                }),
-                option: (base, state) => ({
-                  ...base, fontSize: 14,
-                  backgroundColor: state.isSelected ? '#6C2BD9' : state.isFocused ? '#F3EEFF' : '#fff',
-                  color: state.isSelected ? '#fff' : '#374151',
-                }),
-                menu: (base) => ({
-                  ...base, borderRadius: 10, border: '1.5px solid #EDE0FF',
-                  boxShadow: '0 8px 24px rgba(108,43,217,0.12)',
-                }),
-              }}
+          {/* Insurance Provider (kept separate as it's more administrative) */}
+          <div style={card}>
+            <SLabel text="Insurance Provider" />
+            <input
+              value={insuranceProvider}
+              onChange={(e) => setInsuranceProvider(e.target.value)}
+              placeholder="e.g. none"
+              style={{ ...inputBase, resize: 'none' }}
+              onFocus={(e) => (e.target.style.borderColor = '#6C2BD9')}
+              onBlur={(e) => (e.target.style.borderColor = '#E5D9FF')}
             />
-            {canShowAdd && (
-              <button type="button" onClick={handleAddClick} disabled={adding}
-                style={{
-                  marginTop: 6, fontSize: 13, color: '#6C2BD9',
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  padding: 0, fontFamily: 'inherit',
-                }}>
-                {adding ? '…Adding' : `+ Add "${inputValue}" as new diagnosis`}
-              </button>
-            )}
-            {tplLoading && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-                <CSpinner size="sm" style={{ color: '#6C2BD9' }} />
-                <small style={{ color: '#6C2BD9', fontSize: 12 }}>Fetching template…</small>
-              </div>
-            )}
-            {hasTemplate && complaints && (
-              <button type="button" onClick={() => applyTemplate(complaints)}
-                style={{
-                  marginTop: 10, padding: '7px 20px',
-                  background: 'linear-gradient(135deg,#6C2BD9,#8B5CF6)',
-                  color: '#fff', border: 'none', borderRadius: 24,
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  boxShadow: '0 2px 10px rgba(108,43,217,0.25)', fontFamily: 'inherit',
-                }}>
-                ✦ Apply Template
-              </button>
-            )}
-          </div> */}
+          </div>
 
-          {/* Probable Symptoms */}
-          {/* {probableSymptoms && (
-            <div style={{ ...card, background: '#F3EEFF', border: '1px solid #DDD0FF' }}>
-              <SLabel text="Probable Symptoms" />
-              <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.7 }}>{probableSymptoms}</p>
-            </div>
-          )} */}
-
-          {/* Key Notes */}
-          {/* {keyNotes && (
-            <div style={{ ...card, background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-              <SLabel text="Key Notes" />
-              <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.7 }}>{keyNotes}</p>
-            </div>
-          )} */}
         </div>
 
         {/* ════ RIGHT COLUMN ════ */}
@@ -585,40 +417,6 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
             </div>
           )}
 
-          {/* Patient Attachments */}
-          {/* {attachmentImages.length > 0 && (
-            <div style={card}>
-              <SLabel text="Patient Attachments" />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, paddingTop: 4 }}>
-                {attachmentImages.map((raw, idx) => {
-                  const src = toImageSrc(raw)
-                  if (!src) return null
-                  return (
-                    <div key={idx}
-                      onClick={() => window.open(src, '_blank')}
-                      style={{
-                        width: 90, height: 90, borderRadius: 10, overflow: 'hidden',
-                        cursor: 'pointer', border: '2px solid #DDD0FF',
-                        transition: 'transform 0.15s, border-color 0.15s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.05)'
-                        e.currentTarget.style.borderColor = '#6C2BD9'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)'
-                        e.currentTarget.style.borderColor = '#DDD0FF'
-                      }}
-                    >
-                      <img src={src} alt={`Attachment ${idx + 1}`}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )} */}
-
           {/* Upload New Attachments */}
           <div style={card}>
             <SLabel text="Upload New Attachments" />
@@ -626,38 +424,26 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           </div>
 
         </div>
-        {/* ════ END TWO-COLUMN GRID ════ */}
       </div>
 
-      {/* ══ THERAPY QUESTIONNAIRE — full width, below the two-column grid ══ */}
+      {/* ══ THERAPY QUESTIONNAIRE — full width ══ */}
       {therapyGroups.length > 0 && (
-        <div style={{
-          maxWidth: 1200, margin: '0 auto 20px', padding: '0 20px',
-        }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto 20px', padding: '0 20px' }}>
           <div style={card}>
             <SLabel text="Therapy Questionnaire" />
-
-            {/* Multi-column layout for categories */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
               gap: 16,
             }}>
-              {therapyGroups.map(({ category, questions }, gi) => (
-                <div key={category} style={{
-                  borderRadius: 10, overflow: 'hidden',
-                  border: '1px solid #EDE0FF',
-                }}>
-                  {/* Category header */}
+              {therapyGroups.map(({ category, questions }) => (
+                <div key={category} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #EDE0FF' }}>
                   <div style={{
                     background: 'linear-gradient(90deg,#F3EEFF,#EEF2FF)',
                     padding: '8px 16px', fontWeight: 700, fontSize: 12,
-                    color: '#6C2BD9', textTransform: 'capitalize',
-                    letterSpacing: '0.07em',
+                    color: '#6C2BD9', textTransform: 'capitalize', letterSpacing: '0.07em',
                     borderBottom: '1px solid #EDE0FF',
                   }}>{category}</div>
-
-                  {/* Each Q&A row */}
                   {questions.map((q, idx) => (
                     <div key={q.questionId ?? idx} style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -679,29 +465,17 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       )}
 
       {/* ── Sticky Bottom Bar ── */}
-      <div
-        className="position-fixed bottom-0"
-        style={{
-          left: 0,
-          right: 0,
-          background: '#a5c4d4ff', // ✅ light background
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 16,
-          padding: '10px 24px',
-          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)', // ✅ soft shadow
-        }}
-      >
+      <div className="position-fixed bottom-0" style={{
+        left: 0, right: 0,
+        background: '#a5c4d4ff',
+        display: 'flex', justifyContent: 'flex-end', gap: 16,
+        padding: '10px 24px',
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
+      }}>
         <Button
-          customColor="#ffffff" // ✅ white button bg
-          color="#7e3a93"       // ✅ purple text
+          customColor="#ffffff" color="#7e3a93"
           onClick={handleNext}
-          style={{
-            borderRadius: '20px',
-            fontWeight: 600,
-            padding: '6px 18px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-          }}
+          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
         >
           Next
         </Button>
