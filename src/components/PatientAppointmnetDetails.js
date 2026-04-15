@@ -10,34 +10,34 @@ import { SavePatientPrescription, getInProgressDetails } from '../Auth/Auth'
 import { useToast } from '../utils/Toaster'
 
 const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = false }) => {
-  const { id }    = useParams()
+  const { id } = useParams()
   const { state } = useLocation()
   const { patientData } = useDoctorContext()
 
-  const [patient,  setPatient]  = useState(patientData || state?.patient || null)
-  const [details,  setDetails]  = useState(state?.details || null)
+  const [patient, setPatient] = useState(patientData || state?.patient || null)
+  const [details, setDetails] = useState(state?.details || null)
 
   // ── Single accumulator — every tab ADDS to this, nothing is ever lost ────
   const [formData, setFormData] = useState(state?.formData || {
-    symptoms:        {},
-    assessment:      {},
-    diagnosis:       {},
-    investigation:   {},
+    symptoms: {},
+    assessment: {},
+    diagnosis: {},
+    investigation: {},
     therapySessions: {},
-    exercisePlan:    { exercises: [], homeAdvice: '' },
-    followUp:        {},
-    prescription:    {},
-    history:         {},
-    ClinicImages:    {},
-    summary:         {},
+    exercisePlan: { exercises: [], homeAdvice: '' },
+    followUp: [],   // ✅ initialised as array so seed works immediately
+    prescription: {},
+    history: {},
+    ClinicImages: {},
+    summary: {},
     // top-level background fields (from Complaints tab)
-    previousInjuries:   '',
+    previousInjuries: '',
     currentMedications: '',
-    allergies:          '',
-    occupation:         '',
-    insuranceProvider:  '',
-    activityLevels:     [],
-    patientPain:        '',
+    allergies: '',
+    occupation: '',
+    insuranceProvider: '',
+    activityLevels: [],
+    patientPain: '',
   })
 
   const { success, info } = useToast()
@@ -56,16 +56,21 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   ]
 
   const [activeTab, setActiveTab] = useState(defaultTab || ALL_TABS[0])
-  const [snackbar, setSnackbar]   = useState({ show: false, message: '', type: '' })
+  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
 
   // ── Fetch in-progress ─────────────────────────────────────────────────────
   useEffect(() => {
     if (state?.fromTab === 'In-Progress' && patient && !details) {
-      ;(async () => {
+      ; (async () => {
         try {
           const data = await getInProgressDetails(patient.patientId, patient.bookingId)
           setDetails(data)
-          setFormData(data?.savedDetails?.[0] || {})
+          const saved = data?.savedDetails?.[0] || {}
+          // Ensure followUp is always an array after loading saved data
+          setFormData({
+            ...saved,
+            followUp: Array.isArray(saved.followUp) ? saved.followUp : [],
+          })
         } catch (err) {
           console.error('❌ Failed to fetch in-progress details:', err)
         }
@@ -120,25 +125,26 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
       const patch = {
         symptoms: {
-          symptomDetails:   data.symptomDetails   ?? '',
-          doctorObs:        data.doctorObs        ?? '',
-          complaints:       data.complaints       ?? '',
-          duration:         data.duration         ?? '',
-          attachments:      data.attachments      ?? [],
-          partImage:        data.partImage        ?? '',
-          parts:            data.parts            ?? [],
-          selectedTherapy:  data.selectedTherapy  ?? '',
-          theraphyAnswers:  data.theraphyAnswers  ?? {},
+          symptomDetails: data.symptomDetails ?? '',
+          doctorObs: data.doctorObs ?? '',
+          complaints: data.complaints ?? '',
+          duration: data.duration ?? '',
+          attachments: data.attachments ?? [],
+          partImage: data.partImage ?? '',
+          parts: data.parts ?? [],
+          selectedTherapy: data.selectedTherapy ?? '',
+          selectedTherapyID: data.selectedTherapyID ?? '',
+          theraphyAnswers: data.theraphyAnswers ?? {},
           attachmentImages: data.attachmentImages ?? [],
         },
         // ── Patient background — stored at TOP LEVEL for Summary payload ──
-        previousInjuries:   data.previousInjuries   ?? '',
+        previousInjuries: data.previousInjuries ?? '',
         currentMedications: data.currentMedications ?? '',
-        allergies:          data.allergies           ?? '',
-        occupation:         data.occupation          ?? '',
-        insuranceProvider:  data.insuranceProvider   ?? '',
-        activityLevels:     Array.isArray(data.activityLevels) ? data.activityLevels : [],
-        patientPain:        data.patientPain         ?? '',
+        allergies: data.allergies ?? '',
+        occupation: data.occupation ?? '',
+        insuranceProvider: data.insuranceProvider ?? '',
+        activityLevels: Array.isArray(data.activityLevels) ? data.activityLevels : [],
+        patientPain: data.patientPain ?? '',
       }
 
       if (data.prescription?.medicines?.length)
@@ -147,22 +153,22 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       if (data.tests?.selectedTests?.length || data.tests?.testReason)
         patch.tests = {
           selectedTests: data.tests?.selectedTests ?? [],
-          testReason:    data.tests?.testReason    ?? '',
+          testReason: data.tests?.testReason ?? '',
         }
 
       if (data.treatments?.selectedTestTreatments?.length || data.treatments?.treatmentReason)
         patch.treatments = {
-          generatedData:          data.treatments?.generatedData          ?? {},
+          generatedData: data.treatments?.generatedData ?? {},
           selectedTestTreatments: data.treatments?.selectedTestTreatments ?? [],
-          treatmentReason:        data.treatments?.treatmentReason        ?? '',
+          treatmentReason: data.treatments?.treatmentReason ?? '',
         }
 
       if (data.followUp?.durationValue || data.followUp?.followUpNote)
         patch.followUp = {
-          durationValue:    data.followUp?.durationValue    ?? '',
-          durationUnit:     data.followUp?.durationUnit     ?? '',
+          durationValue: data.followUp?.durationValue ?? '',
+          durationUnit: data.followUp?.durationUnit ?? '',
           nextFollowUpDate: data.followUp?.nextFollowUpDate ?? '',
-          followUpNote:     data.followUp?.followUpNote     ?? '',
+          followUpNote: data.followUp?.followUpNote ?? '',
         }
 
       if (data.exercise && Object.keys(data.exercise).length)
@@ -181,38 +187,38 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
       const patch = {
         assessment: {
-          chiefComplaint:     data.chiefComplaint     ?? '',
-          painScale:          data.painScale          ?? '',
-          painType:           data.painType           ?? '',
-          duration:           data.duration           ?? '',
-          onset:              data.onset              ?? '',
+          chiefComplaint: data.chiefComplaint ?? '',
+          painScale: data.painScale ?? '',
+          painType: data.painType ?? '',
+          duration: data.duration ?? '',
+          onset: data.onset ?? '',
           aggravatingFactors: data.aggravatingFactors ?? '',
-          relievingFactors:   data.relievingFactors   ?? '',
-          observations:       data.observations       ?? '',
-          difficultiesIn:      Array.isArray(data.difficultiesIn) ? data.difficultiesIn : [],
-          otherDifficulty:     data.otherDifficulty     ?? '',
+          relievingFactors: data.relievingFactors ?? '',
+          observations: data.observations ?? '',
+          difficultiesIn: Array.isArray(data.difficultiesIn) ? data.difficultiesIn : [],
+          otherDifficulty: data.otherDifficulty ?? '',
           dailyLivingAffected: data.dailyLivingAffected ?? '',
           postureAssessment: Array.isArray(data.postureAssessment) ? data.postureAssessment : [],
           postureDeviations: data.postureDeviations ?? '',
-          romStatus:         Array.isArray(data.romStatus) ? data.romStatus : [],
-          romRestricted:     data.romRestricted ?? '',
-          romJoints:         data.romJoints     ?? '',
-          muscleStrength:    Array.isArray(data.muscleStrength) ? data.muscleStrength : [],
-          muscleWeakness:    data.muscleWeakness   ?? '',
+          romStatus: Array.isArray(data.romStatus) ? data.romStatus : [],
+          romRestricted: data.romRestricted ?? '',
+          romJoints: data.romJoints ?? '',
+          muscleStrength: Array.isArray(data.muscleStrength) ? data.muscleStrength : [],
+          muscleWeakness: data.muscleWeakness ?? '',
           neurologicalSigns: Array.isArray(data.neurologicalSigns) ? data.neurologicalSigns : [],
-          posture:            data.posture       ?? '',
-          rangeOfMotion:      data.rangeOfMotion ?? '',
-          specialTests:       data.specialTests  ?? '',
-          patientPain:        data.patientPain   ?? '',
-          painTriggers:       data.painTriggers    ?? '',
-          chronicRelieving:   data.chronicRelieving ?? '',
-          typeOfSport:         data.typeOfSport         ?? '',
-          recurringInjuries:   data.recurringInjuries   ?? '',
-          returnToSportGoals:  data.returnToSportGoals  ?? '',
+          posture: data.posture ?? '',
+          rangeOfMotion: data.rangeOfMotion ?? '',
+          specialTests: data.specialTests ?? '',
+          patientPain: data.patientPain ?? '',
+          painTriggers: data.painTriggers ?? '',
+          chronicRelieving: data.chronicRelieving ?? '',
+          typeOfSport: data.typeOfSport ?? '',
+          recurringInjuries: data.recurringInjuries ?? '',
+          returnToSportGoals: data.returnToSportGoals ?? '',
           neuroDiagnosis: data.neuroDiagnosis ?? '',
-          neuroOnset:     data.neuroOnset     ?? '',
+          neuroOnset: data.neuroOnset ?? '',
           mobilityStatus: data.mobilityStatus ?? '',
-          cognitiveStatus:data.cognitiveStatus ?? '',
+          cognitiveStatus: data.cognitiveStatus ?? '',
         },
         ...(data.patientPain ? { patientPain: data.patientPain } : {}),
       }
@@ -230,14 +236,14 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           diagnosisRows: Array.isArray(data.diagnosis?.diagnosisRows)
             ? data.diagnosis.diagnosisRows
             : [
-                {
-                  physioDiagnosis: data.diagnosis?.physioDiagnosis ?? '',
-                  affectedArea:    data.diagnosis?.affectedArea    ?? '',
-                  severity:        data.diagnosis?.severity        ?? '',
-                  stage:           data.diagnosis?.stage           ?? '',
-                  notes:           data.diagnosis?.notes           ?? '',
-                },
-              ],
+              {
+                physioDiagnosis: data.diagnosis?.physioDiagnosis ?? '',
+                affectedArea: data.diagnosis?.affectedArea ?? '',
+                severity: data.diagnosis?.severity ?? '',
+                stage: data.diagnosis?.stage ?? '',
+                notes: data.diagnosis?.notes ?? '',
+              },
+            ],
         },
       }
 
@@ -251,8 +257,8 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
       const patch = {
         investigation: {
-          tests: data.investigation?.tests ?? data.tests ?? '',
-          notes: data.investigation?.notes ?? data.notes ?? '',
+          tests: data.investigation?.tests ?? data.tests ?? [],
+          reason: data.investigation?.reason ?? data.investigation?.notes ?? data.notes ?? '',
         },
       }
 
@@ -261,71 +267,68 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     },
 
     // ── Plan ──────────────────────────────────────────────────────────────
-    // KEY FIX: We now store both the structured sessions payload (for Summary/API)
-    // AND the raw _internalState (for TherapySession to restore its local state
-    // when the user returns to this tab without losing any edits).
     Plan: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Plan'); return }
 
       const programObj = data.selectedProgramObj ?? {}
 
       const sessionEntry = {
-        programId:       data.selectedProgramId ?? programObj?.id ?? programObj?._id ?? programObj?.programId ?? '',
-        programName:     programObj?.programName ?? programObj?.name ?? programObj?.title ?? '',
-        clinicId:        localStorage.getItem('clinicId') || localStorage.getItem('hospitalId') || '',
-        branchId:        programObj?.branchId ?? '',
-        totalTherapyIds: Array.isArray(data.selectedTherapies) ? data.selectedTherapies.length : 0,
-        serviceType:     data.mode ?? 'program',
-        therapyData:     Array.isArray(data.selectedTherapies)
+        programId: data.selectedProgramId ?? programObj?.id ?? programObj?._id ?? programObj?.programId ?? '',
+        programName: programObj?.programName ?? programObj?.name ?? programObj?.title ?? '',
+        clinicId: localStorage.getItem('clinicId') || localStorage.getItem('hospitalId') || '',
+        branchId: programObj?.branchId ?? '',
+        totalTherapies: Array.isArray(data.selectedTherapies) ? data.selectedTherapies.length : 0,
+        serviceType: data.mode ?? 'PROGRAM',
+        therapyData: Array.isArray(data.selectedTherapies)
           ? data.selectedTherapies.map(t => ({
-              therapyId:   t.therapyId   ?? '',
-              therapyName: t.therapyName ?? '',
-              exercises:   Array.isArray(t.exercises)
-                ? t.exercises.map(ex => ({
-                    therapyExercisesId: ex.therapyExercisesId ?? ex._id ?? ex.id ?? '',
-                    name:               ex.exerciseName ?? ex.name ?? ex.exercise_name ?? '',
-                    session:            String(ex.sessions ?? ex.session ?? ''),
-                    frequency:          ex.frequencyCount
-                      ? `${ex.frequencyCount} times/${(ex.frequencyUnit ?? 'day').toLowerCase()}`
-                      : ex.frequency ?? '',
-                    notes:              ex.notes ?? ex.instructions ?? '',
-                    sets:               Number(ex.sets)        || 0,
-                    repetitions:        Number(ex.reps ?? ex.repetitions) || 0,
-                    totalPrice:         ex.totalPrice ?? ex.price ?? 0,
-                  }))
-                : [],
-            }))
+            therapyId: t.therapyId ?? '',
+            therapyName: t.therapyName ?? '',
+            totalSessions: t.totalSessions ?? 0,
+            exercises: Array.isArray(t.exercises)
+              ? t.exercises.map(ex => ({
+                therapyExerciseId: ex.therapyExercisesId ?? ex.therapyExerciseId ?? ex._id ?? ex.id ?? '',
+                name: ex.exerciseName ?? ex.name ?? ex.exercise_name ?? '',
+                session: Number(ex.sessions ?? ex.session ?? 1),
+                frequency: ex.frequencyCount
+                  ? `${ex.frequencyCount} times/${(ex.frequencyUnit ?? 'day').toLowerCase()}`
+                  : ex.frequency ?? '',
+                notes: ex.notes ?? ex.instructions ?? '',
+                sets: Number(ex.sets) || 0,
+                repetitions: Number(ex.reps ?? ex.repetitions) || 0,
+                videoUrl: ex.videoUrl ?? '',
+                totalPrice: ex.totalPrice ?? ex.price ?? 0,
+              }))
+              : [],
+          }))
           : [],
-        therapistId:     data.therapistId     ?? '',
-        therapistName:   data.therapistName   ?? '',
-        modalitiesUsed:  data.modalitiesUsed  ?? [],
+        therapistId: data.therapistId ?? '',
+        therapistName: data.therapistName ?? '',
+        modalitiesUsed: data.modalitiesUsed ?? [],
         patientResponse: data.patientResponse ?? '',
-        manualTherapy:   data.manualTherapy   ?? '',
-        precautions:     data.precautions     ?? '',
+        manualTherapy: data.manualTherapy ?? '',
+        precautions: Array.isArray(data.precautions)
+          ? data.precautions
+          : data.precautions
+            ? [data.precautions]
+            : [],
       }
 
-      // ── KEY: persist _internalState so TherapySession can restore ──────
-      // This carries therophyDataState, therapyLibrary, therapyState so that
-      // when the component remounts (tab change), it reads these back from
-      // seed.sessions and re-derives its local state via restoreTherophyDataState.
       const internalState = data._internalState ?? {}
 
       const patch = {
         therapySessions: {
           overallStatus: data.overallStatus ?? '',
-          sessions:      [sessionEntry],
-          therapistId:   data.therapistId   ?? '',
+          sessions: [sessionEntry],
+          therapistId: data.therapistId ?? '',
           therapistName: data.therapistName ?? '',
           manualTherapy: data.manualTherapy ?? '',
-          precautions:   data.precautions   ?? '',
-          // Store internal state for tab-return restoration
+          precautions: data.precautions ?? '',
           _internalState: internalState,
-          // Store the raw selectedProgramId/Obj so ProgramDropdown can show selection
-          selectedProgramId:  data.selectedProgramId  ?? '',
+          selectedProgramId: data.selectedProgramId ?? '',
           selectedProgramObj: data.selectedProgramObj ?? null,
-          serviceType:        data.mode               ?? 'program',
-          modalitiesUsed:     data.modalitiesUsed     ?? [],
-          patientResponse:    data.patientResponse    ?? '',
+          serviceType: data.mode ?? 'PROGRAM',
+          modalitiesUsed: data.modalitiesUsed ?? [],
+          patientResponse: data.patientResponse ?? '',
         },
       }
 
@@ -342,17 +345,17 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
       const patch = {
         exercisePlan: {
-          homeAdvice:    data.exercisePlan?.homeAdvice ?? data.homeAdvice ?? '',
-          exercises:     rawExercises,
+          homeAdvice: data.exercisePlan?.homeAdvice ?? data.homeAdvice ?? '',
+          exercises: rawExercises,
           homeExercises: rawExercises.map(ex => ({
-            id:           ex.id           ?? ex._id ?? '',
-            name:         ex.name         ?? '',
-            sets:         String(ex.sets  ?? ''),
-            reps:         String(ex.reps  ?? ''),
-            frequency:    ex.frequency    ?? '',
+            id: ex.id ?? ex._id ?? '',
+            name: ex.name ?? '',
+            sets: String(ex.sets ?? ''),
+            reps: String(ex.reps ?? ''),
+            frequency: ex.frequency ?? '',
             instructions: ex.instructions ?? '',
-            videoUrl:     ex.videoUrl     ?? '',
-            thumbnail:    ex.thumbnail    ?? '',
+            videoUrl: ex.videoUrl ?? '',
+            thumbnail: ex.thumbnail ?? '',
           })),
         },
       }
@@ -365,17 +368,12 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     FollowUp: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('FollowUp'); return }
 
+      // FollowUpnew sends: { followUp: [...entries] }
       const entries = Array.isArray(data.followUp) ? data.followUp : []
-      const first   = entries[0] ?? {}
 
       const patch = {
-        followUp: {
-          nextVisitDate:   first.nextVisitDate   ?? '',
-          reviewNotes:     first.reviewNotes     ?? '',
-          modifications:   first.modifications   ?? '',
-          treatmentStatus: first.treatmentStatus ?? '',
-        },
-        followUpEntries: entries,
+        followUp: entries,   // ✅ keep as array — TabContent seeds from this
+        followUpEntries: entries,   // backup reference if needed elsewhere
       }
 
       mergeAndLog('FollowUp', patch)
@@ -463,23 +461,23 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   const savePrescriptionTemplate = async () => {
     try {
       const complaints = formData.symptoms?.complaints?.trim() || ''
-      const clinicId   = localStorage.getItem('hospitalId')
+      const clinicId = localStorage.getItem('hospitalId')
 
       const template = {
         clinicId,
-        title:         complaints,
-        symptoms:      complaints,
-        tests:         formData.tests         || [],
-        prescription:  formData.prescription  || [],
-        treatments:    formData.treatments    || [],
-        followUp:      formData.followUp      || {},
-        exercisePlan:  formData.exercisePlan  || {},
+        title: complaints,
+        symptoms: complaints,
+        tests: formData.tests || [],
+        prescription: formData.prescription || [],
+        treatments: formData.treatments || [],
+        followUp: formData.followUp || [],
+        exercisePlan: formData.exercisePlan || {},
         investigation: formData.investigation || {},
       }
 
       const res = await SavePatientPrescription(template)
       if (res.status === 200) success(res.message || 'Saved successfully!', { title: 'Success' })
-      else                    info(res.message   || 'Updated successfully',  { title: 'Info'    })
+      else info(res.message || 'Updated successfully', { title: 'Info' })
     } catch (error) {
       console.error('❌ Error saving template:', error)
       alert('Failed to save prescription template.')
@@ -497,7 +495,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       {/* ── Tabs ── */}
       <div className="w-100" style={{ position: 'sticky', top: 110, zIndex: 10 }}>
         <CContainer fluid className="p-0">
-          <CCard style={{ border: 0, borderRadius: 0, backgroundColor: COLORS.theme }}>
+          <CCard style={{ border: 0, borderRadius: 0, backgroundColor: COLORS.theme, }}>
             <CCardBody className="p-0 pt-3">
               <CNav variant="tabs" role="tablist" style={{ whiteSpace: 'nowrap' }}>
                 {TABS.map((t) => {
@@ -507,9 +505,17 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
                       <CNavLink
                         active={active}
                         onClick={() => setActiveTab(t)}
-                        style={{ padding: '.5rem .85rem', cursor: 'pointer', borderRadius: '6px 6px 0 0' }}
+                        style={{
+                          padding: '.5rem .85rem',
+                          cursor: 'pointer',
+                          borderRadius: '6px 6px 0 0',
+                          color: active ? '#000' : '#7e3a93',   // 👈 active = black, inactive = gray
+                         
+                        }}
                       >
-                        <span style={{ fontSize: 16, fontWeight: active ? 700 : 500 }}>{t}</span>
+                        <span style={{ fontSize: 16, fontWeight: active ? 700 : 500 }}>
+                          {t}
+                        </span>
                       </CNavLink>
                     </CNavItem>
                   )

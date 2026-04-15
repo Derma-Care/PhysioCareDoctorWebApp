@@ -13,9 +13,9 @@ import { pdf } from '@react-pdf/renderer'
 import { capitalizeEachWord } from '../utils/CaptalZeWord'
 
 /* ─── Design tokens ─────────────────────────────────────────────────────── */
-const P      = '#1a3a5c'
-const A      = '#1a5fa8'
-const LIGHT  = '#f5f9ff'
+const P = '#1a3a5c'
+const A = '#1a5fa8'
+const LIGHT = '#f5f9ff'
 const BORDER = '#d8e8f5'
 
 /* ─── Tiny helpers ───────────────────────────────────────────────────────── */
@@ -25,20 +25,20 @@ const toImageSrc = (raw) => {
   if (!raw || typeof raw !== 'string') return null
   if (raw.startsWith('http') || raw.startsWith('blob:') || raw.startsWith('/')) return raw
   if (raw.startsWith('data:')) return raw
-  if (raw.startsWith('/9j/'))  return `data:image/jpeg;base64,${raw}`
+  if (raw.startsWith('/9j/')) return `data:image/jpeg;base64,${raw}`
   if (raw.startsWith('iVBOR')) return `data:image/png;base64,${raw}`
   if (raw.startsWith('R0lGO')) return `data:image/gif;base64,${raw}`
   return `data:image/jpeg;base64,${raw}`
 }
 
 const PAIN_LABEL_MAP = {
-  chronicPain:  'Chronic Pain',
-  sportsRehab:  'Sports Rehab',
-  neuroRehab:   'Neuro Rehab',
-  acutePain:         'Acute Pain',
-  neuropathicPain:   'Neuropathic Pain',
-  referredPain:      'Referred Pain',
-  inflammatoryPain:  'Inflammatory Pain',
+  chronicPain: 'Chronic Pain',
+  sportsRehab: 'Sports Rehab',
+  neuroRehab: 'Neuro Rehab',
+  acutePain: 'Acute Pain',
+  neuropathicPain: 'Neuropathic Pain',
+  referredPain: 'Referred Pain',
+  inflammatoryPain: 'Inflammatory Pain',
 }
 
 const Section = ({ icon, title, children }) => (
@@ -105,10 +105,10 @@ const CheckChip = ({ label, checked }) => (
 
 const StatusDot = ({ status }) => {
   const map = {
-    Confirmed:     ['#d1fae5', '#065f46', '#6ee7b7'],
-    Completed:     ['#d1fae5', '#065f46', '#6ee7b7'],
-    Pending:       ['#fef3c7', '#92400e', '#fcd34d'],
-    Cancelled:     ['#fee2e2', '#991b1b', '#fecaca'],
+    Confirmed: ['#d1fae5', '#065f46', '#6ee7b7'],
+    Completed: ['#d1fae5', '#065f46', '#6ee7b7'],
+    Pending: ['#fef3c7', '#92400e', '#fcd34d'],
+    Cancelled: ['#fee2e2', '#991b1b', '#fecaca'],
     'In Progress': ['#dbeafe', '#1e40af', '#93c5fd'],
   }
   const [bg, fg, border] = map[status] || ['#f3f4f6', '#374151', '#d1d5db']
@@ -123,8 +123,8 @@ const AnswerBadge = ({ answer }) => {
   const up = String(answer).toUpperCase()
   const [bg, color, border] =
     up === 'YES' ? ['#d1fae5', '#065f46', '#6ee7b7'] :
-    up === 'NO'  ? ['#fee2e2', '#991b1b', '#fecaca'] :
-                   ['#eff6ff', '#1d4ed8', '#bfdbfe']
+      up === 'NO' ? ['#fee2e2', '#991b1b', '#fecaca'] :
+        ['#eff6ff', '#1d4ed8', '#bfdbfe']
   return (
     <span style={{ background: bg, color, border: `1px solid ${border}`, borderRadius: 20, padding: '2px 12px', fontSize: '0.78rem', fontWeight: 700 }}>
       {answer}
@@ -133,9 +133,9 @@ const AnswerBadge = ({ answer }) => {
 }
 
 const FOLLOWUP_STATUS_STYLE = {
-  Active:     { bg: '#f0fff4', border: '#68d391', color: '#276749', icon: '🟢' },
-  'On Hold':  { bg: '#fffbeb', border: '#f6ad55', color: '#7b341e', icon: '🟡' },
-  Completed:  { bg: '#ebf8ff', border: '#63b3ed', color: '#2a4365', icon: '🔵' },
+  Active: { bg: '#f0fff4', border: '#68d391', color: '#276749', icon: '🟢' },
+  'On Hold': { bg: '#fffbeb', border: '#f6ad55', color: '#7b341e', icon: '🟡' },
+  Completed: { bg: '#ebf8ff', border: '#63b3ed', color: '#2a4365', icon: '🔵' },
   Discharged: { bg: '#fff5f5', border: '#fc8181', color: '#742a2a', icon: '🔴' },
 }
 
@@ -144,11 +144,11 @@ const getVisitUrgency = (dateStr) => {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const visit = new Date(dateStr); visit.setHours(0, 0, 0, 0)
   const diffDays = Math.round((visit - today) / (1000 * 60 * 60 * 24))
-  if (diffDays < 0)   return { label: 'Overdue',   bg: '#fff5f5', color: '#c53030', border: '#fc8181', icon: '⚠️' }
-  if (diffDays === 0) return { label: 'Today',     bg: '#f0fff4', color: '#276749', border: '#68d391', icon: '📍' }
-  if (diffDays <= 3)  return { label: 'Very Soon', bg: '#fffbeb', color: '#7b341e', border: '#f6ad55', icon: '🔔' }
-  if (diffDays <= 7)  return { label: 'This Week', bg: '#ebf8ff', color: '#2a4365', border: '#63b3ed', icon: '📅' }
-  return                     { label: 'Upcoming',  bg: '#f5f0ff', color: '#44337a', border: '#b794f4', icon: '🗓️' }
+  if (diffDays < 0) return { label: 'Overdue', bg: '#fff5f5', color: '#c53030', border: '#fc8181', icon: '⚠️' }
+  if (diffDays === 0) return { label: 'Today', bg: '#f0fff4', color: '#276749', border: '#68d391', icon: '📍' }
+  if (diffDays <= 3) return { label: 'Very Soon', bg: '#fffbeb', color: '#7b341e', border: '#f6ad55', icon: '🔔' }
+  if (diffDays <= 7) return { label: 'This Week', bg: '#ebf8ff', color: '#2a4365', border: '#63b3ed', icon: '📅' }
+  return { label: 'Upcoming', bg: '#f5f0ff', color: '#44337a', border: '#b794f4', icon: '🗓️' }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -195,7 +195,7 @@ const ExerciseTableDisplay = ({ exercises }) => {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   THERAPY BLOCK — renders a single therapy with its exercise table
+   THERAPY BLOCK
 ────────────────────────────────────────────────────────────────────────── */
 const TherapyBlock = ({ therapyName, exercises, totalPrice, accentColor = A, accentBg = '#eef5ff', borderColor = BORDER }) => (
   <div style={{ marginBottom: 12 }}>
@@ -221,14 +221,14 @@ const TherapyBlock = ({ therapyName, exercises, totalPrice, accentColor = A, acc
 )
 
 /* ──────────────────────────────────────────────────────────────────────────
-   SESSION META BAR — therapist, modalities, service type badge
+   SESSION META BAR
 ────────────────────────────────────────────────────────────────────────── */
 const SessionMetaBar = ({ sess }) => {
   const serviceType = (sess.serviceType || '').toLowerCase()
   const typeStyle = {
-    package:  { bg: '#fef3c7', color: '#92400e', icon: '📦' },
-    program:  { bg: '#dbeafe', color: '#1e40af', icon: '🎯' },
-    therapy:  { bg: '#ede9fe', color: '#5b21b6', icon: '💊' },
+    package: { bg: '#fef3c7', color: '#92400e', icon: '📦' },
+    program: { bg: '#dbeafe', color: '#1e40af', icon: '🎯' },
+    therapy: { bg: '#ede9fe', color: '#5b21b6', icon: '💊' },
     exercise: { bg: '#d1fae5', color: '#065f46', icon: '🏋️' },
   }
   const ts = typeStyle[serviceType] || { bg: '#f3f4f6', color: '#374151', icon: '📋' }
@@ -250,7 +250,7 @@ const SessionMetaBar = ({ sess }) => {
         </span>
       )}
       {sess.therapistName && <Chip label={`👤 ${sess.therapistName}`} color={P} bg="#f0f7ff" />}
-      {sess.therapistId   && <Chip label={`ID: ${sess.therapistId}`}  color="#64748b" bg="#f3f4f6" />}
+      {sess.therapistId && <Chip label={`ID: ${sess.therapistId}`} color="#64748b" bg="#f3f4f6" />}
       {Array.isArray(sess.modalitiesUsed) && sess.modalitiesUsed.map(m => (
         <Chip key={m} label={m} color={A} bg="#dbeafe" />
       ))}
@@ -259,23 +259,23 @@ const SessionMetaBar = ({ sess }) => {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   SESSION DETAILS ROW — manualTherapy, precautions, patientResponse
+   SESSION DETAILS ROW
 ────────────────────────────────────────────────────────────────────────── */
 const SessionDetailsRow = ({ sess }) => {
   if (!sess.manualTherapy && !sess.precautions && !sess.patientResponse) return null
   return (
     <div style={{ marginBottom: 14, padding: '10px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8 }}>
       <Grid cols={3}>
-        {sess.manualTherapy   && <Row label="Manual Therapy"   value={sess.manualTherapy} />}
-        {sess.precautions     && <Row label="Precautions"       value={sess.precautions} />}
-        {sess.patientResponse && <Row label="Patient Response"  value={sess.patientResponse} />}
+        {sess.manualTherapy && <Row label="Manual Therapy" value={sess.manualTherapy} />}
+        {sess.precautions && <Row label="Precautions" value={Array.isArray(sess.precautions) ? sess.precautions.join(', ') : sess.precautions} />}
+        {sess.patientResponse && <Row label="Patient Response" value={sess.patientResponse} />}
       </Grid>
     </div>
   )
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   THERAPY SESSIONS DISPLAY — handles all 4 serviceType shapes correctly
+   THERAPY SESSIONS DISPLAY
 ══════════════════════════════════════════════════════════════════════════ */
 const TherapySessionsDisplay = ({ sessionsList }) => {
   if (!sessionsList || sessionsList.length === 0) return (
@@ -290,13 +290,9 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
         const serviceType = (sess.serviceType || '').toLowerCase()
         const isLast = si === sessionsList.length - 1
 
-        /* ════ PACKAGE ════
-           Shape: { serviceType:'package', packageName, totalPrice, programs:[{ programName, totalPrice, therapyData:[{ therapyId, therapyName, totalPrice, exercises:[] }] }], therapistId, therapistName, modalitiesUsed, ... }
-        */
         if (serviceType === 'package') {
           return (
             <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
-              {/* Package header */}
               <div style={{
                 padding: '12px 18px',
                 background: 'linear-gradient(135deg,#7c3aed,#a855f7)',
@@ -310,11 +306,8 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
               <div style={{ border: '2px solid #c4b5fd', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
                 <SessionMetaBar sess={sess} />
                 <SessionDetailsRow sess={sess} />
-
-                {/* Programs inside package */}
                 {Array.isArray(sess.programs) && sess.programs.length > 0 && sess.programs.map((prog, pIdx) => (
                   <div key={pIdx} style={{ marginBottom: pIdx < sess.programs.length - 1 ? 18 : 0 }}>
-                    {/* Program sub-header */}
                     <div style={{
                       padding: '9px 16px',
                       background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
@@ -326,7 +319,6 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
                       {prog.totalPrice > 0 && <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>₹ {prog.totalPrice}</span>}
                     </div>
                     <div style={{ border: '1.5px solid #c8ddf0', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '12px 14px' }}>
-                      {/* therapyData is the correct key from buildPayload */}
                       {Array.isArray(prog.therapyData ?? prog.therophyData) &&
                         (prog.therapyData ?? prog.therophyData ?? []).map((therapy, tIdx) => (
                           <TherapyBlock
@@ -337,7 +329,6 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
                           />
                         ))
                       }
-                      {/* Fallback: no therapyData */}
                       {!Array.isArray(prog.therapyData ?? prog.therophyData) && (
                         <div style={{ color: '#94a3b8', fontSize: '0.82rem', fontStyle: 'italic', padding: '8px 12px' }}>
                           No therapy data for this program.
@@ -346,8 +337,6 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
                     </div>
                   </div>
                 ))}
-
-                {/* Fallback: package has therophyData directly (no programs[]) */}
                 {(!Array.isArray(sess.programs) || sess.programs.length === 0) &&
                   Array.isArray(sess.therapyData ?? sess.therophyData) &&
                   (sess.therapyData ?? sess.therophyData ?? []).map((therapy, tIdx) => (
@@ -359,22 +348,17 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
                     />
                   ))
                 }
-
-                {/* Nothing at all */}
                 {(!Array.isArray(sess.programs) || sess.programs.length === 0) &&
                   !Array.isArray(sess.therapyData ?? sess.therophyData) && (
-                  <div style={{ color: '#94a3b8', fontSize: '0.82rem', fontStyle: 'italic', padding: '8px 12px' }}>
-                    No program or therapy data found in this package.
-                  </div>
-                )}
+                    <div style={{ color: '#94a3b8', fontSize: '0.82rem', fontStyle: 'italic', padding: '8px 12px' }}>
+                      No program or therapy data found in this package.
+                    </div>
+                  )}
               </div>
             </div>
           )
         }
 
-        /* ════ PROGRAM ════
-           Shape: { serviceType:'program', programId, programName, totalPrice, therapyData:[{ therapyId, therapyName, totalPrice, exercises:[] }], therapistId, ... }
-        */
         if (serviceType === 'program') {
           const therapies = sess.therapyData ?? sess.therophyData ?? []
           return (
@@ -392,16 +376,15 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
               <div style={{ border: '2px solid #c8ddf0', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
                 <SessionMetaBar sess={sess} />
                 <SessionDetailsRow sess={sess} />
-
                 {Array.isArray(therapies) && therapies.length > 0
                   ? therapies.map((therapy, tIdx) => (
-                      <TherapyBlock
-                        key={tIdx}
-                        therapyName={therapy.therapyName}
-                        exercises={therapy.exercises || []}
-                        totalPrice={therapy.totalPrice}
-                      />
-                    ))
+                    <TherapyBlock
+                      key={tIdx}
+                      therapyName={therapy.therapyName}
+                      exercises={therapy.exercises || []}
+                      totalPrice={therapy.totalPrice}
+                    />
+                  ))
                   : (
                     <div style={{ color: '#94a3b8', fontSize: '0.82rem', fontStyle: 'italic', padding: '8px 12px' }}>
                       No therapies found for this program.
@@ -413,12 +396,7 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
           )
         }
 
-        /* ════ THERAPY ════
-           Shape: { serviceType:'therapy', therapyData:[{ therapyId, therapyName, exercises:[] }], therapistId, ... }
-           NOTE: buildPayload wraps individual therapies inside therapyData array
-        */
         if (serviceType === 'therapy') {
-          // therapyData is array of { therapyId, therapyName, serviceType, totalPrice, exercises[] }
           const therapies = sess.therapyData ?? []
           return (
             <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
@@ -435,21 +413,19 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
               <div style={{ border: '2px solid #c4b5fd', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
                 <SessionMetaBar sess={sess} />
                 <SessionDetailsRow sess={sess} />
-
                 {Array.isArray(therapies) && therapies.length > 0
                   ? therapies.map((t, tIdx) => (
-                      <TherapyBlock
-                        key={tIdx}
-                        therapyName={t.therapyName}
-                        exercises={t.exercises || []}
-                        totalPrice={t.totalPrice}
-                        accentColor="#5b21b6"
-                        accentBg="#f5f3ff"
-                        borderColor="#c4b5fd"
-                      />
-                    ))
+                    <TherapyBlock
+                      key={tIdx}
+                      therapyName={t.therapyName}
+                      exercises={t.exercises || []}
+                      totalPrice={t.totalPrice}
+                      accentColor="#5b21b6"
+                      accentBg="#f5f3ff"
+                      borderColor="#c4b5fd"
+                    />
+                  ))
                   : (
-                    /* Fallback: exercises directly on sess (legacy shape) */
                     Array.isArray(sess.exercises) && sess.exercises.length > 0
                       ? (
                         <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden' }}>
@@ -468,9 +444,6 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
           )
         }
 
-        /* ════ EXERCISE ════
-           Shape: { serviceType:'exercise', exercises:[{ ... }], therapistId, ... }
-        */
         if (serviceType === 'exercise') {
           return (
             <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
@@ -500,8 +473,6 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
           <div key={si} style={{ marginBottom: isLast ? 0 : 24 }}>
             <SessionMetaBar sess={sess} />
             <SessionDetailsRow sess={sess} />
-
-            {/* therapyData flat table */}
             {Array.isArray(sess.therapyData) && sess.therapyData.length > 0 && (
               sess.therapyData.map((therapy, tIdx) => (
                 <TherapyBlock
@@ -512,8 +483,6 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
                 />
               ))
             )}
-
-            {/* direct exercises */}
             {Array.isArray(sess.exercises) && sess.exercises.length > 0 && (
               <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden', marginTop: 8 }}>
                 <ExerciseTableDisplay exercises={sess.exercises} />
@@ -532,9 +501,9 @@ const TherapySessionsDisplay = ({ sessionsList }) => {
 const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formData = {}, fromPage }) => {
   const { doctorDetails, setDoctorDetails, setClinicDetails, clinicDetails, updateTemplate } = useDoctorContext()
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
-  const [saving, setSaving]     = useState(false)
+  const [saving, setSaving] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [pendingAction, setPendingAction]         = useState(null)
+  const [pendingAction, setPendingAction] = useState(null)
   const [clickedSaveTemplate, setClickedSaveTemplate] = useState(false)
   const navigate = useNavigate()
   const { success, error, info, warning } = useToast()
@@ -543,40 +512,54 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const record = formData?.physiotherapyRecord ?? formData ?? {}
 
   /* ── Booking-level IDs ── */
-  const bookingId  = record.bookingId  ?? patientData?.bookingId  ?? ''
-  const clinicId   = record.clinicId   ?? patientData?.clinicId   ?? clinicDetails?.hospitalId ?? ''
-  const branchId   = record.branchId   ?? patientData?.branchId   ?? ''
+  const bookingId = record.bookingId ?? patientData?.bookingId ?? ''
+  const clinicId = record.clinicId ?? patientData?.clinicId ?? clinicDetails?.hospitalId ?? ''
+  const branchId = record.branchId ?? patientData?.branchId ?? ''
   const clinicName = clinicDetails?.name ?? patientData?.clinicName ?? ''
-  const doctorId   = doctorDetails?.doctorId ?? patientData?.doctorId ?? ''
+  const doctorId = doctorDetails?.doctorId ?? patientData?.doctorId ?? ''
   const doctorName = doctorDetails?.name ?? doctorDetails?.fullName ?? patientData?.doctorName ?? ''
 
   /* ── patientInfo ── */
-  const patientInfo   = record.patientInfo ?? {}
-  const patientId     = patientInfo.patientId    ?? patientData?.patientId    ?? ''
-  const patientName   =
-    patientInfo.patientName  ??
+  const patientInfo = record.patientInfo ?? {}
+  const patientId = patientInfo.patientId ?? patientData?.patientId ?? ''
+  const patientName =
+    patientInfo.patientName ??
     patientData?.patientName ??
-    patientData?.name        ??
-    patientData?.fullName    ?? ''
+    patientData?.name ??
+    patientData?.fullName ?? ''
   const patientMobile = patientInfo.mobileNumber ?? patientData?.mobileNumber ?? patientData?.patientMobileNumber ?? ''
-  const patientAge    = patientInfo.age  ?? patientData?.age  ?? ''
-  const patientSex    = patientInfo.sex  ?? patientData?.sex  ?? patientData?.gender ?? ''
+  const patientAge = patientInfo.age ?? patientData?.age ?? ''
+  const patientSex = patientInfo.sex ?? patientData?.sex ?? patientData?.gender ?? ''
 
   /* ── complaints ── */
-  const complaintsObj     = record.complaints ?? record.symptoms ?? {}
-  const complaintDetails  = complaintsObj.complaintDetails  ?? complaintsObj.symptomDetails ?? patientData?.problem ?? ''
-  const complaintDuration = complaintsObj.duration          ?? patientData?.symptomsDuration ?? ''
-  const selectedTherapy   = patientData?.subServiceName     ?? complaintsObj.selectedTherapy ?? ''
-  const selectedTherapyID = patientData?.subServiceId       ?? complaintsObj.selectedTherapyID ?? ''
-  const partImage         = complaintsObj.partImage ?? complaintsObj.painAssessmentImage ?? formData?.partImage ?? patientData?.partImage ?? ''
-  const reportImages      = Array.isArray(complaintsObj.reportImages)      ? complaintsObj.reportImages
-                          : Array.isArray(complaintsObj.attachmentImages) ? complaintsObj.attachmentImages
-                          : []
-  const therapyAnswers = complaintsObj.theraphyAnswers ?? formData?.theraphyAnswers ?? patientData?.theraphyAnswers ?? {}
+  const symptomsObj = record.symptoms ?? {}
+
+  const complaintsObj = {
+    complaintDetails: symptomsObj.symptomDetails ?? patientData?.problem ?? '',
+    duration: symptomsObj.duration ?? patientData?.symptomsDuration ?? '',
+    selectedTherapy: symptomsObj.selectedTherapy ?? patientData?.subServiceName ?? '',
+    selectedTherapyID: symptomsObj.selectedTherapyID ?? patientData?.subServiceId ?? '',
+    painAssessmentImage: symptomsObj.partImage ?? '',
+    reportImages: Array.isArray(symptomsObj.attachmentImages) ? symptomsObj.attachmentImages : [],
+    theraphyAnswers: symptomsObj.theraphyAnswers ?? {},
+  }
+
+  const complaintDetails = complaintsObj.complaintDetails
+  const complaintDuration = complaintsObj.duration
+  const selectedTherapy = complaintsObj.selectedTherapy
+  const selectedTherapyID = complaintsObj.selectedTherapyID
+  const partImage = complaintsObj.painAssessmentImage
+  const reportImages = complaintsObj.reportImages
+  const therapyAnswers = complaintsObj.theraphyAnswers
 
   const finalComplaints = {
-    complaintDetails, duration: complaintDuration, selectedTherapy, selectedTherapyID,
-    painAssessmentImage: partImage, reportImages, theraphyAnswers: therapyAnswers,
+    complaintDetails,
+    duration: complaintDuration,
+    selectedTherapy,
+    selectedTherapyID,
+    painAssessmentImage: partImage,
+    reportImages,
+    theraphyAnswers: therapyAnswers,
   }
 
   const therapyGroups = Object.entries(therapyAnswers).map(([cat, qs]) => ({
@@ -589,111 +572,108 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   ]
 
   /* ── patient background fields ── */
-  const previousInjuries   = record.previousInjuries   ?? formData?.previousInjuries   ?? patientData?.previousInjuries   ?? ''
+  const previousInjuries = record.previousInjuries ?? formData?.previousInjuries ?? patientData?.previousInjuries ?? ''
   const currentMedications = record.currentMedications ?? formData?.currentMedications ?? patientData?.currentMedications ?? ''
-  const allergies          = record.allergies           ?? formData?.allergies           ?? patientData?.allergies           ?? ''
-  const occupation         = record.occupation          ?? formData?.occupation          ?? patientData?.occupation          ?? ''
-  const insuranceProvider  = record.insuranceProvider   ?? formData?.insuranceProvider   ?? patientData?.insuranceProvider   ?? ''
-  const activityLevels     = Array.isArray(record.activityLevels)   ? record.activityLevels
-                           : Array.isArray(formData?.activityLevels) ? formData.activityLevels
-                           : Array.isArray(patientData?.activityLevels) ? patientData.activityLevels
-                           : []
+  const allergies = record.allergies ?? formData?.allergies ?? patientData?.allergies ?? ''
+  const occupation = record.occupation ?? formData?.occupation ?? patientData?.occupation ?? ''
+  const insuranceProvider = record.insuranceProvider ?? formData?.insuranceProvider ?? patientData?.insuranceProvider ?? ''
+  const activityLevels = Array.isArray(record.activityLevels)
+    ? record.activityLevels
+    : Array.isArray(formData?.activityLevels)
+      ? formData.activityLevels
+      : Array.isArray(patientData?.activityLevels)
+        ? patientData.activityLevels
+        : []
   const patientPain = record.patientPain ?? formData?.patientPain ?? formData?.assessment?.patientPain ?? patientData?.patientPain ?? ''
 
   /* ── investigation ── */
-  const investigationObj   = record.investigation ?? formData?.investigation ?? {}
+  const investigationObj = record.investigation ?? formData?.investigation ?? {}
   const investigationTests = investigationObj.tests ?? ''
-  const investigationNotes = investigationObj.notes ?? ''
+  const investigationReason = investigationObj.reason ?? investigationObj.notes ?? ''
 
   /* ── assessment ── */
   const assessment = record.assessment ?? formData?.assessment ?? {}
 
-  const difficultiesIn      = Array.isArray(assessment.difficultiesIn) ? assessment.difficultiesIn : []
-  const otherDifficulty     = assessment.otherDifficulty     ?? ''
+  const difficultiesIn = Array.isArray(assessment.difficultiesIn) ? assessment.difficultiesIn : []
+  const otherDifficulty = assessment.otherDifficulty ?? ''
   const dailyLivingAffected = assessment.dailyLivingAffected ?? ''
-
   const postureAssessment = Array.isArray(assessment.postureAssessment) ? assessment.postureAssessment : []
   const postureDeviations = assessment.postureDeviations ?? ''
-  const romStatus         = Array.isArray(assessment.romStatus) ? assessment.romStatus : []
-  const romRestricted     = assessment.romRestricted ?? ''
-  const romJoints         = assessment.romJoints     ?? ''
-  const muscleStrength    = Array.isArray(assessment.muscleStrength) ? assessment.muscleStrength : []
-  const muscleWeakness    = assessment.muscleWeakness   ?? ''
+  const romStatus = Array.isArray(assessment.romStatus) ? assessment.romStatus : []
+  const romRestricted = assessment.romRestricted ?? ''
+  const romJoints = assessment.romJoints ?? ''
+  const muscleStrength = Array.isArray(assessment.muscleStrength) ? assessment.muscleStrength : []
+  const muscleWeakness = assessment.muscleWeakness ?? ''
   const neurologicalSigns = Array.isArray(assessment.neurologicalSigns) ? assessment.neurologicalSigns : []
 
-  const effectivePain      = patientPain || assessment.patientPain || ''
-  const painTriggers       = assessment.painTriggers    ?? ''
-  const chronicRelieving   = assessment.chronicRelieving ?? ''
-  const typeOfSport        = assessment.typeOfSport        ?? ''
-  const recurringInjuries  = assessment.recurringInjuries  ?? ''
+  const effectivePain = patientPain || assessment.patientPain || ''
+  const painTriggers = assessment.painTriggers ?? ''
+  const chronicRelieving = assessment.chronicRelieving ?? ''
+  const typeOfSport = assessment.typeOfSport ?? ''
+  const recurringInjuries = assessment.recurringInjuries ?? ''
   const returnToSportGoals = assessment.returnToSportGoals ?? ''
-  const neuroDiagnosis     = assessment.neuroDiagnosis  ?? ''
-  const neuroOnset         = assessment.neuroOnset      ?? ''
-  const mobilityStatus     = assessment.mobilityStatus  ?? ''
-  const cognitiveStatus    = assessment.cognitiveStatus ?? ''
+  const neuroDiagnosis = assessment.neuroDiagnosis ?? ''
+  const neuroOnset = assessment.neuroOnset ?? ''
+  const mobilityStatus = assessment.mobilityStatus ?? ''
+  const cognitiveStatus = assessment.cognitiveStatus ?? ''
 
   /* ── diagnosis ── */
-  const diagnosisObj  = record.diagnosis ?? formData?.diagnosis ?? {}
+  const diagnosisObj = record.diagnosis ?? formData?.diagnosis ?? {}
   const diagnosisRows = Array.isArray(diagnosisObj.diagnosisRows)
     ? diagnosisObj.diagnosisRows
     : diagnosisObj.physioDiagnosis ? [diagnosisObj] : []
 
-  /* ─────────────────────────────────────────────────────────────────────────
-     THERAPY SESSIONS — FIXED resolution
-     
-     Priority order:
-     1. formData.therapySessions  — set directly by TherapySession.buildPayload()
-        after deepMerge in TabContent. This is always an ARRAY like:
-        [ { serviceType:'program', programName:'...', therapyData:[...], ... } ]
-     
-     2. record.therapySessions    — if physiotherapyRecord wraps it
-     
-     3. therapySessionsRaw.sessions — legacy { sessions:[...] } shape
-  ───────────────────────────────────────────────────────────────────────── */
+  /* ── therapy sessions resolution ── */
+  // ✅ FIX: Resolve the nested sessions structure correctly
   const therapySessionsRaw =
-    formData?.therapySessions ??       // ← check formData FIRST (direct array from TherapySession)
-    record?.therapySessions ??         // ← then physiotherapyRecord
+    formData?.therapySessions ??
+    record?.therapySessions ??
     {}
 
   const overallStatus = (!Array.isArray(therapySessionsRaw) && therapySessionsRaw?.overallStatus)
     ? therapySessionsRaw.overallStatus
     : ''
 
+  // ✅ FIX: Always extract from .sessions array — this preserves the full
+  // program/therapyData structure that the API expects
   let sessionsList = []
   if (Array.isArray(therapySessionsRaw)) {
-    // Direct array — from TherapySession buildPayload after deepMerge
     sessionsList = therapySessionsRaw
   } else if (Array.isArray(therapySessionsRaw?.sessions)) {
-    // Legacy nested shape
     sessionsList = therapySessionsRaw.sessions
   }
 
-  // Safety unwrap: if somehow double-nested
   if (sessionsList.length === 1 && Array.isArray(sessionsList[0])) {
     sessionsList = sessionsList[0]
   }
 
-  /* ── treatmentPlan (from first session or top-level) ── */
+  /* ── treatmentPlan ── */
   const firstSession = sessionsList[0] ?? {}
   const treatmentPlanDisplay = {
     doctorId, doctorName,
-    therapistId:   firstSession.therapistId   ?? therapySessionsRaw?.therapistId   ?? '',
+    therapistId: firstSession.therapistId ?? therapySessionsRaw?.therapistId ?? '',
     therapistName: firstSession.therapistName ?? therapySessionsRaw?.therapistName ?? '',
     manualTherapy: firstSession.manualTherapy ?? therapySessionsRaw?.manualTherapy ?? '',
-    precautions:   firstSession.precautions   ?? therapySessionsRaw?.precautions   ?? '',
+    precautions: firstSession.precautions ?? therapySessionsRaw?.precautions ?? '',
+    frequency: firstSession.frequency ?? therapySessionsRaw?.frequency ?? '',
   }
 
   /* ── exercisePlan ── */
   const exercisePlanObj = record.exercisePlan ?? formData?.exercisePlan ?? {}
-  const homeExercises   = Array.isArray(exercisePlanObj.homeExercises) ? exercisePlanObj.homeExercises
-                        : Array.isArray(exercisePlanObj.exercises)     ? exercisePlanObj.exercises : []
-  const homeAdvice      = exercisePlanObj.homeAdvice ?? ''
+  const homeExercises = Array.isArray(exercisePlanObj.homeExercises)
+    ? exercisePlanObj.homeExercises
+    : Array.isArray(exercisePlanObj.exercises)
+      ? exercisePlanObj.exercises
+      : []
+  const homeAdvice = exercisePlanObj.homeAdvice ?? ''
 
   /* ── followUp ── */
-  const followUpObj   = record.followUp ?? formData?.followUp ?? {}
-  const followUpEntry = Array.isArray(followUpObj) ? (followUpObj[0] ?? {}) : (typeof followUpObj === 'object' ? followUpObj : {})
+  const followUpObj = record.followUp ?? formData?.followUp ?? {}
+  const followUpEntry = Array.isArray(followUpObj)
+    ? (followUpObj[0] ?? {})
+    : (typeof followUpObj === 'object' ? followUpObj : {})
 
-  const parts              = formData?.parts ?? record.symptoms?.parts ?? patientData?.parts ?? []
+  const parts = formData?.parts ?? record.symptoms?.parts ?? patientData?.parts ?? []
   const treatmentTemplates = Array.isArray(record.treatmentTemplates) ? record.treatmentTemplates : []
 
   const todayStr = () => new Date().toISOString().split('T')[0]
@@ -714,13 +694,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const renderPdfBlob = async () =>
     await pdf(<PrescriptionPDF doctorData={doctorDetails} clicniData={clinicDetails} formData={formData} patientData={patientData} />).toBlob()
 
-  const blobToBase64 = (blob) => new Promise((resolve, reject) => {
-    const r = new FileReader()
-    r.onloadend = () => resolve(typeof r.result === 'string' ? r.result.split(',')[1] : '')
-    r.onerror = reject
-    r.readAsDataURL(blob)
-  })
-
   const downloadBlob = (blob, filename) => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -729,64 +702,143 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     URL.revokeObjectURL(url)
   }
 
-  /* ── Build final payload ── */
+  /* ══════════════════════════════════════════════════════════════════════
+     BUILD FINAL PAYLOAD
+     ✅ KEY FIX: therapySessions now passes the full nested structure
+        (programId, programName, therapyData with exercises) instead of
+        being flattened to flat sessionDate/modalitiesUsed objects.
+     ✅ KEY FIX: investigation now included with correct field names.
+     ✅ KEY FIX: complaints uses 'therapyAnswers' (no extra 'h').
+     ✅ KEY FIX: precautions sent as array.
+  ══════════════════════════════════════════════════════════════════════ */
   const buildPayload = () => {
     const firstDiag = diagnosisRows[0] ?? {}
+
+    // ✅ Pass the full structured sessions directly — do NOT flatten
+    // The API expects: [{ serviceType, programId, programName, therapyData: [...] }]
+    const structuredSessions = sessionsList.map(sess => ({
+      serviceType:     (sess.serviceType ?? 'PROGRAM').toUpperCase(),
+      programId:       sess.programId       ?? '',
+      programName:     sess.programName     ?? '',
+      clinicId:        sess.clinicId        ?? clinicId,
+      branchId:        sess.branchId        ?? branchId,
+      totalTherapies:  Array.isArray(sess.therapyData) ? sess.therapyData.length : 0,
+      therapistId:     sess.therapistId     ?? '',
+      therapistName:   sess.therapistName   ?? '',
+      modalitiesUsed:  Array.isArray(sess.modalitiesUsed) ? sess.modalitiesUsed : [],
+      patientResponse: sess.patientResponse ?? '',
+      manualTherapy:   sess.manualTherapy   ?? '',
+      precautions:     Array.isArray(sess.precautions)
+        ? sess.precautions
+        : sess.precautions ? [sess.precautions] : [],
+      therapyData: Array.isArray(sess.therapyData)
+        ? sess.therapyData.map(therapy => ({
+            therapyId:     therapy.therapyId    ?? '',
+            therapyName:   therapy.therapyName  ?? '',
+            totalSessions: therapy.totalSessions ?? 0,
+            exercises: Array.isArray(therapy.exercises)
+              ? therapy.exercises.map(ex => ({
+                  therapyExerciseId: ex.therapyExerciseId ?? ex.therapyExercisesId ?? '',
+                  name:              ex.name              ?? '',
+                  session:           Number(ex.session)   || 1,
+                  frequency:         ex.frequency         ?? '',
+                  notes:             ex.notes             ?? '',
+                  sets:              Number(ex.sets)       || 0,
+                  repetitions:       Number(ex.repetitions ?? ex.reps) || 0,
+                  videoUrl:          ex.videoUrl           ?? '',
+                  totalPrice:        ex.totalPrice         ?? 0,
+                }))
+              : [],
+          }))
+        : [],
+    }))
+
+    // ✅ followUp — send as object (first entry) to match schema
+    const followUpPayload = Array.isArray(followUpObj)
+      ? (followUpObj[0] ?? {})
+      : (followUpObj ?? {})
+
     return {
-      bookingId, clinicId, branchId,
-      overallStatus: overallStatus || 'Pending',
-      createdAt: todayStr(), updatedAt: '',
-      patientInfo: { patientId, patientName, mobileNumber: patientMobile, age: patientAge, sex: patientSex },
-      complaints: {
-        complaintDetails:    finalComplaints.complaintDetails,
-        painAssessmentImage: finalComplaints.painAssessmentImage,
-        reportImages:        finalComplaints.reportImages,
-        selectedTherapy:     finalComplaints.selectedTherapy,
-        selectedTherapyID:   finalComplaints.selectedTherapyID,
-        duration:            finalComplaints.duration,
-        theraphyAnswers:     finalComplaints.theraphyAnswers,
+      bookingId,
+      clinicId,
+      branchId,
+      patientInfo: {
+        patientId,
+        patientName,
+        mobileNumber: patientMobile,
+        age:  Number(patientAge) || 0,
+        sex:  patientSex,
       },
-      previousInjuries,
-      currentMedications,
-      allergies,
-      occupation,
-      insuranceProvider,
-      activityLevels,
-      patientPain: effectivePain,
-      investigation: { tests: investigationTests, notes: investigationNotes },
+      // ✅ 'therapyAnswers' — correct spelling (no extra 'h')
+      complaints: {
+        complaintDetails:   finalComplaints.complaintDetails   || '',
+        painAssessmentImage:finalComplaints.painAssessmentImage|| '',
+        reportImages:       finalComplaints.reportImages       || [],
+        selectedTherapy:    finalComplaints.selectedTherapy    || '',
+        selectedTherapyId:  finalComplaints.selectedTherapyID  || '',
+        duration:           finalComplaints.duration           || '',
+        therapyAnswers:     Object.values(finalComplaints.theraphyAnswers ?? {}).flat().map(q => ({
+          questionKey: q.questionKey ?? '',
+          questionId:  q.questionId  ?? '',
+          question:    q.question    ?? '',
+          answer:      q.answer      ?? '',
+        })),
+      },
+      // ✅ investigation now included
+      investigation: {
+        tests:  Array.isArray(investigationTests)
+          ? investigationTests
+          : investigationTests ? [investigationTests] : [],
+        reason: investigationReason || '',
+      },
       assessment: {
-        chiefComplaint:     assessment.chiefComplaint     ?? '',
-        painScale:          assessment.painScale          ?? '',
-        painType:           assessment.painType           ?? '',
-        duration:           assessment.duration           ?? '',
-        onset:              assessment.onset              ?? '',
-        aggravatingFactors: assessment.aggravatingFactors ?? '',
-        relievingFactors:   assessment.relievingFactors   ?? '',
-        posture:            assessment.posture            ?? '',
-        rangeOfMotion:      assessment.rangeOfMotion      ?? '',
-        specialTests:       assessment.specialTests       ?? '',
-        observations:       assessment.observations       ?? '',
-        difficultiesIn,
-        otherDifficulty,
-        dailyLivingAffected,
-        postureAssessment,
-        postureDeviations,
-        romStatus,
-        romRestricted,
-        romJoints,
-        muscleStrength,
-        muscleWeakness,
-        neurologicalSigns,
-        patientPain: effectivePain,
-        painTriggers,
-        chronicRelieving,
-        typeOfSport,
-        recurringInjuries,
-        returnToSportGoals,
-        neuroDiagnosis,
-        neuroOnset,
-        mobilityStatus,
-        cognitiveStatus,
+        subjectiveAssessment: {
+          chiefComplaint:     assessment.chiefComplaint     ?? '',
+          painScale:          Number(assessment.painScale)  || 0,
+          painType:           assessment.painType           ?? '',
+          duration:           assessment.duration           ?? '',
+          onset:              assessment.onset              ?? '',
+          aggravatingFactors: assessment.aggravatingFactors ?? '',
+          relievingFactors:   assessment.relievingFactors   ?? '',
+          observations:       assessment.observations       ?? '',
+        },
+        functionalAssessment: {
+          difficultiesIn:      difficultiesIn,
+          otherDifficulty:     otherDifficulty,
+          dailyLivingAffected: dailyLivingAffected,
+        },
+        physicalExamination: {
+          postureAssessment: postureAssessment,
+          postureDeviations: postureDeviations,
+          rangeOfMotion:     romStatus,
+          romRestricted:     romRestricted,
+          romJoints:         romJoints,
+          muscleStrength:    muscleStrength,
+          muscleWeakness:    muscleWeakness,
+          neurologicalSigns: neurologicalSigns,
+        },
+        // ✅ Conditional pain-type sub-assessments
+        ...(effectivePain === 'chronicPain' ? {
+          chronicPainPatients: {
+            painTriggers:     painTriggers,
+            relievingFactors: chronicRelieving,
+          }
+        } : {}),
+        ...(effectivePain === 'sportsRehab' ? {
+          sportsRehabPatients: {
+            typeOfSport:        typeOfSport,
+            recurringInjuries:  recurringInjuries,
+            returnToSportGoals: returnToSportGoals,
+          }
+        } : {}),
+        ...(effectivePain === 'neuroRehab' ? {
+          neuroRehabPatients: {
+            neuroDiagnosis:  neuroDiagnosis,
+            neuroOnset:      neuroOnset,
+            mobilityStatus:  mobilityStatus,
+            cognitiveStatus: cognitiveStatus,
+          }
+        } : {}),
       },
       diagnosis: {
         physioDiagnosis: firstDiag.physioDiagnosis ?? '',
@@ -796,20 +848,40 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         notes:           firstDiag.notes           ?? '',
       },
       treatmentPlan: {
-        doctorId, doctorName,
+        doctorId,
+        doctorName,
         therapistId:   treatmentPlanDisplay.therapistId,
         therapistName: treatmentPlanDisplay.therapistName,
         manualTherapy: treatmentPlanDisplay.manualTherapy,
-        precautions:   treatmentPlanDisplay.precautions,
+        precautions: Array.isArray(treatmentPlanDisplay.precautions)
+          ? treatmentPlanDisplay.precautions
+          : treatmentPlanDisplay.precautions
+            ? [treatmentPlanDisplay.precautions]
+            : [],
+        frequency: treatmentPlanDisplay.frequency,
       },
-      therapySessions: sessionsList,
-      exercisePlan: { homeAdvice, homeExercises },
+      // ✅ Full nested structure preserved
+      therapySessions: structuredSessions,
+      exercisePlan: {
+        homeAdvice,
+        homeExercises: homeExercises.map(ex => ({
+          id:           ex.id           ?? '',
+          name:         ex.name         ?? '',
+          sets:         Number(ex.sets) || 0,
+          reps:         Number(ex.reps) || 0,
+          duration:     ex.duration     || '10 mins',
+          instructions: ex.instructions ?? '',
+          videoUrl:     ex.videoUrl     ?? '',
+          thumbnail:    ex.thumbnail    ?? '',
+        })),
+      },
       followUp: {
-        nextVisitDate: followUpEntry.nextVisitDate ?? '',
-        reviewNotes:   followUpEntry.reviewNotes   ?? '',
-        modifications: followUpEntry.modifications ?? '',
+        nextVisitDate: followUpPayload.nextVisitDate ?? '',
+        reviewNotes:   followUpPayload.reviewNotes   ?? '',
+        modifications: followUpPayload.modifications ?? '',
       },
       treatmentTemplates,
+      createdAt: todayStr(),
     }
   }
 
@@ -821,9 +893,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     }
     setSaving(true)
     try {
-      const blob     = await renderPdfBlob()
+      const blob = await renderPdfBlob()
       const safeName = (patientName || 'Record').replace(/[^\w\-]+/g, '_')
-      const payload  = buildPayload()
+      const payload = buildPayload()
       console.log('🚀 FINAL SAVE PAYLOAD 👉', JSON.stringify(payload, null, 2))
       const resp = await SavePatientPrescription(payload)
       if (resp) {
@@ -882,17 +954,17 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         {/* ══ 1. PATIENT & BOOKING INFO ══ */}
         <Section icon="👤" title="Patient & Booking Information">
           <Grid cols={3}>
-            <Row label="Patient ID"     value={patientId} />
-            <Row label="Booking ID"     value={bookingId} />
-            <Row label="Name"           value={capitalizeEachWord(patientName)} />
-            <Row label="Age / Sex"      value={patientAge ? `${patientAge} yrs / ${patientSex}` : ''} />
-            <Row label="Mobile"         value={patientMobile} />
-            <Row label="Clinic ID"      value={clinicId} />
-            <Row label="Clinic"         value={clinicName} />
-            <Row label="Branch ID"      value={branchId} />
-            <Row label="Doctor"         value={doctorName} />
-            <Row label="Doctor ID"      value={doctorId} />
-            <Row label="Therapy Type"   value={patientData?.subServiceName} />
+            <Row label="Patient ID" value={patientId} />
+            <Row label="Booking ID" value={bookingId} />
+            <Row label="Name" value={capitalizeEachWord(patientName)} />
+            <Row label="Age / Sex" value={patientAge ? `${patientAge} yrs / ${patientSex}` : ''} />
+            <Row label="Mobile" value={patientMobile} />
+            <Row label="Clinic ID" value={clinicId} />
+            <Row label="Clinic" value={clinicName} />
+            <Row label="Branch ID" value={branchId} />
+            <Row label="Doctor" value={doctorName} />
+            <Row label="Doctor ID" value={doctorId} />
+            <Row label="Therapy Type" value={patientData?.subServiceName} />
             <Row label="Overall Status" value={overallStatus || 'Pending'} />
           </Grid>
         </Section>
@@ -901,9 +973,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         <Section icon="🩺" title="Complaints & Symptoms">
           <Grid cols={2}>
             <Row label="Complaint Details" value={complaintDetails} highlight />
-            <Row label="Duration"          value={complaintDuration} highlight />
-            <Row label="Selected Therapy"  value={selectedTherapy} />
-            <Row label="Report Images"     value={reportImages.length > 0 ? `${reportImages.length} image(s)` : 'None'} />
+            <Row label="Duration" value={complaintDuration} highlight />
+            <Row label="Selected Therapy" value={selectedTherapy} />
+            <Row label="Report Images" value={reportImages.length > 0 ? `${reportImages.length} image(s)` : 'None'} />
           </Grid>
           {parts.length > 0 && (
             <div style={{ marginTop: 8 }}>
@@ -930,12 +1002,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         {/* ══ 3. PATIENT BACKGROUND ══ */}
         <Section icon="📋" title="Patient Background">
           <Grid cols={3}>
-            <Row label="Previous Injuries"   value={previousInjuries}  highlight />
+            <Row label="Previous Injuries" value={previousInjuries} highlight />
             <Row label="Current Medications" value={currentMedications} highlight />
-            <Row label="Allergies"           value={allergies} />
-            <Row label="Occupation"          value={occupation} />
-            <Row label="Insurance Provider"  value={insuranceProvider} />
-            <Row label="Patient Pain Type"   value={PAIN_LABEL_MAP[effectivePain] || effectivePain} highlight />
+            <Row label="Allergies" value={allergies} />
+            <Row label="Occupation" value={occupation} />
+            <Row label="Insurance Provider" value={insuranceProvider} />
+            <Row label="Patient Pain Type" value={PAIN_LABEL_MAP[effectivePain] || effectivePain} highlight />
           </Grid>
           {activityLevels.length > 0 && (
             <div style={{ marginTop: 8 }}>
@@ -965,11 +1037,11 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         )}
 
         {/* ══ 5. INVESTIGATION ══ */}
-        {(investigationTests || investigationNotes) && (
+        {(investigationTests || investigationReason) && (
           <Section icon="🔬" title="Investigation">
             <Grid cols={2}>
-              <Row label="Tests"  value={investigationTests} highlight />
-              <Row label="Notes"  value={investigationNotes} />
+              <Row label="Tests" value={Array.isArray(investigationTests) ? investigationTests.join(', ') : investigationTests} highlight />
+              <Row label="Reason" value={investigationReason} />
             </Grid>
           </Section>
         )}
@@ -982,16 +1054,16 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${BORDER}` }}>
               <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>📋 Subjective Assessment</div>
               <Grid cols={2}>
-                <Row label="Chief Complaint"     value={assessment.chiefComplaint}     highlight />
-                <Row label="Pain Scale"          value={assessment.painScale}          highlight />
-                <Row label="Pain Type"           value={assessment.painType} />
-                <Row label="Duration"            value={assessment.duration} />
-                <Row label="Onset"               value={assessment.onset} />
+                <Row label="Chief Complaint" value={assessment.chiefComplaint} highlight />
+                <Row label="Pain Scale" value={assessment.painScale} highlight />
+                <Row label="Pain Type" value={assessment.painType} />
+                <Row label="Duration" value={assessment.duration} />
+                <Row label="Onset" value={assessment.onset} />
                 <Row label="Aggravating Factors" value={assessment.aggravatingFactors} />
-                <Row label="Relieving Factors"   value={assessment.relievingFactors} />
-                <Row label="Posture Notes"       value={assessment.posture} />
-                <Row label="Range of Motion"     value={assessment.rangeOfMotion} />
-                <Row label="Special Tests"       value={assessment.specialTests} />
+                <Row label="Relieving Factors" value={assessment.relievingFactors} />
+                <Row label="Posture Notes" value={assessment.posture} />
+                <Row label="Range of Motion" value={assessment.rangeOfMotion} />
+                <Row label="Special Tests" value={assessment.specialTests} />
               </Grid>
               {assessment.observations && <Row label="Observations" value={assessment.observations} full />}
             </div>
@@ -1045,8 +1117,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <div style={{ marginBottom: 16, background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 10, padding: '14px 18px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#991b1b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>🔴 Chronic Pain Assessment</div>
                 <Grid cols={2}>
-                  <Row label="Pain Triggers"     value={painTriggers}     highlight />
-                  <Row label="Relieving Factors"  value={chronicRelieving} highlight />
+                  <Row label="Pain Triggers" value={painTriggers} highlight />
+                  <Row label="Relieving Factors" value={chronicRelieving} highlight />
                 </Grid>
               </div>
             )}
@@ -1056,9 +1128,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <div style={{ marginBottom: 16, background: '#f0fff4', border: '1.5px solid #6ee7b7', borderRadius: 10, padding: '14px 18px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>🟢 Sports Rehab Assessment</div>
                 <Grid cols={2}>
-                  <Row label="Type of Sport"          value={typeOfSport}         highlight />
-                  <Row label="Recurring Injuries"     value={recurringInjuries}   highlight />
-                  <Row label="Return-to-Sport Goals"  value={returnToSportGoals}  full />
+                  <Row label="Type of Sport" value={typeOfSport} highlight />
+                  <Row label="Recurring Injuries" value={recurringInjuries} highlight />
+                  <Row label="Return-to-Sport Goals" value={returnToSportGoals} full />
                 </Grid>
               </div>
             )}
@@ -1068,9 +1140,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <div style={{ marginBottom: 16, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 10, padding: '14px 18px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>🟣 Neuro Rehab Assessment</div>
                 <Grid cols={2}>
-                  <Row label="Diagnosis"              value={neuroDiagnosis}  highlight />
-                  <Row label="Onset"                  value={neuroOnset}      highlight />
-                  <Row label="Mobility Status"        value={mobilityStatus} />
+                  <Row label="Diagnosis" value={neuroDiagnosis} highlight />
+                  <Row label="Onset" value={neuroOnset} highlight />
+                  <Row label="Mobility Status" value={mobilityStatus} />
                   <Row label="Cognitive / Communication" value={cognitiveStatus} />
                 </Grid>
               </div>
@@ -1093,10 +1165,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                 </thead>
                 <tbody>
                   {diagnosisRows.map((d, i) => {
-                    const sevColor  = { Mild: ['#e6f4ea','#2e7d32'], Moderate: ['#fff3e0','#e65100'], Severe: ['#fdecea','#c62828'] }
-                    const stagColor = { Acute: ['#fdecea','#c62828'], 'Sub-acute': ['#fff8e1','#f57f17'], Chronic: ['#e8eaf6','#283593'] }
-                    const [sBg, sFg] = sevColor[d.severity]  || ['#f3f4f6','#374151']
-                    const [tBg, tFg] = stagColor[d.stage]    || ['#f3f4f6','#374151']
+                    const sevColor = { Mild: ['#e6f4ea', '#2e7d32'], Moderate: ['#fff3e0', '#e65100'], Severe: ['#fdecea', '#c62828'] }
+                    const stagColor = { Acute: ['#fdecea', '#c62828'], 'Sub-acute': ['#fff8e1', '#f57f17'], Chronic: ['#e8eaf6', '#283593'] }
+                    const [sBg, sFg] = sevColor[d.severity] || ['#f3f4f6', '#374151']
+                    const [tBg, tFg] = stagColor[d.stage] || ['#f3f4f6', '#374151']
                     return (
                       <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
                         <td style={{ padding: '9px 12px', fontWeight: 700, color: '#3a8fd4' }}>{i + 1}</td>
@@ -1122,12 +1194,13 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         {(treatmentPlanDisplay.therapistId || treatmentPlanDisplay.therapistName) && (
           <Section icon="🧑‍⚕️" title="Treatment Plan">
             <Grid cols={2}>
-              <Row label="Doctor ID"      value={treatmentPlanDisplay.doctorId} />
-              <Row label="Doctor Name"    value={treatmentPlanDisplay.doctorName} />
-              <Row label="Therapist ID"   value={treatmentPlanDisplay.therapistId} />
+              <Row label="Doctor ID" value={treatmentPlanDisplay.doctorId} />
+              <Row label="Doctor Name" value={treatmentPlanDisplay.doctorName} />
+              <Row label="Therapist ID" value={treatmentPlanDisplay.therapistId} />
               <Row label="Therapist Name" value={treatmentPlanDisplay.therapistName} highlight />
               <Row label="Manual Therapy" value={treatmentPlanDisplay.manualTherapy} />
-              <Row label="Precautions"    value={treatmentPlanDisplay.precautions} />
+              <Row label="Frequency" value={treatmentPlanDisplay.frequency} />
+              <Row label="Precautions" value={Array.isArray(treatmentPlanDisplay.precautions) ? treatmentPlanDisplay.precautions.join(', ') : treatmentPlanDisplay.precautions} />
             </Grid>
           </Section>
         )}
@@ -1140,7 +1213,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <StatusDot status={overallStatus} />
             </div>
           )}
-          {/* Debug info shown only in development */}
           {process.env.NODE_ENV === 'development' && sessionsList.length === 0 && (
             <div style={{ marginBottom: 10, padding: '8px 12px', background: '#fff8e1', border: '1px solid #fde68a', borderRadius: 8, fontSize: '0.78rem', color: '#92400e' }}>
               ⚠️ Dev: No sessions found. formData.therapySessions type: {typeof formData?.therapySessions} | isArray: {String(Array.isArray(formData?.therapySessions))} | length: {Array.isArray(formData?.therapySessions) ? formData.therapySessions.length : 'N/A'}
@@ -1198,14 +1270,14 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         {(followUpEntry.nextVisitDate || followUpEntry.reviewNotes) && (
           <Section icon="📅" title="Follow Up">
             <Grid cols={2}>
-              <Row label="Next Visit Date"  value={followUpEntry.nextVisitDate} highlight />
+              <Row label="Next Visit Date" value={followUpEntry.nextVisitDate} highlight />
               <Row label="Treatment Status" value={followUpEntry.treatmentStatus} />
-              <Row label="Review Notes"     value={followUpEntry.reviewNotes} highlight />
-              <Row label="Modifications"    value={followUpEntry.modifications} />
+              <Row label="Review Notes" value={followUpEntry.reviewNotes} highlight />
+              <Row label="Modifications" value={followUpEntry.modifications} />
             </Grid>
             {followUpEntry.nextVisitDate && (() => {
               const urgency = getVisitUrgency(followUpEntry.nextVisitDate)
-              const st      = FOLLOWUP_STATUS_STYLE[followUpEntry.treatmentStatus]
+              const st = FOLLOWUP_STATUS_STYLE[followUpEntry.treatmentStatus]
               return urgency ? (
                 <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <span style={{ background: urgency.bg, color: urgency.color, border: `1px solid ${urgency.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700 }}>
@@ -1250,7 +1322,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                           ? t.exercises.map(e => <Chip key={e} label={e} color="#065f46" bg="#d1fae5" />)
                           : '—'}
                       </td>
-                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{t.duration  || '—'}</td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{t.duration || '—'}</td>
                       <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{t.frequency || '—'}</td>
                     </tr>
                   ))}

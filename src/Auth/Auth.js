@@ -643,31 +643,43 @@ export const addMedicineType = async (newType) => {
 
 export const getPatientVitals = async (bookingId, patientId) => {
   if (!bookingId || !patientId) {
-    console.warn('Booking ID or Patient ID is missing')
-    return null
+    console.warn('Booking ID or Patient ID is missing');
+    return null;
   }
+
   try {
-    const response = await api.get(`${baseUrl}/getVitals/${bookingId}/${patientId}`)
+    const response = await api.get(
+      `${baseUrl}/getVitals/${bookingId}/${patientId}`
+    );
+
     if (response?.data?.success) {
-      const vitals = response.data.data || {}
-      console.log('Fetched Vitals:', vitals)
+      const vitalsArray = response.data.data || [];
+
+      console.log('Fetched Vitals Array:', vitalsArray);
+
+      const vitals = vitalsArray[0] || {}; // ✅ FIX HERE
+
+      console.log('Vitals Object:', vitals);
+
       return {
         height: vitals.height ?? '—',
         weight: vitals.weight ?? '—',
         bloodPressure: vitals.bloodPressure ?? '—',
         temperature: vitals.temperature ?? '—',
         bmi: vitals.bmi ?? '—',
-        ...vitals,
-      }
+      };
     } else {
-      console.warn('Vitals not found or API returned failure:', response?.data?.message)
-      return null
+      console.warn(
+        'Vitals not found or API returned failure:',
+        response?.data?.message
+      );
+      return null;
     }
   } catch (error) {
-    console.error('Error fetching patient vitals:', error)
-    return null
+    console.error('Error fetching patient vitals:', error);
+    return null;
   }
-}
+};
 
 export const getBookedSlots = async (doctorId) => {
   try {
