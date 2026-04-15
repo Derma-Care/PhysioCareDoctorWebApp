@@ -18,6 +18,32 @@ import TherapySession from './TreatmentPlan'
 import HomePlan from './ExercisePlan'
 import Investigation from './Investigation'
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Deep merge helper — keeps nested objects intact instead of overwriting
+   them wholesale the way Object.assign / spread does.
+───────────────────────────────────────────────────────────────────────── */
+const deepMerge = (target, source) => {
+  if (!source || typeof source !== 'object') return target
+  const result = { ...target }
+  Object.keys(source).forEach(key => {
+    const srcVal = source[key]
+    const tgtVal = target[key]
+    if (
+      srcVal !== null &&
+      typeof srcVal === 'object' &&
+      !Array.isArray(srcVal) &&
+      tgtVal !== null &&
+      typeof tgtVal === 'object' &&
+      !Array.isArray(tgtVal)
+    ) {
+      result[key] = deepMerge(tgtVal, srcVal)
+    } else {
+      result[key] = srcVal
+    }
+  })
+  return result
+}
+
 const TabContent = ({
   activeTab,
   formData = {},
@@ -31,11 +57,13 @@ const TabContent = ({
 }) => {
 
   // ── KEY FIX ──────────────────────────────────────────────────────────────
-  // Each tab sends a partial payload. This wrapper merges it into formData
-  // BEFORE calling the real onNext, so navigating back always shows the data.
+  // Each tab sends a partial payload. This wrapper DEEP-merges it into
+  // formData BEFORE calling the real onNext, so:
+  //   1. Navigating back always shows the last-entered data.
+  //   2. Nested fields (e.g. therapySessions._internalState) are NOT wiped.
   const handleNext = (payload) => {
-    if (setFormData) {
-      setFormData(prev => ({ ...prev, ...payload }))
+    if (setFormData && payload && typeof payload === 'object') {
+      setFormData(prev => deepMerge(prev, payload))
     }
     onNext?.(payload)
   }
@@ -86,6 +114,7 @@ const TabContent = ({
         />
       )
       break
+
     case 'Investigation':
       content = (
         <Investigation
@@ -96,7 +125,14 @@ const TabContent = ({
         />
       )
       break
+
     case 'Plan':
+      // KEY FIX: Pass the full therapySessions object as seed.
+      // TherapySession reads seed.sessions[0] to restore mode / therapistId /
+      // therapistId / modalitiesUsed / patientResponse / manualTherapy / precautions,
+      // and calls restoreTherophyDataState(seed.sessions) to rebuild the
+      // exercise table from the stored therapyData arrays — preserving every
+      // set / rep / session / frequency edit the user made.
       content = fromDoctorTemplate ? (
         <DoctorFollowUp
           seed={formData.therapySessions || {}}

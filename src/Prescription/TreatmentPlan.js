@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 import {
   getTherapyExercises,
-  getTodayAppointments,
   getTherapists,
   getProgramsByBranch,
-  getPrograms,
-
   getPackagesByBranch,
   getTherapiesByBranch,
   getExercisesByBranch,
@@ -15,9 +12,7 @@ import {
   getTherapiesByBranchAndId,
   getExercisesByBranchAndIdAndId,
   getPackagesByBranchAndId,
-
 } from '../Auth/Auth'
-
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 const MODALITY_OPTIONS = [
@@ -189,39 +184,24 @@ const TherapistSearch = ({ therapists, loading, value, name, onChange }) => {
 
 /* ─── Program Dropdown ───────────────────────────────────────────────────── */
 const getName = (p, mode) => {
+  if (!p) return ''
   switch (mode) {
-    case 'package':
-      return p.packageName || p.name || p.title || `Package ${p.id ?? ''}`
-
-    case 'program':
-      return p.programName || p.name || p.title || `Program ${p.id ?? ''}`
-
-    case 'therapy':
-      return p.therapyName || p.name || `Therapy ${p.id ?? ''}`
-
-    case 'exercise':
-      return p.exerciseName || p.name || `Exercise ${p.id ?? ''}`
-
-    default:
-      return p.name || p.title || `Item ${p.id ?? ''}`
+    case 'package':  return p.packageName  || p.name || p.title || `Package ${p.packageId ?? p.id ?? ''}`
+    case 'program':  return p.programName  || p.name || p.title || `Program ${p.programId ?? p.id ?? ''}`
+    case 'therapy':  return p.therapyName  || p.name || `Therapy ${p.therapyId ?? p.id ?? ''}`
+    case 'exercise': return p.exerciseName || p.name || `Exercise ${p.therapyExercisesId ?? p.id ?? ''}`
+    default:         return p.name || p.title || `Item ${p.id ?? ''}`
   }
 }
+
 const getId = (p, mode) => {
+  if (!p) return ''
   switch (mode) {
-    case 'exercise':
-      return String(p.therapyExercisesId || p.id || '')
-
-    case 'therapy':
-      return String(p.therapyId || p.id || '')
-
-    case 'program':
-      return String(p.programId || p.id || '')
-
-    case 'package':
-      return String(p.packageId || p.id || '')
-
-    default:
-      return String(p.id || '')
+    case 'exercise': return String(p.therapyExercisesId || p.id || '')
+    case 'therapy':  return String(p.therapyId  || p.id || '')
+    case 'program':  return String(p.programId  || p.id || '')
+    case 'package':  return String(p.packageId  || p.id || '')
+    default:         return String(p.id || '')
   }
 }
 
@@ -274,7 +254,7 @@ const ProgramDropdown = ({ programs, loading, value, onChange, mode }) => {
 
       {value && selectedObj && (
         <div style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6, background: '#eef5ff', border: '1px solid #a8c6f0', borderRadius: 20, padding: '3px 12px', fontSize: '0.8rem', color: '#1a3a5c', fontWeight: 600 }}>
-          {mode === 'program' ? '🎯' : '📦'} {getName(selectedObj)}
+          {mode === 'program' ? '🎯' : '📦'} {getName(selectedObj, mode)}
         </div>
       )}
 
@@ -411,7 +391,7 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
                 background: allChecked ? 'rgba(255,255,255,0.3)' : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 'auto',
               }}>
-                {allChecked && <span style={{ color: '#fff', fontSize: '0.6rem', lineHeight: 1, fontWeight: 900 }}>✓</span>}
+                {allChecked && <span style={{ color: '#fff', fontSize: '0.6rem' }}>✓</span>}
               </div>
             </TH>
             <TH>#</TH>
@@ -420,45 +400,47 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
             <TH center>Sets</TH>
             <TH center>Reps</TH>
             <TH>Frequency</TH>
+            <TH>Notes</TH>
           </tr>
         </thead>
         <tbody>
-          {exercises.map((ex, idx) => {
-            const isChecked = ex._checked !== false
-            return (
-              <tr key={idx} style={{
-                backgroundColor: !isChecked ? '#f0f0f0' : idx % 2 === 0 ? '#f5f9ff' : '#fff',
-                borderBottom: '1px solid #e3eef8',
-                opacity: isChecked ? 1 : 0.5,
-                transition: 'all 0.18s',
-                display: isChecked ? 'table-row' : 'none',
-              }}>
-                <TD style={{ textAlign: 'center', width: 32 }}>
-                  <ExerciseCheckbox checked={isChecked} onChange={() => toggleExercise(idx)} />
-                </TD>
-                <TD style={{ fontWeight: 700, color: '#1a5fa8' }}>{idx + 1}</TD>
-                <TD style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#1a3a5c' }}>
-                  {ex.exerciseName || ex.name || ex.exercise_name || '—'}
-                </TD>
-                <TD style={{ textAlign: 'center' }}>
-                  <NumCell value={ex.sessions} onChange={v => setField(idx, 'sessions', v)} />
-                </TD>
-                <TD style={{ textAlign: 'center' }}>
-                  <NumCell value={ex.sets} onChange={v => setField(idx, 'sets', v)} />
-                </TD>
-                <TD style={{ textAlign: 'center' }}>
-                  <NumCell value={ex.reps} onChange={v => setField(idx, 'reps', v)} />
-                </TD>
-                <TD>
-                  <FreqCell
-                    count={ex.frequencyCount} unit={ex.frequencyUnit}
-                    onCountChange={v => setField(idx, 'frequencyCount', v)}
-                    onUnitChange={v => setField(idx, 'frequencyUnit', v)}
-                  />
-                </TD>
-              </tr>
-            )
-          })}
+          {exercises.map((ex, idx) => (
+            <tr key={idx} style={{
+              backgroundColor: idx % 2 === 0 ? '#f5f9ff' : '#fff',
+              borderBottom: '1px solid #e3eef8',
+            }}>
+              <TD style={{ textAlign: 'center', width: 32 }}>
+                <ExerciseCheckbox
+                  checked={ex._checked !== false}
+                  onChange={() => toggleExercise(idx)}
+                />
+              </TD>
+              <TD style={{ fontWeight: 700, color: '#1a5fa8' }}>{idx + 1}</TD>
+              <TD style={{ fontWeight: 600 }}>
+                {ex.exerciseName || ex.name || '—'}
+              </TD>
+              <TD style={{ textAlign: 'center' }}>
+                <NumCell value={ex.sessions} onChange={v => setField(idx, 'sessions', v)} />
+              </TD>
+              <TD style={{ textAlign: 'center' }}>
+                <NumCell value={ex.sets} onChange={v => setField(idx, 'sets', v)} />
+              </TD>
+              <TD style={{ textAlign: 'center' }}>
+                <NumCell value={ex.reps} onChange={v => setField(idx, 'reps', v)} />
+              </TD>
+              <TD>
+                <FreqCell
+                  count={ex.frequencyCount}
+                  unit={ex.frequencyUnit}
+                  onCountChange={v => setField(idx, 'frequencyCount', v)}
+                  onUnitChange={v => setField(idx, 'frequencyUnit', v)}
+                />
+              </TD>
+              <TD>
+                {ex.notes || '-'}
+              </TD>
+            </tr>
+          ))}
         </tbody>
       </table>
 
@@ -520,155 +502,138 @@ const TherapyBlock = ({ therapy, checked, onToggle, exercises, onUpdateExercises
 )
 
 /* ══════════════════════════════════════════════════════════════════════════
+   RESTORE HELPERS — rebuild therophyDataState / therapyLibrary from a
+   previously-saved sessions array (so returning to the tab shows data)
+══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Given the sessions array stored in formData.therapySessions.sessions,
+ * re-derive therophyDataState so the UI renders the previously-entered data.
+ *
+ * Each session has { serviceType, therapyData: [{ therapyName, exercises }] }
+ */
+const restoreTherophyDataState = (sessions) => {
+  if (!Array.isArray(sessions) || sessions.length === 0) return {}
+  const mapped = {}
+  sessions.forEach((sess) => {
+    const therapyData = Array.isArray(sess.therapyData) ? sess.therapyData : []
+    therapyData.forEach((therapy, tIndex) => {
+      const key = `${therapy.therapyName}_${tIndex}`
+      mapped[key] = {
+        checked: true,
+        exercises: (therapy.exercises || []).map(ex => ({
+          ...ex,
+          exerciseName: ex.name || ex.exerciseName || '',
+          sessions: ex.session ?? ex.sessions ?? '',
+          sets: ex.sets ?? '',
+          reps: ex.repetitions ?? ex.reps ?? '',
+          frequencyCount: parseFrequency(ex.frequency).count,
+          frequencyUnit:  parseFrequency(ex.frequency).unit,
+          notes: ex.notes ?? '',
+          _checked: true,
+        }))
+      }
+    })
+  })
+  return mapped
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
-   seed = formData.therapySessions (persisted between tab switches)
 ══════════════════════════════════════════════════════════════════════════ */
 const TherapySession = ({ seed = {}, onNext, patientData }) => {
   console.log('💊 TherapySession seed:', seed)
   console.log('💊 TherapySession patientData:', patientData)
 
-  // ── Restore previously saved session (from first session entry) ──────────
-  const savedSession = Array.isArray(seed.sessions) ? (seed.sessions[0] ?? {}) : {}
+  // ── Resolve the previously-saved session (if any) ──────────────────────
+  // seed = formData.therapySessions which has shape:
+  //   { overallStatus, sessions: [...], therapistId, therapistName, ... }
+  // OR it may be empty {} on first render
+  const savedSessions = Array.isArray(seed?.sessions) ? seed.sessions : []
+  const savedSession  = savedSessions[0] ?? {}
 
-  /* ── Mode — restored from seed ── */
-  const [mode, setMode] = useState('package')
+  /* ── Mode — restore from saved session if available ── */
+  const [mode, setMode] = useState(savedSession.serviceType || seed.serviceType || 'package')
 
   /* ── Clinic / Branch IDs ── */
   const clinicId = localStorage.getItem('hospitalId')
-  const branchId = patientData.branchId
-  const idsReady = clinicId && branchId
+  const branchId = patientData?.branchId
+  const idsReady = !!(clinicId && branchId)
 
   /* ── Therapists ── */
-  const [therapists, setTherapists] = useState([])
+  const [therapists, setTherapists]           = useState([])
   const [loadingTherapists, setLoadingTherapists] = useState(false)
-  // Restore from seed
-  const [therapistId, setTherapistId] = useState(savedSession.therapistId ?? seed.therapistId ?? '')
-  const [therapistName, setTherapistName] = useState(savedSession.therapistName ?? seed.therapistName ?? '')
+  const [therapistId,   setTherapistId]       = useState(savedSession.therapistId   ?? seed.therapistId   ?? '')
+  const [therapistName, setTherapistName]     = useState(savedSession.therapistName ?? seed.therapistName ?? '')
 
-  /* ── Programs ── */
-  const [programs, setPrograms] = useState([])
+  /* ── Programs / Packages / Therapies / Exercises list ── */
+  const [programs, setPrograms]               = useState([])
   const [loadingPrograms, setLoadingPrograms] = useState(false)
 
   /* ── All exercises (cached once per branch) ── */
-  const [allExercises, setAllExercises] = useState([])
+  const [allExercises, setAllExercises]               = useState([])
   const [loadingAllExercises, setLoadingAllExercises] = useState(false)
   const exercisesFetchedRef = useRef(false)
 
-  /* ── Selected program — restore from seed ── */
-  const [selectedProgramId, setSelectedProgramId] = useState(savedSession.programId ?? seed.selectedProgramId ?? null)
+  /* ── Selected item — restore from saved session ── */
+  const [selectedProgramId,  setSelectedProgramId]  = useState(savedSession.programId ?? seed.selectedProgramId ?? null)
   const [selectedProgramObj, setSelectedProgramObj] = useState(null)
   const [loadingProgramDetail, setLoadingProgramDetail] = useState(false)
 
-  /* ── Therapy library built from program.therophy[] ── */
+  /* ── Therapy state (therapy[] path) ── */
   const [therapyLibrary, setTherapyLibrary] = useState([])
+  const [therapyState,   setTherapyState]   = useState({})
 
-  /* ── Therapy state ── */
-  const [therapyState, setTherapyState] = useState({})
-  const [therophyDataState, setTherophyDataState] = useState({})
+  /* ─────────────────────────────────────────────────────────────────────────
+     KEY FIX: Restore therophyDataState from seed on mount so the exercises
+     and their edited values (sets / reps / sessions / freq) are preserved
+     when the user navigates away and comes back to the Plan tab.
+  ───────────────────────────────────────────────────────────────────────── */
+  const [therophyDataState, setTherophyDataState] = useState(() => {
+    const restored = restoreTherophyDataState(savedSessions)
+    console.log('🔄 Restored therophyDataState from seed:', restored)
+    return restored
+  })
 
-  /* ── Session Details — restored from seed ── */
-  const [modalitiesUsed, setModalitiesUsed] = useState(savedSession.modalitiesUsed ?? seed.modalitiesUsed ?? [])
+  /* ── Session Details — restore from saved session ── */
+  const [modalitiesUsed,  setModalitiesUsed]  = useState(savedSession.modalitiesUsed  ?? seed.modalitiesUsed  ?? [])
   const [patientResponse, setPatientResponse] = useState(savedSession.patientResponse ?? seed.patientResponse ?? '')
-  const [manualTherapy, setManualTherapy] = useState(savedSession.manualTherapy ?? seed.manualTherapy ?? '')
-  const [precautions, setPrecautions] = useState(savedSession.precautions ?? seed.precautions ?? '')
+  const [manualTherapy,   setManualTherapy]   = useState(savedSession.manualTherapy   ?? seed.manualTherapy   ?? '')
+  const [precautions,     setPrecautions]     = useState(savedSession.precautions     ?? seed.precautions     ?? '')
 
-  /* ── Restore previously selected therapies from seed into state ──────────
-     This runs once after programs/exercises are loaded; it re-populates
-     therapyState / therophyDataState so the user's selections are visible. ── */
-  const seedRestoredRef = useRef(false)
+  // ── Track whether we already restored — avoid double-fetch ──────────────
+  const restoredFromSeedRef = useRef(Object.keys(restoreTherophyDataState(savedSessions)).length > 0)
 
   /* ────────────────────────────────────────────────────────────────────────
-     STEP 1 — Resolve clinicId & branchId
+     Fetch therapists + service list whenever mode/IDs change
   ──────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
-    const resolveIds = async () => {
-      const cId = localStorage.getItem('clinicId') || localStorage.getItem('hospitalId') || ''
-      if (!cId) { console.warn('⚠️ No clinicId in localStorage'); return }
-      let bId = ''
-      try {
-        const res = await getTodayAppointments()
-        bId = res?.data?.[0]?.branchId || ''
-      } catch (err) { console.error('❌ getTodayAppointments error:', err) }
-
-    }
-    resolveIds()
-  }, [])
-
-  /* ────────────────────────────────────────────────────────────────────────
-     STEP 2 — Fetch therapists + programs once IDs are ready
-  ──────────────────────────────────────────────────────────────────────── */
-  // useEffect(() => {
-  //   if (!idsReady) return
-
-  //   // const fetchTherapistsAndPrograms = async () => {
-  //   //   setLoadingTherapists(true)
-  //   //   setLoadingPrograms(true)
-  //   //   try {
-  //   //     const [therapistData, branchPrograms] = await Promise.allSettled([
-  //   //       getTherapists(clinicId, branchId),
-  //   //       branchId ? getProgramsByBranch(clinicId, branchId) : Promise.resolve([]),
-  //   //     ])
-
-  //   //     const tList = therapistData.status === 'fulfilled'
-  //   //       ? (Array.isArray(therapistData.value) ? therapistData.value : [])
-  //   //       : []
-  //   //     setTherapists(tList)
-
-  //   //     let pList = branchPrograms.status === 'fulfilled'
-  //   //       ? (Array.isArray(branchPrograms.value) ? branchPrograms.value : [])
-  //   //       : []
-
-  //   //     if (!pList.length) {
-  //   //       try {
-  //   //         const allPrograms = await getPrograms()
-  //   //         pList = Array.isArray(allPrograms) ? allPrograms : []
-  //   //       } catch (e) { console.error('❌ getPrograms fallback error:', e) }
-  //   //     }
-  //   //     setPrograms(pList)
-  //   //   } catch (err) {
-  //   //     console.error('❌ fetchTherapistsAndPrograms error:', err)
-  //   //   } finally {
-  //   //     setLoadingTherapists(false)
-  //   //     setLoadingPrograms(false)
-  //   //   }
-  //   // }
-
-  //   fetchTherapistsAndPrograms()
-  // }, [idsReady, clinicId, branchId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    console.log("clinicId:", clinicId)
-    console.log("branchId:", branchId)
-    console.log("idsReady:", idsReady)
     if (!idsReady) return
     fetchDataByMode()
-  }, [idsReady, clinicId, branchId, mode])
+  }, [idsReady, clinicId, branchId, mode]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const getServiceByMode = async (m, cId, bId) => {
+    switch (m) {
+      case 'package':  return await getPackagesByBranch(cId, bId)
+      case 'program':  return await getProgramsByBranch(cId, bId)
+      case 'therapy':  return await getTherapiesByBranch(cId, bId)
+      case 'exercise': return await getExercisesByBranch(cId, bId)
+      default:         return []
+    }
+  }
+
   const fetchDataByMode = async () => {
-    // alert(`Fetching data for mode: ${mode}...`)
     setLoadingTherapists(true)
     setLoadingPrograms(true)
-
     try {
       const [therapistRes, serviceRes] = await Promise.allSettled([
         getTherapists(clinicId, branchId),
         getServiceByMode(mode, clinicId, branchId),
       ])
-
-      // 👤 Therapists
-      const tList =
-        therapistRes.status === 'fulfilled' && Array.isArray(therapistRes.value)
-          ? therapistRes.value
-          : []
+      const tList = therapistRes.status === 'fulfilled' && Array.isArray(therapistRes.value) ? therapistRes.value : []
       setTherapists(tList)
-
-      // 📦 Dynamic Data (Programs / Packages / Therapy / Exercise)
-      const sList =
-        serviceRes.status === 'fulfilled' && Array.isArray(serviceRes.value)
-          ? serviceRes.value
-          : []
-
+      const sList = serviceRes.status === 'fulfilled'  && Array.isArray(serviceRes.value)  ? serviceRes.value  : []
       setPrograms(sList)
-
     } catch (err) {
       console.error('❌ fetchDataByMode error:', err)
     } finally {
@@ -677,41 +642,8 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     }
   }
 
-  const getServiceByMode = async (mode, clinicId, branchId) => {
-    // alert(`Fetching ${mode}s for this branch...`)
-    switch (mode) {
-      case 'package':
-        return await getPackagesByBranch(clinicId, branchId)
-
-      case 'program':
-        return await getProgramsByBranch(clinicId, branchId)
-
-      case 'therapy':
-        return await getTherapiesByBranch(clinicId, branchId)
-
-      case 'exercise':
-        return await getExercisesByBranch(clinicId, branchId)
-
-      default:
-        return []
-    }
-  }
-
   /* ────────────────────────────────────────────────────────────────────────
-     STEP 2b — If seed has a selectedProgramId, re-fetch program detail
-               so therapies are restored after tab switch
-  ──────────────────────────────────────────────────────────────────────── */
-  useEffect(() => {
-    if (!idsReady || !selectedProgramId || selectedProgramObj || loadingProgramDetail) return
-    setLoadingProgramDetail(true)
-    getProgramsByBranchAndId(clinicId, branchId, selectedProgramId)
-      .then(detail => { if (detail) setSelectedProgramObj(detail) })
-      .catch(err => console.error('❌ re-fetch program detail error:', err))
-      .finally(() => setLoadingProgramDetail(false))
-  }, [idsReady, selectedProgramId, clinicId, branchId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  /* ────────────────────────────────────────────────────────────────────────
-     STEP 3 — Pre-fetch ALL exercises for this branch (cached)
+     Pre-fetch ALL exercises for this branch (cached)
   ──────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!idsReady || exercisesFetchedRef.current) return
@@ -733,61 +665,14 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   }, [idsReady, clinicId, branchId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ────────────────────────────────────────────────────────────────────────
-     STEP 4a — When program selected: build therapy library from therophy[]
-  ──────────────────────────────────────────────────────────────────────── */
-  useEffect(() => {
-    if (!selectedProgramId || !selectedProgramObj) {
-      setTherapyLibrary([])
-      setTherapyState({})
-      return
-    }
-    const therapies = selectedProgramObj?.therophy ?? []
-    if (!therapies.length) { setTherapyLibrary([]); setTherapyState({}); return }
-
-    const lib = therapies.map(t => ({ therapyId: t.theraphyId, therapyName: t.theraphyName }))
-    setTherapyLibrary(lib)
-
-    const initState = {}
-    lib.forEach(({ therapyName }) => {
-      initState[therapyName] = { checked: true, exercises: [] }
-    })
-    setTherapyState(initState)
-  }, [selectedProgramId, selectedProgramObj])
-
-  /* ────────────────────────────────────────────────────────────────────────
-     STEP 4b — therophyData[] path
-  ──────────────────────────────────────────────────────────────────────── */
-  useEffect(() => {
-    if (!selectedProgramObj?.therophyData?.length) { setTherophyDataState({}); return }
-
-    const init = {}
-    selectedProgramObj.therophyData.forEach((therapy, idx) => {
-      const key = therapy.therapyName || String(idx)
-      init[key] = {
-        checked: true,
-        exercises: (therapy.exercises || []).map(ex => {
-          const freq = parseFrequency(ex.frequency)
-          return {
-            ...ex,
-            exerciseName: ex.exerciseName || ex.name || ex.exercise_name || '',
-            sessions: ex.session ?? ex.sessions ?? '',
-            sets: ex.sets ?? '',
-            reps: ex.repetitions ?? ex.reps ?? '',
-            frequencyCount: freq.count,
-            frequencyUnit: freq.unit,
-            _checked: true,
-          }
-        }),
-      }
-    })
-    setTherophyDataState(init)
-  }, [selectedProgramObj])
-
-  /* ────────────────────────────────────────────────────────────────────────
-     STEP 5 — Filter cached exercises per therapy using theraphyId
+     Filter cached exercises per therapy (therapy mode — therophy[] path)
+     Only do this when NOT already restored from seed
   ──────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!therapyLibrary.length || loadingAllExercises) return
+    // If we already have restored data from seed, don't overwrite
+    if (restoredFromSeedRef.current && Object.keys(therophyDataState).length > 0) return
+
     setTherapyState(prev => {
       const updated = { ...prev }
       therapyLibrary.forEach(({ therapyId, therapyName }) => {
@@ -813,7 +698,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
       })
       return updated
     })
-  }, [therapyLibrary, allExercises, loadingAllExercises])
+  }, [therapyLibrary, allExercises, loadingAllExercises]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Therapy helpers (therophy[] path) ── */
   const toggleTherapy = name =>
@@ -827,28 +712,39 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   const updateTherophyDataExercises = (key, updated) =>
     setTherophyDataState(prev => ({ ...prev, [key]: { ...prev[key], exercises: updated } }))
 
-  /* ── Select All helpers ── */
-  const hasTherophyData = (selectedProgramObj?.therophyData?.length ?? 0) > 0
+  /* ── Derived select-all helpers ── */
+  const hasTherophyData = Object.keys(therophyDataState).length > 0
+
   const tdKeys = Object.keys(therophyDataState)
   const tdAllChecked = tdKeys.length > 0 && tdKeys.every(k => therophyDataState[k]?.checked)
   const tdCheckedCnt = tdKeys.filter(k => therophyDataState[k]?.checked).length
+
   const tlAllChecked = therapyLibrary.length > 0 && therapyLibrary.every(t => therapyState[t.therapyName]?.checked)
   const tlCheckedCnt = therapyLibrary.filter(t => therapyState[t.therapyName]?.checked).length
-  const allChecked = hasTherophyData ? tdAllChecked : tlAllChecked
-  const checkedCount = hasTherophyData ? tdCheckedCnt : tlCheckedCnt
-  const totalCount = hasTherophyData ? tdKeys.length : therapyLibrary.length
+
+  const allChecked   = hasTherophyData ? tdAllChecked  : tlAllChecked
+  const checkedCount = hasTherophyData ? tdCheckedCnt  : tlCheckedCnt
+  const totalCount   = hasTherophyData ? tdKeys.length : therapyLibrary.length
 
   const toggleAll = () => {
     if (hasTherophyData) {
       const next = !tdAllChecked
-      setTherophyDataState(prev => { const u = { ...prev }; tdKeys.forEach(k => { u[k] = { ...u[k], checked: next } }); return u })
+      setTherophyDataState(prev => {
+        const u = { ...prev }
+        tdKeys.forEach(k => { u[k] = { ...u[k], checked: next } })
+        return u
+      })
     } else {
       const next = !tlAllChecked
-      setTherapyState(prev => { const u = { ...prev }; therapyLibrary.forEach(({ therapyName }) => { u[therapyName] = { ...u[therapyName], checked: next } }); return u })
+      setTherapyState(prev => {
+        const u = { ...prev }
+        therapyLibrary.forEach(({ therapyName }) => { u[therapyName] = { ...u[therapyName], checked: next } })
+        return u
+      })
     }
   }
 
-  /* ── Mode change ── */
+  /* ── Mode change — reset everything (user explicitly changed mode) ── */
   const handleModeChange = val => {
     setMode(val)
     setSelectedProgramId(null)
@@ -856,213 +752,209 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     setTherapyLibrary([])
     setTherapyState({})
     setTherophyDataState({})
+    restoredFromSeedRef.current = false
   }
 
-  /* ── Program selection ── */
+  /* ─────────────────────────────────────────────────────────────────────────
+     handleServiceChange — called when user picks from the dropdown
+  ───────────────────────────────────────────────────────────────────────── */
   const handleServiceChange = async (id, obj) => {
-    console.log(`Selected ${mode}:`, id)
-
     if (!id) {
       setSelectedProgramId(null)
       setSelectedProgramObj(null)
+      setTherapyLibrary([])
+      setTherapyState({})
+      setTherophyDataState({})
+      restoredFromSeedRef.current = false
       return
     }
 
     const correctId = getId(obj, mode)
     setSelectedProgramId(correctId)
+    setLoadingProgramDetail(true)
+
+    // Reset previous state — user is selecting a new service
+    setTherapyLibrary([])
+    setTherapyState({})
+    setTherophyDataState({})
+    restoredFromSeedRef.current = false
 
     try {
-      let response = obj
+      let data = null
 
       switch (mode) {
-        case 'package':
-          setLoadingProgramDetail(true)
-          response = await getPackagesByBranchAndId(clinicId, branchId, correctId)
+        case 'package': {
+          data = await getPackagesByBranchAndId(clinicId, branchId, correctId)
           break
-
-        case 'program':
-          setLoadingProgramDetail(true)
-          response = await getProgramsByBranchAndId(clinicId, branchId, correctId)
+        }
+        case 'program': {
+          data = await getProgramsByBranchAndId(clinicId, branchId, correctId)
           break
-
-        case 'therapy':
-          response = await getTherapiesByBranchAndId(clinicId, branchId, correctId)
+        }
+        case 'therapy': {
+          data = await getTherapiesByBranchAndId(clinicId, branchId, correctId)
           break
-
-        case 'exercise':
-          response = await getExercisesByBranchAndIdAndId(clinicId, branchId, correctId)
+        }
+        case 'exercise': {
+          data = await getExercisesByBranchAndIdAndId(clinicId, branchId, correctId)
           break
+        }
+        default:
+          data = obj
       }
 
-      const data = response?.data || response
+      console.log(`✅ ${mode} detail data:`, data)
       setSelectedProgramObj(data)
 
-      /* =========================
-         🔥 MODE BASED UI LOGIC
-      ========================= */
+      /* ── PACKAGE MODE ── */
+      if (mode === 'package') {
+        const programsList = Array.isArray(data?.programs) ? data.programs : []
+        if (!programsList.length) {
+          setTherophyDataState({})
+          setTherapyLibrary([])
+          setTherapyState({})
+          return
+        }
+        const mapped = {}
+        programsList.forEach((program) => {
+          const programName   = program.programName || program.name || ''
+          const therophyData  = Array.isArray(program.therophyData) ? program.therophyData : []
+          therophyData.forEach((therapy, tIndex) => {
+            const key = `${programName}_${therapy.therapyName}_${tIndex}`
+            mapped[key] = {
+              checked: true,
+              exercises: (therapy.exercises || []).map(ex => ({
+                ...ex,
+                exerciseName:   ex.name          || ex.exerciseName  || '',
+                sessions:       ex.session       ?? ex.sessions      ?? '',
+                sets:           ex.sets          ?? '',
+                reps:           ex.repetitions   ?? ex.reps          ?? '',
+                frequencyCount: parseFrequency(ex.frequency).count,
+                frequencyUnit:  parseFrequency(ex.frequency).unit,
+                notes:          ex.notes         ?? '',
+                _checked:       true,
+              }))
+            }
+          })
+        })
+        setTherophyDataState(mapped)
+        setTherapyLibrary([])
+        setTherapyState({})
+      }
 
-      // ✅ THERAPY MODE
-      if (mode === 'therapy') {
-        const therapyName = data?.therapyName || data?.name
-        const therapyId = data?.therapyId || data?.id
+      /* ── PROGRAM MODE ── */
+      else if (mode === 'program') {
+        const therophyData = Array.isArray(data?.therophyData) ? data.therophyData : []
+        const mapped = {}
+        therophyData.forEach((therapy, tIndex) => {
+          const key = `${therapy.therapyName}_${tIndex}`
+          mapped[key] = {
+            checked: true,
+            exercises: (therapy.exercises || []).map(ex => ({
+              ...ex,
+              exerciseName:   ex.name        || ex.exerciseName  || '',
+              sessions:       ex.session     ?? ex.sessions      ?? '',
+              sets:           ex.sets        ?? '',
+              reps:           ex.repetitions ?? ex.reps          ?? '',
+              frequencyCount: parseFrequency(ex.frequency).count,
+              frequencyUnit:  parseFrequency(ex.frequency).unit,
+              notes:          ex.notes       ?? '',
+              _checked:       true,
+            }))
+          }
+        })
+        setTherophyDataState(mapped)
+        setTherapyLibrary([])
+        setTherapyState({})
+      }
 
+      /* ── THERAPY MODE ── */
+      else if (mode === 'therapy') {
+        const therapyName = data?.therapyName || data?.name || ''
+        const therapyId   = data?.therapyId   || data?.id   || ''
         const matchedExercises = allExercises.filter(
-          ex => String(ex.therapyId) === String(therapyId)
+          ex => String(ex.therapyId || ex.theraphyId || '') === String(therapyId)
         )
-
-        setTherapyLibrary([
-          { therapyId, therapyName }
-        ])
-
+        setTherapyLibrary([{ therapyId, therapyName }])
         setTherapyState({
           [therapyName]: {
             checked: true,
             exercises: matchedExercises.map(ex => ({
               ...ex,
-              exerciseName: ex.name,
-              sessions: ex.session ?? '',
-              sets: ex.sets ?? '',
-              reps: ex.repetitions ?? '',
+              exerciseName:   ex.name        || ex.exerciseName  || '',
+              sessions:       ex.session     ?? ex.sessions      ?? '',
+              sets:           ex.sets        ?? '',
+              reps:           ex.repetitions ?? ex.reps          ?? '',
               frequencyCount: parseFrequency(ex.frequency).count,
-              frequencyUnit: parseFrequency(ex.frequency).unit,
-              _checked: true,
+              frequencyUnit:  parseFrequency(ex.frequency).unit,
+              notes:          ex.notes       ?? '',
+              _checked:       true,
             })),
           }
         })
-
         setTherophyDataState({})
       }
 
-      // ✅ EXERCISE MODE
+      /* ── EXERCISE MODE ── */
       else if (mode === 'exercise') {
-        const ex = data
-
+        const ex     = data || obj
+        const exName = ex?.name || ex?.exerciseName || ''
         setTherophyDataState({
-          [ex.name]: {
+          [exName]: {
             checked: true,
-            exercises: [
-              {
-                ...ex,
-                exerciseName: ex.name,
-                sessions: ex.session ?? '',
-                sets: ex.sets ?? '',
-                reps: ex.repetitions ?? '',
-                frequencyCount: parseFrequency(ex.frequency).count,
-                frequencyUnit: parseFrequency(ex.frequency).unit,
-                _checked: true,
-              }
-            ]
-          }
-        })
-
-        setTherapyLibrary([])
-        setTherapyState({})
-      }
-
-      // ✅ PROGRAM MODE
-      else if (mode === 'program') {
-        const therapies = Array.isArray(data?.therophyData)
-          ? data.therophyData
-          : []
-
-        const mapped = {}
-
-        therapies.forEach(therapy => {
-          const key = therapy.therapyName
-
-          mapped[key] = {
-            checked: true,
-            exercises: (therapy.exercises || []).map(ex => ({
+            exercises: [{
               ...ex,
-              exerciseName: ex.name,
-              sessions: ex.session ?? '',
-              sets: ex.sets ?? '',
-              reps: ex.repetitions ?? '',
-              frequencyCount: parseFrequency(ex.frequency).count,
-              frequencyUnit: parseFrequency(ex.frequency).unit,
-              _checked: true,
-            }))
+              exerciseName:   exName,
+              sessions:       ex?.session     ?? ex?.sessions      ?? '',
+              sets:           ex?.sets        ?? '',
+              reps:           ex?.repetitions ?? ex?.reps          ?? '',
+              frequencyCount: parseFrequency(ex?.frequency).count,
+              frequencyUnit:  parseFrequency(ex?.frequency).unit,
+              notes:          ex?.notes       ?? '',
+              _checked:       true,
+            }]
           }
         })
-
-        setTherophyDataState(mapped)
-        setTherapyLibrary([])
-        setTherapyState({})
-      }
-
-      // ✅ PACKAGE MODE (program → therapy → exercise)
-      else if (mode === 'package') {
-        const programs = Array.isArray(data?.programs)
-          ? data.programs
-          : []
-
-        const mapped = {}
-
-        programs.forEach(program => {
-          (program.therophyData || []).forEach(therapy => {
-            const key = therapy.therapyName
-
-            mapped[key] = {
-              checked: true,
-              exercises: (therapy.exercises || []).map(ex => ({
-                ...ex,
-                exerciseName: ex.name,
-                sessions: ex.session ?? '',
-                sets: ex.sets ?? '',
-                reps: ex.repetitions ?? '',
-                frequencyCount: parseFrequency(ex.frequency).count,
-                frequencyUnit: parseFrequency(ex.frequency).unit,
-                _checked: true,
-              }))
-            }
-          })
-        })
-
-        setTherophyDataState(mapped)
         setTherapyLibrary([])
         setTherapyState({})
       }
 
     } catch (err) {
-      console.error(`❌ Error fetching ${mode}:`, err)
+      console.error(`❌ Error fetching ${mode} detail:`, err)
       setSelectedProgramObj(obj)
     } finally {
       setLoadingProgramDetail(false)
     }
   }
 
-  /* ── Next — builds payload matching required API structure ── */
-  const handleNext = () => {
+  /* ────────────────────────────────────────────────────────────────────────
+     handleNext — builds the complete payload and calls onNext.
+     CRITICAL: We include ALL current state so the parent can persist it
+     and pass it back as seed if the user returns to this tab.
+  ──────────────────────────────────────────────────────────────────────── */
+  const handleNext = useCallback(() => {
     let selectedTherapies = []
 
     if (hasTherophyData) {
-      selectedTherapies = (selectedProgramObj?.therophyData ?? [])
-        .filter((therapy, idx) => {
-          const key = therapy.therapyName || String(idx)
-          return therophyDataState[key]?.checked
-        })
-        .map((therapy, idx) => {
-          const key = therapy.therapyName || String(idx)
-          return {
-            therapyId: therapy.therapyId || therapy.id,
-            therapyName: therapy.therapyName,
-            exercises: (therophyDataState[key]?.exercises || []).filter(ex => ex._checked !== false),
-          }
-        })
+      selectedTherapies = tdKeys
+        .filter(key => therophyDataState[key]?.checked)
+        .map(key => ({
+          therapyName: key,
+          exercises: (therophyDataState[key]?.exercises || []).filter(ex => ex._checked !== false),
+        }))
     } else {
       selectedTherapies = therapyLibrary
         .filter(t => therapyState[t.therapyName]?.checked)
         .map(t => ({
-          therapyId: t.therapyId,
+          therapyId:   t.therapyId,
           therapyName: t.therapyName,
           exercises: (therapyState[t.therapyName]?.exercises || []).filter(ex => ex._checked !== false),
         }))
     }
 
     const payload = {
-      // serviceType is "program" or "package" based on the selected radio
       mode,
-      serviceType: mode,   // ← explicitly named for clarity in parent
+      serviceType: mode,
       therapistId,
       therapistName,
       selectedProgramId,
@@ -1072,46 +964,43 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
       patientResponse,
       manualTherapy,
       precautions,
+      // ── Include raw state so parent can persist it and restore on return ──
+      _internalState: {
+        therophyDataState,
+        therapyLibrary,
+        therapyState,
+      },
     }
 
     console.log('🚀 TherapySession payload:', payload)
     onNext?.(payload)
-  }
+  }, [
+    hasTherophyData, tdKeys, therophyDataState,
+    therapyLibrary, therapyState,
+    mode, therapistId, therapistName,
+    selectedProgramId, selectedProgramObj,
+    modalitiesUsed, patientResponse, manualTherapy, precautions,
+    onNext,
+  ])
 
   /* ── Derived flags ── */
-  const loadingExercises = loadingAllExercises || loadingProgramDetail
-  const loadingAnything = loadingPrograms || loadingAllExercises || loadingProgramDetail
-  const initPending = !clinicId
+  const loadingExercises  = loadingAllExercises || loadingProgramDetail
+  const loadingAnything   = loadingPrograms || loadingAllExercises || loadingProgramDetail
+  const initPending       = !clinicId
+
+  // Show therapies if: we have a selectedProgramId OR we already have restored data from seed
   const showTherapies =
-    selectedProgramId &&
+    !loadingAnything &&
     (
-      mode === 'program' ||
-        mode === 'package'
-        ? Object.keys(therophyDataState).length > 0
-        : mode === 'therapy'
-          ? therapyLibrary.length > 0
-          : mode === 'exercise'
-            ? Object.keys(therophyDataState).length > 0
-            : false
+      (!!selectedProgramId && (Object.keys(therophyDataState).length > 0 || therapyLibrary.length > 0)) ||
+      (restoredFromSeedRef.current && (Object.keys(therophyDataState).length > 0 || therapyLibrary.length > 0))
     )
-
-
 
   /* ════════════════════════════════════════════════════════════════════════
      RENDER
   ════════════════════════════════════════════════════════════════════════ */
   return (
     <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
-      {
-        (mode === 'therapy' || mode === 'exercise') && selectedProgramObj && (
-          <div style={{ padding: 20 }}>
-            <h6>{getName(selectedProgramObj, mode)}</h6>
-            <p style={{ color: '#6b9fc7' }}>
-              {mode === 'therapy' ? 'Therapy selected' : 'Exercise selected'}
-            </p>
-          </div>
-        )
-      }
       <CContainer fluid className="p-1">
 
         {initPending && (
@@ -1120,23 +1009,20 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           </div>
         )}
 
-
-        {/* ══ 1. SESSION TYPE + PROGRAM SELECTOR ═══════════════════════ */}
+        {/* ══ 1. SESSION TYPE + SERVICE SELECTOR ═══════════════════════ */}
         <CCard style={cardStyle}>
           <CCardBody style={{ padding: '22px 28px' }}>
             <SectionHeader emoji="⚙️" title="Session Type" />
 
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <RadioBtn label="Package" emoji="📦" value="package" active={mode === 'package'} onClick={handleModeChange} />
-              <RadioBtn label="Program" emoji="🎯" value="program" active={mode === 'program'} onClick={handleModeChange} />
-              <RadioBtn label="Therapy" emoji="📦" value="therapy" active={mode === 'therapy'} onClick={handleModeChange} />
-              <RadioBtn label="Exercise" emoji="📦" value="exercise" active={mode === 'exercise'} onClick={handleModeChange} />
-
-
+              <RadioBtn label="Package"  emoji="📦" value="package"  active={mode === 'package'}  onClick={handleModeChange} />
+              <RadioBtn label="Program"  emoji="🎯" value="program"  active={mode === 'program'}  onClick={handleModeChange} />
+              <RadioBtn label="Therapy"  emoji="💆" value="therapy"  active={mode === 'therapy'}  onClick={handleModeChange} />
+              <RadioBtn label="Exercise" emoji="🏋️" value="exercise" active={mode === 'exercise'} onClick={handleModeChange} />
             </div>
 
             <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1.5px solid #e3eef8' }}>
-              <Field label={`Select ${mode}`}>
+              <Field label={`Select ${mode.charAt(0).toUpperCase() + mode.slice(1)}`}>
                 <ProgramDropdown
                   programs={programs}
                   loading={loadingPrograms}
@@ -1147,7 +1033,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
               </Field>
               {!loadingPrograms && !initPending && programs.length === 0 && (
                 <p style={{ marginTop: 8, fontSize: '0.8rem', color: '#94a3b8' }}>
-                  No {mode === 'program' ? 'programs' : 'packages'} found for this branch.
+                  No {mode}s found for this branch.
                 </p>
               )}
             </div>
@@ -1173,30 +1059,40 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           <CCardBody style={{ padding: '22px 28px' }}>
             <SectionHeader
               emoji={mode === 'program' ? '🎯' : '📦'}
-              title={mode === 'program' ? 'Program — Therapies & Exercises' : 'Package — Therapies & Exercises'}
+              title={
+                mode === 'package'  ? 'Package — Therapies & Exercises' :
+                mode === 'program'  ? 'Program — Therapies & Exercises' :
+                mode === 'therapy'  ? 'Therapy — Exercises' :
+                                     'Exercise Details'
+              }
               subtitle={
-                selectedProgramId
-                  ? loadingExercises
-                    ? 'Loading exercises…'
-                    : `${checkedCount} / ${totalCount} therapies selected`
-                  : `Select a ${mode} above to view therapies`
+                showTherapies
+                  ? `${checkedCount} / ${totalCount} therapies selected`
+                  : selectedProgramId
+                    ? loadingExercises ? 'Loading…' : `Select a ${mode} above to view therapies`
+                    : `Select a ${mode} above to view therapies`
               }
             />
 
-            {!selectedProgramId && !loadingAnything && (
+            {/* Empty state */}
+            {!selectedProgramId && !restoredFromSeedRef.current && !loadingAnything && (
               <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
-                <div style={{ fontSize: '2rem', marginBottom: 10 }}>{mode === 'program' ? '🎯' : '📦'}</div>
+                <div style={{ fontSize: '2rem', marginBottom: 10 }}>
+                  {mode === 'program' ? '🎯' : '📦'}
+                </div>
                 Please select a {mode} above to load its therapies and exercises.
               </div>
             )}
 
+            {/* Loading state */}
             {(loadingPrograms || loadingProgramDetail) && (
               <div style={{ padding: '28px', textAlign: 'center', color: '#6b9fc7', fontSize: '0.9rem' }}>
                 <div style={{ fontSize: '1.6rem', marginBottom: 10 }}>⏳</div>
-                {loadingPrograms ? `Loading ${mode}s…` : 'Loading program details…'}
+                {loadingPrograms ? `Loading ${mode}s…` : `Loading ${mode} details…`}
               </div>
             )}
 
+            {/* Therapy list */}
             {showTherapies && (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7' }}>
@@ -1213,22 +1109,23 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                   </button>
                 </div>
 
-                {hasTherophyData && selectedProgramObj.therophyData.map((therapy, index) => {
-                  const key = therapy.therapyName || String(index)
-                  const ts = therophyDataState[key] || { checked: true, exercises: [] }
+                {/* therophyData path (package / program / exercise mode) */}
+                {hasTherophyData && tdKeys.map((key) => {
+                  const ts = therophyDataState[key]
                   return (
                     <TherapyBlock
-                      key={therapy.id || index}
-                      therapy={therapy.therapyName}
+                      key={key}
+                      therapy={key}
                       checked={ts.checked}
                       onToggle={() => toggleTherophyData(key)}
                       exercises={ts.exercises}
-                      onUpdateExercises={updated => updateTherophyDataExercises(key, updated)}
-                      loading={loadingExercises}
+                      onUpdateExercises={(updated) => updateTherophyDataExercises(key, updated)}
+                      loading={false}
                     />
                   )
                 })}
 
+                {/* therophy[] path (therapy mode) */}
                 {!hasTherophyData && therapyLibrary.map((t, index) => (
                   <TherapyBlock
                     key={t.therapyId || index}
@@ -1243,15 +1140,13 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
               </>
             )}
 
-            {selectedProgramId &&
-              !loadingAnything &&
-              Object.keys(therophyDataState).length === 0 &&
-              therapyLibrary.length === 0 && (
-                <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
-                  <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>🔍</div>
-                  No therapies found in the selected {mode}.
-                </div>
-              )}
+            {/* No therapies found */}
+            {selectedProgramId && !loadingAnything && !showTherapies && (
+              <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
+                <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>🔍</div>
+                No therapies found in the selected {mode}.
+              </div>
+            )}
           </CCardBody>
         </CCard>
 

@@ -10,12 +10,12 @@ import { SavePatientPrescription, getInProgressDetails } from '../Auth/Auth'
 import { useToast } from '../utils/Toaster'
 
 const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = false }) => {
-  const { id }      = useParams()
-  const { state }   = useLocation()
+  const { id }    = useParams()
+  const { state } = useLocation()
   const { patientData } = useDoctorContext()
 
-  const [patient, setPatient] = useState(patientData || state?.patient || null)
-  const [details, setDetails] = useState(state?.details || null)
+  const [patient,  setPatient]  = useState(patientData || state?.patient || null)
+  const [details,  setDetails]  = useState(state?.details || null)
 
   // ── Single accumulator — every tab ADDS to this, nothing is ever lost ────
   const [formData, setFormData] = useState(state?.formData || {
@@ -181,7 +181,6 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
       const patch = {
         assessment: {
-          // Subjective
           chiefComplaint:     data.chiefComplaint     ?? '',
           painScale:          data.painScale          ?? '',
           painType:           data.painType           ?? '',
@@ -190,13 +189,9 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           aggravatingFactors: data.aggravatingFactors ?? '',
           relievingFactors:   data.relievingFactors   ?? '',
           observations:       data.observations       ?? '',
-
-          // Functional Assessment
           difficultiesIn:      Array.isArray(data.difficultiesIn) ? data.difficultiesIn : [],
           otherDifficulty:     data.otherDifficulty     ?? '',
           dailyLivingAffected: data.dailyLivingAffected ?? '',
-
-          // Physical Examination
           postureAssessment: Array.isArray(data.postureAssessment) ? data.postureAssessment : [],
           postureDeviations: data.postureDeviations ?? '',
           romStatus:         Array.isArray(data.romStatus) ? data.romStatus : [],
@@ -205,31 +200,20 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           muscleStrength:    Array.isArray(data.muscleStrength) ? data.muscleStrength : [],
           muscleWeakness:    data.muscleWeakness   ?? '',
           neurologicalSigns: Array.isArray(data.neurologicalSigns) ? data.neurologicalSigns : [],
-
-          // Objective / additional
           posture:            data.posture       ?? '',
           rangeOfMotion:      data.rangeOfMotion ?? '',
           specialTests:       data.specialTests  ?? '',
-
-          // Pain classification (may be set here if not from Complaints)
           patientPain:        data.patientPain   ?? '',
-
-          // Chronic Pain
           painTriggers:       data.painTriggers    ?? '',
           chronicRelieving:   data.chronicRelieving ?? '',
-
-          // Sports Rehab
           typeOfSport:         data.typeOfSport         ?? '',
           recurringInjuries:   data.recurringInjuries   ?? '',
           returnToSportGoals:  data.returnToSportGoals  ?? '',
-
-          // Neuro Rehab
           neuroDiagnosis: data.neuroDiagnosis ?? '',
           neuroOnset:     data.neuroOnset     ?? '',
           mobilityStatus: data.mobilityStatus ?? '',
           cognitiveStatus:data.cognitiveStatus ?? '',
         },
-        // Also store patientPain at top level if set in Assessment (overrides only if not already set from Complaints)
         ...(data.patientPain ? { patientPain: data.patientPain } : {}),
       }
 
@@ -277,6 +261,9 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     },
 
     // ── Plan ──────────────────────────────────────────────────────────────
+    // KEY FIX: We now store both the structured sessions payload (for Summary/API)
+    // AND the raw _internalState (for TherapySession to restore its local state
+    // when the user returns to this tab without losing any edits).
     Plan: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Plan'); return }
 
@@ -317,6 +304,12 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
         precautions:     data.precautions     ?? '',
       }
 
+      // ── KEY: persist _internalState so TherapySession can restore ──────
+      // This carries therophyDataState, therapyLibrary, therapyState so that
+      // when the component remounts (tab change), it reads these back from
+      // seed.sessions and re-derives its local state via restoreTherophyDataState.
+      const internalState = data._internalState ?? {}
+
       const patch = {
         therapySessions: {
           overallStatus: data.overallStatus ?? '',
@@ -325,6 +318,14 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           therapistName: data.therapistName ?? '',
           manualTherapy: data.manualTherapy ?? '',
           precautions:   data.precautions   ?? '',
+          // Store internal state for tab-return restoration
+          _internalState: internalState,
+          // Store the raw selectedProgramId/Obj so ProgramDropdown can show selection
+          selectedProgramId:  data.selectedProgramId  ?? '',
+          selectedProgramObj: data.selectedProgramObj ?? null,
+          serviceType:        data.mode               ?? 'program',
+          modalitiesUsed:     data.modalitiesUsed     ?? [],
+          patientResponse:    data.patientResponse    ?? '',
         },
       }
 
@@ -437,23 +438,6 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
         console.log('prescription        :', finalPayload.prescription)
         console.log('history             :', finalPayload.history)
         console.log('ClinicImages        :', finalPayload.ClinicImages)
-        console.log('previousInjuries    :', finalPayload.previousInjuries)
-        console.log('currentMedications  :', finalPayload.currentMedications)
-        console.log('allergies           :', finalPayload.allergies)
-        console.log('occupation          :', finalPayload.occupation)
-        console.log('insuranceProvider   :', finalPayload.insuranceProvider)
-        console.log('activityLevels      :', finalPayload.activityLevels)
-        console.log('patientPain         :', finalPayload.patientPain)
-        // Assessment nested fields
-        console.log('assessment.difficultiesIn    :', finalPayload.assessment?.difficultiesIn)
-        console.log('assessment.postureAssessment :', finalPayload.assessment?.postureAssessment)
-        console.log('assessment.muscleStrength    :', finalPayload.assessment?.muscleStrength)
-        console.log('assessment.neurologicalSigns :', finalPayload.assessment?.neurologicalSigns)
-        console.log('assessment.patientPain       :', finalPayload.assessment?.patientPain)
-        console.log('assessment.painTriggers      :', finalPayload.assessment?.painTriggers)
-        console.log('assessment.typeOfSport       :', finalPayload.assessment?.typeOfSport)
-        console.log('assessment.neuroDiagnosis    :', finalPayload.assessment?.neuroDiagnosis)
-        console.log('summary             :', finalPayload.summary)
         console.log('── COMPLETE OBJECT ─────────────────────────────────')
         console.log(finalPayload)
         console.groupEnd()

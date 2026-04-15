@@ -35,7 +35,7 @@ import {
   programUrlId,
   therapyUrlId,
   exerciseUrlId,
-  packageUrlId,   // ✅ new
+  packageUrlId,
 } from './BaseUrl'
 
 export const postLogin = async (payload, endpoint) => {
@@ -789,7 +789,7 @@ export const createDoctorSaveDetails = async (prescriptionData) => {
 }
 
 // =============================
-// ✅ Get packages by clinicId & branchId
+// ✅ Get packages by clinicId & branchId (list)
 export const getPackagesByBranch = async (clinicId, branchId) => {
   try {
     const response = await api.get(`${packageUrl}/${clinicId}/${branchId}`)
@@ -802,17 +802,22 @@ export const getPackagesByBranch = async (clinicId, branchId) => {
   }
 }
 
+// ✅ FIX: Get single package detail by ID — returns the full object, NOT forced into array
 export const getPackagesByBranchAndId = async (clinicId, branchId, packagesId) => {
   try {
     const response = await api.get(`${packageUrlId}/${clinicId}/${branchId}/${packagesId}`)
-    console.log('✅ Packages by Branch API:', response.data)
-    const raw = response.data?.data ?? response.data ?? []
-    return Array.isArray(raw) ? raw : []
+    console.log('✅ Package Detail API (full response):', response.data)
+    // The API returns { success, data: { packageId, programs: [...], ... }, message, status }
+    // We must return the data object directly — NOT coerce it to an array
+    const raw = response.data?.data ?? response.data ?? null
+    // If raw is an array (unexpected), take the first element; otherwise return as-is
+    return Array.isArray(raw) ? (raw[0] ?? null) : raw
   } catch (error) {
-    console.error('❌ Packages by Branch API Error:', error)
-    return []
+    console.error('❌ Package Detail API Error:', error)
+    return null
   }
 }
+
 // ===============================
 // ✅ Get programs by clinicId & branchId
 export const getProgramsByBranch = async (clinicId, branchId) => {
@@ -826,17 +831,19 @@ export const getProgramsByBranch = async (clinicId, branchId) => {
     return []
   }
 }
+
 export const getProgramsByBranchAndId = async (clinicId, branchId, programId) => {
   try {
     const response = await api.post(`${programUrlId}/${clinicId}/${branchId}/${programId}`)
-    console.log('✅ Programs by Branch API:', response.data)
-    const raw = response.data?.data ?? response.data ?? []
-    return Array.isArray(raw) ? raw : []
+    console.log('✅ Programs by Branch+ID API:', response.data)
+    const raw = response.data?.data ?? response.data ?? null
+    return Array.isArray(raw) ? (raw[0] ?? null) : raw
   } catch (error) {
-    console.error('❌ Programs by Branch API Error:', error)
-    return []
+    console.error('❌ Programs by Branch+ID API Error:', error)
+    return null
   }
 }
+
 // ==============================
 // ✅ Get therapies by clinicId & branchId
 export const getTherapiesByBranch = async (clinicId, branchId) => {
@@ -850,19 +857,20 @@ export const getTherapiesByBranch = async (clinicId, branchId) => {
     return []
   }
 }
+
 export const getTherapiesByBranchAndId = async (clinicId, branchId, therapyId) => {
   try {
     const response = await api.get(`${therapyUrlId}/${therapyId}/${clinicId}/${branchId}`)
-    console.log('✅ Therapies by Branch API:', response.data)
-    const raw = response.data?.data ?? response.data ?? []
-    return Array.isArray(raw) ? raw : []
+    console.log('✅ Therapy Detail API:', response.data)
+    const raw = response.data?.data ?? response.data ?? null
+    return Array.isArray(raw) ? (raw[0] ?? null) : raw
   } catch (error) {
-    console.error('❌ Therapies by Branch API Error:', error)
-    return []
+    console.error('❌ Therapy Detail API Error:', error)
+    return null
   }
 }
-// =`=============================
 
+// =============================
 // ✅ Get exercises by clinicId & branchId
 export const getExercisesByBranch = async (clinicId, branchId) => {
   try {
@@ -879,16 +887,16 @@ export const getExercisesByBranch = async (clinicId, branchId) => {
 export const getExercisesByBranchAndIdAndId = async (clinicId, branchId, exerciseId) => {
   try {
     const response = await api.get(`${exerciseUrlId}/${clinicId}/${branchId}/${exerciseId}`)
-    console.log('✅ Exercises by Branch API:', response.data)
-    const raw = response.data?.data ?? response.data ?? []
-    return Array.isArray(raw) ? raw : []
+    console.log('✅ Exercise Detail API:', response.data)
+    const raw = response.data?.data ?? response.data ?? null
+    return Array.isArray(raw) ? (raw[0] ?? null) : raw
   } catch (error) {
-    console.error('❌ Exercises by Branch API Error:', error)
-    return []
+    console.error('❌ Exercise Detail API Error:', error)
+    return null
   }
 }
-// =============================
 
+// =============================
 // ✅ Get all programs (fallback)
 export const getPrograms = async () => {
   try {
@@ -901,18 +909,3 @@ export const getPrograms = async () => {
     return []
   }
 }
-
-// // ✅ Get single program detail by programId (for therophy[] data)
-// export const getProgramById = async (clinicId, branchId, programId) => {
-//   try {
-//     const response = await api.post(`${programUrl}/${clinicId}/${branchId}/${programId}`)
-
-//     console.log('✅ getProgramById API:', response.data)
-
-//     return response?.data?.data ?? null
-
-//   } catch (error) {
-//     console.error('❌ getProgramById API Error:', error)
-//     throw error
-//   }
-// }

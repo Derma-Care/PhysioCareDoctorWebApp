@@ -132,7 +132,6 @@ const AnswerBadge = ({ answer }) => {
   )
 }
 
-/* ─── Visit urgency ─────────────────────────────────────────────────────── */
 const FOLLOWUP_STATUS_STYLE = {
   Active:     { bg: '#f0fff4', border: '#68d391', color: '#276749', icon: '🟢' },
   'On Hold':  { bg: '#fffbeb', border: '#f6ad55', color: '#7b341e', icon: '🟡' },
@@ -153,7 +152,382 @@ const getVisitUrgency = (dateStr) => {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   MAIN COMPONENT
+   EXERCISE TABLE (read-only for summary display)
+══════════════════════════════════════════════════════════════════════════ */
+const ExerciseTableDisplay = ({ exercises }) => {
+  if (!exercises || exercises.length === 0) return (
+    <div style={{ padding: '8px 12px', color: '#94a3b8', fontStyle: 'italic', fontSize: '0.82rem' }}>No exercises</div>
+  )
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', color: P }}>
+        <thead>
+          <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+            {['#', 'Exercise Name', 'Session', 'Sets', 'Reps', 'Frequency', 'Notes'].map(h => (
+              <th key={h} style={{ padding: '8px 10px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.8rem' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {exercises.map((ex, i) => (
+            <tr key={i} style={{ background: i % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
+              <td style={{ padding: '7px 10px', fontWeight: 700, color: '#3a8fd4' }}>{i + 1}</td>
+              <td style={{ padding: '7px 10px', fontWeight: 600 }}>{ex.name || ex.exerciseName || '—'}</td>
+              <td style={{ padding: '7px 10px', textAlign: 'center' }}>{dash(ex.session)}</td>
+              <td style={{ padding: '7px 10px', textAlign: 'center' }}>
+                {ex.sets ? <span style={{ background: '#dbeafe', color: A, borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span> : '—'}
+              </td>
+              <td style={{ padding: '7px 10px', textAlign: 'center' }}>
+                {(ex.repetitions || ex.reps) ? <span style={{ background: '#dbeafe', color: A, borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.repetitions || ex.reps}</span> : '—'}
+              </td>
+              <td style={{ padding: '7px 10px', whiteSpace: 'nowrap' }}>
+                {ex.frequency ? <span style={{ background: '#f0f7ff', color: P, borderRadius: 8, padding: '2px 8px', fontWeight: 600, fontSize: '0.78rem' }}>📆 {ex.frequency}</span> : '—'}
+              </td>
+              <td style={{ padding: '7px 10px', maxWidth: 160 }}>
+                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.notes}>{ex.notes || '—'}</div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   THERAPY BLOCK — renders a single therapy with its exercise table
+────────────────────────────────────────────────────────────────────────── */
+const TherapyBlock = ({ therapyName, exercises, totalPrice, accentColor = A, accentBg = '#eef5ff', borderColor = BORDER }) => (
+  <div style={{ marginBottom: 12 }}>
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '8px 14px',
+      background: accentBg,
+      borderRadius: '8px 8px 0 0',
+      border: `1px solid ${borderColor}`,
+      borderBottom: 'none',
+    }}>
+      <span style={{ fontWeight: 700, color: accentColor, fontSize: '0.9rem' }}>
+        💊 {therapyName || 'Therapy'}
+      </span>
+      {totalPrice > 0 && (
+        <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>₹ {totalPrice}</span>
+      )}
+    </div>
+    <div style={{ border: `1px solid ${borderColor}`, borderTop: 'none', borderRadius: '0 0 8px 8px', overflow: 'hidden' }}>
+      <ExerciseTableDisplay exercises={exercises} />
+    </div>
+  </div>
+)
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SESSION META BAR — therapist, modalities, service type badge
+────────────────────────────────────────────────────────────────────────── */
+const SessionMetaBar = ({ sess }) => {
+  const serviceType = (sess.serviceType || '').toLowerCase()
+  const typeStyle = {
+    package:  { bg: '#fef3c7', color: '#92400e', icon: '📦' },
+    program:  { bg: '#dbeafe', color: '#1e40af', icon: '🎯' },
+    therapy:  { bg: '#ede9fe', color: '#5b21b6', icon: '💊' },
+    exercise: { bg: '#d1fae5', color: '#065f46', icon: '🏋️' },
+  }
+  const ts = typeStyle[serviceType] || { bg: '#f3f4f6', color: '#374151', icon: '📋' }
+
+  return (
+    <div style={{
+      display: 'flex', flexWrap: 'wrap', gap: 8,
+      marginBottom: 14, padding: '10px 16px',
+      background: '#f8fbff', borderRadius: 10,
+      border: `1px solid ${BORDER}`, alignItems: 'center',
+    }}>
+      {sess.serviceType && (
+        <span style={{
+          background: ts.bg, color: ts.color,
+          borderRadius: 20, padding: '3px 12px',
+          fontSize: '0.78rem', fontWeight: 700, textTransform: 'capitalize',
+        }}>
+          {ts.icon} {sess.serviceType}
+        </span>
+      )}
+      {sess.therapistName && <Chip label={`👤 ${sess.therapistName}`} color={P} bg="#f0f7ff" />}
+      {sess.therapistId   && <Chip label={`ID: ${sess.therapistId}`}  color="#64748b" bg="#f3f4f6" />}
+      {Array.isArray(sess.modalitiesUsed) && sess.modalitiesUsed.map(m => (
+        <Chip key={m} label={m} color={A} bg="#dbeafe" />
+      ))}
+    </div>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SESSION DETAILS ROW — manualTherapy, precautions, patientResponse
+────────────────────────────────────────────────────────────────────────── */
+const SessionDetailsRow = ({ sess }) => {
+  if (!sess.manualTherapy && !sess.precautions && !sess.patientResponse) return null
+  return (
+    <div style={{ marginBottom: 14, padding: '10px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8 }}>
+      <Grid cols={3}>
+        {sess.manualTherapy   && <Row label="Manual Therapy"   value={sess.manualTherapy} />}
+        {sess.precautions     && <Row label="Precautions"       value={sess.precautions} />}
+        {sess.patientResponse && <Row label="Patient Response"  value={sess.patientResponse} />}
+      </Grid>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THERAPY SESSIONS DISPLAY — handles all 4 serviceType shapes correctly
+══════════════════════════════════════════════════════════════════════════ */
+const TherapySessionsDisplay = ({ sessionsList }) => {
+  if (!sessionsList || sessionsList.length === 0) return (
+    <div style={{ padding: '16px', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+      No therapy session data found.
+    </div>
+  )
+
+  return (
+    <>
+      {sessionsList.map((sess, si) => {
+        const serviceType = (sess.serviceType || '').toLowerCase()
+        const isLast = si === sessionsList.length - 1
+
+        /* ════ PACKAGE ════
+           Shape: { serviceType:'package', packageName, totalPrice, programs:[{ programName, totalPrice, therapyData:[{ therapyId, therapyName, totalPrice, exercises:[] }] }], therapistId, therapistName, modalitiesUsed, ... }
+        */
+        if (serviceType === 'package') {
+          return (
+            <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
+              {/* Package header */}
+              <div style={{
+                padding: '12px 18px',
+                background: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+                borderRadius: '12px 12px 0 0', color: '#fff',
+                fontWeight: 700, fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <span>📦 {sess.packageName || 'Package'}</span>
+                {sess.totalPrice > 0 && <span style={{ fontSize: '0.85rem', fontWeight: 600, opacity: 0.9 }}>₹ {sess.totalPrice}</span>}
+              </div>
+              <div style={{ border: '2px solid #c4b5fd', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
+                <SessionMetaBar sess={sess} />
+                <SessionDetailsRow sess={sess} />
+
+                {/* Programs inside package */}
+                {Array.isArray(sess.programs) && sess.programs.length > 0 && sess.programs.map((prog, pIdx) => (
+                  <div key={pIdx} style={{ marginBottom: pIdx < sess.programs.length - 1 ? 18 : 0 }}>
+                    {/* Program sub-header */}
+                    <div style={{
+                      padding: '9px 16px',
+                      background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
+                      borderRadius: '8px 8px 0 0', color: '#fff',
+                      fontWeight: 700, fontSize: '0.9rem',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    }}>
+                      <span>🎯 {prog.programName || `Program ${pIdx + 1}`}</span>
+                      {prog.totalPrice > 0 && <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>₹ {prog.totalPrice}</span>}
+                    </div>
+                    <div style={{ border: '1.5px solid #c8ddf0', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '12px 14px' }}>
+                      {/* therapyData is the correct key from buildPayload */}
+                      {Array.isArray(prog.therapyData ?? prog.therophyData) &&
+                        (prog.therapyData ?? prog.therophyData ?? []).map((therapy, tIdx) => (
+                          <TherapyBlock
+                            key={tIdx}
+                            therapyName={therapy.therapyName}
+                            exercises={therapy.exercises || []}
+                            totalPrice={therapy.totalPrice}
+                          />
+                        ))
+                      }
+                      {/* Fallback: no therapyData */}
+                      {!Array.isArray(prog.therapyData ?? prog.therophyData) && (
+                        <div style={{ color: '#94a3b8', fontSize: '0.82rem', fontStyle: 'italic', padding: '8px 12px' }}>
+                          No therapy data for this program.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Fallback: package has therophyData directly (no programs[]) */}
+                {(!Array.isArray(sess.programs) || sess.programs.length === 0) &&
+                  Array.isArray(sess.therapyData ?? sess.therophyData) &&
+                  (sess.therapyData ?? sess.therophyData ?? []).map((therapy, tIdx) => (
+                    <TherapyBlock
+                      key={tIdx}
+                      therapyName={therapy.therapyName}
+                      exercises={therapy.exercises || []}
+                      totalPrice={therapy.totalPrice}
+                    />
+                  ))
+                }
+
+                {/* Nothing at all */}
+                {(!Array.isArray(sess.programs) || sess.programs.length === 0) &&
+                  !Array.isArray(sess.therapyData ?? sess.therophyData) && (
+                  <div style={{ color: '#94a3b8', fontSize: '0.82rem', fontStyle: 'italic', padding: '8px 12px' }}>
+                    No program or therapy data found in this package.
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        }
+
+        /* ════ PROGRAM ════
+           Shape: { serviceType:'program', programId, programName, totalPrice, therapyData:[{ therapyId, therapyName, totalPrice, exercises:[] }], therapistId, ... }
+        */
+        if (serviceType === 'program') {
+          const therapies = sess.therapyData ?? sess.therophyData ?? []
+          return (
+            <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
+              <div style={{
+                padding: '12px 18px',
+                background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
+                borderRadius: '12px 12px 0 0', color: '#fff',
+                fontWeight: 700, fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <span>🎯 {sess.programName || 'Program'}</span>
+                {sess.totalPrice > 0 && <span style={{ fontSize: '0.85rem', fontWeight: 600, opacity: 0.9 }}>₹ {sess.totalPrice}</span>}
+              </div>
+              <div style={{ border: '2px solid #c8ddf0', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
+                <SessionMetaBar sess={sess} />
+                <SessionDetailsRow sess={sess} />
+
+                {Array.isArray(therapies) && therapies.length > 0
+                  ? therapies.map((therapy, tIdx) => (
+                      <TherapyBlock
+                        key={tIdx}
+                        therapyName={therapy.therapyName}
+                        exercises={therapy.exercises || []}
+                        totalPrice={therapy.totalPrice}
+                      />
+                    ))
+                  : (
+                    <div style={{ color: '#94a3b8', fontSize: '0.82rem', fontStyle: 'italic', padding: '8px 12px' }}>
+                      No therapies found for this program.
+                    </div>
+                  )
+                }
+              </div>
+            </div>
+          )
+        }
+
+        /* ════ THERAPY ════
+           Shape: { serviceType:'therapy', therapyData:[{ therapyId, therapyName, exercises:[] }], therapistId, ... }
+           NOTE: buildPayload wraps individual therapies inside therapyData array
+        */
+        if (serviceType === 'therapy') {
+          // therapyData is array of { therapyId, therapyName, serviceType, totalPrice, exercises[] }
+          const therapies = sess.therapyData ?? []
+          return (
+            <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
+              <div style={{
+                padding: '12px 18px',
+                background: 'linear-gradient(135deg,#5b21b6,#7c3aed)',
+                borderRadius: '12px 12px 0 0', color: '#fff',
+                fontWeight: 700, fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <span>💊 Therapy Session</span>
+                {sess.totalPrice > 0 && <span style={{ fontSize: '0.85rem', fontWeight: 600, opacity: 0.9 }}>₹ {sess.totalPrice}</span>}
+              </div>
+              <div style={{ border: '2px solid #c4b5fd', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
+                <SessionMetaBar sess={sess} />
+                <SessionDetailsRow sess={sess} />
+
+                {Array.isArray(therapies) && therapies.length > 0
+                  ? therapies.map((t, tIdx) => (
+                      <TherapyBlock
+                        key={tIdx}
+                        therapyName={t.therapyName}
+                        exercises={t.exercises || []}
+                        totalPrice={t.totalPrice}
+                        accentColor="#5b21b6"
+                        accentBg="#f5f3ff"
+                        borderColor="#c4b5fd"
+                      />
+                    ))
+                  : (
+                    /* Fallback: exercises directly on sess (legacy shape) */
+                    Array.isArray(sess.exercises) && sess.exercises.length > 0
+                      ? (
+                        <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden' }}>
+                          <ExerciseTableDisplay exercises={sess.exercises} />
+                        </div>
+                      )
+                      : (
+                        <div style={{ color: '#94a3b8', fontSize: '0.82rem', fontStyle: 'italic', padding: '8px 12px' }}>
+                          No therapy data found.
+                        </div>
+                      )
+                  )
+                }
+              </div>
+            </div>
+          )
+        }
+
+        /* ════ EXERCISE ════
+           Shape: { serviceType:'exercise', exercises:[{ ... }], therapistId, ... }
+        */
+        if (serviceType === 'exercise') {
+          return (
+            <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
+              <div style={{
+                padding: '12px 18px',
+                background: 'linear-gradient(135deg,#065f46,#10b981)',
+                borderRadius: '12px 12px 0 0', color: '#fff',
+                fontWeight: 700, fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <span>🏋️ Exercise Session</span>
+                {sess.totalPrice > 0 && <span style={{ fontSize: '0.85rem', fontWeight: 600, opacity: 0.9 }}>₹ {sess.totalPrice}</span>}
+              </div>
+              <div style={{ border: '2px solid #6ee7b7', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
+                <SessionMetaBar sess={sess} />
+                <SessionDetailsRow sess={sess} />
+                <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden' }}>
+                  <ExerciseTableDisplay exercises={sess.exercises || []} />
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        /* ════ UNKNOWN / LEGACY fallback ════ */
+        return (
+          <div key={si} style={{ marginBottom: isLast ? 0 : 24 }}>
+            <SessionMetaBar sess={sess} />
+            <SessionDetailsRow sess={sess} />
+
+            {/* therapyData flat table */}
+            {Array.isArray(sess.therapyData) && sess.therapyData.length > 0 && (
+              sess.therapyData.map((therapy, tIdx) => (
+                <TherapyBlock
+                  key={tIdx}
+                  therapyName={therapy.therapyName}
+                  exercises={therapy.exercises || []}
+                  totalPrice={therapy.totalPrice}
+                />
+              ))
+            )}
+
+            {/* direct exercises */}
+            {Array.isArray(sess.exercises) && sess.exercises.length > 0 && (
+              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden', marginTop: 8 }}>
+                <ExerciseTableDisplay exercises={sess.exercises} />
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MAIN SUMMARY COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
 const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formData = {}, fromPage }) => {
   const { doctorDetails, setDoctorDetails, setClinicDetails, clinicDetails, updateTemplate } = useDoctorContext()
@@ -224,7 +598,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                            : Array.isArray(formData?.activityLevels) ? formData.activityLevels
                            : Array.isArray(patientData?.activityLevels) ? patientData.activityLevels
                            : []
-  // patientPain: top-level takes priority, then assessment-level
   const patientPain = record.patientPain ?? formData?.patientPain ?? formData?.assessment?.patientPain ?? patientData?.patientPain ?? ''
 
   /* ── investigation ── */
@@ -235,12 +608,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   /* ── assessment ── */
   const assessment = record.assessment ?? formData?.assessment ?? {}
 
-  // Functional Assessment
   const difficultiesIn      = Array.isArray(assessment.difficultiesIn) ? assessment.difficultiesIn : []
   const otherDifficulty     = assessment.otherDifficulty     ?? ''
   const dailyLivingAffected = assessment.dailyLivingAffected ?? ''
 
-  // Physical Examination
   const postureAssessment = Array.isArray(assessment.postureAssessment) ? assessment.postureAssessment : []
   const postureDeviations = assessment.postureDeviations ?? ''
   const romStatus         = Array.isArray(assessment.romStatus) ? assessment.romStatus : []
@@ -250,7 +621,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const muscleWeakness    = assessment.muscleWeakness   ?? ''
   const neurologicalSigns = Array.isArray(assessment.neurologicalSigns) ? assessment.neurologicalSigns : []
 
-  // Pain-type-specific
   const effectivePain      = patientPain || assessment.patientPain || ''
   const painTriggers       = assessment.painTriggers    ?? ''
   const chronicRelieving   = assessment.chronicRelieving ?? ''
@@ -268,19 +638,49 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     ? diagnosisObj.diagnosisRows
     : diagnosisObj.physioDiagnosis ? [diagnosisObj] : []
 
-  /* ── therapySessions ── */
-  const therapySessionsObj = record.therapySessions ?? formData?.therapySessions ?? {}
-  const overallStatus      = therapySessionsObj.overallStatus ?? ''
-  const sessionsList       = Array.isArray(therapySessionsObj.sessions) ? therapySessionsObj.sessions : []
+  /* ─────────────────────────────────────────────────────────────────────────
+     THERAPY SESSIONS — FIXED resolution
+     
+     Priority order:
+     1. formData.therapySessions  — set directly by TherapySession.buildPayload()
+        after deepMerge in TabContent. This is always an ARRAY like:
+        [ { serviceType:'program', programName:'...', therapyData:[...], ... } ]
+     
+     2. record.therapySessions    — if physiotherapyRecord wraps it
+     
+     3. therapySessionsRaw.sessions — legacy { sessions:[...] } shape
+  ───────────────────────────────────────────────────────────────────────── */
+  const therapySessionsRaw =
+    formData?.therapySessions ??       // ← check formData FIRST (direct array from TherapySession)
+    record?.therapySessions ??         // ← then physiotherapyRecord
+    {}
 
-  /* ── treatmentPlan ── */
+  const overallStatus = (!Array.isArray(therapySessionsRaw) && therapySessionsRaw?.overallStatus)
+    ? therapySessionsRaw.overallStatus
+    : ''
+
+  let sessionsList = []
+  if (Array.isArray(therapySessionsRaw)) {
+    // Direct array — from TherapySession buildPayload after deepMerge
+    sessionsList = therapySessionsRaw
+  } else if (Array.isArray(therapySessionsRaw?.sessions)) {
+    // Legacy nested shape
+    sessionsList = therapySessionsRaw.sessions
+  }
+
+  // Safety unwrap: if somehow double-nested
+  if (sessionsList.length === 1 && Array.isArray(sessionsList[0])) {
+    sessionsList = sessionsList[0]
+  }
+
+  /* ── treatmentPlan (from first session or top-level) ── */
   const firstSession = sessionsList[0] ?? {}
   const treatmentPlanDisplay = {
     doctorId, doctorName,
-    therapistId:   firstSession.therapistId   ?? therapySessionsObj.therapistId   ?? '',
-    therapistName: firstSession.therapistName ?? therapySessionsObj.therapistName ?? '',
-    manualTherapy: firstSession.manualTherapy ?? therapySessionsObj.manualTherapy ?? '',
-    precautions:   firstSession.precautions   ?? therapySessionsObj.precautions   ?? '',
+    therapistId:   firstSession.therapistId   ?? therapySessionsRaw?.therapistId   ?? '',
+    therapistName: firstSession.therapistName ?? therapySessionsRaw?.therapistName ?? '',
+    manualTherapy: firstSession.manualTherapy ?? therapySessionsRaw?.manualTherapy ?? '',
+    precautions:   firstSession.precautions   ?? therapySessionsRaw?.precautions   ?? '',
   }
 
   /* ── exercisePlan ── */
@@ -346,7 +746,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         duration:            finalComplaints.duration,
         theraphyAnswers:     finalComplaints.theraphyAnswers,
       },
-      // ── Patient background fields ──
       previousInjuries,
       currentMedications,
       allergies,
@@ -354,11 +753,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       insuranceProvider,
       activityLevels,
       patientPain: effectivePain,
-      // ── Investigation ──
       investigation: { tests: investigationTests, notes: investigationNotes },
-      // ── Assessment ──
       assessment: {
-        // Subjective
         chiefComplaint:     assessment.chiefComplaint     ?? '',
         painScale:          assessment.painScale          ?? '',
         painType:           assessment.painType           ?? '',
@@ -370,11 +766,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         rangeOfMotion:      assessment.rangeOfMotion      ?? '',
         specialTests:       assessment.specialTests       ?? '',
         observations:       assessment.observations       ?? '',
-        // Functional Assessment
         difficultiesIn,
         otherDifficulty,
         dailyLivingAffected,
-        // Physical Examination
         postureAssessment,
         postureDeviations,
         romStatus,
@@ -383,16 +777,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         muscleStrength,
         muscleWeakness,
         neurologicalSigns,
-        // Pain classification
         patientPain: effectivePain,
-        // Chronic Pain
         painTriggers,
         chronicRelieving,
-        // Sports Rehab
         typeOfSport,
         recurringInjuries,
         returnToSportGoals,
-        // Neuro Rehab
         neuroDiagnosis,
         neuroOnset,
         mobilityStatus,
@@ -626,30 +1016,22 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${BORDER}` }}>
                 <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>🔬 Physical Examination</div>
                 <div style={{ background: '#f8f9ff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
-
-                  {/* Posture */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 700, fontSize: '0.82rem', color: P, minWidth: 160 }}>Posture Assessment:</span>
                     {['Normal', 'Deviations'].map(opt => <CheckChip key={opt} label={opt} checked={postureAssessment.includes(opt)} />)}
                     {postureDeviations && <span style={{ fontSize: '0.82rem', color: '#64748b', fontStyle: 'italic' }}>— {postureDeviations}</span>}
                   </div>
-
-                  {/* ROM */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 700, fontSize: '0.82rem', color: P, minWidth: 160 }}>Range of Motion:</span>
                     {['Normal', 'Restricted'].map(opt => <CheckChip key={opt} label={opt} checked={romStatus.includes(opt)} />)}
                     {romRestricted && <span style={{ fontSize: '0.82rem', color: '#64748b', fontStyle: 'italic' }}>— {romRestricted}</span>}
                     {romJoints && <span style={{ fontSize: '0.82rem', color: P }}>Joints: <strong>{romJoints}</strong></span>}
                   </div>
-
-                  {/* Muscle Strength */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 700, fontSize: '0.82rem', color: P, minWidth: 160 }}>Muscle Strength:</span>
                     {['Normal', 'Weakness in'].map(opt => <CheckChip key={opt} label={opt} checked={muscleStrength.includes(opt)} />)}
                     {muscleWeakness && <span style={{ fontSize: '0.82rem', color: '#64748b', fontStyle: 'italic' }}>— {muscleWeakness}</span>}
                   </div>
-
-                  {/* Neurological Signs */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 700, fontSize: '0.82rem', color: P, minWidth: 160 }}>Neurological Signs:</span>
                     {['Normal', 'Balance', 'Coordination', 'Sensation issues'].map(opt => <CheckChip key={opt} label={opt} checked={neurologicalSigns.includes(opt)} />)}
@@ -751,87 +1133,21 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         )}
 
         {/* ══ 9. THERAPY SESSIONS ══ */}
-        {sessionsList.length > 0 && (
-          <Section icon="🏥" title="Therapy Sessions">
-            {overallStatus && (
-              <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Overall Status:</span>
-                <StatusDot status={overallStatus} />
-              </div>
-            )}
-            {sessionsList.map((sess, si) => (
-              <div key={si} style={{ marginBottom: si < sessionsList.length - 1 ? 24 : 0 }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12, padding: '10px 16px', background: '#f0f7ff', borderRadius: 10, border: `1px solid ${BORDER}`, alignItems: 'center' }}>
-                  {sess.programName && (
-                    <span style={{ background: '#dbeafe', color: A, borderRadius: 20, padding: '3px 12px', fontSize: '0.8rem', fontWeight: 700 }}>
-                      {sess.serviceType === 'package' ? '📦' : '🎯'} {sess.programName}
-                    </span>
-                  )}
-                  {sess.serviceType && (
-                    <span style={{ background: sess.serviceType === 'package' ? '#fef3c7' : '#d1fae5', color: sess.serviceType === 'package' ? '#92400e' : '#065f46', borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', fontWeight: 700, textTransform: 'capitalize' }}>
-                      {sess.serviceType}
-                    </span>
-                  )}
-                  {sess.therapistName && <Chip label={`👤 ${sess.therapistName}`} color={P} bg="#f0f7ff" />}
-                  {sess.totalTherapyIds > 0 && <Chip label={`${sess.totalTherapyIds} therapies`} color="#065f46" bg="#d1fae5" />}
-                </div>
-                {Array.isArray(sess.modalitiesUsed) && sess.modalitiesUsed.length > 0 && (
-                  <div style={{ marginBottom: 10 }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 8 }}>Modalities:</span>
-                    {sess.modalitiesUsed.map(m => <Chip key={m} label={m} color={A} bg="#dbeafe" />)}
-                  </div>
-                )}
-                {Array.isArray(sess.therapyData) && sess.therapyData.length > 0 && (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: P }}>
-                      <thead>
-                        <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                          {['Therapy', 'Exercise Name', 'Session', 'Sets', 'Reps', 'Frequency', 'Notes'].map(h => (
-                            <th key={h} style={{ padding: '9px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sess.therapyData.flatMap((therapy, ti) =>
-                          Array.isArray(therapy.exercises) && therapy.exercises.length > 0
-                            ? therapy.exercises.map((ex, ei) => (
-                                <tr key={`${ti}-${ei}`} style={{ background: (ti + ei) % 2 === 0 ? LIGHT : '#fff', borderBottom: `1px solid ${BORDER}` }}>
-                                  {ei === 0 ? (
-                                    <td rowSpan={therapy.exercises.length} style={{ padding: '9px 12px', fontWeight: 700, color: A, verticalAlign: 'middle', borderRight: `1px solid ${BORDER}`, background: '#f0f7ff' }}>
-                                      {therapy.therapyName || '—'}
-                                    </td>
-                                  ) : null}
-                                  <td style={{ padding: '9px 12px', fontWeight: 600 }}>{ex.name || '—'}</td>
-                                  <td style={{ padding: '9px 12px', textAlign: 'center' }}>{dash(ex.session)}</td>
-                                  <td style={{ padding: '9px 12px', textAlign: 'center' }}>
-                                    {ex.sets ? <span style={{ background: '#dbeafe', color: A, borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span> : '—'}
-                                  </td>
-                                  <td style={{ padding: '9px 12px', textAlign: 'center' }}>
-                                    {ex.repetitions ? <span style={{ background: '#dbeafe', color: A, borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.repetitions}</span> : '—'}
-                                  </td>
-                                  <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
-                                    {ex.frequency ? <span style={{ background: '#f0f7ff', color: P, borderRadius: 8, padding: '2px 8px', fontWeight: 600, fontSize: '0.78rem' }}>📆 {ex.frequency}</span> : '—'}
-                                  </td>
-                                  <td style={{ padding: '9px 12px', maxWidth: 160 }}>
-                                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.notes}>{ex.notes || '—'}</div>
-                                  </td>
-                                </tr>
-                              ))
-                            : [(
-                                <tr key={`${ti}-empty`} style={{ background: LIGHT, borderBottom: `1px solid ${BORDER}` }}>
-                                  <td style={{ padding: '9px 12px', fontWeight: 700, color: A }}>{therapy.therapyName || '—'}</td>
-                                  <td colSpan={6} style={{ padding: '9px 12px', color: '#94a3b8', fontStyle: 'italic' }}>No exercises</td>
-                                </tr>
-                              )]
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            ))}
-          </Section>
-        )}
+        <Section icon="🏥" title="Therapy Sessions">
+          {overallStatus && (
+            <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Overall Status:</span>
+              <StatusDot status={overallStatus} />
+            </div>
+          )}
+          {/* Debug info shown only in development */}
+          {process.env.NODE_ENV === 'development' && sessionsList.length === 0 && (
+            <div style={{ marginBottom: 10, padding: '8px 12px', background: '#fff8e1', border: '1px solid #fde68a', borderRadius: 8, fontSize: '0.78rem', color: '#92400e' }}>
+              ⚠️ Dev: No sessions found. formData.therapySessions type: {typeof formData?.therapySessions} | isArray: {String(Array.isArray(formData?.therapySessions))} | length: {Array.isArray(formData?.therapySessions) ? formData.therapySessions.length : 'N/A'}
+            </div>
+          )}
+          <TherapySessionsDisplay sessionsList={sessionsList} />
+        </Section>
 
         {/* ══ 10. EXERCISE PLAN ══ */}
         {(homeExercises.length > 0 || homeAdvice) && (
