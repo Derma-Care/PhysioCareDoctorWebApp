@@ -587,9 +587,24 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const patientPain = record.patientPain ?? formData?.patientPain ?? formData?.assessment?.patientPain ?? patientData?.patientPain ?? ''
 
   /* ── investigation ── */
+  // ✅ FIX: Investigation component saves as { selectedTests, notes }
+  // Support both old shape { tests, reason } and new shape { selectedTests, notes }
   const investigationObj = record.investigation ?? formData?.investigation ?? {}
-  const investigationTests = investigationObj.tests ?? ''
-  const investigationReason = investigationObj.reason ?? investigationObj.notes ?? ''
+  const investigationTests =
+    investigationObj.selectedTests ??   // ← new shape from Investigation component
+    investigationObj.tests ??           // ← old/API shape
+    []
+  const investigationReason =
+    investigationObj.notes ??           // ← new shape from Investigation component
+    investigationObj.reason ??          // ← old shape
+    ''
+
+  // Normalize to array for display
+  const investigationTestsArray = Array.isArray(investigationTests)
+    ? investigationTests
+    : investigationTests
+      ? [investigationTests]
+      : []
 
   /* ── assessment ── */
   const assessment = record.assessment ?? formData?.assessment ?? {}
@@ -624,7 +639,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     : diagnosisObj.physioDiagnosis ? [diagnosisObj] : []
 
   /* ── therapy sessions resolution ── */
-  // ✅ FIX: Resolve the nested sessions structure correctly
   const therapySessionsRaw =
     formData?.therapySessions ??
     record?.therapySessions ??
@@ -634,8 +648,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     ? therapySessionsRaw.overallStatus
     : ''
 
-  // ✅ FIX: Always extract from .sessions array — this preserves the full
-  // program/therapyData structure that the API expects
   let sessionsList = []
   if (Array.isArray(therapySessionsRaw)) {
     sessionsList = therapySessionsRaw
@@ -704,18 +716,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
   /* ══════════════════════════════════════════════════════════════════════
      BUILD FINAL PAYLOAD
-     ✅ KEY FIX: therapySessions now passes the full nested structure
-        (programId, programName, therapyData with exercises) instead of
-        being flattened to flat sessionDate/modalitiesUsed objects.
-     ✅ KEY FIX: investigation now included with correct field names.
-     ✅ KEY FIX: complaints uses 'therapyAnswers' (no extra 'h').
-     ✅ KEY FIX: precautions sent as array.
   ══════════════════════════════════════════════════════════════════════ */
   const buildPayload = () => {
     const firstDiag = diagnosisRows[0] ?? {}
 
-    // ✅ Pass the full structured sessions directly — do NOT flatten
-    // The API expects: [{ serviceType, programId, programName, therapyData: [...] }]
     const structuredSessions = sessionsList.map(sess => ({
       serviceType:     (sess.serviceType ?? 'PROGRAM').toUpperCase(),
       programId:       sess.programId       ?? '',
@@ -753,7 +757,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         : [],
     }))
 
-    // ✅ followUp — send as object (first entry) to match schema
     const followUpPayload = Array.isArray(followUpObj)
       ? (followUpObj[0] ?? {})
       : (followUpObj ?? {})
@@ -769,26 +772,23 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         age:  Number(patientAge) || 0,
         sex:  patientSex,
       },
-      // ✅ 'therapyAnswers' — correct spelling (no extra 'h')
       complaints: {
-        complaintDetails:   finalComplaints.complaintDetails   || '',
-        painAssessmentImage:finalComplaints.painAssessmentImage|| '',
-        reportImages:       finalComplaints.reportImages       || [],
-        selectedTherapy:    finalComplaints.selectedTherapy    || '',
-        selectedTherapyId:  finalComplaints.selectedTherapyID  || '',
-        duration:           finalComplaints.duration           || '',
-        therapyAnswers:     Object.values(finalComplaints.theraphyAnswers ?? {}).flat().map(q => ({
+        complaintDetails:    finalComplaints.complaintDetails    || '',
+        painAssessmentImage: finalComplaints.painAssessmentImage || '',
+        reportImages:        finalComplaints.reportImages        || [],
+        selectedTherapy:     finalComplaints.selectedTherapy     || '',
+        selectedTherapyId:   finalComplaints.selectedTherapyID   || '',
+        duration:            finalComplaints.duration            || '',
+        therapyAnswers: Object.values(finalComplaints.theraphyAnswers ?? {}).flat().map(q => ({
           questionKey: q.questionKey ?? '',
           questionId:  q.questionId  ?? '',
           question:    q.question    ?? '',
           answer:      q.answer      ?? '',
         })),
       },
-      // ✅ investigation now included
+      // ✅ FIX: Use investigationTestsArray (normalized) and investigationReason
       investigation: {
-        tests:  Array.isArray(investigationTests)
-          ? investigationTests
-          : investigationTests ? [investigationTests] : [],
+        tests:  investigationTestsArray,
         reason: investigationReason || '',
       },
       assessment: {
@@ -817,7 +817,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           muscleWeakness:    muscleWeakness,
           neurologicalSigns: neurologicalSigns,
         },
-        // ✅ Conditional pain-type sub-assessments
         ...(effectivePain === 'chronicPain' ? {
           chronicPainPatients: {
             painTriggers:     painTriggers,
@@ -860,7 +859,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             : [],
         frequency: treatmentPlanDisplay.frequency,
       },
-      // ✅ Full nested structure preserved
       therapySessions: structuredSessions,
       exercisePlan: {
         homeAdvice,
@@ -1037,12 +1035,36 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         )}
 
         {/* ══ 5. INVESTIGATION ══ */}
-        {(investigationTests || investigationReason) && (
+        {/* ✅ FIX: Show section if tests array has items OR reason has content */}
+        {(investigationTestsArray.length > 0 || investigationReason) && (
           <Section icon="🔬" title="Investigation">
-            <Grid cols={2}>
-              <Row label="Tests" value={Array.isArray(investigationTests) ? investigationTests.join(', ') : investigationTests} highlight />
-              <Row label="Reason" value={investigationReason} />
-            </Grid>
+            {/* ✅ FIX: Render tests as chips, not a plain string */}
+            {investigationTestsArray.length > 0 && (
+              <div style={{ marginBottom: investigationReason ? 14 : 0 }}>
+                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Recommended Tests:
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                  {investigationTestsArray.map((test, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        background: '#dbeafe', color: A,
+                        borderRadius: 20, padding: '4px 14px',
+                        fontSize: '0.82rem', fontWeight: 700,
+                        border: `1px solid ${A}33`,
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                      }}
+                    >
+                      🔬 {test}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {investigationReason && (
+              <Row label="Notes / Reason" value={investigationReason} full highlight />
+            )}
           </Section>
         )}
 
