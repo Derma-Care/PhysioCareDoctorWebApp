@@ -3,6 +3,8 @@ import { CCard, CCardBody, CContainer, CAlert } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 import CreatableSelect from 'react-select/creatable'
 import { addLabTest, getLabTests } from '../../src/Auth/Auth'
+import { COLORS } from '../Themes'
+import { useDoctorContext } from '../Context/DoctorContext'
 
 /* ─── Styles (matching HomePlan / Diagnosis) ─────────────────────────────── */
 const inputStyle = {
@@ -49,6 +51,13 @@ const CardHeader = ({ emoji, title }) => (
   </div>
 )
 
+/* ── escapeHtml ───────────────────────────────────────────────────────────── */
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
@@ -60,6 +69,8 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
   const [availableTests, setAvailableTests]         = useState([])
 
   const seedRef = useRef(null)
+
+  const { patientData, clinicDetails, doctorDetails } = useDoctorContext()
 
   // ── Seed sync ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -103,6 +114,91 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
     const payload = { investigation: { selectedTests, notes } }
     setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
     onNext?.(payload)
+  }
+
+  // ── handlePrint ────────────────────────────────────────────────────────
+  const handlePrint = () => {
+    const today = new Date()
+    const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+
+    const testsHtml = selectedTests.length > 0
+      ? selectedTests.map(t => `
+          <div style="display:inline-flex;align-items:center;background:#dbeafe;border:1px solid #b6cfe8;
+            border-radius:20px;padding:4px 12px;font-size:13px;color:#1a3a5c;font-weight:600;margin:3px;">
+            ${escapeHtml(t)}
+          </div>`).join('')
+      : '<span style="color:#8aaac8;font-size:13px;">No tests selected.</span>'
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<title>Investigation – ${escapeHtml(patientData?.name ?? '')}</title>
+<style>
+:root{--ink:#0f172a;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;--bg:#fff;}
+*{box-sizing:border-box;}html,body{margin:0;padding:0;}
+body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;color:var(--ink);background:var(--bg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+@page{size:A4;margin:12mm;}
+.page{padding:20px 24px;border:1px solid var(--line);border-radius:10px;}
+header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-bottom:18px;border-bottom:2px solid var(--line);}
+.logo{width:110px;height:72px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.logo img{max-width:100%;max-height:100%;object-fit:contain;}
+.clinic-name{font-size:20px;font-weight:700;}.clinic-meta{font-size:13px;color:var(--muted);margin-top:4px;}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:16px;}
+.kv{display:flex;flex-direction:column;margin-bottom:10px;}.kv .label{font-size:12px;color:var(--muted);}.kv .value{font-size:14px;font-weight:600;padding-top:2px;}
+.section-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;margin-bottom:14px;}
+.section-title{font-size:14px;font-weight:700;margin:0 0 12px 0;color:#1a3a5c;padding-bottom:8px;border-bottom:1px solid var(--line);}
+.notes-box{background:#f5f9ff;border:1px solid #b6cfe8;border-radius:8px;padding:10px 14px;font-size:14px;line-height:1.6;color:#1a3a5c;white-space:pre-wrap;}
+.footer{margin-top:22px;padding-top:12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--muted);}
+@media print{.no-print{display:none!important;}.page{border:none;padding:0;}}
+</style></head><body><div class="page">
+
+<header>
+  <div class="logo">${clinicDetails?.hospitalLogo ? `<img src="data:image/png;base64,${clinicDetails.hospitalLogo}" alt="Logo"/>` : ''}</div>
+  <div>
+    <div class="clinic-name">${escapeHtml(clinicDetails?.name ?? '')}</div>
+    <div class="clinic-meta">${escapeHtml(clinicDetails?.address ?? '')} • ${escapeHtml(clinicDetails?.contactNumber ?? '')}</div>
+  </div>
+</header>
+
+<div class="meta-grid">
+  <div class="kv"><div class="label">Patient Name</div><div class="value">${escapeHtml(patientData?.name ?? '-')}</div></div>
+  <div class="kv"><div class="label">Date</div><div class="value">${escapeHtml(dateStr)}</div></div>
+  <div class="kv"><div class="label">Doctor</div><div class="value">${escapeHtml(doctorDetails?.doctorName ?? '-')}</div></div>
+  <div class="kv"><div class="label">Licence No</div><div class="value">${escapeHtml(doctorDetails?.doctorLicence ?? '-')}</div></div>
+</div>
+
+<div class="section-card">
+  <div class="section-title">🔬 Recommended Investigations</div>
+  <div style="margin-bottom:${notes ? '16px' : '0'};display:flex;flex-wrap:wrap;gap:4px;">
+    ${testsHtml}
+  </div>
+  ${notes ? `
+  <div style="margin-top:12px;">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Notes / Reason for Recommendation</div>
+    <div class="notes-box">${escapeHtml(notes)}</div>
+  </div>` : ''}
+</div>
+
+<div class="footer">
+  <div>Generated on ${escapeHtml(dateStr)}</div>
+  <div>${escapeHtml(clinicDetails?.name ?? '')}</div>
+</div>
+
+<div style="text-align:right;margin-top:40px;">
+  ${doctorDetails?.doctorSignature ? `<img src="${doctorDetails.doctorSignature}" alt="Signature" style="max-height:60px;"/>` : ''}
+  <div style="font-size:12px;color:#374151;margin-top:4px;">Doctor's Signature</div>
+</div>
+
+<div class="no-print" style="margin-top:12px;text-align:right;">
+  <button onclick="window.print()" style="background:#2563eb;color:#fff;border:0;padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer;">Print</button>
+</div>
+
+</div></body></html>`
+
+    const win = window.open('', '_blank', 'width=900,height=700')
+    if (!win) { alert('Please allow pop-ups to print.'); return }
+    win.document.open()
+    win.document.write(html)
+    win.document.close()
+    win.onload = () => { win.focus(); win.print() }
   }
 
   /* ── RENDER ──────────────────────────────────────────────────────────── */
@@ -258,6 +354,13 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
           padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
         }}
       >
+        <Button
+          customColor="#ffffff"
+          style={{ color: COLORS.bgcolor, borderRadius: '18px', padding: '6px 16px', fontWeight: 600, border: '1px solid #7e3a93' }}
+          onClick={handlePrint}
+        >
+          Print
+        </Button>
         <Button
           customColor="#ffffff"
           color="#7e3a93"

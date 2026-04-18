@@ -252,19 +252,20 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     },
 
     // ── Investigation ─────────────────────────────────────────────────────
-    Investigation: (data = {}) => {
-      if (!data || typeof data !== 'object') { goToNext('Investigation'); return }
+  // ── Investigation ─────────────────────────────────────────────────────
+Investigation: (data = {}) => {
+  if (!data || typeof data !== 'object') { goToNext('Investigation'); return }
 
-      const patch = {
-        investigation: {
-          tests: data.investigation?.tests ?? data.tests ?? [],
-          reason: data.investigation?.reason ?? data.investigation?.notes ?? data.notes ?? '',
-        },
-      }
-
-      mergeAndLog('Investigation', patch)
-      goToNext('Investigation')
+  const patch = {
+    investigation: {
+      selectedTests: data.investigation?.selectedTests ?? [],
+      notes: data.investigation?.notes ?? '',
     },
+  }
+
+  mergeAndLog('Investigation', patch)
+  goToNext('Investigation')
+},
 
     // ── Plan ──────────────────────────────────────────────────────────────
     Plan: (data = {}) => {

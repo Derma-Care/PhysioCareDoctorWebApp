@@ -41,7 +41,7 @@ const cardStyle = {
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 const Field = ({ label, children, error }) => (
   <div style={{ display: 'flex', flexDirection: 'column' }}>
-    <label style={labelStyle}>{label}</label>
+    {label && <label style={labelStyle}>{label}</label>}
     {children}
     {error && (
       <span style={{ marginTop: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
@@ -64,7 +64,7 @@ const CardHeader = ({ emoji, title }) => (
   </div>
 )
 
-/* ─── Validated Number Input (Sets / Reps) ──────────────────────────────── */
+/* ─── Validated Number Input ────────────────────────────────────────────── */
 const NumberInput = ({ value, onChange, min = 1, max, placeholder }) => {
   const [touched, setTouched] = useState(false)
   const num = parseInt(value)
@@ -91,7 +91,6 @@ const NumberInput = ({ value, onChange, min = 1, max, placeholder }) => {
           backgroundColor: error ? '#fff5f5' : value && !error ? '#f0fff4' : '#f5f9ff',
         }}
       />
-
     </Field>
   )
 }
@@ -110,6 +109,10 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   const [loadingLibrary, setLoadingLibrary] = useState(false)
   const [search, setSearch] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
+
+  /* ── Multi-select state ── */
+  const [bulkSelected, setBulkSelected] = useState(new Set())   // Set of exercise names ticked in dropdown
+  const [showBulkPanel, setShowBulkPanel] = useState(false)     // Toggle library panel
 
   useEffect(() => {
     const load = async () => {
@@ -138,15 +141,18 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
   const set = field => val => setForm(f => ({ ...f, [field]: val }))
 
+  /* Already-added names (excluding the one being edited) */
   const addedNames = new Set(
     exercises.filter((_, i) => i !== editingIdx).map(e => e.name?.trim().toLowerCase())
   )
 
+  /* Library filtered by search, excluding already-added */
   const filteredLibrary = exerciseLibrary.filter(ex => {
     const n = (ex.name || '').trim().toLowerCase()
     return n.includes(search.toLowerCase()) && !addedNames.has(n)
   })
 
+  /* ── Single-exercise save (form) ── */
   const handleSave = () => {
     if (!form.name.trim()) return
     if (editingIdx !== null) {
@@ -157,6 +163,43 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
     }
     setForm({ ...EMPTY_EXERCISE })
     setSearch('')
+  }
+
+  /* ── Bulk add from library panel ── */
+  const handleBulkAdd = () => {
+    const toAdd = exerciseLibrary
+      .filter(ex => bulkSelected.has(ex.name))
+      .filter(ex => !addedNames.has((ex.name || '').trim().toLowerCase()))
+      .map(ex => ({
+        therapyExercisesId: ex.therapyExercisesId,
+        name: ex.name || '',
+        sets: ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : '',
+        reps: ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : '',
+        frequency: ex.frequency || '',
+        instructions: ex.notes || '',
+        videoUrl: ex.video || '',
+        thumbnail: ex.image || '',
+      }))
+    setExercises(prev => [...prev, ...toAdd])
+    setBulkSelected(new Set())
+    setShowBulkPanel(false)
+    setSearch('')
+  }
+
+  const toggleBulk = (name) => {
+    setBulkSelected(prev => {
+      const next = new Set(prev)
+      next.has(name) ? next.delete(name) : next.add(name)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (bulkSelected.size === filteredLibrary.length) {
+      setBulkSelected(new Set())
+    } else {
+      setBulkSelected(new Set(filteredLibrary.map(ex => ex.name)))
+    }
   }
 
   const handleEdit = idx => {
@@ -173,18 +216,18 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
   const handleCancel = () => { setForm({ ...EMPTY_EXERCISE }); setEditingIdx(null); setSearch('') }
 
-  // const handleNext = () => onNext?.({ exercisePlan: { exercises, homeAdvice } })
   const handleNext = () => {
-  const payload = {
-    exercisePlan: {
-      exercises,
-      homeAdvice,
-    },
-  };
+    const payload = { exercisePlan: { exercises, homeAdvice } }
+    console.log('handleNext payload:', payload)
+    onNext?.(payload)
+  }
 
-  console.log("handleNext payload:", payload); // console data
-  onNext?.(payload);
-};
+  /* ── Library panel filtered for bulk (no editingIdx exclusion needed) ── */
+  const bulkLibrary = exerciseLibrary.filter(ex => {
+    const n = (ex.name || '').trim().toLowerCase()
+    const alreadyAdded = exercises.some(e => e.name?.trim().toLowerCase() === n)
+    return n.includes(search.toLowerCase()) && !alreadyAdded
+  })
 
   return (
     <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
@@ -193,216 +236,294 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
         {/* ══ FORM CARD ══════════════════════════════════════════════════ */}
         <CCard className="mb-4" style={cardStyle}>
           <CCardBody style={{ padding: '28px 32px' }}>
-            <CardHeader emoji="🏋️" title={editingIdx !== null ? `Editing Exercise #${editingIdx + 1}` : 'Add Exercise'} />
-
-            {/* Exercise Name */}
-            <div style={{ marginBottom: 16 }}>
-              <Field label="Exercise Name">
-                <div style={{ position: 'relative' }}>
-                  <input
-                    value={search || form.name}
-                    onChange={e => {
-                      setSearch(e.target.value)
-                      set('name')(e.target.value)
-                      setShowDropdown(true)
-                    }}
-                    onFocus={() => setShowDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                    placeholder={
-                      loadingLibrary
-                        ? 'Loading exercises...'
-                        : exerciseLibrary.length > 0
-                          ? 'Search or type exercise name...'
-                          : 'Type exercise name...'
-                    }
-                    style={inputStyle}
-                  />
-
-                  {/* ── Dropdown ── */}
-                  {showDropdown && !loadingLibrary && filteredLibrary.length > 0 && (
-                    <div style={{
-                      position: 'absolute', top: '100%', left: 0, right: 0,
-                      background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8,
-                      maxHeight: 260, overflowY: 'auto', zIndex: 1000,
-                      boxShadow: '0 4px 16px rgba(26,90,168,0.12)',
-                    }}>
-                      {filteredLibrary.map((ex, i) => {
-                        const exId = ex.therapyExercisesId
-                        const exName = ex.name || ''
-                        const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
-                        const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
-                        // session = number of sessions (maps to our "sets" field if sets is 0)
-                        const exSession = ex.session ? String(ex.session) : ''
-                        const exFreq = ex.frequency || ''
-                        const exNotes = ex.notes || ''
-                        const exVideo = ex.video || ''
-                        const exImage = ex.image || ''
-                        const isSelected = form.name === exName
-
-                        return (
-                          <div
-                            key={i}
-                            onMouseDown={() => {
-                              setForm(f => ({
-                                ...f,
-                                therapyExercisesId: exId,
-                                name: exName,
-                                // Prefer explicit sets/repetitions from API; fall back to session
-                                sets: exSets || exSession || f.sets,
-                                reps: exReps || f.reps,
-                                frequency: exFreq || f.frequency,
-                                instructions: exNotes || f.instructions,
-                                videoUrl: exVideo || f.videoUrl,
-                                thumbnail: exImage || f.thumbnail,
-                              }))
-                              setSearch(exName)
-                              setShowDropdown(false)
-                            }}
-                            style={{
-                              padding: '9px 12px', cursor: 'pointer',
-                              borderBottom: '1px solid #eee',
-                              background: isSelected ? '#e0f2fe' : '#fff',
-                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            }}
-                            onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f0f7ff' }}
-                            onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isSelected ? '#e0f2fe' : '#fff' }}
-                          >
-                            <div>
-                              <strong style={{ color: '#1a5fa8', fontSize: '0.88rem' }}>{exName}</strong>
-                              <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
-                                {[
-                                  exSets && `🔁 ${exSets} sets`,
-                                  exReps && `🔄 ${exReps} reps`,
-                                  exFreq && `📆 ${exFreq}`,
-                                  exSession && `🗓 ${exSession} session(s)`,
-                                ].filter(Boolean).join('  ·  ')}
-                              </div>
-                            </div>
-                            {isSelected && (
-                              <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.78rem' }}>✓</span>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </Field>
-            </div>
-
-            {/* ── Sets | Reps | Frequency ── */}
-            <div style={gridThree}>
-
-              {/* Sets */}
-              <div>
-                <label style={labelStyle}>Sets</label>
-                <NumberInput
-                  value={form.sets}
-                  onChange={set('sets')}
-                  min={1} max={50}
-                  placeholder="e.g. 3"
-                />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, borderBottom: '1.5px solid #e3eef8', paddingBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏋️</div>
+                <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>
+                  {editingIdx !== null ? `Editing Exercise #${editingIdx + 1}` : 'Add Exercise'}
+                </h5>
               </div>
 
-              {/* Reps */}
-              <div>
-                <label style={labelStyle}>Reps</label>
-                <NumberInput
-                  value={form.reps}
-                  onChange={set('reps')}
-                  min={1} max={200}
-                  placeholder="e.g. 10"
-                />
-              </div>
-
-              {/* Frequency — free-text, e.g. "2 time/ day" */}
-              <div>
-                <label style={labelStyle}>Frequency</label>
-                <Field>
-                  <input
-                    value={form.frequency}
-                    onChange={e => set('frequency')(e.target.value)}
-                    placeholder="e.g. 2 time/ day"
-                    style={{
-                      ...inputStyle,
-                      borderColor: form.frequency ? '#68d391' : '#b6cfe8',
-                      backgroundColor: form.frequency ? '#f0fff4' : '#f5f9ff',
-                    }}
-                  />
-
-                </Field>
-              </div>
-
-            </div>
-
-            {/* Thumbnail (only when present) + Video URL */}
-            <div style={form.thumbnail ? gridTwo : { marginBottom: 16 }}>
-              {form.thumbnail && (
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={labelStyle}>Exercise Thumbnail</label>
-                  <div style={{ marginTop: 6 }}>
-                    <img
-                      src={
-                        form.thumbnail.startsWith('data:image')
-                          ? form.thumbnail
-                          : `data:image/png;base64,${form.thumbnail}`
-                      }
-                      alt="Thumbnail Preview"
-                      style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #c8ddf0' }}
-                    />
-                  </div>
-                </div>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label style={labelStyle}>Video URL</label>
-                <input
-                  value={form.videoUrl}
-                  onChange={e => set('videoUrl')(e.target.value)}
-                  placeholder="https://example.com/video"
-                  style={inputStyle}
-                />
-              </div>
-            </div>
-
-            {/* Instructions */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label style={labelStyle}>Instructions</label>
-                <Textarea
-                  value={form.instructions}
-                  onChange={set('instructions')}
-                  placeholder="e.g. Lie on back and tilt pelvis upward"
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button
-                type="button"
-                onClick={handleSave}
-                style={{
-                  padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
-                  color: '#fff', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit',
-                }}
-              >
-                {editingIdx !== null ? '✅ Update Exercise' : '➕ Add Exercise'}
-              </button>
-              {editingIdx !== null && (
+              {/* ── Select from Library button ── */}
+              {exerciseLibrary.length > 0 && editingIdx === null && (
                 <button
                   type="button"
-                  onClick={handleCancel}
+                  onClick={() => { setShowBulkPanel(v => !v); setSearch(''); setBulkSelected(new Set()) }}
                   style={{
-                    padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
-                    border: '1.5px solid #b6cfe8', background: '#f5f9ff',
-                    color: '#1a3a5c', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                    padding: '7px 18px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                    border: '1.5px solid #1a5fa8',
+                    background: showBulkPanel ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#f0f7ff',
+                    color: showBulkPanel ? '#fff' : '#1a5fa8',
+                    fontWeight: 700, fontSize: '0.85rem',
+                    display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
-                  Cancel
+               📚 {showBulkPanel ? '✕ Close' : 'Browse Exercises'}
                 </button>
               )}
             </div>
+
+            {/* ══ BULK LIBRARY PANEL ══════════════════════════════════════ */}
+            {showBulkPanel && (
+              <div style={{ marginBottom: 24, border: '1.5px solid #b6cfe8', borderRadius: 10, overflow: 'hidden', background: '#f5f9ff' }}>
+
+                {/* Panel toolbar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#e8f1fb', borderBottom: '1px solid #b6cfe8', flexWrap: 'wrap' }}>
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search exercises..."
+                    style={{ ...inputStyle, width: 220, height: 34 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1a5fa8', background: '#fff', color: '#1a5fa8', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    {bulkSelected.size === bulkLibrary.length && bulkLibrary.length > 0 ? '☑ Deselect All' : '☐ Select All'}
+                  </button>
+                  <span style={{ fontSize: '0.8rem', color: '#5a7fa8', fontWeight: 600 }}>
+                    {bulkSelected.size} selected
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleBulkAdd}
+                    disabled={bulkSelected.size === 0}
+                    style={{
+                      marginLeft: 'auto', padding: '6px 20px', borderRadius: 8, border: 'none',
+                      background: bulkSelected.size > 0 ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#c8ddf0',
+                      color: '#fff', fontWeight: 700, fontSize: '0.85rem',
+                      cursor: bulkSelected.size > 0 ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
+                    }}
+                  >
+                    ➕ Add {bulkSelected.size > 0 ? `${bulkSelected.size} ` : ''}Exercise{bulkSelected.size !== 1 ? 's' : ''}
+                  </button>
+                </div>
+
+                {/* Exercise checkboxes */}
+                {loadingLibrary ? (
+                  <div style={{ padding: 20, textAlign: 'center', color: '#8aaac8', fontSize: '0.875rem' }}>Loading exercises…</div>
+                ) : bulkLibrary.length === 0 ? (
+                  <div style={{ padding: 20, textAlign: 'center', color: '#8aaac8', fontSize: '0.875rem' }}>No exercises found.</div>
+                ) : (
+                  <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+                    {bulkLibrary.map((ex, i) => {
+                      const exName = ex.name || ''
+                      const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
+                      const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
+                      const exFreq = ex.frequency || ''
+                      const exSession = ex.session ? String(ex.session) : ''
+                      const isChecked = bulkSelected.has(exName)
+
+                      return (
+                        <label
+                          key={i}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '10px 14px', cursor: 'pointer',
+                            borderBottom: '1px solid #e3eef8',
+                            background: isChecked ? '#dbeafe' : i % 2 === 0 ? '#f5f9ff' : '#fff',
+                            transition: 'background 0.15s',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleBulk(exName)}
+                            style={{ width: 16, height: 16, accentColor: '#1a5fa8', cursor: 'pointer', flexShrink: 0 }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1a3a5c' }}>{exName}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
+                              {[
+                                exSets && `🔁 ${exSets} sets`,
+                                exReps && `🔄 ${exReps} reps`,
+                                exFreq && `📆 ${exFreq}`,
+                                exSession && `🗓 ${exSession} session(s)`,
+                              ].filter(Boolean).join('  ·  ') || 'No details'}
+                            </div>
+                          </div>
+                          {isChecked && <span style={{ color: '#1a5fa8', fontWeight: 700, fontSize: '1rem' }}>✓</span>}
+                        </label>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ══ SINGLE EXERCISE FORM (hidden while bulk panel open) ═════ */}
+            {!showBulkPanel && (
+              <>
+                {/* Exercise Name */}
+                <div style={{ marginBottom: 16 }}>
+                  <Field label="Exercise Name">
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        value={search || form.name}
+                        onChange={e => {
+                          setSearch(e.target.value)
+                          set('name')(e.target.value)
+                          setShowDropdown(true)
+                        }}
+                        onFocus={() => setShowDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                        placeholder={
+                          loadingLibrary
+                            ? 'Loading exercises...'
+                            : exerciseLibrary.length > 0
+                              ? 'Search or type exercise name...'
+                              : 'Type exercise name...'
+                        }
+                        style={inputStyle}
+                      />
+
+                      {showDropdown && !loadingLibrary && filteredLibrary.length > 0 && (
+                        <div style={{
+                          position: 'absolute', top: '100%', left: 0, right: 0,
+                          background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8,
+                          maxHeight: 260, overflowY: 'auto', zIndex: 1000,
+                          boxShadow: '0 4px 16px rgba(26,90,168,0.12)',
+                        }}>
+                          {filteredLibrary.map((ex, i) => {
+                            const exId = ex.therapyExercisesId
+                            const exName = ex.name || ''
+                            const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
+                            const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
+                            const exSession = ex.session ? String(ex.session) : ''
+                            const exFreq = ex.frequency || ''
+                            const exNotes = ex.notes || ''
+                            const exVideo = ex.video || ''
+                            const exImage = ex.image || ''
+                            const isSelected = form.name === exName
+
+                            return (
+                              <div
+                                key={i}
+                                onMouseDown={() => {
+                                  setForm(f => ({
+                                    ...f,
+                                    therapyExercisesId: exId,
+                                    name: exName,
+                                    sets: exSets || exSession || f.sets,
+                                    reps: exReps || f.reps,
+                                    frequency: exFreq || f.frequency,
+                                    instructions: exNotes || f.instructions,
+                                    videoUrl: exVideo || f.videoUrl,
+                                    thumbnail: exImage || f.thumbnail,
+                                  }))
+                                  setSearch(exName)
+                                  setShowDropdown(false)
+                                }}
+                                style={{
+                                  padding: '9px 12px', cursor: 'pointer',
+                                  borderBottom: '1px solid #eee',
+                                  background: isSelected ? '#e0f2fe' : '#fff',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                }}
+                                onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f0f7ff' }}
+                                onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isSelected ? '#e0f2fe' : '#fff' }}
+                              >
+                                <div>
+                                  <strong style={{ color: '#1a5fa8', fontSize: '0.88rem' }}>{exName}</strong>
+                                  <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
+                                    {[
+                                      exSets && `🔁 ${exSets} sets`,
+                                      exReps && `🔄 ${exReps} reps`,
+                                      exFreq && `📆 ${exFreq}`,
+                                      exSession && `🗓 ${exSession} session(s)`,
+                                    ].filter(Boolean).join('  ·  ')}
+                                  </div>
+                                </div>
+                                {isSelected && <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.78rem' }}>✓</span>}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </Field>
+                </div>
+
+                {/* Sets | Reps | Frequency */}
+                <div style={gridThree}>
+                  <div>
+                    <label style={labelStyle}>Sets</label>
+                    <NumberInput value={form.sets} onChange={set('sets')} min={1} max={50} placeholder="e.g. 3" />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Reps</label>
+                    <NumberInput value={form.reps} onChange={set('reps')} min={1} max={200} placeholder="e.g. 10" />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Frequency</label>
+                    <Field>
+                      <input
+                        value={form.frequency}
+                        onChange={e => set('frequency')(e.target.value)}
+                        placeholder="e.g. 2 time/ day"
+                        style={{
+                          ...inputStyle,
+                          borderColor: form.frequency ? '#68d391' : '#b6cfe8',
+                          backgroundColor: form.frequency ? '#f0fff4' : '#f5f9ff',
+                        }}
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                {/* Thumbnail + Video URL */}
+                <div style={form.thumbnail ? gridTwo : { marginBottom: 16 }}>
+                  {form.thumbnail && (
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <label style={labelStyle}>Exercise Thumbnail</label>
+                      <div style={{ marginTop: 6 }}>
+                        <img
+                          src={form.thumbnail.startsWith('data:image') ? form.thumbnail : `data:image/png;base64,${form.thumbnail}`}
+                          alt="Thumbnail Preview"
+                          style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #c8ddf0' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <label style={labelStyle}>Video URL</label>
+                    <input value={form.videoUrl} onChange={e => set('videoUrl')(e.target.value)}
+                      placeholder="https://example.com/video" style={inputStyle} />
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <label style={labelStyle}>Instructions</label>
+                    <Textarea value={form.instructions} onChange={set('instructions')}
+                      placeholder="e.g. Lie on back and tilt pelvis upward" rows={3} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button type="button" onClick={handleSave}
+                    style={{
+                      padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
+                      color: '#fff', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit',
+                    }}>
+                    {editingIdx !== null ? '✅ Update Exercise' : '➕ Add Exercise'}
+                  </button>
+                  {editingIdx !== null && (
+                    <button type="button" onClick={handleCancel}
+                      style={{
+                        padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
+                        border: '1.5px solid #b6cfe8', background: '#f5f9ff',
+                        color: '#1a3a5c', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                      }}>
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
 
           </CCardBody>
         </CCard>
@@ -423,78 +544,42 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                   </thead>
                   <tbody>
                     {exercises.map((ex, idx) => (
-                      <tr
-                        key={idx}
-                        style={{ backgroundColor: idx % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}
-                      >
+                      <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
                         <td style={{ padding: '10px 14px', fontWeight: 700 }}>{idx + 1}</td>
-
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 600 }}>
-                          {ex.name || '—'}
-                        </td>
-
+                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 600 }}>{ex.name || '—'}</td>
                         <td style={{ padding: '10px 14px', textAlign: 'center' }}>
-                          {ex.sets
-                            ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span>
-                            : '—'}
+                          {ex.sets ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span> : '—'}
                         </td>
-
                         <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                           {ex.reps !== '' && ex.reps !== null && ex.reps !== undefined
-                            ? <span
-                              style={{
-                                background: '#dbeafe',
-                                color: '#1a5fa8',
-                                borderRadius: 10,
-                                padding: '2px 9px',
-                                fontWeight: 700,
-                                fontSize: '0.78rem'
-                              }}
-                            >
-                              🔄 {ex.reps}
-                            </span>
+                            ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.reps}</span>
                             : '—'}
                         </td>
-
-                        {/* ── Frequency column ── */}
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          {ex.frequency
-                            ? <span style={{ background: '#f0f7ff', color: '#1a3a5c', borderRadius: 8, padding: '2px 9px', fontWeight: 600, fontSize: '0.78rem' }}>📆 {ex.frequency}</span>
-                            : '—'}
+                          {ex.frequency ? <span style={{ background: '#f0f7ff', color: '#1a3a5c', borderRadius: 8, padding: '2px 9px', fontWeight: 600, fontSize: '0.78rem' }}>📆 {ex.frequency}</span> : '—'}
                         </td>
-
                         <td style={{ padding: '10px 14px', maxWidth: 200 }}>
                           <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>
                             {ex.instructions || '—'}
                           </div>
                         </td>
-
                         <td style={{ padding: '10px 14px' }}>
-                          {ex.videoUrl
-                            ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem' }}>▶ Watch</a>
-                            : '—'}
+                          {ex.videoUrl ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem' }}>▶ Watch</a> : '—'}
                         </td>
-
                         <td style={{ padding: '10px 14px' }}>
                           {ex.thumbnail
-                            ? <img
-                              src={ex.thumbnail}
-                              alt={ex.name}
-                              style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 6, border: '1px solid #c8ddf0' }}
-                              onError={e => { e.target.style.display = 'none' }}
-                            />
+                            ? <img src={ex.thumbnail} alt={ex.name} style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 6, border: '1px solid #c8ddf0' }} onError={e => { e.target.style.display = 'none' }} />
                             : '—'}
                         </td>
-
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          <button
-                            onClick={() => handleEdit(idx)}
-                            style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: '#f0f7ff', color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
-                          >✏️ Edit</button>
-                          <button
-                            onClick={() => handleDelete(idx)}
-                            style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
-                          >🗑️ Delete</button>
+                          <button onClick={() => handleEdit(idx)}
+                            style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: '#f0f7ff', color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            ✏️ Edit
+                          </button>
+                          <button onClick={() => handleDelete(idx)}
+                            style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            🗑️ Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -511,12 +596,8 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
             <CardHeader emoji="🏠" title="Home Advice" />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <label style={labelStyle}>Home Advice</label>
-              <Textarea
-                value={homeAdvice}
-                onChange={setHomeAdvice}
-                placeholder="e.g. Maintain correct posture and do exercises daily"
-                rows={4}
-              />
+              <Textarea value={homeAdvice} onChange={setHomeAdvice}
+                placeholder="e.g. Maintain correct posture and do exercises daily" rows={4} />
             </div>
           </CCardBody>
         </CCard>
@@ -524,19 +605,15 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       </CContainer>
 
       {/* ══ STICKY BOTTOM BAR ══ */}
-      <div
-        className="position-fixed bottom-0"
+      <div className="position-fixed bottom-0"
         style={{
           left: 0, right: 0, background: '#a5c4d4ff',
           display: 'flex', justifyContent: 'flex-end', gap: 16,
           padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
         }}
       >
-        <Button
-          customColor="#ffffff" color="#7e3a93"
-          onClick={handleNext}
-          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
-        >
+        <Button customColor="#ffffff" color="#7e3a93" onClick={handleNext}
+          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
           Next
         </Button>
       </div>

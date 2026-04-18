@@ -216,8 +216,6 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   const [cognitiveStatus, setCognitiveStatus] = useState(seed.cognitiveStatus ?? '')
 
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
-  const [isGenerating, setIsGenerating] = useState(false)
-  const printRef = useRef(null)
 
   const { patientData, clinicDetails, doctorDetails } = useDoctorContext()
 
@@ -323,81 +321,6 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
     console.log('🚀 Assessment payload:', payload)
     onNext?.(payload)
-  }
-
-  function escapeHtml(str) {
-    return String(str ?? '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
-  }
-
-  /* ── Print ── */
-  const handlePrint = () => {
-    const today = new Date()
-    const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    const rowHtml = (label, value) =>
-      value ? `<div class="kv"><div class="label">${label}</div><div class="value">${escapeHtml(value)}</div></div>` : ''
-
-    const finalDuration = durationValue && durationUnit
-      ? `${durationValue} ${durationUnit}${durationValue > 1 ? 's' : ''}` : ''
-
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
-<title>Assessment – ${escapeHtml(patientData?.name ?? '')}</title>
-<style>
-:root{--ink:#0f172a;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;--bg:#fff;}
-*{box-sizing:border-box;}html,body{margin:0;padding:0;}
-body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;color:var(--ink);background:var(--bg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-@page{size:A4;margin:12mm;}
-.page{padding:20px 24px;border:1px solid var(--line);border-radius:10px;}
-header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-bottom:18px;border-bottom:2px solid var(--line);}
-.logo{width:110px;height:72px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.logo img{max-width:100%;max-height:100%;object-fit:contain;}
-.clinic-name{font-size:20px;font-weight:700;}.clinic-meta{font-size:13px;color:var(--muted);margin-top:4px;}
-.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:16px;}
-.kv{display:flex;flex-direction:column;margin-bottom:10px;}.kv .label{font-size:12px;color:var(--muted);}.kv .value{font-size:14px;font-weight:600;padding-top:2px;}
-.section-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;margin-bottom:14px;}
-.section-title{font-size:14px;font-weight:700;margin:0 0 12px 0;color:#1a3a5c;padding-bottom:8px;border-bottom:1px solid var(--line);}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;}.full{grid-column:1/-1;}
-.footer{margin-top:22px;padding-top:12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--muted);}
-@media print{.no-print{display:none!important;}.page{border:none;padding:0;}}
-</style></head><body><div class="page">
-<header>
-  <div class="logo">${clinicDetails?.hospitalLogo ? `<img src="data:image/png;base64,${clinicDetails.hospitalLogo}" alt="Logo"/>` : ''}</div>
-  <div><div class="clinic-name">${escapeHtml(clinicDetails?.name ?? '')}</div>
-  <div class="clinic-meta">${escapeHtml(clinicDetails?.address ?? '')} • ${escapeHtml(clinicDetails?.contactNumber ?? '')}</div></div>
-</header>
-<div class="meta-grid">
-  ${rowHtml('Patient Name', patientData?.name)}${rowHtml('Date', dateStr)}
-  ${rowHtml('Doctor', doctorDetails?.doctorName)}${rowHtml('Licence No', doctorDetails?.doctorLicence)}
-</div>
-<div class="section-card"><div class="section-title">📋 Subjective Assessment</div>
-<div class="two-col">
-  ${rowHtml('Chief Complaint', chiefComplaint)}${rowHtml('Pain Scale', painScale)}
-  ${rowHtml('Pain Type', painType)}${rowHtml('Duration', finalDuration)}
-  ${rowHtml('Onset', onset)}
-  ${aggravatingFactors ? `<div class="kv full"><div class="label">Aggravating Factors</div><div class="value">${escapeHtml(aggravatingFactors)}</div></div>` : ''}
-  ${relievingFactors ? `<div class="kv full"><div class="label">Relieving Factors</div><div class="value">${escapeHtml(relievingFactors)}</div></div>` : ''}
-</div></div>
-<div class="section-card"><div class="section-title">🔬 Objective / Physical Examination</div>
-<div class="two-col">
-  ${posture ? `<div class="kv full"><div class="label">Posture</div><div class="value">${escapeHtml(posture)}</div></div>` : ''}
-  ${rangeOfMotion ? `<div class="kv full"><div class="label">Range of Motion</div><div class="value">${escapeHtml(rangeOfMotion)}</div></div>` : ''}
-  ${specialTests ? `<div class="kv full"><div class="label">Special Tests</div><div class="value">${escapeHtml(specialTests)}</div></div>` : ''}
-  ${observations ? `<div class="kv full"><div class="label">Observations</div><div class="value">${escapeHtml(observations)}</div></div>` : ''}
-</div></div>
-<div class="footer"><div>Generated on ${escapeHtml(dateStr)}</div><div>${escapeHtml(clinicDetails?.name ?? '')}</div></div>
-<div style="text-align:right;margin-top:40px;">
-  ${doctorDetails?.doctorSignature ? `<img src="${doctorDetails.doctorSignature}" alt="Signature" style="max-height:60px;"/>` : ''}
-  <div style="font-size:12px;color:#374151;margin-top:4px;">Doctor's Signature</div>
-</div>
-<div class="no-print" style="margin-top:12px;text-align:right;">
-  <button onclick="window.print()" style="background:#2563eb;color:#fff;border:0;padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer;">Print</button>
-</div></div></body></html>`
-
-    const win = window.open('', '_blank', 'width=900,height=700')
-    if (!win) { alert('Please allow pop-ups to print.'); return }
-    win.document.open(); win.document.write(html); win.document.close()
-    win.onload = () => { win.focus(); win.print() }
   }
 
   /* ═══════════ RENDER ═══════════ */
@@ -686,25 +609,6 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
         </CRow>
       </CContainer>
 
-      {/* Off-screen print block */}
-      <div ref={printRef} id="tests-print"
-        style={{ position: 'absolute', left: '-99999px', top: 0, width: '794px', background: '#fff', padding: '16px' }}>
-        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12 }}>{clinicDetails?.name || 'Clinic'}</div>
-        <div><strong>Patient:</strong> {patientData?.name || '-'}</div>
-        <div style={{ marginTop: 12 }}>
-          <div><strong>Chief Complaint:</strong> {chiefComplaint}</div>
-          <div><strong>Pain Scale:</strong> {painScale}</div>
-          <div><strong>Pain Type:</strong> {painType}</div>
-          <div><strong>Onset:</strong> {onset}</div>
-          <div><strong>Aggravating Factors:</strong> {aggravatingFactors}</div>
-          <div><strong>Relieving Factors:</strong> {relievingFactors}</div>
-          <div><strong>Posture:</strong> {posture}</div>
-          <div><strong>Range of Motion:</strong> {rangeOfMotion}</div>
-          <div><strong>Special Tests:</strong> {specialTests}</div>
-          <div><strong>Observations:</strong> {observations}</div>
-        </div>
-      </div>
-
       {/* Sticky bottom bar */}
       <div className="position-fixed bottom-0" style={{
         left: 0, right: 0,
@@ -713,11 +617,6 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
         padding: '10px 20px',
         boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
       }}>
-        <Button customColor="#ffffff"
-          style={{ color: COLORS.bgcolor, borderRadius: '18px', padding: '6px 16px', fontWeight: 600, border: '1px solid #7e3a93' }}
-          onClick={handlePrint} disabled={isGenerating}>
-          {isGenerating ? 'Printing…' : 'Print'}
-        </Button>
         <Button customColor="#ffffff"
           style={{ color: COLORS.bgcolor, borderRadius: '18px', padding: '6px 18px', fontWeight: 600 }}
           onClick={handleNext}>
