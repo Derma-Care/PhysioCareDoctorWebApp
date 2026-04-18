@@ -1,3 +1,4 @@
+import axios from 'axios'
 import api from './axiosInterceptor'
 import {
   appointmentsbaseUrl,
@@ -178,7 +179,7 @@ export const SavePatientPrescription = async (prescriptionData) => {
     if (Array.isArray(prescriptionData)) {
       throw new Error('Expected a single object, but received an array.')
     }
-    const response = await api.post(
+    const response = await axios.post(
       `${savePrescriptionbaseUrl}/create`,
       prescriptionData,
     )

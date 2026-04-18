@@ -186,11 +186,11 @@ const TherapistSearch = ({ therapists, loading, value, name, onChange }) => {
 const getName = (p, mode) => {
   if (!p) return ''
   switch (mode) {
-    case 'package':  return p.packageName  || p.name || p.title || `Package ${p.packageId ?? p.id ?? ''}`
-    case 'program':  return p.programName  || p.name || p.title || `Program ${p.programId ?? p.id ?? ''}`
-    case 'therapy':  return p.therapyName  || p.name || `Therapy ${p.therapyId ?? p.id ?? ''}`
+    case 'package': return p.packageName || p.name || p.title || `Package ${p.packageId ?? p.id ?? ''}`
+    case 'program': return p.programName || p.name || p.title || `Program ${p.id ?? p.id ?? ''}`
+    case 'therapy': return p.therapyName || p.name || `Therapy ${p.therapyId ?? p.id ?? ''}`
     case 'exercise': return p.exerciseName || p.name || `Exercise ${p.therapyExercisesId ?? p.id ?? ''}`
-    default:         return p.name || p.title || `Item ${p.id ?? ''}`
+    default: return p.name || p.title || `Item ${p.id ?? ''}`
   }
 }
 
@@ -198,10 +198,10 @@ const getId = (p, mode) => {
   if (!p) return ''
   switch (mode) {
     case 'exercise': return String(p.therapyExercisesId || p.id || '')
-    case 'therapy':  return String(p.therapyId  || p.id || '')
-    case 'program':  return String(p.programId  || p.id || '')
-    case 'package':  return String(p.packageId  || p.id || '')
-    default:         return String(p.id || '')
+    case 'therapy': return String(p.therapyId || p.id || '')
+    case 'program': return String(p.programId || p.id || '')
+    case 'package': return String(p.packageId || p.id || '')
+    default: return String(p.id || '')
   }
 }
 
@@ -344,11 +344,22 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
     onUpdate(exercises.map(ex => ({ ...ex, _checked: next })))
   }
 
-  if (!exercises || exercises.length === 0) return (
-    <div style={{ padding: '14px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '0.83rem', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1', marginTop: 8 }}>
-      No exercises available for this therapy
-    </div>
-  )
+  if (!Array.isArray(exercises) || exercises.length === 0) {
+    return (
+      <div style={{
+        padding: '14px 16px',
+        textAlign: 'center',
+        color: '#94a3b8',
+        fontSize: '0.83rem',
+        background: '#f8fafc',
+        borderRadius: 8,
+        border: '1px dashed #cbd5e1',
+        marginTop: 8
+      }}>
+        No exercises available for this therapy
+      </div>
+    )
+  }
 
   const checkedCount = exercises.filter(ex => ex._checked !== false).length
 
@@ -528,7 +539,7 @@ const restoreTherophyDataState = (sessions) => {
           sets: ex.sets ?? '',
           reps: ex.repetitions ?? ex.reps ?? '',
           frequencyCount: parseFrequency(ex.frequency).count,
-          frequencyUnit:  parseFrequency(ex.frequency).unit,
+          frequencyUnit: parseFrequency(ex.frequency).unit,
           notes: ex.notes ?? '',
           _checked: true,
         }))
@@ -550,7 +561,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   //   { overallStatus, sessions: [...], therapistId, therapistName, ... }
   // OR it may be empty {} on first render
   const savedSessions = Array.isArray(seed?.sessions) ? seed.sessions : []
-  const savedSession  = savedSessions[0] ?? {}
+  const savedSession = savedSessions[0] ?? {}
 
   /* ── Mode — restore from saved session if available ── */
   const [mode, setMode] = useState(savedSession.serviceType || seed.serviceType || 'package')
@@ -561,28 +572,28 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   const idsReady = !!(clinicId && branchId)
 
   /* ── Therapists ── */
-  const [therapists, setTherapists]           = useState([])
+  const [therapists, setTherapists] = useState([])
   const [loadingTherapists, setLoadingTherapists] = useState(false)
-  const [therapistId,   setTherapistId]       = useState(savedSession.therapistId   ?? seed.therapistId   ?? '')
-  const [therapistName, setTherapistName]     = useState(savedSession.therapistName ?? seed.therapistName ?? '')
+  const [therapistId, setTherapistId] = useState(savedSession.therapistId ?? seed.therapistId ?? '')
+  const [therapistName, setTherapistName] = useState(savedSession.therapistName ?? seed.therapistName ?? '')
 
   /* ── Programs / Packages / Therapies / Exercises list ── */
-  const [programs, setPrograms]               = useState([])
+  const [programs, setPrograms] = useState([])
   const [loadingPrograms, setLoadingPrograms] = useState(false)
 
   /* ── All exercises (cached once per branch) ── */
-  const [allExercises, setAllExercises]               = useState([])
+  const [allExercises, setAllExercises] = useState([])
   const [loadingAllExercises, setLoadingAllExercises] = useState(false)
   const exercisesFetchedRef = useRef(false)
 
   /* ── Selected item — restore from saved session ── */
-  const [selectedProgramId,  setSelectedProgramId]  = useState(savedSession.programId ?? seed.selectedProgramId ?? null)
+  const [selectedProgramId, setSelectedProgramId] = useState((savedSession.programId || savedSession.id) ?? seed.selectedProgramId ?? null)
   const [selectedProgramObj, setSelectedProgramObj] = useState(null)
   const [loadingProgramDetail, setLoadingProgramDetail] = useState(false)
 
   /* ── Therapy state (therapy[] path) ── */
   const [therapyLibrary, setTherapyLibrary] = useState([])
-  const [therapyState,   setTherapyState]   = useState({})
+  const [therapyState, setTherapyState] = useState({})
 
   /* ─────────────────────────────────────────────────────────────────────────
      KEY FIX: Restore therophyDataState from seed on mount so the exercises
@@ -596,10 +607,10 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   })
 
   /* ── Session Details — restore from saved session ── */
-  const [modalitiesUsed,  setModalitiesUsed]  = useState(savedSession.modalitiesUsed  ?? seed.modalitiesUsed  ?? [])
+  const [modalitiesUsed, setModalitiesUsed] = useState(savedSession.modalitiesUsed ?? seed.modalitiesUsed ?? [])
   const [patientResponse, setPatientResponse] = useState(savedSession.patientResponse ?? seed.patientResponse ?? '')
-  const [manualTherapy,   setManualTherapy]   = useState(savedSession.manualTherapy   ?? seed.manualTherapy   ?? '')
-  const [precautions,     setPrecautions]     = useState(savedSession.precautions     ?? seed.precautions     ?? '')
+  const [manualTherapy, setManualTherapy] = useState(savedSession.manualTherapy ?? seed.manualTherapy ?? '')
+  const [precautions, setPrecautions] = useState(savedSession.precautions ?? seed.precautions ?? '')
 
   // ── Track whether we already restored — avoid double-fetch ──────────────
   const restoredFromSeedRef = useRef(Object.keys(restoreTherophyDataState(savedSessions)).length > 0)
@@ -614,11 +625,11 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
 
   const getServiceByMode = async (m, cId, bId) => {
     switch (m) {
-      case 'package':  return await getPackagesByBranch(cId, bId)
-      case 'program':  return await getProgramsByBranch(cId, bId)
-      case 'therapy':  return await getTherapiesByBranch(cId, bId)
+      case 'package': return await getPackagesByBranch(cId, bId)
+      case 'program': return await getProgramsByBranch(cId, bId)
+      case 'therapy': return await getTherapiesByBranch(cId, bId)
       case 'exercise': return await getExercisesByBranch(cId, bId)
-      default:         return []
+      default: return []
     }
   }
 
@@ -632,7 +643,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
       ])
       const tList = therapistRes.status === 'fulfilled' && Array.isArray(therapistRes.value) ? therapistRes.value : []
       setTherapists(tList)
-      const sList = serviceRes.status === 'fulfilled'  && Array.isArray(serviceRes.value)  ? serviceRes.value  : []
+      const sList = serviceRes.status === 'fulfilled' && Array.isArray(serviceRes.value) ? serviceRes.value : []
       setPrograms(sList)
     } catch (err) {
       console.error('❌ fetchDataByMode error:', err)
@@ -670,25 +681,38 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   ──────────────────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!therapyLibrary.length || loadingAllExercises) return
-    // If we already have restored data from seed, don't overwrite
+
+    // If already loaded from direct API / restored state, do not overwrite
+    const hasExistingExercises = therapyLibrary.some(
+      ({ therapyName }) =>
+        Array.isArray(therapyState[therapyName]?.exercises) &&
+        therapyState[therapyName].exercises.length > 0
+    )
+
+    if (hasExistingExercises) return
+
     if (restoredFromSeedRef.current && Object.keys(therophyDataState).length > 0) return
 
     setTherapyState(prev => {
       const updated = { ...prev }
+
       therapyLibrary.forEach(({ therapyId, therapyName }) => {
         const matched = allExercises.filter(ex => {
-          const exTherapyId = String(ex.theraphyId || ex.therapyId || ex.therapy_id || '')
+          const exTherapyId =
+            String(ex?.theraphyId || ex?.therapyId || ex?.therapy_id || '')
           return exTherapyId === String(therapyId)
         })
+
         updated[therapyName] = {
           ...(updated[therapyName] || { checked: true }),
           exercises: matched.map(ex => {
-            const freq = parseFrequency(ex.frequency ?? ex.frequencyCount)
+            const freq = parseFrequency(ex.frequency)
             return {
               ...ex,
-              sessions: ex.sessions ?? '',
+              exerciseName: ex.name || ex.exerciseName || '',
+              sessions: ex.session ?? ex.sessions ?? '',
               sets: ex.sets ?? '',
-              reps: ex.reps ?? '',
+              reps: ex.repetitions ?? ex.reps ?? '',
               frequencyCount: freq.count,
               frequencyUnit: freq.unit,
               _checked: true,
@@ -696,10 +720,10 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           }),
         }
       })
+
       return updated
     })
-  }, [therapyLibrary, allExercises, loadingAllExercises]) // eslint-disable-line react-hooks/exhaustive-deps
-
+  }, [therapyLibrary, allExercises, loadingAllExercises, therapyState, therophyDataState])
   /* ── Therapy helpers (therophy[] path) ── */
   const toggleTherapy = name =>
     setTherapyState(prev => ({ ...prev, [name]: { ...prev[name], checked: !prev[name].checked } }))
@@ -722,9 +746,9 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   const tlAllChecked = therapyLibrary.length > 0 && therapyLibrary.every(t => therapyState[t.therapyName]?.checked)
   const tlCheckedCnt = therapyLibrary.filter(t => therapyState[t.therapyName]?.checked).length
 
-  const allChecked   = hasTherophyData ? tdAllChecked  : tlAllChecked
-  const checkedCount = hasTherophyData ? tdCheckedCnt  : tlCheckedCnt
-  const totalCount   = hasTherophyData ? tdKeys.length : therapyLibrary.length
+  const allChecked = hasTherophyData ? tdAllChecked : tlAllChecked
+  const checkedCount = hasTherophyData ? tdCheckedCnt : tlCheckedCnt
+  const totalCount = hasTherophyData ? tdKeys.length : therapyLibrary.length
 
   const toggleAll = () => {
     if (hasTherophyData) {
@@ -817,22 +841,32 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         }
         const mapped = {}
         programsList.forEach((program) => {
-          const programName   = program.programName || program.name || ''
-          const therophyData  = Array.isArray(program.therophyData) ? program.therophyData : []
+          const programName = program.programName || program.name || ''
+          const therophyData = Array.isArray(program.therophyData) ? program.therophyData : []
           therophyData.forEach((therapy, tIndex) => {
             const key = `${programName}_${therapy.therapyName}_${tIndex}`
             mapped[key] = {
               checked: true,
+
+              packageId: data.packageId || "",
+              packageName: data.packageName || "",
+
+              programId: program.id || program.programId || "",
+              programName: program.programName || "",
+
+              therapyId: therapy.id || "",
+              therapyName: therapy.therapyName || "",
+
               exercises: (therapy.exercises || []).map(ex => ({
                 ...ex,
-                exerciseName:   ex.name          || ex.exerciseName  || '',
-                sessions:       ex.session       ?? ex.sessions      ?? '',
-                sets:           ex.sets          ?? '',
-                reps:           ex.repetitions   ?? ex.reps          ?? '',
+                exerciseName: ex.name || ex.exerciseName || '',
+                sessions: ex.session ?? ex.sessions ?? '',
+                sets: ex.sets ?? '',
+                reps: ex.repetitions ?? ex.reps ?? '',
                 frequencyCount: parseFrequency(ex.frequency).count,
-                frequencyUnit:  parseFrequency(ex.frequency).unit,
-                notes:          ex.notes         ?? '',
-                _checked:       true,
+                frequencyUnit: parseFrequency(ex.frequency).unit,
+                notes: ex.notes ?? '',
+                _checked: true,
               }))
             }
           })
@@ -848,18 +882,24 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         const mapped = {}
         therophyData.forEach((therapy, tIndex) => {
           const key = `${therapy.therapyName}_${tIndex}`
+
+
           mapped[key] = {
             checked: true,
+            programId: data.programId || data.id || "",
+            programName: data.programName || "",
+            therapyId: therapy.id || "",
+            therapyName: therapy.therapyName || "",
             exercises: (therapy.exercises || []).map(ex => ({
               ...ex,
-              exerciseName:   ex.name        || ex.exerciseName  || '',
-              sessions:       ex.session     ?? ex.sessions      ?? '',
-              sets:           ex.sets        ?? '',
-              reps:           ex.repetitions ?? ex.reps          ?? '',
+              exerciseName: ex.name || ex.exerciseName || '',
+              sessions: ex.session ?? ex.sessions ?? '',
+              sets: ex.sets ?? '',
+              reps: ex.repetitions ?? ex.reps ?? '',
               frequencyCount: parseFrequency(ex.frequency).count,
-              frequencyUnit:  parseFrequency(ex.frequency).unit,
-              notes:          ex.notes       ?? '',
-              _checked:       true,
+              frequencyUnit: parseFrequency(ex.frequency).unit,
+              notes: ex.notes ?? '',
+              _checked: true,
             }))
           }
         })
@@ -870,48 +910,67 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
 
       /* ── THERAPY MODE ── */
       else if (mode === 'therapy') {
-        const therapyName = data?.therapyName || data?.name || ''
-        const therapyId   = data?.therapyId   || data?.id   || ''
-        const matchedExercises = allExercises.filter(
-          ex => String(ex.therapyId || ex.theraphyId || '') === String(therapyId)
-        )
+        const res = data?.data || data || {}
+
+        console.log("Raw therapy data:", res)
+
+        const therapyName =
+          res?.therapyName ||
+          res?.name ||
+          ''
+
+        const therapyId =
+          res?.therapyId ||
+          res?.therpyId ||
+          res?.theraphyId ||
+          res?.therapy_id ||
+          res?.id ||
+          ''
+
+        const exercises = Array.isArray(res?.exercises)
+          ? res.exercises
+          : []
+
+        console.log("Direct Exercises:", exercises)
+
         setTherapyLibrary([{ therapyId, therapyName }])
+
         setTherapyState({
           [therapyName]: {
             checked: true,
-            exercises: matchedExercises.map(ex => ({
+            exercises: exercises.map((ex) => ({
               ...ex,
-              exerciseName:   ex.name        || ex.exerciseName  || '',
-              sessions:       ex.session     ?? ex.sessions      ?? '',
-              sets:           ex.sets        ?? '',
-              reps:           ex.repetitions ?? ex.reps          ?? '',
+              exerciseName: ex.name || ex.exerciseName || '',
+              sessions: ex.session ?? ex.sessions ?? '',
+              sets: ex.sets ?? '',
+              reps: ex.repetitions ?? ex.reps ?? '',
               frequencyCount: parseFrequency(ex.frequency).count,
-              frequencyUnit:  parseFrequency(ex.frequency).unit,
-              notes:          ex.notes       ?? '',
-              _checked:       true,
+              frequencyUnit: parseFrequency(ex.frequency).unit,
+              notes: ex.notes ?? '',
+              _checked: true,
             })),
-          }
+          },
         })
+
         setTherophyDataState({})
       }
-
       /* ── EXERCISE MODE ── */
       else if (mode === 'exercise') {
-        const ex     = data || obj
+        const ex = data || obj
         const exName = ex?.name || ex?.exerciseName || ''
         setTherophyDataState({
           [exName]: {
             checked: true,
             exercises: [{
               ...ex,
-              exerciseName:   exName,
-              sessions:       ex?.session     ?? ex?.sessions      ?? '',
-              sets:           ex?.sets        ?? '',
-              reps:           ex?.repetitions ?? ex?.reps          ?? '',
+              exerciseName: exName,
+              sessions: ex?.session ?? ex?.sessions ?? '',
+              sets: ex?.sets ?? '',
+              reps: ex?.repetitions ?? ex?.reps ?? '',
               frequencyCount: parseFrequency(ex?.frequency).count,
-              frequencyUnit:  parseFrequency(ex?.frequency).unit,
-              notes:          ex?.notes       ?? '',
-              _checked:       true,
+              frequencyUnit: parseFrequency(ex?.frequency).unit,
+              notes: ex?.notes ?? '',
+              _checked: true,
             }]
           }
         })
@@ -932,61 +991,258 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
      CRITICAL: We include ALL current state so the parent can persist it
      and pass it back as seed if the user returns to this tab.
   ──────────────────────────────────────────────────────────────────────── */
-  const handleNext = useCallback(() => {
-    let selectedTherapies = []
+  // const handleNext = useCallback(() => {
+  //   let selectedTherapies = []
+
+  //   if (hasTherophyData) {
+  //     selectedTherapies = tdKeys
+  //       .filter(key => therophyDataState[key]?.checked)
+  //       .map(key => ({
+  //         therapyName: key,
+  //         exercises: (therophyDataState[key]?.exercises || []).filter(
+  //           ex => ex._checked !== false
+  //         ),
+  //       }))
+  //   } else {
+  //     selectedTherapies = therapyLibrary
+  //       .filter(t => therapyState[t.therapyName]?.checked)
+  //       .map(t => ({
+  //         therapyId: t.therapyId,
+  //         therapyName: t.therapyName,
+  //         exercises: (therapyState[t.therapyName]?.exercises || []).filter(ex => ex._checked !== false),
+  //       }))
+  //   }
+
+  //   const payload = {
+  //     mode,
+  //     serviceType: mode,
+  //     // therapistId,
+  //     // therapistName,
+  //     selectedProgramId,
+  //     selectedProgramObj,
+  //     selectedTherapies,
+  //     // modalitiesUsed,
+  //     // patientResponse,
+  //     // manualTherapy,
+  //     // precautions,
+  //     // ── Include raw state so parent can persist it and restore on return ──
+  //     _internalState: {
+  //       therophyDataState,
+  //       therapyLibrary,
+  //       therapyState,
+  //     },
+  //   }
+
+  //   console.log('🚀 TherapySession payload:', payload)
+  //   onNext?.(payload)
+  // }, [
+  //   hasTherophyData, tdKeys, therophyDataState,
+  //   therapyLibrary, therapyState,
+  //   mode, therapistId, therapistName,
+  //   selectedProgramId, selectedProgramObj,
+  //   modalitiesUsed, patientResponse, manualTherapy, precautions,
+  //   onNext,
+  // ])
+
+  const handleNext = () => {
+    const formatExercise = (ex) => ({
+
+      exerciseId:
+        ex.therapyExercisesId ||
+        ex.therapyExerciseId ||
+        ex.id ||
+        "",
+
+      exerciseName: ex.exerciseName || ex.name || "",
+      noOfSessions: Number(ex.sessions || ex.session || 0),
+      frequency: `${ex.frequencyCount || 0} times/${(
+        ex.frequencyUnit || "day"
+      ).toLowerCase()}`,
+      notes: ex.notes || "",
+      sets: Number(ex.sets || 0),
+      repetitions: Number(ex.reps || ex.repetitions || 0),
+      youtubeUrl: ex.videoUrl || ex.video || "",
+      totalExercisePrice: Number(ex.totalPrice || 0),
+      pricePerSession: ex.pricePerSession
+    });
+    console.log('Formatting exercise:', formatExercise);
+    /* ---------------- PROGRAM / PACKAGE SOURCE ---------------- */
+    let selectedTherapiesPayload = [];
 
     if (hasTherophyData) {
-      selectedTherapies = tdKeys
-        .filter(key => therophyDataState[key]?.checked)
-        .map(key => ({
-          therapyName: key,
-          exercises: (therophyDataState[key]?.exercises || []).filter(ex => ex._checked !== false),
-        }))
+      // package / program / exercise
+      selectedTherapiesPayload = tdKeys
+        .filter((key) => therophyDataState[key]?.checked)
+        .map((key) => {
+          const item = therophyDataState[key];
+
+          const exercises = (item.exercises || [])
+            .filter((ex) => ex._checked !== false)
+            .map(formatExercise);
+
+          const totalPrice = exercises.reduce(
+            (sum, ex) => sum + Number(ex.totalPrice || 0),
+            0
+          );
+
+          return {
+            therapyId: item.therapyId || "",
+            therapyName: item.therapyName || key,
+            totalPrice,
+            exercises,
+          };
+        });
+
     } else {
-      selectedTherapies = therapyLibrary
-        .filter(t => therapyState[t.therapyName]?.checked)
-        .map(t => ({
-          therapyId:   t.therapyId,
-          therapyName: t.therapyName,
-          exercises: (therapyState[t.therapyName]?.exercises || []).filter(ex => ex._checked !== false),
-        }))
+      // therapy mode
+      selectedTherapiesPayload = therapyLibrary
+        .filter((t) => therapyState[t.therapyName]?.checked)
+        .map((t) => {
+          const exercises = (therapyState[t.therapyName]?.exercises || [])
+            .filter((ex) => ex._checked !== false)
+            .map(formatExercise);
+
+          const totalPrice = exercises.reduce(
+            (sum, ex) => sum + Number(ex.totalPrice || 0),
+            0
+          );
+
+          return {
+            therapyId: t.therapyId || "",
+            therapyName: t.therapyName || "",
+            totalPrice,
+            exercises,
+          };
+        });
     }
 
-    const payload = {
-      mode,
-      serviceType: mode,
-      therapistId,
-      therapistName,
-      selectedProgramId,
-      selectedProgramObj,
-      selectedTherapies,
-      modalitiesUsed,
-      patientResponse,
-      manualTherapy,
-      precautions,
-      // ── Include raw state so parent can persist it and restore on return ──
-      _internalState: {
-        therophyDataState,
-        therapyLibrary,
-        therapyState,
-      },
+    /* ---------------- PACKAGE GROUPING ---------------- */
+    const groupedPrograms = {};
+
+    tdKeys.forEach((key) => {
+      const item = therophyDataState[key];
+      if (!item?.checked) return;
+      console.log('Processing item for grouping:', item)
+      const programId = item.id || item.programId || "";
+      const programName = item.programName || "";
+
+      if (!groupedPrograms[programId]) {
+        groupedPrograms[programId] = {
+          programId,
+          programName,
+          totalPrice: 0,
+          therapyData: [],
+        };
+      }
+
+      const exercises = (item.exercises || [])
+        .filter((ex) => ex._checked !== false)
+        .map(formatExercise);
+
+      const therapyTotal = exercises.reduce(
+        (sum, ex) => sum + Number(ex.totalPrice || 0),
+        0
+      );
+
+      groupedPrograms[programId].therapyData.push({
+        therapyId: item.therapyId || "",
+        therapyName: item.therapyName || key,
+        totalPrice: therapyTotal,
+        exercises,
+      });
+
+      groupedPrograms[programId].totalPrice += therapyTotal;
+    });
+
+    const packageProgramsPayload = Object.values(groupedPrograms);
+
+    /* ---------------- FINAL ---------------- */
+    let therapySessions = [];
+
+    if (mode === "package") {
+      therapySessions = [
+        {
+          packageId: selectedProgramId || "",
+          packageName: selectedProgramObj?.packageName || "",
+          serviceType: "package",
+          totalPrice: packageProgramsPayload.reduce(
+            (sum, p) => sum + Number(p.totalPrice || 0),
+            0
+          ),
+          programs: packageProgramsPayload,
+        },
+      ];
     }
 
-    console.log('🚀 TherapySession payload:', payload)
-    onNext?.(payload)
-  }, [
-    hasTherophyData, tdKeys, therophyDataState,
-    therapyLibrary, therapyState,
-    mode, therapistId, therapistName,
-    selectedProgramId, selectedProgramObj,
-    modalitiesUsed, patientResponse, manualTherapy, precautions,
-    onNext,
-  ])
+    else if (mode === "program") {
+      therapySessions = [
+        {
+          programId: selectedProgramId || "",
+          programName: selectedProgramObj?.programName || "",
+          serviceType: "program",
+          totalTherapyPrice: selectedTherapiesPayload.reduce(
+            (sum, t) => sum + Number(t.totalPrice || 0),
+            0
+          ),
+          therapyData: selectedTherapiesPayload,
+        },
+      ];
+    }
+
+    else if (mode === "therapy") {
+      therapySessions = selectedTherapiesPayload.map((t) => ({
+        therapyId: t.therapyId || "",
+        therapyName: t.therapyName || "",
+        serviceType: "therapy",
+        totalPrice: Number(t.totalPrice || 0),
+        exercises: t.exercises || []
+      }));
+    }
+    else if (mode === "exercise") {
+      const exercises =
+        (therophyDataState[tdKeys[0]]?.exercises || [])
+          .filter((ex) => ex._checked !== false)
+          .map(formatExercise);
+
+      therapySessions = [
+        {
+          serviceType: "exercise",
+          totalPrice: exercises.reduce(
+            (sum, ex) => sum + Number(ex.totalPrice || 0),
+            0
+          ),
+          exercises,
+        },
+      ];
+    }
+    console.log('🚀 TherapySession therapySessions payload:', therapySessions)
+    onNext({
+      therapySessions,
+
+      therapistId: therapistId || "",
+      therapistName: therapistName || "",
+
+      modalitiesUsed: modalitiesUsed || [],
+
+      patientResponse: patientResponse || "",
+
+      manualTherapy: manualTherapy || "",
+
+      precautions: Array.isArray(precautions)
+        ? precautions
+        : typeof precautions === "string" && precautions.trim()
+          ? precautions
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+          : [],
+    });
+  };
 
   /* ── Derived flags ── */
-  const loadingExercises  = loadingAllExercises || loadingProgramDetail
-  const loadingAnything   = loadingPrograms || loadingAllExercises || loadingProgramDetail
-  const initPending       = !clinicId
+  const loadingExercises = loadingAllExercises || loadingProgramDetail
+  const loadingAnything = loadingPrograms || loadingAllExercises || loadingProgramDetail
+  const initPending = !clinicId
 
   // Show therapies if: we have a selectedProgramId OR we already have restored data from seed
   const showTherapies =
@@ -1015,9 +1271,9 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
             <SectionHeader emoji="⚙️" title="Session Type" />
 
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <RadioBtn label="Package"  emoji="📦" value="package"  active={mode === 'package'}  onClick={handleModeChange} />
-              <RadioBtn label="Program"  emoji="🎯" value="program"  active={mode === 'program'}  onClick={handleModeChange} />
-              <RadioBtn label="Therapy"  emoji="💆" value="therapy"  active={mode === 'therapy'}  onClick={handleModeChange} />
+              <RadioBtn label="Package" emoji="📦" value="package" active={mode === 'package'} onClick={handleModeChange} />
+              <RadioBtn label="Program" emoji="🎯" value="program" active={mode === 'program'} onClick={handleModeChange} />
+              <RadioBtn label="Therapy" emoji="💆" value="therapy" active={mode === 'therapy'} onClick={handleModeChange} />
               <RadioBtn label="Exercise" emoji="🏋️" value="exercise" active={mode === 'exercise'} onClick={handleModeChange} />
             </div>
 
@@ -1060,10 +1316,10 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
             <SectionHeader
               emoji={mode === 'program' ? '🎯' : '📦'}
               title={
-                mode === 'package'  ? 'Package — Therapies & Exercises' :
-                mode === 'program'  ? 'Program — Therapies & Exercises' :
-                mode === 'therapy'  ? 'Therapy — Exercises' :
-                                     'Exercise Details'
+                mode === 'package' ? 'Package — Therapies & Exercises' :
+                  mode === 'program' ? 'Program — Therapies & Exercises' :
+                    mode === 'therapy' ? 'Therapy — Exercises' :
+                      'Exercise Details'
               }
               subtitle={
                 showTherapies

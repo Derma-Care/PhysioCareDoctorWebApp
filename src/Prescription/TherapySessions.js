@@ -925,7 +925,7 @@ const TherapySession = ({ seed = {}, onNext }) => {
         : therapyLibrary
           .filter(t => therapyState[t.therapyName]?.checked)
           .map(t => ({
-            therapyId: t.therapyId,
+            therapyId: t.therapyId || t.id,
             therapyName: t.therapyName,
             totalPrice: 0,
             exercises: (therapyState[t.therapyName]?.exercises || [])

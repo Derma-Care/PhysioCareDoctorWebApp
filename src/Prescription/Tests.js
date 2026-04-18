@@ -41,10 +41,10 @@ const FUNCTIONAL_DIFFICULTIES = [
   'Sports/Training',
 ]
 
-const POSTURE_OPTIONS    = ['Normal', 'Deviations']
-const ROM_OPTIONS        = ['Normal', 'Restricted']
-const STRENGTH_OPTIONS   = ['Normal', 'Weakness in']
-const NEURO_OPTIONS      = ['Normal', 'Balance', 'Coordination', 'Sensation issues']
+const POSTURE_OPTIONS = ['Normal', 'Deviations']
+const ROM_OPTIONS = ['Normal', 'Restricted']
+const STRENGTH_OPTIONS = ['Normal', 'Weakness in']
+const NEURO_OPTIONS = ['Normal', 'Balance', 'Coordination', 'Sensation issues']
 
 /* ─── Styles ────────────────────────────────────────────────────────────── */
 const inputStyle = {
@@ -167,55 +167,55 @@ const UnderlineInput = ({ value, onChange, placeholder = '' }) => (
 ═══════════════════════════════════════════════════════════════════════════ */
 const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   /* ── Subjective ── */
-  const [chiefComplaint, setChiefComplaint]           = useState(seed.chiefComplaint ?? '')
-  const [painScale, setPainScale]                     = useState(seed.painScale ?? '')
-  const [painType, setPainType]                       = useState(seed.painType ?? '')
-  const [durationValue, setDurationValue]             = useState('')
-  const [durationUnit, setDurationUnit]               = useState('day')
-  const [onset, setOnset]                             = useState(seed.onset ?? '')
-  const [aggravatingFactors, setAggravatingFactors]   = useState(seed.aggravatingFactors ?? '')
-  const [relievingFactors, setRelievingFactors]       = useState(seed.relievingFactors ?? '')
-  const [observations, setObservations]               = useState(seed.observations ?? '')
+  const [chiefComplaint, setChiefComplaint] = useState(seed.chiefComplaint ?? '')
+  const [painScale, setPainScale] = useState(seed.painScale ?? '')
+  const [painType, setPainType] = useState(seed.painType ?? '')
+  const [durationValue, setDurationValue] = useState('')
+  const [durationUnit, setDurationUnit] = useState('day')
+  const [onset, setOnset] = useState(seed.onset ?? '')
+  const [aggravatingFactors, setAggravatingFactors] = useState(seed.aggravatingFactors ?? '')
+  const [relievingFactors, setRelievingFactors] = useState(seed.relievingFactors ?? '')
+  const [observations, setObservations] = useState(seed.observations ?? '')
 
   /* ── Physical ── */
-  const [posture, setPosture]               = useState(seed.posture ?? '')
-  const [rangeOfMotion, setRangeOfMotion]   = useState(seed.rangeOfMotion ?? '')
-  const [specialTests, setSpecialTests]     = useState(seed.specialTests ?? '')
+  const [posture, setPosture] = useState(seed.posture ?? '')
+  const [rangeOfMotion, setRangeOfMotion] = useState(seed.rangeOfMotion ?? '')
+  const [specialTests, setSpecialTests] = useState(seed.specialTests ?? '')
 
   /* ── Functional Assessment ── */
-  const [difficultiesIn, setDifficultiesIn]         = useState(seed.difficultiesIn ?? [])
-  const [otherDifficulty, setOtherDifficulty]       = useState(seed.otherDifficulty ?? '')
+  const [difficultiesIn, setDifficultiesIn] = useState(seed.difficultiesIn ?? [])
+  const [otherDifficulty, setOtherDifficulty] = useState(seed.otherDifficulty ?? '')
   const [dailyLivingAffected, setDailyLivingAffected] = useState(seed.dailyLivingAffected ?? '')
 
   /* ── Physical Examination ── */
-  const [postureAssessment, setPostureAssessment]     = useState(seed.postureAssessment ?? [])
-  const [postureDeviations, setPostureDeviations]     = useState(seed.postureDeviations ?? '')
-  const [romStatus, setRomStatus]                     = useState(seed.romStatus ?? [])
-  const [romRestricted, setRomRestricted]             = useState(seed.romRestricted ?? '')
-  const [romJoints, setRomJoints]                     = useState(seed.romJoints ?? '')
-  const [muscleStrength, setMuscleStrength]           = useState(seed.muscleStrength ?? [])
-  const [muscleWeakness, setMuscleWeakness]           = useState(seed.muscleWeakness ?? '')
-  const [neurologicalSigns, setNeurologicalSigns]     = useState(seed.neurologicalSigns ?? [])
+  const [postureAssessment, setPostureAssessment] = useState(seed.postureAssessment ?? [])
+  const [postureDeviations, setPostureDeviations] = useState(seed.postureDeviations ?? '')
+  const [romStatus, setRomStatus] = useState(seed.romStatus ?? [])
+  const [romRestricted, setRomRestricted] = useState(seed.romRestricted ?? '')
+  const [romJoints, setRomJoints] = useState(seed.romJoints ?? '')
+  const [muscleStrength, setMuscleStrength] = useState(seed.muscleStrength ?? [])
+  const [muscleWeakness, setMuscleWeakness] = useState(seed.muscleWeakness ?? '')
+  const [neurologicalSigns, setNeurologicalSigns] = useState(seed.neurologicalSigns ?? [])
 
   /* ── Patient Pain Type (if not passed from complaints) ── */
   const [patientPain, setPatientPain] = useState(seed.patientPain ?? '')
 
   /* ── Chronic Pain ── */
-  const [painTriggers, setPainTriggers]   = useState(seed.painTriggers ?? '')
+  const [painTriggers, setPainTriggers] = useState(seed.painTriggers ?? '')
   const [chronicRelieving, setChronicRelieving] = useState(seed.chronicRelieving ?? '')
 
   /* ── Sports Rehab ── */
-  const [typeOfSport, setTypeOfSport]               = useState(seed.typeOfSport ?? '')
-  const [recurringInjuries, setRecurringInjuries]   = useState(seed.recurringInjuries ?? '')
+  const [typeOfSport, setTypeOfSport] = useState(seed.typeOfSport ?? '')
+  const [recurringInjuries, setRecurringInjuries] = useState(seed.recurringInjuries ?? '')
   const [returnToSportGoals, setReturnToSportGoals] = useState(seed.returnToSportGoals ?? '')
 
   /* ── Neuro Rehab ── */
-  const [neuroDiagnosis, setNeuroDiagnosis]             = useState(seed.neuroDiagnosis ?? '')
-  const [neuroOnset, setNeuroOnset]                     = useState(seed.neuroOnset ?? '')
-  const [mobilityStatus, setMobilityStatus]             = useState(seed.mobilityStatus ?? '')
-  const [cognitiveStatus, setCognitiveStatus]           = useState(seed.cognitiveStatus ?? '')
+  const [neuroDiagnosis, setNeuroDiagnosis] = useState(seed.neuroDiagnosis ?? '')
+  const [neuroOnset, setNeuroOnset] = useState(seed.neuroOnset ?? '')
+  const [mobilityStatus, setMobilityStatus] = useState(seed.mobilityStatus ?? '')
+  const [cognitiveStatus, setCognitiveStatus] = useState(seed.cognitiveStatus ?? '')
 
-  const [snackbar, setSnackbar]   = useState({ show: false, message: '', type: '' })
+  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
   const [isGenerating, setIsGenerating] = useState(false)
   const printRef = useRef(null)
 
@@ -333,7 +333,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
   /* ── Print ── */
   const handlePrint = () => {
-    const today   = new Date()
+    const today = new Date()
     const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
     const rowHtml = (label, value) =>
       value ? `<div class="kv"><div class="label">${label}</div><div class="value">${escapeHtml(value)}</div></div>` : ''
@@ -402,7 +402,7 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
 
   /* ═══════════ RENDER ═══════════ */
   return (
-    <div className="tests-wrapper pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div className="tests-wrapper pb-5" style={{ paddingBottom: "90px" }}>
 
       {snackbar.show && (
         <CAlert color={snackbar.type === 'error' ? 'danger' : snackbar.type || 'info'} className="mb-2">

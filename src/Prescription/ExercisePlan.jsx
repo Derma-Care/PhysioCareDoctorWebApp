@@ -173,7 +173,18 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
   const handleCancel = () => { setForm({ ...EMPTY_EXERCISE }); setEditingIdx(null); setSearch('') }
 
-  const handleNext = () => onNext?.({ exercisePlan: { exercises, homeAdvice } })
+  // const handleNext = () => onNext?.({ exercisePlan: { exercises, homeAdvice } })
+  const handleNext = () => {
+  const payload = {
+    exercisePlan: {
+      exercises,
+      homeAdvice,
+    },
+  };
+
+  console.log("handleNext payload:", payload); // console data
+  onNext?.(payload);
+};
 
   return (
     <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
@@ -216,6 +227,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                       boxShadow: '0 4px 16px rgba(26,90,168,0.12)',
                     }}>
                       {filteredLibrary.map((ex, i) => {
+                        const exId = ex.therapyExercisesId
                         const exName = ex.name || ''
                         const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
                         const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
@@ -233,6 +245,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                             onMouseDown={() => {
                               setForm(f => ({
                                 ...f,
+                                therapyExercisesId: exId,
                                 name: exName,
                                 // Prefer explicit sets/repetitions from API; fall back to session
                                 sets: exSets || exSession || f.sets,

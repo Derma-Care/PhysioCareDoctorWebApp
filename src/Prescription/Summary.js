@@ -510,7 +510,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const ACTIONS = { SAVE: 'save', SAVE_PRINT: 'savePrint' }
 
   const record = formData?.physiotherapyRecord ?? formData ?? {}
-
+  console.log('🚀 ~ file: Summary.js ~ line 78 ~ Summary ~ record', record)
+  console.log('🚀 ~ file: Summary.js ~ line 78 ~ Summary ~ record', patientData?.bookingId)
   /* ── Booking-level IDs ── */
   const bookingId = record.bookingId ?? patientData?.bookingId ?? ''
   const clinicId = record.clinicId ?? patientData?.clinicId ?? clinicDetails?.hospitalId ?? ''
@@ -705,6 +706,21 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   /* ── PDF helpers ── */
   const renderPdfBlob = async () =>
     await pdf(<PrescriptionPDF doctorData={doctorDetails} clicniData={clinicDetails} formData={formData} patientData={patientData} />).toBlob()
+  // ✅ Add this function
+  const blobToBase64 = (blob) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+
+      reader.onloadend = () => {
+        const result = reader.result || ""
+        const base64 = String(result).split(",")[1] || ""
+        resolve(base64)
+      }
+
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+
 
   const downloadBlob = (blob, filename) => {
     const url = URL.createObjectURL(blob)
@@ -717,45 +733,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   /* ══════════════════════════════════════════════════════════════════════
      BUILD FINAL PAYLOAD
   ══════════════════════════════════════════════════════════════════════ */
-  const buildPayload = () => {
+  const buildPayload = (prescriptionPdf = "") => {
     const firstDiag = diagnosisRows[0] ?? {}
+    console.log('Therapy Sessions to be saved:', formData);
 
-    const structuredSessions = sessionsList.map(sess => ({
-      serviceType:     (sess.serviceType ?? 'PROGRAM').toUpperCase(),
-      programId:       sess.programId       ?? '',
-      programName:     sess.programName     ?? '',
-      clinicId:        sess.clinicId        ?? clinicId,
-      branchId:        sess.branchId        ?? branchId,
-      totalTherapies:  Array.isArray(sess.therapyData) ? sess.therapyData.length : 0,
-      therapistId:     sess.therapistId     ?? '',
-      therapistName:   sess.therapistName   ?? '',
-      modalitiesUsed:  Array.isArray(sess.modalitiesUsed) ? sess.modalitiesUsed : [],
-      patientResponse: sess.patientResponse ?? '',
-      manualTherapy:   sess.manualTherapy   ?? '',
-      precautions:     Array.isArray(sess.precautions)
-        ? sess.precautions
-        : sess.precautions ? [sess.precautions] : [],
-      therapyData: Array.isArray(sess.therapyData)
-        ? sess.therapyData.map(therapy => ({
-            therapyId:     therapy.therapyId    ?? '',
-            therapyName:   therapy.therapyName  ?? '',
-            totalSessions: therapy.totalSessions ?? 0,
-            exercises: Array.isArray(therapy.exercises)
-              ? therapy.exercises.map(ex => ({
-                  therapyExerciseId: ex.therapyExerciseId ?? ex.therapyExercisesId ?? '',
-                  name:              ex.name              ?? '',
-                  session:           Number(ex.session)   || 1,
-                  frequency:         ex.frequency         ?? '',
-                  notes:             ex.notes             ?? '',
-                  sets:              Number(ex.sets)       || 0,
-                  repetitions:       Number(ex.repetitions ?? ex.reps) || 0,
-                  videoUrl:          ex.videoUrl           ?? '',
-                  totalPrice:        ex.totalPrice         ?? 0,
-                }))
-              : [],
-          }))
-        : [],
-    }))
 
     const followUpPayload = Array.isArray(followUpObj)
       ? (followUpObj[0] ?? {})
@@ -769,117 +750,120 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         patientId,
         patientName,
         mobileNumber: patientMobile,
-        age:  Number(patientAge) || 0,
-        sex:  patientSex,
+        age: Number(patientAge) || 0,
+        sex: patientSex,
       },
       complaints: {
-        complaintDetails:    finalComplaints.complaintDetails    || '',
+        complaintDetails: finalComplaints.complaintDetails || '',
         painAssessmentImage: finalComplaints.painAssessmentImage || '',
-        reportImages:        finalComplaints.reportImages        || [],
-        selectedTherapy:     finalComplaints.selectedTherapy     || '',
-        selectedTherapyId:   finalComplaints.selectedTherapyID   || '',
-        duration:            finalComplaints.duration            || '',
+        reportImages: finalComplaints.reportImages || [],
+        selectedTherapy: finalComplaints.selectedTherapy || '',
+        selectedTherapyId: finalComplaints.selectedTherapyID || '',
+        duration: finalComplaints.duration || '',
         therapyAnswers: Object.values(finalComplaints.theraphyAnswers ?? {}).flat().map(q => ({
           questionKey: q.questionKey ?? '',
-          questionId:  q.questionId  ?? '',
-          question:    q.question    ?? '',
-          answer:      q.answer      ?? '',
+          questionId: q.questionId ?? '',
+          question: q.question ?? '',
+          answer: q.answer ?? '',
         })),
       },
       // ✅ FIX: Use investigationTestsArray (normalized) and investigationReason
       investigation: {
-        tests:  investigationTestsArray,
+        tests: investigationTestsArray,
         reason: investigationReason || '',
       },
       assessment: {
         subjectiveAssessment: {
-          chiefComplaint:     assessment.chiefComplaint     ?? '',
-          painScale:          Number(assessment.painScale)  || 0,
-          painType:           assessment.painType           ?? '',
-          duration:           assessment.duration           ?? '',
-          onset:              assessment.onset              ?? '',
+          chiefComplaint: assessment.chiefComplaint ?? '',
+          painScale: Number(assessment.painScale) || 0,
+          painType: assessment.painType ?? '',
+          duration: assessment.duration ?? '',
+          onset: assessment.onset ?? '',
           aggravatingFactors: assessment.aggravatingFactors ?? '',
-          relievingFactors:   assessment.relievingFactors   ?? '',
-          observations:       assessment.observations       ?? '',
+          relievingFactors: assessment.relievingFactors ?? '',
+          observations: assessment.observations ?? '',
         },
         functionalAssessment: {
-          difficultiesIn:      difficultiesIn,
-          otherDifficulty:     otherDifficulty,
+          difficultiesIn: difficultiesIn,
+          otherDifficulty: otherDifficulty,
           dailyLivingAffected: dailyLivingAffected,
         },
         physicalExamination: {
           postureAssessment: postureAssessment,
           postureDeviations: postureDeviations,
-          rangeOfMotion:     romStatus,
-          romRestricted:     romRestricted,
-          romJoints:         romJoints,
-          muscleStrength:    muscleStrength,
-          muscleWeakness:    muscleWeakness,
+          rangeOfMotion: romStatus,
+          romRestricted: romRestricted,
+          romJoints: romJoints,
+          muscleStrength: muscleStrength,
+          muscleWeakness: muscleWeakness,
           neurologicalSigns: neurologicalSigns,
         },
         ...(effectivePain === 'chronicPain' ? {
           chronicPainPatients: {
-            painTriggers:     painTriggers,
+            painTriggers: painTriggers,
             relievingFactors: chronicRelieving,
           }
         } : {}),
         ...(effectivePain === 'sportsRehab' ? {
           sportsRehabPatients: {
-            typeOfSport:        typeOfSport,
-            recurringInjuries:  recurringInjuries,
+            typeOfSport: typeOfSport,
+            recurringInjuries: recurringInjuries,
             returnToSportGoals: returnToSportGoals,
           }
         } : {}),
         ...(effectivePain === 'neuroRehab' ? {
           neuroRehabPatients: {
-            neuroDiagnosis:  neuroDiagnosis,
-            neuroOnset:      neuroOnset,
-            mobilityStatus:  mobilityStatus,
+            neuroDiagnosis: neuroDiagnosis,
+            neuroOnset: neuroOnset,
+            mobilityStatus: mobilityStatus,
             cognitiveStatus: cognitiveStatus,
           }
         } : {}),
       },
       diagnosis: {
         physioDiagnosis: firstDiag.physioDiagnosis ?? '',
-        affectedArea:    firstDiag.affectedArea    ?? '',
-        severity:        firstDiag.severity        ?? '',
-        stage:           firstDiag.stage           ?? '',
-        notes:           firstDiag.notes           ?? '',
+        affectedArea: firstDiag.affectedArea ?? '',
+        severity: firstDiag.severity ?? '',
+        stage: firstDiag.stage ?? '',
+        notes: firstDiag.notes ?? '',
       },
       treatmentPlan: {
         doctorId,
         doctorName,
-        therapistId:   treatmentPlanDisplay.therapistId,
-        therapistName: treatmentPlanDisplay.therapistName,
+        therapistId: formData?.therapySessions?.therapistId,
+        therapistName: formData?.therapySessions?.therapistName,
         manualTherapy: treatmentPlanDisplay.manualTherapy,
-        precautions: Array.isArray(treatmentPlanDisplay.precautions)
+        precautions: Array.isArray(formData?.therapySessions?.precautions)
           ? treatmentPlanDisplay.precautions
           : treatmentPlanDisplay.precautions
             ? [treatmentPlanDisplay.precautions]
             : [],
-        frequency: treatmentPlanDisplay.frequency,
+        modalitiesUsed: formData?.therapySessions?.modalitiesUsed || [],
+        patientResponse: formData?.therapySessions?.patientResponse || '',
       },
-      therapySessions: structuredSessions,
+
+      therapySessions: formData?.therapySessions?.sessions || [],
       exercisePlan: {
         homeAdvice,
         homeExercises: homeExercises.map(ex => ({
-          id:           ex.id           ?? '',
-          name:         ex.name         ?? '',
-          sets:         Number(ex.sets) || 0,
-          reps:         Number(ex.reps) || 0,
-          duration:     ex.duration     || '10 mins',
+          id: ex.id ?? '',
+          name: ex.name ?? '',
+          sets: Number(ex.sets) || 0,
+          reps: Number(ex.reps) || 0,
+          duration: ex.duration || '10 mins',
           instructions: ex.instructions ?? '',
-          videoUrl:     ex.videoUrl     ?? '',
-          thumbnail:    ex.thumbnail    ?? '',
+          videoUrl: ex.videoUrl ?? '',
+          thumbnail: ex.thumbnail ?? '',
         })),
       },
       followUp: {
         nextVisitDate: followUpPayload.nextVisitDate ?? '',
-        reviewNotes:   followUpPayload.reviewNotes   ?? '',
+        reviewNotes: followUpPayload.reviewNotes ?? '',
         modifications: followUpPayload.modifications ?? '',
       },
       treatmentTemplates,
       createdAt: todayStr(),
+      prescriptionPdf,
     }
   }
 
@@ -891,9 +875,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     }
     setSaving(true)
     try {
-      const blob = await renderPdfBlob()
+
       const safeName = (patientName || 'Record').replace(/[^\w\-]+/g, '_')
-      const payload = buildPayload()
+      const blob = await renderPdfBlob();
+      const pdfBase64 = await blobToBase64(blob);
+      const payload = buildPayload(pdfBase64);
+      console.log('🚀 FINAL SAVE PAYLOAD 👉', payload)
       console.log('🚀 FINAL SAVE PAYLOAD 👉', JSON.stringify(payload, null, 2))
       const resp = await SavePatientPrescription(payload)
       if (resp) {

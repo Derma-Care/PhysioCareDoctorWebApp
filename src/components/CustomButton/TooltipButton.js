@@ -51,9 +51,9 @@ const TooltipButton = ({ patient, onSelect, tab, disabled }) => {
       onSelect?.()
 
       // navigation
-      if (tab === 'Confirmed') {
+      if (tab.toLowerCase() === 'confirmed') {
         navigate(`/tab-content/${patient.patientId}`, { state: { patient, formData, fromTab: 'Confirmed' } })
-      } else if (tab === 'In-Progress') {
+      } else if (tab.toLowerCase() === 'in-progress') {
         navigate(`/tab-inProgress/${patient.patientId}`, { state: { patient, formData, details, fromTab: 'In-Progress' } })
       } else if (tab === 'Completed') {
         navigate(`/tab-completed-content/${patient.patientId}`, { state: { patient, formData, fromTab: 'Completed' } })

@@ -268,65 +268,24 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
     // ── Plan ──────────────────────────────────────────────────────────────
     Plan: (data = {}) => {
-      if (!data || typeof data !== 'object') { goToNext('Plan'); return }
 
-      const programObj = data.selectedProgramObj ?? {}
+      console.log('🔄 [Plan] onNext data:', data)
 
-      const sessionEntry = {
-        programId: data.selectedProgramId ?? programObj?.id ?? programObj?._id ?? programObj?.programId ?? '',
-        programName: programObj?.programName ?? programObj?.name ?? programObj?.title ?? '',
-        clinicId: localStorage.getItem('clinicId') || localStorage.getItem('hospitalId') || '',
-        branchId: programObj?.branchId ?? '',
-        totalTherapies: Array.isArray(data.selectedTherapies) ? data.selectedTherapies.length : 0,
-        serviceType: data.mode ?? 'PROGRAM',
-        therapyData: Array.isArray(data.selectedTherapies)
-          ? data.selectedTherapies.map(t => ({
-            therapyId: t.therapyId ?? '',
-            therapyName: t.therapyName ?? '',
-            totalSessions: t.totalSessions ?? 0,
-            exercises: Array.isArray(t.exercises)
-              ? t.exercises.map(ex => ({
-                therapyExerciseId: ex.therapyExercisesId ?? ex.therapyExerciseId ?? ex._id ?? ex.id ?? '',
-                name: ex.exerciseName ?? ex.name ?? ex.exercise_name ?? '',
-                session: Number(ex.sessions ?? ex.session ?? 1),
-                frequency: ex.frequencyCount
-                  ? `${ex.frequencyCount} times/${(ex.frequencyUnit ?? 'day').toLowerCase()}`
-                  : ex.frequency ?? '',
-                notes: ex.notes ?? ex.instructions ?? '',
-                sets: Number(ex.sets) || 0,
-                repetitions: Number(ex.reps ?? ex.repetitions) || 0,
-                videoUrl: ex.videoUrl ?? '',
-                totalPrice: ex.totalPrice ?? ex.price ?? 0,
-              }))
-              : [],
-          }))
-          : [],
-        therapistId: data.therapistId ?? '',
-        therapistName: data.therapistName ?? '',
-        modalitiesUsed: data.modalitiesUsed ?? [],
-        patientResponse: data.patientResponse ?? '',
-        manualTherapy: data.manualTherapy ?? '',
-        precautions: Array.isArray(data.precautions)
-          ? data.precautions
-          : data.precautions
-            ? [data.precautions]
-            : [],
-      }
 
-      const internalState = data._internalState ?? {}
+
+
 
       const patch = {
         therapySessions: {
-          overallStatus: data.overallStatus ?? '',
-          sessions: [sessionEntry],
+
+          sessions: data.therapySessions,
           therapistId: data.therapistId ?? '',
           therapistName: data.therapistName ?? '',
           manualTherapy: data.manualTherapy ?? '',
           precautions: data.precautions ?? '',
-          _internalState: internalState,
-          selectedProgramId: data.selectedProgramId ?? '',
-          selectedProgramObj: data.selectedProgramObj ?? null,
-          serviceType: data.mode ?? 'PROGRAM',
+
+
+
           modalitiesUsed: data.modalitiesUsed ?? [],
           patientResponse: data.patientResponse ?? '',
         },
@@ -510,7 +469,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
                           cursor: 'pointer',
                           borderRadius: '6px 6px 0 0',
                           color: active ? '#000' : '#7e3a93',   // 👈 active = black, inactive = gray
-                         
+
                         }}
                       >
                         <span style={{ fontSize: 16, fontWeight: active ? 700 : 500 }}>

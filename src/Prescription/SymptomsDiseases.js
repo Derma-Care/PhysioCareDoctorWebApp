@@ -6,7 +6,14 @@ import Snackbar from '../components/Snackbar'
 import { useToast } from '../utils/Toaster'
 import { getBookingDetails } from '../Auth/Auth'
 import { useDoctorContext } from '../Context/DoctorContext'
-
+import { COLORS } from '../Themes'
+import { color } from 'framer-motion'
+import {
+  CAccordion,
+  CAccordionItem,
+  CAccordionHeader,
+  CAccordionBody,
+} from "@coreui/react";
 // ─── helpers ────────────────────────────────────────────────────────────────
 const toImageSrc = (raw) => {
   if (!raw || typeof raw !== 'string') return null
@@ -44,7 +51,7 @@ const SLabel = ({ text }) => (
 const StatusBadge = ({ status }) => {
   const map = {
     Confirmed: { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
-    Pending:   { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
+    Pending: { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
     Cancelled: { bg: '#FEE2E2', color: '#991B1B', border: '#FECACA' },
   }
   const s = map[status] || { bg: '#F3F4F6', color: '#374151', border: '#D1D5DB' }
@@ -91,7 +98,7 @@ const inputBase = {
 const readonlyChip = {
   background: '#F3EEFF', border: '1px solid #DDD0FF',
   borderRadius: 10, padding: '10px 14px',
-  fontSize: 13, fontWeight: 700, color: '#5B21B6',
+  fontSize: 13, fontWeight: 700, color: COLORS.black,
 }
 
 // ─── main component ──────────────────────────────────────────────────────────
@@ -195,10 +202,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
 
   // ─── render ───────────────────────────────────────────────────────────────
   return (
-    <div style={{
-      fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-      background: '#F8F5FF', minHeight: '100vh', paddingBottom: 90,
-    }}>
+    <div style={{ paddingBottom: "90px" }} >
 
       {/* ── Header ── */}
       <div style={{
@@ -207,7 +211,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
       }}>
         <div style={{
-          fontSize: 10, color: '#7e3a93', fontWeight: 700,
+          fontSize: 10, color: COLORS.black, fontWeight: 700,
           letterSpacing: '0.1em', textTransform: 'uppercase',
         }}>
           Patient Consultation
@@ -217,7 +221,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               background: '#ffffff', borderRadius: 24, padding: '6px 16px',
-              color: '#7e3a93', fontSize: 13, fontWeight: 600,
+              color: COLORS.black, fontSize: 13, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 8,
               boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
             }}>
@@ -343,44 +347,79 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           </div>
 
           {/* Duration + Therapy side-by-side */}
-          <div style={card}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div>
-                <SLabel text="Duration" />
-                <input
-                  value={duration || '0 Days'}
-                  onChange={(e) => setDuration(e.target.value)}
-                  placeholder="e.g. 3 weeks"
-                  style={{ ...inputBase, resize: 'none' }}
-                  onFocus={(e) => (e.target.style.borderColor = '#6C2BD9')}
-                  onBlur={(e) => (e.target.style.borderColor = '#E5D9FF')}
-                />
-              </div>
-              {isValid(selectedTherapy || bk?.subServiceName) && (
-                <div>
-                  <SLabel text="Selected Therapy" />
-                  <div style={readonlyChip}>{selectedTherapy || bk?.subServiceName}</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Affected Body Parts */}
-          {parts.length > 0 && (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 16,
+              alignItems: 'start',
+            }}
+          >
+            {/* Duration + Selected Therapy */}
             <div style={card}>
-              <SLabel text="Affected Body Parts" />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 2 }}>
-                {parts.map((p) => (
-                  <span key={p} style={{
-                    background: '#EDE9FE', color: '#5B21B6',
-                    border: '1px solid #DDD6FE', borderRadius: 20,
-                    padding: '4px 14px', fontSize: 12, fontWeight: 700,
-                    textTransform: 'capitalize',
-                  }}>{p}</span>
-                ))}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: 14,
+                }}
+              >
+                <div>
+                  <SLabel text="Duration" />
+                  <input
+                    value={duration || '0 Days'}
+                    onChange={(e) => setDuration(e.target.value)}
+                    placeholder="e.g. 3 weeks"
+                    style={{ ...inputBase, resize: 'none' }}
+                    onFocus={(e) => (e.target.style.borderColor = '#6C2BD9')}
+                    onBlur={(e) => (e.target.style.borderColor = '#E5D9FF')}
+                  />
+                </div>
+
+                {isValid(selectedTherapy || bk?.subServiceName) && (
+                  <div>
+                    <SLabel text="Selected Therapy" />
+                    <div style={readonlyChip}>
+                      {selectedTherapy || bk?.subServiceName}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+
+            {/* Affected Body Parts */}
+            {parts.length > 0 && (
+              <div style={card}>
+                <SLabel text="Affected Body Parts" />
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 8,
+                    paddingTop: 2,
+                  }}
+                >
+                  {parts.map((p) => (
+                    <span
+                      key={p}
+                      style={{
+                        background: '#EDE9FE',
+                        color: '#5B21B6',
+                        border: '1px solid #DDD6FE',
+                        borderRadius: 20,
+                        padding: '4px 14px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Insurance Provider (kept separate as it's more administrative) */}
           <div style={card}>
@@ -428,44 +467,82 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
 
       {/* ══ THERAPY QUESTIONNAIRE — full width ══ */}
       {therapyGroups.length > 0 && (
-        <div style={{ maxWidth: 1200, margin: '0 auto 20px', padding: '0 20px' }}>
-          <div style={card}>
+        <div style={{ maxWidth: 1200, margin: "0 auto 24px", padding: "0 20px" }} >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 18,
+              padding: 20,
+              boxShadow: "0 8px 24px rgba(108,43,217,0.08)",
+              border: "1px solid #EEE7FF",
+            }}
+          >
             <SLabel text="Therapy Questionnaire" />
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: 16,
-            }}>
-              {therapyGroups.map(({ category, questions }) => (
-                <div key={category} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #EDE0FF' }}>
-                  <div style={{
-                    background: 'linear-gradient(90deg,#F3EEFF,#EEF2FF)',
-                    padding: '8px 16px', fontWeight: 700, fontSize: 12,
-                    color: '#6C2BD9', textTransform: 'capitalize', letterSpacing: '0.07em',
-                    borderBottom: '1px solid #EDE0FF',
-                  }}>{category}</div>
-                  {questions.map((q, idx) => (
-                    <div key={q.questionId ?? idx} style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '10px 16px',
-                      borderBottom: idx < questions.length - 1 ? '1px solid #F5F0FF' : 'none',
-                      background: idx % 2 === 0 ? '#FDFBFF' : '#fff',
-                    }}>
-                      <span style={{ fontSize: 13, color: '#374151', flex: 1, marginRight: 16 }}>
-                        {q.question || `Question ${q.questionId}`}
-                      </span>
-                      <AnswerBadge answer={q.answer} />
-                    </div>
-                  ))}
-                </div>
+
+            <CAccordion flush style={{ marginTop: 14, zIndex: 1 }}>
+              {therapyGroups.map(({ category, questions }, index) => (
+                <CAccordionItem
+                  key={category}
+                  itemKey={index + 1}
+                  style={{
+                    marginBottom: 12,
+                    border: "1px solid #E8DDFF",
+                    borderRadius: 14,
+                    overflow: "hidden",
+                  }}
+                >
+                  <CAccordionHeader
+                    style={{
+                      background: "linear-gradient(90deg,#F3EEFF,#EEF2FF)",
+                      color: "#6C2BD9",
+                      fontWeight: 700,
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {category}
+                  </CAccordionHeader>
+
+                  <CAccordionBody style={{ padding: 0 }}>
+                    {questions.map((q, idx) => (
+                      <div
+                        key={q.questionId ?? idx}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 14,
+                          padding: "12px 16px",
+                          borderBottom:
+                            idx < questions.length - 1
+                              ? "1px solid #F4EEFF"
+                              : "none",
+                          background: idx % 2 === 0 ? "#FCFAFF" : "#fff",
+                        }}
+                      >
+                        <div
+                          style={{
+                            flex: 1,
+                            fontSize: 13,
+                            color: "#374151",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {q.question || `Question ${q.questionId}`}
+                        </div>
+
+                        <AnswerBadge answer={q.answer} />
+                      </div>
+                    ))}
+                  </CAccordionBody>
+                </CAccordionItem>
               ))}
-            </div>
+            </CAccordion>
           </div>
         </div>
       )}
 
       {/* ── Sticky Bottom Bar ── */}
-      <div className="position-fixed bottom-0" style={{
+      <div className="position-fixed bottom-0  " style={{
         left: 0, right: 0,
         background: '#a5c4d4ff',
         display: 'flex', justifyContent: 'flex-end', gap: 16,
@@ -473,7 +550,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
       }}>
         <Button
-          customColor="#ffffff" color="#7e3a93"
+          customColor="#ffffff" color={COLORS.black}
           onClick={handleNext}
           style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
         >
