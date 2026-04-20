@@ -94,7 +94,7 @@ const Login = () => {
           <div style={{ maxWidth: 500 }}>
             <img src={launcherIcon} alt="Logo" style={{ height: 120 }} />
             <h1 style={{ backgroundImage: 'linear-gradient(90deg, #0061c2, #0196ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: '40px', margin: '1rem 0', fontWeight: 'bolder' }}>
-              Derma Care, Hyderabad
+              Chiselon Clinic Management System, Hyderabad
             </h1>
             <p style={{ color: COLORS.gray, fontSize: '20px' }}>Powered By Chiselon Technologies</p>
           </div>

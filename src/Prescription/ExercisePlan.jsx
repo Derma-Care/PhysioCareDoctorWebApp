@@ -28,11 +28,6 @@ const gridThree = {
   gap: '16px 28px', marginBottom: 16,
 }
 
-const gridTwo = {
-  display: 'grid', gridTemplateColumns: '1fr 1fr',
-  gap: '16px 28px', marginBottom: 16,
-}
-
 const cardStyle = {
   border: '1px solid #d8e8f5', borderRadius: 14,
   boxShadow: '0 2px 16px rgba(26,90,168,0.07)',
@@ -111,8 +106,8 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   const [showDropdown, setShowDropdown] = useState(false)
 
   /* ── Multi-select state ── */
-  const [bulkSelected, setBulkSelected] = useState(new Set())   // Set of exercise names ticked in dropdown
-  const [showBulkPanel, setShowBulkPanel] = useState(false)     // Toggle library panel
+  const [bulkSelected, setBulkSelected] = useState(new Set())
+  const [showBulkPanel, setShowBulkPanel] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -222,7 +217,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
     onNext?.(payload)
   }
 
-  /* ── Library panel filtered for bulk (no editingIdx exclusion needed) ── */
+  /* ── Library panel filtered for bulk ── */
   const bulkLibrary = exerciseLibrary.filter(ex => {
     const n = (ex.name || '').trim().toLowerCase()
     const alreadyAdded = exercises.some(e => e.name?.trim().toLowerCase() === n)
@@ -258,7 +253,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
-               📚 {showBulkPanel ? '✕ Close' : 'Browse Exercises'}
+                  📚 {showBulkPanel ? '✕ Close' : 'Browse Exercises'}
                 </button>
               )}
             </div>
@@ -472,24 +467,16 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                   </div>
                 </div>
 
-                {/* Thumbnail + Video URL */}
-                <div style={form.thumbnail ? gridTwo : { marginBottom: 16 }}>
-                  {form.thumbnail && (
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <label style={labelStyle}>Exercise Thumbnail</label>
-                      <div style={{ marginTop: 6 }}>
-                        <img
-                          src={form.thumbnail.startsWith('data:image') ? form.thumbnail : `data:image/png;base64,${form.thumbnail}`}
-                          alt="Thumbnail Preview"
-                          style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #c8ddf0' }}
-                        />
-                      </div>
-                    </div>
-                  )}
+                {/* Video URL */}
+                <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <label style={labelStyle}>Video URL</label>
-                    <input value={form.videoUrl} onChange={e => set('videoUrl')(e.target.value)}
-                      placeholder="https://example.com/video" style={inputStyle} />
+                    <input
+                      value={form.videoUrl}
+                      onChange={e => set('videoUrl')(e.target.value)}
+                      placeholder="https://example.com/video"
+                      style={inputStyle}
+                    />
                   </div>
                 </div>
 
@@ -537,7 +524,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                      {['#', 'Name', 'Sets', 'Reps', 'Frequency', 'Instructions', 'Video', 'Thumbnail', 'Actions'].map(h => (
+                      {['#', 'Name', 'Sets', 'Reps', 'Frequency', 'Instructions', 'Video', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
@@ -565,11 +552,6 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                         </td>
                         <td style={{ padding: '10px 14px' }}>
                           {ex.videoUrl ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem' }}>▶ Watch</a> : '—'}
-                        </td>
-                        <td style={{ padding: '10px 14px' }}>
-                          {ex.thumbnail
-                            ? <img src={ex.thumbnail} alt={ex.name} style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 6, border: '1px solid #c8ddf0' }} onError={e => { e.target.style.display = 'none' }} />
-                            : '—'}
                         </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                           <button onClick={() => handleEdit(idx)}

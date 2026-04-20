@@ -2,7 +2,6 @@ import React from 'react'
 import PrescriptionTab from './PrescriptionTab'
 import SymptomsDiseases from './SymptomsDiseases'
 import DoctorSymptoms from './DoctorSymptoms'
-import FollowUp from './TherapySessions'
 import DoctorFollowUp from './DoctorFollowUp'
 import VisitHistory from './VisitHistory'
 import Summary from './Summary'
@@ -12,16 +11,12 @@ import { COLORS } from '../Themes'
 import ReportDetails from '../components/Reports/Reports'
 import ImageGallery from './RetiveImages'
 import Assessment from './Tests'
-
 import FollowUpnew from './FollowUpnew'
 import TherapySession from './TreatmentPlan'
 import HomePlan from './ExercisePlan'
 import Investigation from './Investigation'
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Deep merge helper — keeps nested objects intact instead of overwriting
-   them wholesale the way Object.assign / spread does.
-───────────────────────────────────────────────────────────────────────── */
+/* ─── deepMerge ──────────────────────────────────────────────────────────── */
 const deepMerge = (target, source) => {
   if (!source || typeof source !== 'object') return target
   const result = { ...target }
@@ -29,12 +24,8 @@ const deepMerge = (target, source) => {
     const srcVal = source[key]
     const tgtVal = target[key]
     if (
-      srcVal !== null &&
-      typeof srcVal === 'object' &&
-      !Array.isArray(srcVal) &&
-      tgtVal !== null &&
-      typeof tgtVal === 'object' &&
-      !Array.isArray(tgtVal)
+      srcVal !== null && typeof srcVal === 'object' && !Array.isArray(srcVal) &&
+      tgtVal !== null && typeof tgtVal === 'object' && !Array.isArray(tgtVal)
     ) {
       result[key] = deepMerge(tgtVal, srcVal)
     } else {
@@ -56,179 +47,110 @@ const TabContent = ({
   setImage,
 }) => {
 
-  // ── KEY FIX ──────────────────────────────────────────────────────────────
-  // Each tab sends a partial payload. This wrapper DEEP-merges it into
-  // formData BEFORE calling the real onNext, so:
-  //   1. Navigating back always shows the last-entered data.
-  //   2. Nested fields (e.g. therapySessions._internalState) are NOT wiped.
+  /* ── handleNext ────────────────────────────────────────────────────────────
+     Immediately deep-merges the tab's partial payload into formData so that:
+     1. If the user navigates BACK, the restored seed already has their edits.
+     2. The parent's onNextMap handler then does its own mergeAndLog — which
+        is also safe because deepMerge is idempotent.
+
+     IMPORTANT: For the Plan tab, TherapySession calls onNext with:
+       { therapySessions: [...], therapistId, therapistName, ... }
+     We must NOT wrap this payload in another layer here.
+     The parent's Plan handler wraps it into { therapySessions: { sessions, ... } }.
+  ─────────────────────────────────────────────────────────────────────────── */
   const handleNext = (payload) => {
     if (setFormData && payload && typeof payload === 'object') {
-      setFormData(prev => deepMerge(prev, payload))
+      // For Plan tab: payload has therapySessions as an ARRAY
+      // We pre-merge it so returning to Plan shows saved data.
+      // We use the same shape the parent uses: { therapySessions: { sessions: [...], ... } }
+      if (activeTab === 'Plan') {
+        const planPatch = {
+          therapySessions: {
+            sessions:        Array.isArray(payload.therapySessions) ? payload.therapySessions : [],
+            therapistId:     payload.therapistId    ?? '',
+            therapistName:   payload.therapistName  ?? '',
+            manualTherapy:   payload.manualTherapy  ?? '',
+            precautions:     payload.precautions    ?? [],
+            modalitiesUsed:  payload.modalitiesUsed ?? [],
+            patientResponse: payload.patientResponse ?? '',
+          },
+        }
+        setFormData(prev => deepMerge(prev, planPatch))
+      } else {
+        setFormData(prev => deepMerge(prev, payload))
+      }
     }
     onNext?.(payload)
   }
-  // ─────────────────────────────────────────────────────────────────────────
 
   let content = null
 
   switch (activeTab) {
     case 'Complaints':
       content = fromDoctorTemplate ? (
-        <DoctorSymptoms
-          seed={formData.symptoms || {}}
-          onNext={handleNext}
-          sidebarWidth={260}
-          patientData={patientData}
-          setFormData={setFormData}
-          formData={formData}
-        />
+        <DoctorSymptoms seed={formData.symptoms || {}} onNext={handleNext} sidebarWidth={260} patientData={patientData} setFormData={setFormData} formData={formData} />
       ) : (
-        <SymptomsDiseases
-          seed={formData.symptoms || {}}
-          onNext={handleNext}
-          sidebarWidth={260}
-          patientData={patientData}
-          setFormData={setFormData}
-          formData={formData}
-        />
+        <SymptomsDiseases seed={formData.symptoms || {}} onNext={handleNext} sidebarWidth={260} patientData={patientData} setFormData={setFormData} formData={formData} />
       )
       break
 
     case 'Assessment':
-      content = (
-        <Assessment
-          seed={formData.assessment || {}}
-          onNext={handleNext}
-          sidebarWidth={260}
-          formData={formData}
-        />
-      )
+      content = <Assessment seed={formData.assessment || {}} onNext={handleNext} sidebarWidth={260} formData={formData} />
       break
 
     case 'Diagnosis':
-      content = (
-        <PrescriptionTab
-          seed={{ diagnosis: formData.diagnosis || {} }}
-          onNext={handleNext}
-          formData={formData}
-        />
-      )
+      content = <PrescriptionTab seed={{ diagnosis: formData.diagnosis || {} }} onNext={handleNext} formData={formData} />
       break
 
     case 'Investigation':
-      content = (
-        <Investigation
-          seed={formData.investigation || {}}
-          onNext={handleNext}
-          formData={formData}
-          setFormData={setFormData}
-        />
-      )
+      content = <Investigation seed={formData.investigation || {}} onNext={handleNext} formData={formData} setFormData={setFormData} />
       break
 
     case 'Plan':
-      // KEY FIX: Pass the full therapySessions object as seed.
-      // TherapySession reads seed.sessions[0] to restore mode / therapistId /
-      // therapistId / modalitiesUsed / patientResponse / manualTherapy / precautions,
-      // and calls restoreTherophyDataState(seed.sessions) to rebuild the
-      // exercise table from the stored therapyData arrays — preserving every
-      // set / rep / session / frequency edit the user made.
+      /* ── KEY FIX: pass formData.therapySessions as seed ──────────────────
+         TherapySession reads:
+           seed.sessions[0].serviceType  → restores mode
+           seed.therapistId / therapistName → restores therapist
+           restoreTherophyDataState(seed.sessions) → rebuilds exercise table
+         This ensures all edits survive tab navigation.
+      ────────────────────────────────────────────────────────────────────── */
       content = fromDoctorTemplate ? (
-        <DoctorFollowUp
-          seed={formData.therapySessions || {}}
-          onNext={handleNext}
-          patientData={patientData}
-          formData={formData}
-          setFormData={setFormData}
-        />
+        <DoctorFollowUp seed={formData.therapySessions || {}} onNext={handleNext} patientData={patientData} formData={formData} setFormData={setFormData} />
       ) : (
-        <TherapySession
-          seed={formData.therapySessions || {}}
-          onNext={handleNext}
-          patientData={patientData}
-          formData={formData}
-          setFormData={setFormData}
-        />
+        <TherapySession seed={formData.therapySessions || {}} onNext={handleNext} patientData={patientData} formData={formData} setFormData={setFormData} />
       )
       break
 
     case 'HomePlan':
-      content = (
-        <HomePlan
-          seed={formData.exercisePlan || {}}
-          onNext={handleNext}
-          sidebarWidth={260}
-        />
-      )
+      content = <HomePlan seed={formData.exercisePlan || {}} onNext={handleNext} sidebarWidth={260} />
       break
 
     case 'FollowUp':
-      content = (
-        <FollowUpnew
-          seed={Array.isArray(formData.followUp) ? formData.followUp : []}
-          onNext={handleNext}
-          sidebarWidth={260}
-        />
-      )
+      content = <FollowUpnew seed={Array.isArray(formData.followUp) ? formData.followUp : []} onNext={handleNext} sidebarWidth={260} />
       break
 
     case 'History':
-      content = (
-        <VisitHistory
-          seed={formData.history || {}}
-          onNext={handleNext}
-          patientId={patientData?.patientId || formData.patientId}
-          doctorId={patientData?.doctorId || formData.doctorId}
-          patientData={patientData}
-          formData={formData}
-        />
-      )
+      content = <VisitHistory seed={formData.history || {}} onNext={handleNext} patientId={patientData?.patientId || formData.patientId} doctorId={patientData?.doctorId || formData.doctorId} patientData={patientData} formData={formData} />
       break
 
     case 'Prescription':
       content = fromDoctorTemplate ? (
-        <DoctorSummary
-          onNext={handleNext}
-          onSaveTemplate={onSaveTemplate}
-          patientData={patientData}
-          formData={formData}
-          setFormData={setFormData}
-          sidebarWidth={260}
-        />
+        <DoctorSummary onNext={handleNext} onSaveTemplate={onSaveTemplate} patientData={patientData} formData={formData} setFormData={setFormData} sidebarWidth={260} />
       ) : (
-        <Summary
-          onNext={handleNext}
-          onSaveTemplate={onSaveTemplate}
-          patientData={patientData}
-          formData={formData}
-          sidebarWidth={260}
-        />
+        <Summary onNext={handleNext} onSaveTemplate={onSaveTemplate} patientData={patientData} formData={formData} sidebarWidth={260} />
       )
       break
 
     case 'Images':
       content = setImage ? (
-        <MultiImageUpload
-          data={formData}
-          onSubmit={handleNext}
-          patientData={patientData}
-        />
+        <MultiImageUpload data={formData} onSubmit={handleNext} patientData={patientData} />
       ) : (
-        <ImageGallery
-          data={formData}
-          patientData={patientData}
-        />
+        <ImageGallery data={formData} patientData={patientData} />
       )
       break
 
     case 'Reports':
-      content = (
-        <ReportDetails
-          patientData={patientData}
-          formData={formData}
-          show={true}
-        />
-      )
+      content = <ReportDetails patientData={patientData} formData={formData} show={true} />
       break
 
     default:

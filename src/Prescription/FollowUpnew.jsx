@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
-import { getTodayAppointments } from '../Auth/Auth'
 
 /* ─── Styles ───────────────────────────────────────────────────────────── */
 const inputStyle = {
@@ -26,44 +25,11 @@ const labelStyle = {
   display: 'block',
 }
 
-const gridTwo = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: '16px 28px',
-  marginBottom: 16,
-}
-
 const cardStyle = {
   border: '1px solid #d8e8f5',
   borderRadius: 14,
   boxShadow: '0 2px 16px rgba(26,90,168,0.07)',
 }
-
-/* ─── Colour palette ─────────────────────────────────────────────────── */
-const STATUS_PALETTE = [
-  { bg: '#f0fff4', border: '#68d391', color: '#276749', icon: '🟢' },
-  { bg: '#fffbeb', border: '#f6ad55', color: '#7b341e', icon: '🟡' },
-  { bg: '#ebf8ff', border: '#63b3ed', color: '#2a4365', icon: '🔵' },
-  { bg: '#fff5f5', border: '#fc8181', color: '#742a2a', icon: '🔴' },
-  { bg: '#f5f0ff', border: '#b794f4', color: '#44337a', icon: '🟣' },
-  { bg: '#fffff0', border: '#f6e05e', color: '#744210', icon: '🟠' },
-]
-
-const statusStyleCache = {}
-let paletteIndex = 0
-
-const getStatusStyle = (status) => {
-  if (!status) return null
-  const key = status.trim().toLowerCase()
-  if (!statusStyleCache[key]) {
-    statusStyleCache[key] = STATUS_PALETTE[paletteIndex % STATUS_PALETTE.length]
-    paletteIndex++
-  }
-  return statusStyleCache[key]
-}
-
-/* ─── Statuses that hide Modifications ───────────────────────────────── */
-const HIDE_MODIFICATIONS_FOR = ['confirmed', 'completed']
 
 /* ─── Visit urgency ──────────────────────────────────────────────────── */
 const getVisitUrgency = (dateStr) => {
@@ -79,102 +45,19 @@ const getVisitUrgency = (dateStr) => {
 }
 
 const EMPTY_FORM = {
-  nextVisitDate:   '',
-  treatmentStatus: '',
-  reviewNotes:     '',
-  modifications:   '',
+  nextVisitDate: '',
+  reviewNotes:   '',
 }
 
 /* ══════════════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════════════ */
-const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
+const FollowUpnew = ({ seed = [], onNext }) => {
 
-  const [form,          setForm]          = useState({ ...EMPTY_FORM })
-  const [data,          setData]          = useState(Array.isArray(seed) ? seed : [])
-  const [editIndex,     setEditIndex]     = useState(null)
-  const [dupError,      setDupError]      = useState(false)
-  const [bookingStatus, setBookingStatus] = useState('')
-  const [statusOptions, setStatusOptions] = useState([])
-  const [apiLoading,    setApiLoading]    = useState(false)
-  const [apiError,      setApiError]      = useState('')
-
-  /* ══ Fetch ══════════════════════════════════════════════════════════ */
-  useEffect(() => {
-    const fetchStatus = async () => {
-      setApiLoading(true)
-      setApiError('')
-
-      try {
-        const result = await getTodayAppointments()
-
-        console.log('📦 Full API result:', result)
-        console.log('🔍 bookingId prop received:', bookingId)
-
-        if (result.statusCode === 200 && Array.isArray(result.data) && result.data.length > 0) {
-
-          // Log all bookingIds from API for comparison
-          console.log('📋 All bookingIds from API:',
-            result.data.map(b => ({ id: b.bookingId, status: b.status }))
-          )
-
-          // Match with strict string comparison
-          const matched = result.data.find(
-            b => String(b.bookingId).trim() === String(bookingId).trim()
-          )
-
-          console.log('🎯 Matched booking:', matched)
-
-          if (matched?.status) {
-            const s = matched.status.trim()
-            setBookingStatus(s)
-            setStatusOptions([s])
-
-            // ✅ Auto-select the status in the form so table always shows it
-            setForm(prev => ({ ...prev, treatmentStatus: s }))
-
-            console.log('✅ Status auto-selected:', s)
-
-          } else {
-            // Fallback: show ALL unique statuses from all bookings
-            console.warn('⚠️ No match for bookingId:', bookingId, '— using all statuses as fallback')
-            const allStatuses = [
-              ...new Set(result.data.map(b => b.status?.trim()).filter(Boolean))
-            ]
-            setStatusOptions(allStatuses)
-
-            // Auto-select first available status as fallback
-            if (allStatuses.length > 0) {
-              setBookingStatus(allStatuses[0])
-              setForm(prev => ({ ...prev, treatmentStatus: allStatuses[0] }))
-              console.log('⚠️ Fallback status auto-selected:', allStatuses[0])
-            }
-          }
-
-        } else {
-          console.error('❌ API returned empty or error:', result)
-          setApiError(`API error: ${result.message || 'No data returned'}`)
-        }
-
-      } catch (err) {
-        console.error('❌ Fetch exception:', err)
-        setApiError('Failed to load status. Please refresh.')
-      } finally {
-        setApiLoading(false)
-      }
-    }
-
-    fetchStatus()
-  }, [bookingId])
-
-  /* ── Modifications logic ─────────────────────────────────────────── */
-  const apiStatusNorm      = bookingStatus.toLowerCase()
-  const selectedStatusNorm = (form.treatmentStatus || '').trim().toLowerCase()
-
-  const hideModifications  = HIDE_MODIFICATIONS_FOR.includes(apiStatusNorm) ||
-                             HIDE_MODIFICATIONS_FOR.includes(selectedStatusNorm)
-
-  const showModifications  = selectedStatusNorm === 'active' && !hideModifications
+  const [form,      setForm]      = useState({ ...EMPTY_FORM })
+  const [data,      setData]      = useState(Array.isArray(seed) ? seed : [])
+  const [editIndex, setEditIndex] = useState(null)
+  const [dupError,  setDupError]  = useState(false)
 
   useEffect(() => {
     if (Array.isArray(seed)) setData(seed)
@@ -185,17 +68,14 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
     setForm(prev => ({ ...prev, [field]: val }))
   }
 
-  const urgency     = getVisitUrgency(form.nextVisitDate)
-  const statusStyle = getStatusStyle(form.treatmentStatus)
+  const urgency = getVisitUrgency(form.nextVisitDate)
 
   const isDuplicate = (entry, excludeIdx = null) =>
     data.some((e, i) => {
       if (i === excludeIdx) return false
       return (
-        (e.nextVisitDate   || '') === (entry.nextVisitDate   || '') &&
-        (e.treatmentStatus || '').toLowerCase() === (entry.treatmentStatus || '').toLowerCase() &&
-        (e.reviewNotes     || '').trim().toLowerCase() === (entry.reviewNotes     || '').trim().toLowerCase() &&
-        (e.modifications   || '').trim().toLowerCase() === (entry.modifications   || '').trim().toLowerCase()
+        (e.nextVisitDate || '') === (entry.nextVisitDate || '') &&
+        (e.reviewNotes   || '').trim().toLowerCase() === (entry.reviewNotes || '').trim().toLowerCase()
       )
     })
 
@@ -203,22 +83,13 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
     if (!form.nextVisitDate) return
     if (isDuplicate(form, editIndex ?? null)) { setDupError(true); return }
 
-    const entryToSave = {
-      ...form,
-      modifications: showModifications ? form.modifications : '',
-    }
-
     if (editIndex !== null) {
-      setData(prev => prev.map((e, i) => i === editIndex ? entryToSave : e))
+      setData(prev => prev.map((e, i) => i === editIndex ? { ...form } : e))
       setEditIndex(null)
     } else {
-      setData(prev => [...prev, entryToSave])
+      setData(prev => [...prev, { ...form }])
     }
-    setForm(prev => ({
-      ...EMPTY_FORM,
-      // ✅ Keep treatmentStatus populated after save so pills stay selected
-      treatmentStatus: bookingStatus || prev.treatmentStatus,
-    }))
+    setForm({ ...EMPTY_FORM })
     setDupError(false)
   }
 
@@ -232,14 +103,14 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
   const handleDelete = (index) => {
     setData(prev => prev.filter((_, i) => i !== index))
     if (editIndex === index) {
-      setForm({ ...EMPTY_FORM, treatmentStatus: bookingStatus })
+      setForm({ ...EMPTY_FORM })
       setEditIndex(null)
       setDupError(false)
     }
   }
 
   const handleCancel = () => {
-    setForm({ ...EMPTY_FORM, treatmentStatus: bookingStatus })
+    setForm({ ...EMPTY_FORM })
     setEditIndex(null)
     setDupError(false)
   }
@@ -250,23 +121,10 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
     onNext?.(payload)
   }
 
-  const tableHeaders = [
-    '#', 'Next Visit Date', 'Urgency', 'Treatment Status', 'Review Notes',
-    ...(!hideModifications ? ['Modifications'] : []),
-    'Actions',
-  ]
-
   /* ─── Render ──────────────────────────────────────────────────────── */
   return (
     <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <CContainer fluid className="p-1">
-
-        {/* API error banner */}
-        {apiError && (
-          <div style={{ marginBottom: 12, padding: '10px 16px', borderRadius: 8, background: '#fff5f5', border: '1.5px solid #fc8181', color: '#c53030', fontWeight: 600, fontSize: '0.82rem' }}>
-            ❌ {apiError}
-          </div>
-        )}
 
         {/* ══ FORM CARD ═══════════════════════════════════════════════ */}
         <CCard className="mb-4" style={cardStyle}>
@@ -278,13 +136,6 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
               <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>
                 {editIndex !== null ? `Editing Entry #${editIndex + 1}` : 'Follow Up'}
               </h5>
-
-              {/* Lock badge */}
-              {hideModifications && bookingStatus && (
-                <span style={{ marginLeft: 'auto', fontSize: '0.78rem', fontWeight: 700, background: '#ebf8ff', border: '1px solid #63b3ed', color: '#2a4365', borderRadius: 20, padding: '3px 12px' }}>
-                  🔒 {bookingStatus} — Modifications hidden
-                </span>
-              )}
             </div>
 
             {/* Duplicate error */}
@@ -294,110 +145,35 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
               </div>
             )}
 
-            {/* Row 1 — Next Visit Date + Treatment Status */}
-            <div style={gridTwo}>
-
-              {/* Next Visit Date */}
-              <div>
-                <label style={labelStyle}>Next Visit Date</label>
-                <input
-                  type="date"
-                  value={form.nextVisitDate}
-                  onChange={e => set('nextVisitDate')(e.target.value)}
-                  style={inputStyle}
-                />
-                {urgency && (
-                  <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, background: urgency.bg, border: `1px solid ${urgency.border}`, borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', color: urgency.color, fontWeight: 700 }}>
-                    {urgency.icon} {urgency.label}
-                  </div>
-                )}
-              </div>
-
-              {/* Treatment Status pills */}
-              <div>
-                <label style={labelStyle}>Treatment Status</label>
-
-                {apiLoading ? (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
-                    {[1, 2, 3].map(n => (
-                      <div key={n} style={{ width: 90, height: 34, borderRadius: 20, background: '#e2e8f0', animation: 'pulse 1.5s ease-in-out infinite' }} />
-                    ))}
-                  </div>
-
-                ) : statusOptions.length > 0 ? (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
-                    {statusOptions.map(s => {
-                      const active = form.treatmentStatus === s
-                      const st     = getStatusStyle(s)
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => set('treatmentStatus')(s)}
-                          style={{
-                            padding: '5px 14px', borderRadius: 20, border: '1.5px solid',
-                            borderColor: active ? st.border : '#b6cfe8',
-                            background:  active ? st.bg    : '#f5f9ff',
-                            color:       active ? st.color : '#64748b',
-                            fontWeight:  active ? 700      : 500,
-                            fontSize: '0.8rem', cursor: 'pointer',
-                            transition: 'all 0.15s', fontFamily: 'inherit',
-                          }}
-                        >
-                          {st.icon} {s}
-                        </button>
-                      )
-                    })}
-                  </div>
-
-                ) : (
-                  <div style={{ fontSize: '0.82rem', color: '#e53e3e', fontStyle: 'italic', marginTop: 6, fontWeight: 600 }}>
-                    ⚠️ Could not load status — check console.
-                  </div>
-                )}
-
-                {/* Selected status badge */}
-                {/* {statusStyle && (
-                  <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, background: statusStyle.bg, border: `1px solid ${statusStyle.border}`, borderRadius: 8, padding: '4px 12px', fontSize: '0.78rem', color: statusStyle.color, fontWeight: 700 }}>
-                    {statusStyle.icon} Status: <strong>{form.treatmentStatus}</strong>
-                    {showModifications && <span style={{ marginLeft: 4, opacity: 0.8 }}>— Modifications enabled</span>}
-                  </div>
-                )} */}
-              </div>
-            </div>
-
-            {/* Row 2 — Review Notes + Modifications */}
-            <div style={{ ...gridTwo, gridTemplateColumns: showModifications ? '1fr 1fr' : '1fr' }}>
-              <div>
-                <label style={labelStyle}>Review Notes</label>
-                <textarea
-                  value={form.reviewNotes}
-                  onChange={e => set('reviewNotes')(e.target.value)}
-                  placeholder="e.g. Patient showing improvement in mobility"
-                  style={{ ...inputStyle, height: 90, resize: 'vertical' }}
-                />
-              </div>
-
-              {showModifications && (
-                <div style={{ animation: 'fadeIn 0.2s ease' }}>
-                  <label style={labelStyle}>
-                    Modifications
-                    <span style={{ marginLeft: 8, fontSize: '0.75rem', fontWeight: 500, color: '#276749', background: '#f0fff4', border: '1px solid #68d391', borderRadius: 10, padding: '1px 8px' }}>
-                      Active only
-                    </span>
-                  </label>
-                  <textarea
-                    value={form.modifications}
-                    onChange={e => set('modifications')(e.target.value)}
-                    placeholder="e.g. Increase resistance, add balance exercises"
-                    style={{ ...inputStyle, height: 90, resize: 'vertical' }}
-                  />
+            {/* Next Visit Date */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Next Visit Date</label>
+              <input
+                type="date"
+                value={form.nextVisitDate}
+                onChange={e => set('nextVisitDate')(e.target.value)}
+                style={inputStyle}
+              />
+              {urgency && (
+                <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, background: urgency.bg, border: `1px solid ${urgency.border}`, borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', color: urgency.color, fontWeight: 700 }}>
+                  {urgency.icon} {urgency.label}
                 </div>
               )}
             </div>
 
+            {/* Review Notes */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={labelStyle}>Review Notes</label>
+              <textarea
+                value={form.reviewNotes}
+                onChange={e => set('reviewNotes')(e.target.value)}
+                placeholder="e.g. Patient showing improvement in mobility"
+                style={{ ...inputStyle, height: 90, resize: 'vertical' }}
+              />
+            </div>
+
             {/* Buttons */}
-            <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={handleSave} style={{ padding: '8px 24px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit' }}>
                 {editIndex !== null ? '✅ Update' : '➕ Add'}
               </button>
@@ -425,15 +201,14 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
-                      {tableHeaders.map(h => (
+                      {['#', 'Next Visit Date', 'Urgency', 'Review Notes', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {data.map((item, i) => {
-                      const u  = getVisitUrgency(item.nextVisitDate)
-                      const st = getStatusStyle(item.treatmentStatus)
+                      const u = getVisitUrgency(item.nextVisitDate)
                       return (
                         <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
                           <td style={{ padding: '10px 14px', fontWeight: 700 }}>{i + 1}</td>
@@ -443,32 +218,11 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
                               ? <span style={{ background: u.bg, color: u.color, border: `1px solid ${u.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700, whiteSpace: 'nowrap' }}>{u.icon} {u.label}</span>
                               : '—'}
                           </td>
-                          <td style={{ padding: '10px 14px' }}>
-                            {/* ✅ Always show status badge — fallback to bookingStatus if item has none */}
-                            {(() => {
-                              const displayStatus = item.treatmentStatus || bookingStatus
-                              const s = getStatusStyle(displayStatus)
-                              return s
-                                ? <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, borderRadius: 12, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700, whiteSpace: 'nowrap' }}>{s.icon} {displayStatus}</span>
-                                : '—'
-                            })()}
-                          </td>
-                          <td style={{ padding: '10px 14px', maxWidth: 180 }}>
+                          <td style={{ padding: '10px 14px', maxWidth: 340 }}>
                             <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.reviewNotes}>
                               {item.reviewNotes || '—'}
                             </div>
                           </td>
-
-                          {/* Modifications column — hidden for Confirmed / Completed */}
-                          {!hideModifications && (
-                            <td style={{ padding: '10px 14px', maxWidth: 180 }}>
-                              {(item.treatmentStatus || bookingStatus || '').toLowerCase() === 'active'
-                                ? <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.modifications}>{item.modifications || '—'}</div>
-                                : <span style={{ color: '#a0aec0', fontSize: '0.78rem', fontStyle: 'italic' }}>N/A</span>
-                              }
-                            </td>
-                          )}
-
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                             <button onClick={() => handleEdit(i)} style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: '#f0f7ff', color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
                             <button onClick={() => handleDelete(i)} style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️ Delete</button>
@@ -491,11 +245,6 @@ const FollowUpnew = ({ seed = [], bookingId = '', onNext }) => {
           Next
         </Button>
       </div>
-
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse  { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-      `}</style>
     </div>
   )
 }

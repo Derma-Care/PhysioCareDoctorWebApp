@@ -113,7 +113,7 @@ const AppHeader = () => {
           <CIcon icon={cilMenu} size="lg" style={{ color: COLORS.black }} />
         </CHeaderToggler>
         {/* Search */}
-        <div className="position-relative flex-grow-1 mx-3 search-wrap" style={{ maxWidth: "500px" }}>
+        {/* <div className="position-relative flex-grow-1 mx-3 search-wrap" style={{ maxWidth: "500px" }}>
           <div className="position-relative">
             <CFormInput
               type="text"
@@ -178,7 +178,7 @@ const AppHeader = () => {
   </div>
 )}
 
-        </div>
+        </div> */}
         <CHeaderNav className="ms-auto">
           <CNavItem>
             <CNavLink
