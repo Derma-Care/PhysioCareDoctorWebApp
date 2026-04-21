@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import {
   CCard,
   CCardBody,
@@ -47,6 +47,8 @@ const Appointments = ({ searchTerm = '' }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
 
+  const isFetchingRef = useRef(false)
+
   const toISODate = (val) => {
     if (!val) return ''
     const parsed = new Date(val)
@@ -60,46 +62,41 @@ const Appointments = ({ searchTerm = '' }) => {
     return ''
   }
 
-  useEffect(() => {
-    let isMounted = true
-
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        if (activeTab === 'all') {
-          const [upcoming, active, completed] = await Promise.all([
-            getAppointments(`1?_=${Date.now()}`),
-            getAppointments(`4?_=${Date.now()}`),
-            getAppointments(`3?_=${Date.now()}`),
-          ])
-          if (isMounted) {
-            setAppointments([
-              ...(upcoming || []),
-              ...(active || []),
-              ...(completed || []),
-            ])
-          }
-        } else {
-          const tabNumber = tabToNumberMap[activeTab]
-          const data = await getAppointments(`${tabNumber}?_=${Date.now()}`)
-          if (isMounted) setAppointments(data || [])
-        }
-      } catch (err) {
-        console.error('Error fetching appointments:', err)
-      } finally {
-        if (isMounted) setLoading(false)
+  const fetchData = useCallback(async () => {
+    if (isFetchingRef.current) return
+    isFetchingRef.current = true
+    setLoading(true)
+    try {
+      if (activeTab === 'all') {
+        const [upcoming, active, completed] = await Promise.all([
+          getAppointments(`1?_=${Date.now()}`),
+          getAppointments(`4?_=${Date.now()}`),
+          getAppointments(`3?_=${Date.now()}`),
+        ])
+        setAppointments([
+          ...(upcoming || []),
+          ...(active || []),
+          ...(completed || []),
+        ])
+      } else {
+        const tabNumber = tabToNumberMap[activeTab]
+        const data = await getAppointments(`${tabNumber}?_=${Date.now()}`)
+        setAppointments(data || [])
       }
-    }
-
-    fetchData()
-    const interval = setInterval(fetchData, 10000)
-    return () => {
-      isMounted = false
-      clearInterval(interval)
+    } catch (err) {
+      console.error('Error fetching appointments:', err)
+    } finally {
+      setLoading(false)
+      isFetchingRef.current = false
     }
   }, [activeTab])
 
-  // Reset page when filters change
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchData, 10000)
+    return () => clearInterval(interval)
+  }, [fetchData])
+
   useEffect(() => {
     setCurrentPage(1)
   }, [activeTab, filter, selectedBranch, selectedDate, searchTerm])
@@ -110,7 +107,10 @@ const Appointments = ({ searchTerm = '' }) => {
     ? appointments
         .filter((p) => {
           const matchesSearch = p.name?.toLowerCase().includes(safeSearch)
-          const matchesFilter = filter === 'All' || p.consultationType === filter
+          const matchesFilter =
+            filter === 'All' ||
+            filter === 'First-Time & Follow-up' ||
+            p.consultationType?.toLowerCase() === filter.toLowerCase()
           const matchesBranch =
             !selectedBranch ||
             p.branchId === selectedBranch.branchId ||
@@ -132,36 +132,52 @@ const Appointments = ({ searchTerm = '' }) => {
     return tabLabels[activeTab]
   }
 
+  // helper: is this filter button active?
+  const isFilterActive = (name) => filter === name
+
   return (
     <CContainer>
-     <style>{`
-  .themed-dropdown-menu .dropdown-menu {
-    background-color: #ffffff;
-    border: 1px solid ${COLORS.bgcolor};
-  }
-  .themed-dropdown-menu .dropdown-item {
-    color: #000000;
-    background-color: #ffffff;
-  }
-  .themed-dropdown-menu .dropdown-item:hover {
-    background-color: #f5f5f5;
-    color: #000000;
-  }
-  .themed-dropdown-menu .dropdown-item.active,
-  .themed-dropdown-menu .dropdown-item:active {
-    background-color: ${COLORS.bgcolor} !important;
-    color: ${COLORS.black} !important;
-  }
-`}</style>
+      <style>{`
+        .themed-dropdown-menu .dropdown-menu {
+          background-color: #ffffff;
+          border: 1.5px solid #1B4F8A;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(27,79,138,0.1);
+        }
+        .themed-dropdown-menu .dropdown-item {
+          color: #1B4F8A;
+          background-color: #ffffff;
+          font-size: 13px;
+          font-weight: 500;
+          padding: 8px 16px;
+        }
+        .themed-dropdown-menu .dropdown-item:hover {
+          background-color: #EAF1FB;
+          color: #1B4F8A;
+        }
+        .themed-dropdown-menu .dropdown-item.active,
+        .themed-dropdown-menu .dropdown-item:active {
+          background-color: #f9c571 !important;
+          color: #ffffff !important;
+          font-weight: 600;
+        }
+        .appt-row:hover {
+          background-color: #EAF1FB !important;
+        }
+      `}</style>
 
       <CRow>
         <CCol>
-          {/* Sticky Header */}
+
+          {/* ── Sticky Header ── */}
           <div
             className="position-sticky z-3 w-100 pt-4"
-            style={{ top: 105, backgroundColor: `${COLORS.theme}` }}
+            style={{ top: 105, backgroundColor: COLORS.theme }}
           >
-            <h5 style={{ fontSize: SIZES.medium, color: COLORS.black }} className="pb-3">
+            <h5
+              style={{ fontSize: SIZES.medium, color: COLORS.black, fontWeight: '600' }}
+              className="pb-3"
+            >
               Appointments
             </h5>
 
@@ -169,29 +185,30 @@ const Appointments = ({ searchTerm = '' }) => {
               <CCol xs={12}>
                 <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
 
-                  {/* LEFT: Tabs Dropdown + Consultation Filters */}
+                  {/* LEFT: Tab Dropdown + Filter Buttons */}
                   <div className="d-flex align-items-center gap-2 flex-wrap">
 
-                    {/* Tabs Dropdown with All inside */}
+                    {/* Tab Dropdown */}
                     <CDropdown className="themed-dropdown-menu" style={{ cursor: 'pointer' }}>
                       <CDropdownToggle
                         size="sm"
                         className="d-flex align-items-center gap-2"
                         style={{
-                          border: `1px solid ${COLORS.bgcolor}`,
-                          borderRadius: '6px',
-                          color: COLORS.black,
-                          fontWeight: '600',
                           backgroundColor: COLORS.bgcolor,
+                          border: `1.5px solid ${COLORS.bgcolor}`,
+                          borderRadius: '8px',
+                          color: COLORS.white,
+                          fontWeight: '600',
+                          fontSize: '13px',
+                          padding: '6px 14px',
                         }}
                       >
                         <span>{getDropdownLabel()}</span>
-                        <span style={{ color: COLORS.black, fontWeight: '600' }}>
+                        <span style={{ color: COLORS.white, fontWeight: '600' }}>
                           ({filteredPatients.length})
                         </span>
                       </CDropdownToggle>
                       <CDropdownMenu placement="end">
-                        {/* All option */}
                         <CDropdownItem
                           active={activeTab === 'all'}
                           onClick={() => {
@@ -202,8 +219,6 @@ const Appointments = ({ searchTerm = '' }) => {
                         >
                           All
                         </CDropdownItem>
-
-                        {/* Upcoming / Active / Completed */}
                         {Object.keys(tabLabels).map((key) => (
                           <CDropdownItem
                             key={key}
@@ -220,140 +235,162 @@ const Appointments = ({ searchTerm = '' }) => {
                       </CDropdownMenu>
                     </CDropdown>
 
-
-                    {/* Services & Treatments */}
-                    <Button
-                      variant={filter === 'Services & Treatments' ? 'primary' : 'outline'}
-                      onClick={() => setFilter('Services & Treatments')}
-                      customColor={
-                        filter === 'Services & Treatments' ? COLORS.bgcolor : COLORS.black
+                    {/* First-Time & Follow-up */}
+                    <button
+                      onClick={() =>
+                        setFilter(isFilterActive('First-Time & Follow-up') ? 'All' : 'First-Time & Follow-up')
                       }
-                      color={COLORS.black}
-                      size="small"
+                      style={{
+                        backgroundColor: isFilterActive('First-Time & Follow-up') ? COLORS.orange : COLORS.white,
+                        color: isFilterActive('First-Time & Follow-up') ? COLORS.white : COLORS.black,
+                        border: `1.5px solid ${isFilterActive('First-Time & Follow-up') ? COLORS.orange : COLORS.black}`,
+                        borderRadius: '8px',
+                        padding: '5px 14px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
                     >
-                      Services & Treatments
-                    </Button>
+                      First-Time & Follow-up
+                    </button>
 
                     {/* In-Clinic Consultation */}
-                    <Button
-                      variant={filter === 'In-Clinic Consultation' ? 'primary' : 'outline'}
-                      onClick={() => setFilter('In-Clinic Consultation')}
-                      customColor={
-                        filter === 'In-Clinic Consultation' ? COLORS.bgcolor : COLORS.black
+                    <button
+                      onClick={() =>
+                        setFilter(isFilterActive('In-Clinic Consultation') ? 'All' : 'In-Clinic Consultation')
                       }
-                      color={COLORS.black}
-                      size="small"
+                      style={{
+                        backgroundColor: isFilterActive('In-Clinic Consultation') ? COLORS.orange : COLORS.white,
+                        color: isFilterActive('In-Clinic Consultation') ? COLORS.white : COLORS.black,
+                        border: `1.5px solid ${isFilterActive('In-Clinic Consultation') ? COLORS.orange : COLORS.black}`,
+                        borderRadius: '8px',
+                        padding: '5px 14px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
                     >
                       In-Clinic Consultation
-                    </Button>
+                    </button>
 
                     {/* Online Consultation */}
-                    <Button
-                      variant={filter === 'Online Consultation' ? 'primary' : 'outline'}
-                      onClick={() => setFilter('Online Consultation')}
-                      customColor={
-                        filter === 'Online Consultation' ? COLORS.bgcolor : COLORS.black
+                    <button
+                      onClick={() =>
+                        setFilter(isFilterActive('Online Consultation') ? 'All' : 'Online Consultation')
                       }
-                      color={COLORS.black}
-                      size="small"
+                      style={{
+                        backgroundColor: isFilterActive('Online Consultation') ? COLORS.orange : COLORS.white,
+                        color: isFilterActive('Online Consultation') ? COLORS.white : COLORS.black,
+                        border: `1.5px solid ${isFilterActive('Online Consultation') ? COLORS.orange : COLORS.black}`,
+                        borderRadius: '8px',
+                        padding: '5px 14px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
                     >
                       Online Consultation
-                    </Button>
+                    </button>
                   </div>
 
                   {/* RIGHT: Branch Dropdown */}
-                  <div>
-                    <CDropdown className="themed-dropdown-menu" style={{ cursor: 'pointer' }}>
-                      <CDropdownToggle
-                        size="sm"
-                        className="d-flex align-items-center gap-2"
-                        style={{
-                          border: `1px solid ${COLORS.bgcolor}`,
-                          borderRadius: '6px',
-                          fontWeight: '600',
-                          backgroundColor: COLORS.bgcolor,
-                          color: COLORS.black,
-                        }}
-                      >
-                        {selectedBranch ? selectedBranch.branchName : 'All Branches'}
-                      </CDropdownToggle>
-                      <CDropdownMenu>
-                        <CDropdownItem onClick={() => setSelectedBranch(null)}>
-                          All Branches
-                        </CDropdownItem>
-                        {branches.length > 0 ? (
-                          branches.map((branch) => (
-                            <CDropdownItem
-                              key={branch.branchId}
-                              onClick={() => setSelectedBranch(branch)}
-                            >
-                              {branch.branchName}
-                            </CDropdownItem>
-                          ))
-                        ) : (
-                          <CDropdownItem disabled>No branches available</CDropdownItem>
-                        )}
-                      </CDropdownMenu>
-                    </CDropdown>
-                  </div>
+                  <CDropdown className="themed-dropdown-menu" style={{ cursor: 'pointer' }}>
+                    <CDropdownToggle
+                      size="sm"
+                      className="d-flex align-items-center gap-2"
+                      style={{
+                        backgroundColor: COLORS.white,
+                        border: `1.5px solid ${COLORS.black}`,
+                        borderRadius: '8px',
+                        color: COLORS.black,
+                        fontWeight: '600',
+                        fontSize: '13px',
+                        padding: '6px 14px',
+                      }}
+                    >
+                      {selectedBranch ? selectedBranch.branchName : 'All Branches'}
+                    </CDropdownToggle>
+                    <CDropdownMenu>
+                      <CDropdownItem onClick={() => setSelectedBranch(null)}>
+                        All Branches
+                      </CDropdownItem>
+                      {branches.length > 0 ? (
+                        branches.map((branch) => (
+                          <CDropdownItem
+                            key={branch.branchId}
+                            onClick={() => setSelectedBranch(branch)}
+                          >
+                            {branch.branchName}
+                          </CDropdownItem>
+                        ))
+                      ) : (
+                        <CDropdownItem disabled>No branches available</CDropdownItem>
+                      )}
+                    </CDropdownMenu>
+                  </CDropdown>
 
                 </div>
               </CCol>
             </CRow>
           </div>
 
-          {/* Appointments Table */}
+          {/* ── Appointments Table ── */}
           <CCard
-            className="mb-2 border"
+            className="mb-2"
             style={{
-              border: '2px solid #0d6efd',
-              borderRadius: '8px',
-              boxShadow: '0 0 10px rgba(13, 110, 253, 0.1)',
+              border: `1.5px solid ${COLORS.bgcolor}`,
+              borderRadius: '10px',
+              boxShadow: '0 2px 12px rgba(27,79,138,0.08)',
+              overflow: 'hidden',
             }}
           >
             <CCardBody style={{ padding: '0', overflowY: 'auto' }}>
-              <CTable hover responsive className="mb-0 table-horizontal-lines striped">
+              <CTable hover responsive className="mb-0">
                 <CTableHead>
-                  <CTableRow className="text-nowrap" style={{ fontSize: '0.875rem' }}>
-                    {[
-                      'S.No',
-                    
-                      'Name',
-                      'Mobile',
-                      'Date',
-                      'Time',
-                      'Consultation',
-                      'Branch',
-                      'Status',
-                      'Action',
-                    ].map((header) => (
-                      <CTableHeaderCell
-                        key={header}
-                        style={{
-                          backgroundColor: COLORS.bgcolor,
-                          color: COLORS.black,
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {header}
-                      </CTableHeaderCell>
-                    ))}
+                  <CTableRow
+                    className="text-nowrap"
+                    style={{ fontSize: '0.875rem' }}
+                  >
+                    {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Consultation', 'Branch', 'Status', 'Action'].map(
+                      (header) => (
+                        <CTableHeaderCell
+                          key={header}
+                          style={{
+                            backgroundColor: COLORS.bgcolor,
+                            color: COLORS.white,
+                            fontWeight: '600',
+                            fontSize: '13px',
+                            padding: '10px 12px',
+                            borderBottom: 'none',
+                          }}
+                        >
+                          {header}
+                        </CTableHeaderCell>
+                      ),
+                    )}
                   </CTableRow>
                 </CTableHead>
 
                 <CTableBody>
                   {loading ? (
                     <CTableRow>
-                      <CTableDataCell colSpan={10} className="text-center py-4">
+                      <CTableDataCell
+                        colSpan={9}
+                        className="text-center py-4"
+                        style={{ color: COLORS.black, fontSize: '14px' }}
+                      >
                         Loading...
                       </CTableDataCell>
                     </CTableRow>
                   ) : currentPatients.length === 0 ? (
                     <CTableRow>
                       <CTableDataCell
-                        colSpan={10}
-                        className="text-center text-muted py-4"
-                        style={{ color: COLORS.logocolor }}
+                        colSpan={9}
+                        className="text-center py-4"
+                        style={{ color: COLORS.gray, fontSize: '14px' }}
                       >
                         No appointments found
                       </CTableDataCell>
@@ -362,44 +399,73 @@ const Appointments = ({ searchTerm = '' }) => {
                     currentPatients.map((p, i) => (
                       <CTableRow
                         key={p.id || `${p.patientId}-${i}`}
-                        style={{ fontSize: '0.85rem' }}
+                        className="appt-row"
+                        style={{
+                          fontSize: '0.85rem',
+                          backgroundColor: i % 2 === 0 ? COLORS.white : '#F0F6FF',
+                        }}
                       >
-                        <CTableDataCell>{indexOfFirstItem + i + 1}</CTableDataCell>
-                        {/* <CTableDataCell>{p.patientId}</CTableDataCell> */}
-                        <CTableDataCell>
-                          {p.name
-                            ? p.name.charAt(0).toUpperCase() + p.name.slice(1)
-                            : 'NA'}
+                        <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black }}>
+                          {indexOfFirstItem + i + 1}
                         </CTableDataCell>
-                        <CTableDataCell>{p.mobileNumber}</CTableDataCell>
-                        <CTableDataCell>{p.serviceDate}</CTableDataCell>
-                        <CTableDataCell>{p.servicetime}</CTableDataCell>
-                        <CTableDataCell>{p.consultationType}</CTableDataCell>
+                        <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black, fontWeight: '500' }}>
+                          {p.name ? p.name.charAt(0).toUpperCase() + p.name.slice(1) : 'NA'}
+                        </CTableDataCell>
+                        <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black }}>
+                          {p.mobileNumber}
+                        </CTableDataCell>
+                        <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black }}>
+                          {p.serviceDate}
+                        </CTableDataCell>
+                        <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black }}>
+                          {p.servicetime}
+                        </CTableDataCell>
+                        <CTableDataCell style={{ padding: '10px 12px' }}>
+                          <span
+                            style={{
+                              backgroundColor: '#EAF1FB',
+                              color: COLORS.black,
+                              borderRadius: '20px',
+                              padding: '3px 10px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                            }}
+                          >
+                            {p.consultationType}
+                          </span>
+                        </CTableDataCell>
                         <CTableDataCell
                           style={{
+                            padding: '10px 12px',
                             whiteSpace: 'normal',
                             wordBreak: 'break-word',
                             maxWidth: '150px',
+                            color: COLORS.black,
                           }}
                         >
                           {branches.find((b) => b.branchId === p.branchId)?.branchName || 'N/A'}
                         </CTableDataCell>
-                        <CTableDataCell>
+                        <CTableDataCell style={{ padding: '10px 12px' }}>
                           <span
-                            className="px-2 py-1 rounded"
                             style={{
                               backgroundColor:
-                                p.status === 'Confirmed' ? '#e8f9f2' : '#e0e0e0',
+                                p.status === 'Confirmed' ? '#EAF7F0'
+                                : p.status === 'In-Progress' ? '#FFF4E0'
+                                : '#F0F6FF',
                               color:
-                                p.status === 'Confirmed' ? '#27ae60' : '#7f8c8d',
-                              fontWeight: '500',
-                              fontSize: '0.8rem',
+                                p.status === 'Confirmed' ? '#1B8A56'
+                                : p.status === 'In-Progress' ? COLORS.orange
+                                : COLORS.black,
+                              borderRadius: '20px',
+                              padding: '3px 10px',
+                              fontSize: '12px',
+                              fontWeight: '600',
                             }}
                           >
                             {p.status === 'In-Progress' ? 'Active' : p.status}
                           </span>
                         </CTableDataCell>
-                        <CTableDataCell>
+                        <CTableDataCell style={{ padding: '10px 12px' }}>
                           <TooltipButton patient={p} tab={p.status} />
                         </CTableDataCell>
                       </CTableRow>
@@ -408,32 +474,49 @@ const Appointments = ({ searchTerm = '' }) => {
                 </CTableBody>
               </CTable>
 
-              {/* Pagination */}
+              {/* ── Pagination ── */}
               {filteredPatients.length > itemsPerPage && (
-                <div className="d-flex justify-content-end align-items-center gap-2 p-2">
-                  <Button
-                    size="small"
-                    variant="outline"
+                <div className="d-flex justify-content-end align-items-center gap-2 p-3">
+                  <button
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
+                    style={{
+                      backgroundColor: currentPage === 1 ? '#e9ecef' : COLORS.white,
+                      color: currentPage === 1 ? COLORS.gray : COLORS.black,
+                      border: `1.5px solid ${currentPage === 1 ? '#dee2e6' : COLORS.black}`,
+                      borderRadius: '8px',
+                      padding: '4px 14px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    }}
                   >
                     Prev
-                  </Button>
-                  <span style={{ fontSize: '13px', color: COLORS.black }}>
+                  </button>
+                  <span style={{ fontSize: '13px', color: COLORS.black, fontWeight: '500' }}>
                     Page {currentPage} of {totalPages}
                   </span>
-                  <Button
-                    size="small"
-                    variant="outline"
+                  <button
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
+                    style={{
+                      backgroundColor: currentPage === totalPages ? '#e9ecef' : COLORS.white,
+                      color: currentPage === totalPages ? COLORS.gray : COLORS.black,
+                      border: `1.5px solid ${currentPage === totalPages ? '#dee2e6' : COLORS.black}`,
+                      borderRadius: '8px',
+                      padding: '4px 14px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    }}
                   >
                     Next
-                  </Button>
+                  </button>
                 </div>
               )}
             </CCardBody>
           </CCard>
+
         </CCol>
       </CRow>
     </CContainer>

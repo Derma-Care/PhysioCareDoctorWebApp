@@ -1,19 +1,17 @@
-// src/styles/constants.ts
-
 export const COLORS = {
-  primary: '#0061c2',
-  secondary: '#0196ee',
+  primary: '#1B4F8A',
+  secondary: '#2A6DB5',
   danger: '#ff4d4f',
   success: '#28a745',
-  white: '#fff',
-  black: '#7e3a93',
+  white: '#FFFFFF',
+  black: '#1B4F8A',
   gray: '#6c757d',
   lowgray: '#6c757d3e',
   teal: '#16a085',
-  orange: '#f39c12',
-  theme: '#f3f4f7',
-  bgcolor: '#a5c4d4ff',
-  logocolor: '#000',
+  orange: '#f9c571',
+  theme: '#F0F6FF',
+  bgcolor: '#1B4F8A',
+  logocolor: '#1B4F8A',
 }
 
 export const FONT_SIZES = {

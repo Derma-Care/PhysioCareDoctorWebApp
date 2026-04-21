@@ -1,141 +1,405 @@
-.patient-modal-ui {
-  .modal-header-modern {
-    background: linear-gradient(120deg, #6fb1fc, #6fb1fc, #a5c4d4ff);
-    color: #fff;
-    border-bottom: none;
-    text-align: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
+/* ─── AppSidebar.css ─── Navy #1B4F8A · Yellow #f9c571 · White #FFFFFF ─── */
 
-  .modal-body-modern {
-    background-color: #f9fafc;
-    padding: 2rem;
-    color: #2a2a2a;
-    font-family: "Inter", "Segoe UI", sans-serif;
-  }
+/* ── Sidebar shell ─────────────────────────────────────────────────────── */
+.sidebar {
+  background-color: #1B4F8A !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
 
-  .info-card {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    padding: 1.2rem 1.5rem;
-    margin-bottom: 1rem;
-    transition: all 0.2s ease;
+/* ── Sidebar header ─────────────────────────────────────────────────────── */
+.sidebar-header,
+.sidebar .border-bottom {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  padding: 1rem 1rem 0.75rem !important;
+  background-color: #1B4F8A !important;
+}
 
-    &:hover {
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-    }
+/* ── Avatar image ───────────────────────────────────────────────────────── */
+.sidebar-header .rounded-circle {
+  border: 2.5px solid #f9c571 !important;
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 4px;
+  box-shadow: 0 0 0 4px rgba(245, 166, 35, 0.18);
+  transition: box-shadow 0.2s ease;
+}
 
-    h5 {
-      color: #7e3a93;
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.6rem;
-    }
+.sidebar-header .rounded-circle:hover {
+  box-shadow: 0 0 0 6px rgba(245, 166, 35, 0.28);
+}
 
-    p {
-      margin: 0.2rem 0;
-      font-size: 0.9rem;
-    }
+/* ── Doctor / patient name ──────────────────────────────────────────────── */
+.sidebar-header h4 {
+  color: #FFFFFF !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  margin-top: 0.5rem !important;
+}
 
-    .subtext {
-      color: #666;
-      font-size: 0.8rem;
-    }
+/* ── Doctor qualification / specialization ──────────────────────────────── */
+.sidebar-header h6 {
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 0.75rem !important;
+}
+
+/* ── Patient info rows in the sidebar header ────────────────────────────── */
+.sidebar-header div[style*="textAlign"] h6,
+.sidebar-header .w-100.px-2 h6 {
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-size: 0.74rem !important;
+  margin-bottom: 5px !important;
+}
+
+.sidebar-header div[style*="textAlign"] h6 strong,
+.sidebar-header .w-100.px-2 h6 strong {
+  color: #f9c571 !important;
+  font-weight: 600;
+}
+
+/* ── Divider ────────────────────────────────────────────────────────────── */
+.sidebar-header hr {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  margin: 0.5rem 0 !important;
+}
+
+/* ── Vitals section header inside sidebar ───────────────────────────────── */
+.sidebar-header .w-100.px-2 > h4 {
+  color: #f9c571 !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem !important;
+}
+
+/* ── Navigation links ───────────────────────────────────────────────────── */
+.sidebar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.78) !important;
+  font-size: 0.85rem !important;
+  font-weight: 400;
+  padding: 0.55rem 1rem !important;
+  border-radius: 6px;
+  margin: 1px 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-nav .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+}
+
+.sidebar-nav .nav-link.active {
+  background-color: #f9c571 !important;
+  color: #1B4F8A !important;
+  font-weight: 600;
+}
+
+.sidebar-nav .nav-link .nav-icon {
+  color: inherit !important;
+}
+
+.sidebar-nav .nav-link.active .nav-icon {
+  color: #1B4F8A !important;
+}
+
+/* ── Nav group title ─────────────────────────────────────────────────────── */
+.sidebar-nav .nav-title {
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-size: 0.68rem !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 1rem 1rem 0.35rem !important;
+}
+
+/* ── Sidebar footer (ratings) ────────────────────────────────────────────── */
+.sidebar-footer,
+.sidebar .border-top {
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+  background-color: #1B4F8A !important;
+  padding: 0.75rem 0.875rem !important;
+}
+
+.sidebar-footer h6 {
+  color: #f9c571 !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem !important;
+}
+
+.sidebar-footer small {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 0.7rem !important;
+  font-weight: 500;
+}
+
+/* Rating bar track */
+.sidebar-footer .progress {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border-radius: 4px !important;
+}
+
+/* Excellent – green stays, but tinted white-visible */
+.sidebar-footer .progress-bar.bg-success {
+  background-color: #4cde8a !important;
+}
+
+/* Good – use yellow accent */
+.sidebar-footer .progress-bar.bg-primary {
+  background-color: #f9c571 !important;
+}
+
+/* Average – soft amber */
+.sidebar-footer .progress-bar.bg-warning {
+  background-color: #ffcc66 !important;
+}
+
+/* Default */
+.sidebar-footer .progress-bar.bg-secondary {
+  background-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* ── Skeleton loading placeholders ──────────────────────────────────────── */
+.sidebar-header [style*="background: #eee"],
+.sidebar-header [style*="background:#eee"] {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ── Close button ────────────────────────────────────────────────────────── */
+.sidebar .btn-close,
+.sidebar .close-button,
+.sidebar [class*="CloseButton"] {
+  filter: brightness(0) invert(1) !important;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.sidebar .btn-close:hover {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PATIENT OVERVIEW MODAL
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Modal backdrop ─────────────────────────────────────────────────────── */
+.patient-modal-ui .modal-content {
+  border: none !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(27, 79, 138, 0.22) !important;
+}
+
+/* ── Modal header ───────────────────────────────────────────────────────── */
+.modal-header-modern {
+  background: linear-gradient(135deg, #1B4F8A 0%, #2263a8 100%) !important;
+  border-bottom: none !important;
+  padding: 1.1rem 1.5rem !important;
+}
+
+.modal-header-modern .modal-title {
+  color: #FFFFFF !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+}
+
+.modal-header-modern .btn-close {
+  filter: brightness(0) invert(1) !important;
+  opacity: 0.8;
+}
+
+.modal-header-modern .btn-close:hover {
+  opacity: 1;
+}
+
+/* ── Modal body ─────────────────────────────────────────────────────────── */
+.modal-body-modern {
+  background-color: #f4f7fb !important;
+  padding: 1.25rem 1.5rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Info cards ─────────────────────────────────────────────────────────── */
+.info-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(27, 79, 138, 0.1);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  position: relative;
+}
+
+.info-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #f9c571;
+  border-radius: 10px 0 0 10px;
+}
+
+/* ── Card section headings ──────────────────────────────────────────────── */
+.info-card h5 {
+  color: #1B4F8A !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 0.5rem !important;
+}
+
+/* ── Card body text ─────────────────────────────────────────────────────── */
+.info-card p {
+  color: #2c2c2c !important;
+  font-size: 0.84rem !important;
+  margin-bottom: 0.3rem !important;
+  line-height: 1.5;
+}
+
+.info-card p strong {
+  color: #1B4F8A !important;
+  font-weight: 600;
+}
+
+.info-card .subtext {
+  color: #6c757d !important;
+  font-size: 0.78rem !important;
+}
+
+/* ── Left panel inside info card (avatar + name) ────────────────────────── */
+.info-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 0.875rem;
+}
+
+.info-left .avatar {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 50%;
+  border: 2.5px solid #f9c571;
+  object-fit: cover;
+  padding: 3px;
+}
+
+.patient-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.patient-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+}
+
+.patient-field .label {
+  color: #1B4F8A;
+  font-weight: 600;
+  font-size: 0.78rem;
+  min-width: 80px;
+}
+
+.patient-field .value {
+  color: #2c2c2c;
+  font-weight: 500;
+}
+
+/* ── Info grid (2-up and 3-up) ──────────────────────────────────────────── */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px 16px;
+}
+
+.info-grid > div {
+  font-size: 0.8rem;
+  color: #2c2c2c;
+}
+
+.info-grid > div strong {
+  color: #1B4F8A;
+}
+
+.info-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Info block (clinic / doctor) ───────────────────────────────────────── */
+.info-block {
+  padding-right: 1rem;
+}
+
+.info-block:last-child {
+  padding-right: 0;
+  border-left: 1px solid rgba(27, 79, 138, 0.1);
+  padding-left: 1rem;
+}
+
+/* ── Vitals row ─────────────────────────────────────────────────────────── */
+.vitals-container {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.vitals-container > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, #eef4fb 0%, #ddeaf8 100%);
+  border: 1px solid rgba(27, 79, 138, 0.14);
+  border-radius: 8px;
+  padding: 8px 14px;
+  min-width: 80px;
+  flex: 1;
+  text-align: center;
+}
+
+.vitals-container > div span {
+  font-size: 0.68rem;
+  color: #1B4F8A;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 4px;
+}
+
+.vitals-container > div strong {
+  font-size: 0.9rem;
+  color: #1B4F8A;
+  font-weight: 700;
+}
+
+/* ── Responsive: stack modal on small screens ────────────────────────────── */
+@media (max-width: 576px) {
+  .info-grid-2 {
+    grid-template-columns: 1fr;
   }
 
   .info-left {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-
-    .avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      border: 3px solid #e5e9f2;
-      margin-right: 1rem;
-    }
-
-    .patient-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      /* tighter vertical spacing between rows */
-      padding: 4px 0;
-    }
-
-    .patient-field {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      /* reduce space between label and value */
-    }
-
-    .label {
-      font-weight: 500;
-      color: #7e3a93;
-      min-width: 80px;
-      /* smaller width for compactness */
-      margin-right: 2px;
-      /* brings value closer */
-    }
-
-    .value {
-      font-weight: 600;
-      color: #000;
-      text-transform: capitalize;
-    }
-
-  }
-
-  .info-grid,
-  .info-grid-2 {
-    display: grid;
-    gap: 0.4rem;
-  }
-
-  .info-grid {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  }
-
-  .info-grid-2 {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  }
-
-  .info-block {
-    margin-bottom: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .vitals-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 0.5rem;
+    gap: 8px;
+  }
 
-    div {
-      flex: 1 1 100px;
-      background: #eef4ff;
-      padding: 0.8rem;
-      border-radius: 8px;
-      text-align: center;
-      min-width: 100px;
-
-      span {
-        display: block;
-        font-size: 0.8rem;
-        color: #555;
-      }
-
-      strong {
-        display: block;
-        font-size: 1rem;
-        color: #002b5c;
-        margin-top: 0.2rem;
-      }
-    }
+  .vitals-container > div {
+    min-width: 60px;
+    padding: 6px 10px;
   }
 }

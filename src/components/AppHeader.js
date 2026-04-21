@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-
 import { useSelector, useDispatch } from 'react-redux'
 import {
   CContainer,
@@ -8,8 +7,6 @@ import {
   CHeaderToggler,
   CNavLink,
   CNavItem,
-  useColorModes,
-  CFormInput,
   CModal,
   CModalHeader,
   CModalTitle,
@@ -17,39 +14,31 @@ import {
   CModalFooter,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilBell,
-  cilMenu,
-} from '@coreui/icons'
+import { cilBell, cilMenu } from '@coreui/icons'
 import { AppBreadcrumb } from './index'
 import { AppHeaderDropdown } from './header/index'
 import './header/sidebar.css'
 import { COLORS, SIZES } from '../Themes'
 import { getDateParts } from '../utils/formatDateTime'
 import Button from './CustomButton/CustomButton'
-// import { patientData } from '../Prescription/patientData.json'
 import TooltipButton from './CustomButton/TooltipButton'
 import { getClinicDetails, getTodayAppointments } from '../Auth/Auth'
 import { useDoctorContext } from '../Context/DoctorContext'
 import { capitalizeFirst, capitalizeWords } from '../utils/CaptalZeWord'
 import './AppHeader.css'
+
 const AppHeader = () => {
   const { patientData, setTodayAppointments, todayAppointments } = useDoctorContext()
+
   useEffect(() => {
-    // clear context + localStorage so sidebar shows doctor data
-    appointmentDetails();
+    appointmentDetails()
   }, [])
 
   const appointmentDetails = async () => {
-
     const response = await getTodayAppointments()
-    console.log(response)
-
-    if (response.statusCode == 200) {
-      console.log(response.data)
+    if (response.statusCode === 200) {
       setTodayAppointments(response.data)
     }
-
   }
 
   const headerRef = useRef()
@@ -67,17 +56,14 @@ const AppHeader = () => {
   useEffect(() => {
     const fetchClinic = async () => {
       try {
-        const res = await getClinicDetails();
-        console.log('✅ Clinic loaded:', res);
-        setClinic(res);
+        const res = await getClinicDetails()
+        setClinic(res)
       } catch (err) {
-        console.error('❌ Error fetching clinic:', err);
+        console.error('Error fetching clinic:', err)
       }
-    };
-
-    fetchClinic();
-  }, []);
-
+    }
+    fetchClinic()
+  }, [])
 
   const { day, date, time } = getDateParts()
   const [searchTerm, setSearchTerm] = useState('')
@@ -88,7 +74,9 @@ const AppHeader = () => {
   const handleSearch = (e) => {
     const value = e.target.value
     setSearchTerm(value)
-    const filtered = todayAppointments.filter((p) => p.name.toLowerCase().includes(value.toLowerCase()))
+    const filtered = todayAppointments.filter((p) =>
+      p.name.toLowerCase().includes(value.toLowerCase())
+    )
     setSearchResults(filtered)
   }
 
@@ -101,156 +89,208 @@ const AppHeader = () => {
     <CHeader
       position="sticky"
       className="mb-0 p-0 app-header"
-      // ref={headerRef}
-      style={{ top: 0, insetInline: 0, zIndex: 1030, margin: -20, backgroundColor: COLORS.bgcolor }}
+      style={{
+        top: 0,
+        insetInline: 0,
+        zIndex: 1030,
+        margin: -20,
+        backgroundColor: COLORS.white,
+        borderBottom: `2px solid ${COLORS.bgcolor}`,
+        boxShadow: '0 2px 8px rgba(27, 79, 138, 0.08)',
+      }}
     >
-      <CContainer className="border-bottom px-4 header-row " fluid>
+      {/* Top Header Row */}
+      <CContainer
+        className="px-4"
+        fluid
+        style={{
+          borderBottom: `1px solid ${COLORS.bgcolor}20`,
+          paddingTop: '8px',
+          paddingBottom: '8px',
+        }}
+      >
+        {/* Hamburger Menu */}
         <CHeaderToggler
           onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
           style={{ marginInlineStart: '-14px' }}
           aria-label="Toggle sidebar"
         >
-          <CIcon icon={cilMenu} size="lg" style={{ color: COLORS.black }} />
-        </CHeaderToggler>
-        {/* Search */}
-        {/* <div className="position-relative flex-grow-1 mx-3 search-wrap" style={{ maxWidth: "500px" }}>
-          <div className="position-relative">
-            <CFormInput
-              type="text"
-              placeholder="🔍 Search patient by name..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="placeholder-[#7e3a93] placeholder:font-bold"
-            />
-
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchTerm('')
-                  setSearchResults([])
-                }}
-                style={{
-                  position: 'absolute',
-                  right: 10,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '1.2rem',
-                  color: COLORS.black,
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-
-        {searchTerm && (
-  <div
-    className="position-absolute w-100 mt-1 bg-white shadow rounded p-2 search-dropdown"
-    style={{ maxHeight: 300, overflowY: 'auto' }}
-  >
-    {searchResults.length > 0 ? (
-      searchResults.map((patient, idx) => (
-        <div
-          key={idx}
-          className="d-flex justify-content-between align-items-center border-bottom py-2 px-2"
-        >
-          <div>
-            <strong>{capitalizeFirst(patient.name)}</strong>
-            <div style={{ fontSize: '0.85rem', color: '#666' }}>{patient.mobileNumber}</div>
-          </div>
-
-          <TooltipButton
-            patient={patient}
-            onSelect={() => {
-              setSearchTerm('')
-              setSearchResults([])
-            }}
+          <CIcon
+            icon={cilMenu}
+            size="lg"
+            style={{ color: COLORS.bgcolor }}
           />
-        </div>
-      ))
-    ) : (
-      <div className="text-center py-2 text-muted">No data found</div>
-    )}
-  </div>
-)}
+        </CHeaderToggler>
 
-        </div> */}
-        <CHeaderNav className="ms-auto">
+        {/* Right side: Bell + Clinic Name + Avatar */}
+        <CHeaderNav className="ms-auto gap-2 align-items-center">
+
+          {/* Bell icon */}
           <CNavItem>
             <CNavLink
-              onClick={(e) => {
-                e.preventDefault();
-              }}
-              style={{ cursor: 'pointer' }}
+              onClick={(e) => e.preventDefault()}
+              style={{ cursor: 'pointer', position: 'relative', padding: '4px 8px' }}
             >
-              <CIcon icon={cilBell} size="lg" style={{ color: COLORS.black }} />
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  backgroundColor: '#EAF1FB',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: `1.5px solid ${COLORS.bgcolor}30`,
+                }}
+              >
+                <CIcon icon={cilBell} size="sm" style={{ color: COLORS.bgcolor }} />
+              </div>
             </CNavLink>
           </CNavItem>
 
-        </CHeaderNav>
+          {/* Vertical divider */}
+          <div
+            style={{
+              width: '1px',
+              height: '32px',
+              backgroundColor: `${COLORS.bgcolor}40`,
+              margin: '0 4px',
+            }}
+          />
 
-        {/* Theme switch + profile */}
-        <CHeaderNav className="gap-2 align-items-center">
-
-          <div className="vr h-100 mx-2 text-body text-opacity-75 d-none d-md-block" />
-
-          <div className="d-flex flex-column align-items-center justify-content-center text-center px-2">
+          {/* Clinic name */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              padding: '0 8px',
+            }}
+          >
             {clinic ? (
               <>
-                <h5 className="fw-bold " style={{ fontSize: SIZES.large, color: COLORS.black }}>
+                <h5
+                  style={{
+                    fontSize: SIZES.large,
+                    color: COLORS.bgcolor,
+                    fontWeight: '700',
+                    margin: 0,
+                    letterSpacing: '0.3px',
+                  }}
+                >
                   {capitalizeWords(clinic.name) || 'Clinic Name'}
-
                 </h5>
-                {/* <h6 style={{ color: COLORS.black, fontSize: SIZES.small }}>
-                  {clinic.city || 'No city'}
-                </h6> */}
               </>
             ) : (
-              <h6 className="text-muted">Loading...</h6>
+              <span style={{ color: COLORS.gray, fontSize: '13px' }}>Loading...</span>
             )}
           </div>
 
+          {/* Profile dropdown */}
           <AppHeaderDropdown />
+
         </CHeaderNav>
       </CContainer>
 
-      <CContainer className="px-4" fluid>
+      {/* Breadcrumb Row */}
+      <CContainer
+        className="px-4"
+        fluid
+        style={{
+          backgroundColor: '#F0F6FF',
+          paddingTop: '4px',
+          paddingBottom: '4px',
+        }}
+      >
         <AppBreadcrumb />
       </CContainer>
 
+      {/* Patient Details Modal */}
       <CModal visible={visible} onClose={() => setVisible(false)}>
-        <CModalHeader>
-          <CModalTitle>Patient Details</CModalTitle>
+        <CModalHeader
+          style={{
+            backgroundColor: COLORS.bgcolor,
+            borderBottom: 'none',
+          }}
+        >
+          <CModalTitle style={{ color: COLORS.white, fontWeight: '600', fontSize: '16px' }}>
+            Patient Details
+          </CModalTitle>
         </CModalHeader>
-        <CModalBody>
+
+        <CModalBody style={{ backgroundColor: COLORS.white, padding: '20px 24px' }}>
           {selectedPatient && (
-            <div>
-              <p>
-                <strong>Name:</strong>{capitalizeFirst(selectedPatient.name)} 
-              </p>
-              <p>
-                <strong>Mobile:</strong> {selectedPatient.mobileNumber}
-              </p>
-              <p>
-                <strong>Problem:</strong> {selectedPatient.problem}
-              </p>
-              <p>
-                <strong>Doctor:</strong> {selectedPatient.doctorName}
-              </p>
-              <p>
-                <strong>Consultation:</strong> {selectedPatient.consultationType}
-              </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[
+                { label: 'Name', value: capitalizeFirst(selectedPatient.name) },
+                { label: 'Mobile', value: selectedPatient.mobileNumber },
+                { label: 'Problem', value: selectedPatient.problem },
+                { label: 'Doctor', value: selectedPatient.doctorName },
+                { label: 'Consultation', value: selectedPatient.consultationType },
+              ].map(({ label, value }) => (
+                <div
+                  key={label}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: '#F0F6FF',
+                    border: `1px solid ${COLORS.bgcolor}20`,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: COLORS.bgcolor,
+                      minWidth: '90px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    {label}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '14px',
+                      color: COLORS.black,
+                      fontWeight: '500',
+                    }}
+                  >
+                    {value || '—'}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </CModalBody>
-        <CModalFooter>
-          <Button color="secondary" onClick={() => setVisible(false)}>
+
+        <CModalFooter
+          style={{
+            backgroundColor: COLORS.white,
+            borderTop: `1px solid ${COLORS.bgcolor}20`,
+            padding: '12px 24px',
+          }}
+        >
+          <button
+            onClick={() => setVisible(false)}
+            style={{
+              backgroundColor: COLORS.bgcolor,
+              color: COLORS.white,
+              border: 'none',
+              borderRadius: '8px',
+              padding: '7px 20px',
+              fontSize: '13px',
+              fontWeight: '500',
+              cursor: 'pointer',
+            }}
+          >
             Close
-          </Button>
+          </button>
         </CModalFooter>
       </CModal>
     </CHeader>

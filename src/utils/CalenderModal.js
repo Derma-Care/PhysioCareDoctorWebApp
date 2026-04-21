@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { CModal, CModalHeader, CModalTitle, CModalBody } from "@coreui/react";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import { COLORS } from "../Themes";
-
 import { getDoctorDetails } from "../Auth/Auth";
 
+// ─── Time helpers ─────────────────────────────────────────────────────────────
 const convertTo24Hr = (time12h) => {
   if (!time12h) return null;
   const [time, modifier] = time12h.split(" ");
@@ -17,14 +16,20 @@ const convertTo24Hr = (time12h) => {
   return `${hours.toString().padStart(2, "0")}:${minutes}`;
 };
 
-// Generate time slots dynamically
+const convertTo12Hr = (time24) => {
+  if (!time24) return "";
+  const [hours, minutes] = time24.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const hours12 = hours % 12 === 0 ? 12 : hours % 12;
+  return `${hours12.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")} ${period}`;
+};
+
 const generateTimeSlots = (start, end, interval = 30) => {
   const slots = [];
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
   let cur = new Date(1970, 0, 1, sh, sm, 0);
   const endDate = new Date(1970, 0, 1, eh, em, 0);
-
   while (cur <= endDate) {
     const h = cur.getHours();
     const m = cur.getMinutes();
@@ -45,21 +50,6 @@ const generateDates = (days = 15) => {
     return d;
   });
 };
-// Convert "07:00" → "07:00 AM", "22:00" → "10:00 PM"
-const convertTo12Hr = (time24) => {
-  if (!time24) return "";
-  const [hours, minutes] = time24.split(":").map(Number);
-  const period = hours >= 12 ? "PM" : "AM";
-  const hours12 = hours % 12 === 0 ? 12 : hours % 12;
-  return `${hours12.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")} ${period}`;
-};
-
-const formatFullDate = (date) =>
-  date instanceof Date
-    ? date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : date;
 
 const toMinutes = (timeStr) => {
   if (!timeStr || typeof timeStr !== "string") return null;
@@ -74,9 +64,8 @@ const toMinutes = (timeStr) => {
   const parts = timePart.split(":").map((p) => p.trim());
   if (parts.length < 2) return null;
   let hh = parseInt(parts[0], 10);
-  let mm = parseInt(parts[1], 10);
+  const mm = parseInt(parts[1], 10);
   if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
-
   if (modifier) {
     if (modifier === "PM" && hh !== 12) hh += 12;
     if (modifier === "AM" && hh === 12) hh = 0;
@@ -84,6 +73,95 @@ const toMinutes = (timeStr) => {
   return hh * 60 + mm;
 };
 
+const formatFullDate = (date) =>
+  date instanceof Date
+    ? date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    : date;
+
+const getLocalDateStr = (d) => new Date(d).toLocaleDateString("en-CA");
+
+// ─── Status colour map (using theme colours where possible) ───────────────────
+const STATUS_COLORS = {
+  confirmed:    { bg: COLORS.bgcolor,  label: "Confirmed"   }, // navy
+  "in-progress":{ bg: COLORS.orange,  label: "In-Progress" }, // yellow
+  "in progress":{ bg: COLORS.orange,  label: "In-Progress" },
+  completed:    { bg: "#28a745",       label: "Completed"   }, // green
+  cancelled:    { bg: "#d9534f",       label: "Cancelled"   }, // red
+  canceled:     { bg: "#d9534f",       label: "Cancelled"   },
+};
+
+const getStatusStyle = (status = "") => {
+  const key = status.toLowerCase().trim();
+  return STATUS_COLORS[key] || { bg: COLORS.bgcolor, label: "Booked" };
+};
+
+// ─── Popover ─────────────────────────────────────────────────────────────────
+const generatePopover = (appt) => (
+  <Popover
+    id={`popover-${appt.bookingId}`}
+    style={{
+      maxWidth: "260px",
+      border: `1.5px solid ${COLORS.bgcolor}`,
+      borderRadius: "10px",
+      overflow: "hidden",
+      boxShadow: "0 4px 16px rgba(27,79,138,0.14)",
+    }}
+  >
+    {/* Header */}
+    <div
+      style={{
+        backgroundColor: COLORS.bgcolor,
+        padding: "8px 14px",
+        fontSize: "11px",
+        fontWeight: "700",
+        color: "#fff",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+      }}
+    >
+      Patient Info
+    </div>
+
+    {/* Body */}
+    <div style={{ backgroundColor: "#fff", padding: "10px 14px" }}>
+      {[
+        ["Name",        appt.name],
+        ["Age & Gender",`${appt.age}, ${appt.gender}`],
+        ["Mobile",      appt.patientMobileNumber || appt.mobileNumber],
+        ["Branch",      `${appt.branchname}, ${appt.clinicName}`],
+        ["Doctor",      appt.doctorName],
+        ["Date & Time", `${formatFullDate(new Date(appt.serviceDate))}, ${appt.servicetime}`],
+        ["Status",      appt.status],
+      ].map(([label, value]) => (
+        <div
+          key={label}
+          style={{
+            display: "flex",
+            gap: "8px",
+            padding: "4px 0",
+            borderBottom: "1px solid rgba(27,79,138,0.07)",
+            fontSize: "12px",
+          }}
+        >
+          <span style={{ minWidth: "80px", fontWeight: "600", color: COLORS.bgcolor, textTransform: "uppercase", fontSize: "10px", letterSpacing: "0.4px", paddingTop: "1px" }}>
+            {label}
+          </span>
+          <span style={{ color: "#1a1a2e", fontWeight: "500" }}>{value || "—"}</span>
+        </div>
+      ))}
+    </div>
+  </Popover>
+);
+
+// ─── Legend item ─────────────────────────────────────────────────────────────
+const LegendDot = ({ color, label }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#fff" }}>
+    <div style={{ width: "12px", height: "12px", borderRadius: "3px", backgroundColor: color, flexShrink: 0, border: "1.5px solid rgba(255,255,255,0.35)" }} />
+    <span style={{ fontWeight: "500", whiteSpace: "nowrap" }}>{label}</span>
+  </div>
+);
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 const CalendarModal = ({
   visible,
   onClose,
@@ -91,263 +169,244 @@ const CalendarModal = ({
   defaultBookedSlots = [],
   days = 15,
   interval = 30,
-  handleClick = () => { },
+  handleClick = () => {},
   fetchAppointments,
   intervalMs = 60000,
 }) => {
-  const [timeSlots, setTimeSlots] = useState([]);
+  const [timeSlots, setTimeSlots]   = useState([]);
   const [clinicTimes, setClinicTimes] = useState({ open: "", close: "" });
   const dates = generateDates(days);
 
-  // ✅ Fetch opening & closing times dynamically (no static fallback)
   useEffect(() => {
     const fetchClinicTimings = async () => {
       try {
-        const doctorData = await getDoctorDetails(); // ✅ Use your API helper
+        const doctorData = await getDoctorDetails();
         if (doctorData?.availableTimes) {
           const [openTime, closeTime] = doctorData.availableTimes.split(" - ").map((t) => t.trim());
           if (openTime && closeTime) {
-            const open = convertTo24Hr(openTime);
+            const open  = convertTo24Hr(openTime);
             const close = convertTo24Hr(closeTime);
             setClinicTimes({ open, close });
             setTimeSlots(generateTimeSlots(open, close, interval));
           } else {
-            console.warn("⚠️ Invalid availableTimes format:", doctorData.availableTimes);
             setTimeSlots([]);
           }
         } else {
-          console.warn("⚠️ availableTimes not found in doctor details");
           setTimeSlots([]);
         }
-      } catch (error) {
-        console.error("❌ Failed to fetch doctor details:", error);
+      } catch {
         setTimeSlots([]);
       }
     };
-
     fetchClinicTimings();
   }, [interval]);
 
-  // Refresh appointments periodically
   useEffect(() => {
     if (!visible || !fetchAppointments) return;
-    fetchAppointments(); // immediate
+    fetchAppointments();
     const id = setInterval(fetchAppointments, intervalMs);
     return () => clearInterval(id);
   }, [visible, fetchAppointments, intervalMs]);
 
-  const getLocalDateStr = (d) => new Date(d).toLocaleDateString("en-CA");
-
   const getAppointments = (dateObj, slotStart, slotEnd) => {
-    const dateStr = getLocalDateStr(dateObj);
+    const dateStr  = getLocalDateStr(dateObj);
     const startMin = toMinutes(slotStart);
-    const endMin = slotEnd ? toMinutes(slotEnd) : startMin + interval;
-
+    const endMin   = slotEnd ? toMinutes(slotEnd) : startMin + interval;
     return (todayAppointments || []).filter((appt) => {
       if (!appt.serviceDate || !appt.servicetime) return false;
-      const apptDateStr = getLocalDateStr(appt.serviceDate);
-      if (apptDateStr !== dateStr) return false;
+      if (getLocalDateStr(appt.serviceDate) !== dateStr) return false;
       const apptMin = toMinutes(appt.servicetime);
       return apptMin >= startMin && apptMin < endMin;
     });
   };
 
   const isDefaultBooked = (dateObj, slotStart, slotEnd) => {
-    const dateStr = getLocalDateStr(dateObj);
+    const dateStr  = getLocalDateStr(dateObj);
     const startMin = toMinutes(slotStart);
-    const endMin = slotEnd ? toMinutes(slotEnd) : startMin + interval;
-
+    const endMin   = slotEnd ? toMinutes(slotEnd) : startMin + interval;
     return (defaultBookedSlots || []).some((slot) => {
       if (!slot.date || !slot.time) return false;
-      const sDateStr = getLocalDateStr(slot.date);
-      if (sDateStr !== dateStr) return false;
+      if (getLocalDateStr(slot.date) !== dateStr) return false;
       const sMin = toMinutes(slot.time);
       return sMin >= startMin && sMin < endMin;
     });
   };
 
-  const generatePopover = (appointment) => (
-    <Popover id={`popover-${appointment.bookingId}`} style={{ maxWidth: "260px" }}>
-      <Popover.Header as="h6">Patient Info</Popover.Header>
-      <Popover.Body>
-        <div><strong>Name:</strong> {appointment.name}</div>
-        <div><strong>Age & Gender:</strong> {appointment.age}, {appointment.gender}</div>
-        <div><strong>Mobile:</strong> {appointment.patientMobileNumber || appointment.mobileNumber}</div>
-        <div><strong>Branch & Clinic:</strong> {appointment.branchname}, {appointment.clinicName}</div>
-        <div><strong>Doctor:</strong> {appointment.doctorName}</div>
-        <div><strong>Service Date & Time:</strong> {formatFullDate(new Date(appointment.serviceDate))}, {appointment.servicetime}</div>
-        <div><strong>Status:</strong> {appointment.status}</div>
-      </Popover.Body>
-    </Popover>
-  );
+  // ── Styles ─────────────────────────────────────────────────────────────────
+  const headerCellStyle = {
+    padding: "10px 8px",
+    backgroundColor: COLORS.bgcolor,
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: "12px",
+    textAlign: "center",
+    borderLeft: "1px solid rgba(255,255,255,0.15)",
+    borderBottom: "1px solid rgba(255,255,255,0.15)",
+    position: "sticky",
+    top: 0,
+    zIndex: 2,
+    whiteSpace: "nowrap",
+  };
+
+  const timeColStyle = {
+    padding: "8px",
+    fontWeight: "700",
+    fontSize: "12px",
+    backgroundColor: "#EAF1FB",
+    color: COLORS.bgcolor,
+    textAlign: "center",
+    borderBottom: "1px solid rgba(27,79,138,0.1)",
+    position: "sticky",
+    left: 0,
+    zIndex: 1,
+    whiteSpace: "nowrap",
+  };
+
+  const dataCellStyle = {
+    padding: "5px 4px",
+    borderLeft: "1px solid rgba(27,79,138,0.08)",
+    borderBottom: "1px solid rgba(27,79,138,0.08)",
+    minHeight: "44px",
+    textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    gap: "3px",
+    backgroundColor: "#fff",
+  };
 
   return (
     <CModal visible={visible} onClose={onClose} size="xl">
-      <CModalHeader closeButton>
+      {/* ── Modal Header ───────────────────────────────────────────────── */}
+      <CModalHeader
+        closeButton
+        style={{
+          backgroundColor: COLORS.bgcolor,
+          borderBottom: "none",
+          padding: "12px 20px",
+        }}
+      >
         <CModalTitle
           className="w-100"
           style={{
             display: "flex",
-            justifyContent: "center",
+            justifyContent: "space-between",
             alignItems: "center",
-            position: "relative",
-            color: COLORS.black,
+            flexWrap: "wrap",
+            gap: "10px",
           }}
         >
-          {/* Centered Title */}
-          <div style={{ textAlign: "center", flex: "1" }}>
-            My Calendar{" "}
-            {clinicTimes.open && clinicTimes.close ? (
-              <>
-                (
-                {convertTo12Hr(clinicTimes.open)} - {convertTo12Hr(clinicTimes.close)}
-                )
-              </>
-            ) : (
-              "(Loading timings...)"
-            )}
+          {/* Title */}
+          <div style={{ color: "#fff", fontWeight: "700", fontSize: "15px" }}>
+            📅 My Calendar{" "}
+            <span style={{ fontWeight: "400", fontSize: "13px", opacity: 0.85 }}>
+              {clinicTimes.open && clinicTimes.close
+                ? `(${convertTo12Hr(clinicTimes.open)} – ${convertTo12Hr(clinicTimes.close)})`
+                : "(Loading timings…)"}
+            </span>
           </div>
 
-          {/* Legend on Right Corner */}
-          <div
-            style={{
-              position: "absolute",
-              right: "20px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              fontSize: "13px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <div
-                style={{
-                  width: "14px",
-                  height: "14px",
-                  borderRadius: "4px",
-                  backgroundColor: "#7e3a93",
-                }}
-              ></div>
-              <span>Booked</span>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <div
-                style={{
-                  width: "14px",
-                  height: "14px",
-                  borderRadius: "4px",
-                  backgroundColor: "#f0ad4e",
-                }}
-              ></div>
-              <span>In-Progress</span>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <div
-                style={{
-                  width: "14px",
-                  height: "14px",
-                  borderRadius: "4px",
-                  backgroundColor: "#28a745",
-                }}
-              ></div>
-              <span>Completed</span>
-            </div>
+          {/* Legend */}
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
+            <LegendDot color={COLORS.bgcolor} label="Confirmed" />
+            <LegendDot color={COLORS.orange}  label="In-Progress" />
+            <LegendDot color="#28a745"         label="Completed" />
+            <LegendDot color="#d9534f"         label="Cancelled" />
           </div>
         </CModalTitle>
       </CModalHeader>
 
-      <CModalBody style={{ padding: 0 }}>
-        <div style={{ overflow: "auto", maxHeight: "80vh", border: "1px solid #ccc" }}>
+      {/* ── Modal Body ─────────────────────────────────────────────────── */}
+      <CModalBody style={{ padding: 0, backgroundColor: "#f4f7fb" }}>
+        <div
+          style={{
+            overflow: "auto",
+            maxHeight: "80vh",
+            border: `1px solid ${COLORS.bgcolor}30`,
+            borderRadius: "0 0 8px 8px",
+          }}
+        >
           {timeSlots.length === 0 ? (
-            <div className="text-center py-5">No clinic timings available</div>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "60px 20px",
+                color: COLORS.bgcolor,
+                fontSize: "15px",
+                fontWeight: "500",
+              }}
+            >
+              No clinic timings available
+            </div>
           ) : (
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: `120px repeat(${dates.length}, 1fr)`,
-                fontFamily: "Arial, sans-serif",
-                fontSize: "14px",
+                gridTemplateColumns: `110px repeat(${dates.length}, minmax(90px, 1fr))`,
+                fontFamily: "Segoe UI, Arial, sans-serif",
+                fontSize: "13px",
               }}
             >
-              <div style={{ backgroundColor: COLORS?.bgcolor || "#e9eef6" }}></div>
+              {/* Top-left corner cell */}
+              <div
+                style={{
+                  ...headerCellStyle,
+                  backgroundColor: COLORS.bgcolor,
+                  borderLeft: "none",
+                  zIndex: 3,
+                  left: 0,
+                  position: "sticky",
+                }}
+              />
 
-              {dates.map((d, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    padding: "10px 6px",
-                    backgroundColor: COLORS?.bgcolor || "#b5d0e0",
-                    color: COLORS?.black || "#4b0082",
-                    fontWeight: 600,
-                    textAlign: "center",
-                    borderLeft: "1px solid #dbdada",
-                    borderBottom: "1px solid #dbdada",
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 2,
-                  }}
-                >
-                  {d.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit" })}
-                </div>
-              ))}
-
-              {timeSlots.map((slot, i) => (
-                <React.Fragment key={slot + i}>
+              {/* Date header cells */}
+              {dates.map((d, idx) => {
+                const isToday =
+                  d.toDateString() === new Date().toDateString();
+                return (
                   <div
+                    key={idx}
                     style={{
-                      padding: "8px",
-                      fontWeight: "bold",
-                      backgroundColor: COLORS?.bgcolor || "#e9eef6",
-                      color: COLORS?.black,
-                      textAlign: "center",
-                      borderBottom: "1px solid #dbdada",
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
+                      ...headerCellStyle,
+                      backgroundColor: isToday ? COLORS.orange : COLORS.bgcolor,
+                      color: "#fff",
                     }}
                   >
-                    {slot}
+                    <div style={{ fontSize: "11px", opacity: 0.85 }}>
+                      {d.toLocaleDateString("en-GB", { weekday: "short" })}
+                    </div>
+                    <div style={{ fontSize: "13px", fontWeight: "700" }}>
+                      {d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+                    </div>
                   </div>
+                );
+              })}
 
+              {/* Time rows */}
+              {timeSlots.map((slot, i) => (
+                <React.Fragment key={slot + i}>
+                  {/* Time label */}
+                  <div style={timeColStyle}>{slot}</div>
+
+                  {/* Data cells */}
                   {dates.map((d, j) => {
-                    const nextSlot = timeSlots[i + 1] || null;
+                    const nextSlot     = timeSlots[i + 1] || null;
                     const appointments = getAppointments(d, slot, nextSlot);
-                    const defaultBooked = isDefaultBooked(d, slot, nextSlot);
+                    const defBooked    = isDefaultBooked(d, slot, nextSlot);
+                    const isEven       = i % 2 === 0;
 
                     return (
                       <div
                         key={`${i}-${j}`}
                         style={{
-                          padding: "6px",
-                          borderLeft: "1px solid #dbdada",
-                          borderBottom: "1px solid #dbdada",
-                          minHeight: "44px",
-                          textAlign: "center",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                          gap: "4px",
+                          ...dataCellStyle,
+                          backgroundColor: isEven ? "#fff" : "#f4f7fb",
                         }}
                       >
                         {appointments.length > 0 ? (
                           appointments.map((appt) => {
-                            const status = appt.status?.toLowerCase();
-                            let bgColor = "#7e3a93"; // default (Booked - purple)
-
-                            if (status === "in-progress" || status === "in progress") {
-                              bgColor = "#f0ad4e"; // orange for in-progress
-                            } else if (status === "completed") {
-                              bgColor = "#28a745"; // green for completed
-                            } else if (status === "cancelled" || status === "canceled") {
-                              bgColor = "#d9534f"; // red for cancelled
-                            }
-
-                            // Disable click only for completed appointments
-                            const isClickable = status !== "completed";
+                            const { bg, label } = getStatusStyle(appt.status);
+                            const isClickable   = appt.status?.toLowerCase() !== "completed";
 
                             return (
                               <OverlayTrigger
@@ -358,38 +417,45 @@ const CalendarModal = ({
                               >
                                 <div
                                   onClick={() => {
-                                    if (!isClickable) {
-                                      alert("This appointment is completed and cannot be opened.");
-                                      return;
-                                    }
+                                    if (!isClickable) return;
                                     handleClick(appt);
                                   }}
                                   style={{
-                                    fontSize: "12px",
-                                    borderRadius: "6px",
-                                    backgroundColor: bgColor,
+                                    fontSize: "11px",
+                                    borderRadius: "5px",
+                                    backgroundColor: bg,
                                     color: "#fff",
-                                    padding: "4px 6px",
+                                    padding: "3px 6px",
+                                    fontWeight: "600",
                                     cursor: isClickable ? "pointer" : "not-allowed",
-                                    opacity: isClickable ? 1 : 0.6,
+                                    opacity: isClickable ? 1 : 0.65,
+                                    transition: "opacity 0.15s, transform 0.1s",
+                                    userSelect: "none",
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (isClickable) e.currentTarget.style.opacity = "0.85";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.opacity = isClickable ? "1" : "0.65";
                                   }}
                                 >
-                                  Booked
+                                  {label}
                                 </div>
                               </OverlayTrigger>
                             );
                           })
-                        ) : defaultBooked ? (
+                        ) : defBooked ? (
                           <div
                             style={{
-                              fontSize: "12px",
-                              borderRadius: "6px",
-                              backgroundColor: "#999",
+                              fontSize: "11px",
+                              borderRadius: "5px",
+                              backgroundColor: COLORS.gray,
                               color: "#fff",
-                              padding: "4px 6px",
+                              padding: "3px 6px",
+                              fontWeight: "600",
                             }}
                           >
-                            Default Booked
+                            Reserved
                           </div>
                         ) : null}
                       </div>

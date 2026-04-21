@@ -68,3 +68,4 @@ export const exerciseUrlId = `${ipUrl}/clinic-admin/getBytherapyExercisesClinicI
 
 // ✅ Programs — getAll
 export const programAllUrl = `${ipUrl}/clinic-admin/program/getAll`
+
