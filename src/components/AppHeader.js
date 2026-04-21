@@ -94,7 +94,7 @@ const AppHeader = () => {
         insetInline: 0,
         zIndex: 1030,
         margin: -20,
-        backgroundColor: COLORS.white,
+        backgroundColor: COLORS.bgcolor,
         borderBottom: `2px solid ${COLORS.bgcolor}`,
         boxShadow: '0 2px 8px rgba(27, 79, 138, 0.08)',
       }}
@@ -115,11 +115,7 @@ const AppHeader = () => {
           style={{ marginInlineStart: '-14px' }}
           aria-label="Toggle sidebar"
         >
-          <CIcon
-            icon={cilMenu}
-            size="lg"
-            style={{ color: COLORS.bgcolor }}
-          />
+          <CIcon icon={cilMenu} size="lg" style={{ color: COLORS.white }} />
         </CHeaderToggler>
 
         {/* Right side: Bell + Clinic Name + Avatar */}
@@ -174,7 +170,7 @@ const AppHeader = () => {
                 <h5
                   style={{
                     fontSize: SIZES.large,
-                    color: COLORS.bgcolor,
+                    color: COLORS.white,
                     fontWeight: '700',
                     margin: 0,
                     letterSpacing: '0.3px',

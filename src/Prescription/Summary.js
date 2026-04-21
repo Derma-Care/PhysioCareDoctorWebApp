@@ -14,28 +14,27 @@ import { capitalizeEachWord } from '../utils/CaptalZeWord'
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 const T = {
-  primary: '#1a3c5e',
-  accent: '#2563eb',
-  accentLight: '#dbeafe',
-  accentMid: '#93c5fd',
-  teal: '#0d9488',
-  tealLight: '#ccfbf1',
-  purple: '#7c3aed',
-  purpleLight: '#ede9fe',
-  rose: '#e11d48',
-  roseLight: '#ffe4e6',
-  amber: '#d97706',
-  amberLight: '#fef3c7',
-  green: '#16a34a',
-  greenLight: '#dcfce7',
-  border: '#e2e8f0',
-  borderLight: '#f1f5f9',
-  text: '#0f172a',
-  textMid: '#475569',
-  textLight: '#94a3b8',
-  bg: '#f8fafc',
-  white: '#ffffff',
-  headerBg: '#a5c4d4ff',
+  bgcolor:      '#1B4F8A',
+  orange:       '#f9c571',
+  orangeLight:  '#fff8ec',
+  orangeMid:    '#fde2a3',
+  white:        '#FFFFFF',
+  bgLight:      '#F0F6FF',
+  border:       '#c2d8f0',
+  borderLight:  '#deeaf7',
+  text:         '#1B4F8A',
+  textMid:      '#4a6fa5',
+  textLight:    '#7a9ec2',
+  teal:         '#0d9488',
+  tealLight:    '#ccfbf1',
+  purple:       '#7c3aed',
+  purpleLight:  '#ede9fe',
+  rose:         '#e11d48',
+  roseLight:    '#ffe4e6',
+  amber:        '#d97706',
+  amberLight:   '#fef3c7',
+  green:        '#16a34a',
+  greenLight:   '#dcfce7',
 }
 
 const isValid = (v) =>
@@ -74,33 +73,33 @@ const getVisitUrgency = (dateStr) => {
 }
 
 // ─── Section Component ────────────────────────────────────────────────────────
-const Section = ({ icon, title, children, accent = T.accent, badge = null }) => (
+const Section = ({ icon, title, children, badge = null }) => (
   <div style={{
-    background: T.white, border: `1px solid ${T.border}`, borderRadius: 16,
-    marginBottom: 20, overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.04)',
+    background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+    marginBottom: 14, overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(27,79,138,0.07), 0 4px 16px rgba(27,79,138,0.06)',
   }}>
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 12,
-      padding: '14px 22px',
-      background: T.headerBg,
-      borderBottom: `1px solid rgba(255,255,255,0.2)`,
+      display: 'flex', alignItems: 'center', gap: 8,
+      padding: '8px 16px',
+      background: T.bgcolor,
+      borderBottom: `2px solid ${T.orange}`,
     }}>
       <span style={{
-        width: 34, height: 34, borderRadius: 10,
-        background: 'rgba(255,255,255,0.3)',
+        width: 26, height: 26, borderRadius: 8,
+        background: 'rgba(249,197,113,0.2)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 18, flexShrink: 0,
+        fontSize: 14, flexShrink: 0,
       }}>{icon}</span>
-      <span style={{ color: T.text, fontWeight: 800, fontSize: '0.95rem', letterSpacing: '-0.01em', flex: 1 }}>{title}</span>
+      <span style={{ color: T.white, fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.01em', flex: 1 }}>{title}</span>
       {badge && (
         <span style={{
-          background: 'rgba(255,255,255,0.4)', color: T.primary,
-          borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 700,
+          background: T.orange, color: T.bgcolor,
+          borderRadius: 20, padding: '2px 10px', fontSize: 10, fontWeight: 700,
         }}>{badge}</span>
       )}
     </div>
-    <div style={{ padding: '18px 22px' }}>{children}</div>
+    <div style={{ padding: '12px 16px' }}>{children}</div>
   </div>
 )
 
@@ -109,15 +108,15 @@ const Row = ({ label, value, full = false, highlight = false }) => {
   if (!isValid(value) && value !== 0) return null
   return (
     <div style={{
-      display: full ? 'block' : 'flex', gap: 8, marginBottom: 10,
-      padding: highlight ? '8px 12px' : 0,
-      background: highlight ? T.accentLight + '55' : 'transparent',
-      borderRadius: highlight ? 8 : 0,
-      borderLeft: highlight ? `3px solid ${T.accent}` : 'none',
-      paddingLeft: highlight ? 12 : 0,
+      display: full ? 'block' : 'flex', gap: 6, marginBottom: 7,
+      padding: highlight ? '5px 10px' : 0,
+      background: highlight ? T.orangeLight : 'transparent',
+      borderRadius: highlight ? 6 : 0,
+      borderLeft: highlight ? `3px solid ${T.orange}` : 'none',
+      paddingLeft: highlight ? 10 : 0,
     }}>
-      <span style={{ fontWeight: 700, fontSize: '0.78rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', flexShrink: 0 }}>{label}:</span>
-      <span style={{ fontSize: '0.9rem', color: T.text, wordBreak: 'break-word', marginLeft: full ? 0 : 4 }}>{dash(value)}</span>
+      <span style={{ fontWeight: 700, fontSize: '0.72rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', flexShrink: 0 }}>{label}:</span>
+      <span style={{ fontSize: '0.82rem', color: T.text, wordBreak: 'break-word', marginLeft: full ? 0 : 4 }}>{dash(value)}</span>
     </div>
   )
 }
@@ -127,28 +126,28 @@ const Grid = ({ children, cols = 2 }) => {
   const validChildren = React.Children.toArray(children).filter(Boolean)
   if (validChildren.length === 0) return null
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '8px 24px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '6px 20px' }}>
       {validChildren}
     </div>
   )
 }
 
 // ─── Chip Components ──────────────────────────────────────────────────────────
-const Chip = ({ label, color = T.accent, bg = T.accentLight }) => (
+const Chip = ({ label, color = T.bgcolor, bg = T.bgLight }) => (
   <span style={{
-    background: bg, color, borderRadius: 20, padding: '3px 12px',
-    fontSize: '0.78rem', fontWeight: 700, border: `1px solid ${color}33`,
-    display: 'inline-block', margin: '2px 4px 2px 0',
+    background: bg, color, borderRadius: 20, padding: '2px 10px',
+    fontSize: '0.72rem', fontWeight: 700, border: `1px solid ${color}33`,
+    display: 'inline-block', margin: '2px 3px 2px 0',
   }}>{label}</span>
 )
 
 const CheckChip = ({ label, checked }) => (
   <span style={{
-    background: checked ? T.accentLight : '#f3f4f6',
-    color: checked ? T.accent : '#94a3b8',
-    borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', fontWeight: 700,
-    border: `1px solid ${checked ? T.accent + '44' : '#e2e8f0'}`,
-    display: 'inline-flex', alignItems: 'center', gap: 5, margin: '2px 4px 2px 0',
+    background: checked ? T.orangeLight : '#f3f4f6',
+    color: checked ? T.bgcolor : '#94a3b8',
+    borderRadius: 20, padding: '2px 10px', fontSize: '0.72rem', fontWeight: 700,
+    border: `1px solid ${checked ? T.orange : '#e2e8f0'}`,
+    display: 'inline-flex', alignItems: 'center', gap: 4, margin: '2px 3px 2px 0',
     opacity: checked ? 1 : 0.5,
   }}>
     {checked ? '✓' : '○'} {label}
@@ -161,34 +160,35 @@ const StatusDot = ({ status }) => {
     Completed: ['#d1fae5', '#065f46', '#6ee7b7'],
     Pending: ['#fef3c7', '#92400e', '#fcd34d'],
     Cancelled: ['#fee2e2', '#991b1b', '#fecaca'],
-    'In Progress': [T.accentLight, '#1e40af', T.accentMid],
+    'In Progress': [T.bgLight, T.bgcolor, T.border],
+    'in-progress': [T.bgLight, T.bgcolor, T.border],
   }
   const [bg, fg, border] = map[status] || ['#f3f4f6', '#374151', '#d1d5db']
   return (
-    <span style={{ background: bg, color: fg, border: `1px solid ${border}`, borderRadius: 20, padding: '3px 14px', fontSize: '0.8rem', fontWeight: 700 }}>{status}</span>
+    <span style={{ background: bg, color: fg, border: `1px solid ${border}`, borderRadius: 20, padding: '3px 12px', fontSize: '0.75rem', fontWeight: 700 }}>{status}</span>
   )
 }
 
 const AnswerBadge = ({ answer }) => {
   const display = String(answer ?? '').trim()
   if (!display || display.toLowerCase() === 'undefined' || display.toLowerCase() === 'na') {
-    return <span style={{ color: T.textLight, fontSize: 12, fontStyle: 'italic' }}>Not answered</span>
+    return <span style={{ color: T.textLight, fontSize: 11, fontStyle: 'italic' }}>Not answered</span>
   }
   const up = display.toUpperCase()
-  const [bg, color, border] = up === 'YES' ? ['#d1fae5', '#065f46', '#6ee7b7'] : up === 'NO' ? ['#fee2e2', '#991b1b', '#fecaca'] : [T.accentLight, T.accent, T.accentMid]
+  const [bg, color, border] = up === 'YES' ? ['#d1fae5', '#065f46', '#6ee7b7'] : up === 'NO' ? ['#fee2e2', '#991b1b', '#fecaca'] : [T.bgLight, T.bgcolor, T.border]
   return (
-    <span style={{ background: bg, color, border: `1px solid ${border}`, borderRadius: 20, padding: '2px 12px', fontSize: '0.78rem', fontWeight: 700 }}>{display}</span>
+    <span style={{ background: bg, color, border: `1px solid ${border}`, borderRadius: 20, padding: '2px 10px', fontSize: '0.72rem', fontWeight: 700 }}>{display}</span>
   )
 }
 
 // ─── Therapy Tables ───────────────────────────────────────────────────────────
-const tableStyle = { width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', color: T.text }
-const thStyle = { padding: '8px 12px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.79rem', background: `linear-gradient(135deg, ${T.primary}, ${T.accent})`, color: T.white }
-const tdStyle = (i) => ({ padding: '7px 12px', borderBottom: `1px solid ${T.border}`, background: i % 2 === 0 ? T.bg : T.white })
+const tableStyle = { width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', color: T.text }
+const thStyle = { padding: '6px 10px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.72rem', background: T.bgcolor, color: T.white }
+const tdStyle = (i) => ({ padding: '5px 10px', borderBottom: `1px solid ${T.border}`, background: i % 2 === 0 ? T.bgLight : T.white })
 
 const ExerciseTableDisplay = ({ exercises }) => {
   if (!exercises || exercises.length === 0) return (
-    <div style={{ padding: '10px 14px', color: T.textLight, fontStyle: 'italic', fontSize: '0.82rem' }}>No exercises</div>
+    <div style={{ padding: '8px 12px', color: T.textLight, fontStyle: 'italic', fontSize: '0.78rem' }}>No exercises</div>
   )
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -203,19 +203,19 @@ const ExerciseTableDisplay = ({ exercises }) => {
         <tbody>
           {exercises.map((ex, i) => (
             <tr key={i}>
-              <td style={{ ...tdStyle(i), fontWeight: 700, color: T.accent }}>{i + 1}</td>
+              <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
               <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</td>
               <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(ex.noOfSessions ?? ex.session ?? ex.sessions)}</td>
               <td style={{ ...tdStyle(i), textAlign: 'center' }}>
-                {ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.accent} bg={T.accentLight} /> : '—'}
+                {ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}
               </td>
               <td style={{ ...tdStyle(i), textAlign: 'center' }}>
                 {(ex.repetitions || ex.reps) ? <Chip label={`🔄 ${ex.repetitions || ex.reps}`} color={T.teal} bg={T.tealLight} /> : '—'}
               </td>
               <td style={{ ...tdStyle(i), whiteSpace: 'nowrap' }}>
-                {ex.frequency ? <span style={{ fontSize: '0.78rem', fontWeight: 600, color: T.primary }}>📆 {ex.frequency}</span> : '—'}
+                {ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600, color: T.bgcolor }}>📆 {ex.frequency}</span> : '—'}
               </td>
-              <td style={{ ...tdStyle(i), maxWidth: 160 }}>
+              <td style={{ ...tdStyle(i), maxWidth: 140 }}>
                 <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.notes}>{ex.notes || '—'}</div>
               </td>
             </tr>
@@ -226,14 +226,14 @@ const ExerciseTableDisplay = ({ exercises }) => {
   )
 }
 
-const TherapyBlock = ({ therapyName, exercises, totalPrice, accentColor = T.accent, accentBg = T.accentLight }) => (
-  <div style={{ marginBottom: 12, borderRadius: 10, overflow: 'hidden', border: `1px solid ${T.border}` }}>
+const TherapyBlock = ({ therapyName, exercises, totalPrice }) => (
+  <div style={{ marginBottom: 10, borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '9px 14px', background: accentBg, borderBottom: `1px solid ${T.border}`,
+      padding: '7px 12px', background: T.bgLight, borderBottom: `1px solid ${T.border}`,
     }}>
-      <span style={{ fontWeight: 700, color: accentColor, fontSize: '0.88rem' }}>💊 {therapyName || 'Therapy'}</span>
-      {totalPrice > 0 && <span style={{ fontSize: '0.78rem', color: T.textMid, fontWeight: 600 }}>₹ {totalPrice}</span>}
+      <span style={{ fontWeight: 700, color: T.bgcolor, fontSize: '0.8rem' }}>💊 {therapyName || 'Therapy'}</span>
+      {totalPrice > 0 && <span style={{ fontSize: '0.72rem', color: T.textMid, fontWeight: 600 }}>₹ {totalPrice}</span>}
     </div>
     <ExerciseTableDisplay exercises={exercises} />
   </div>
@@ -245,12 +245,12 @@ const SessionMetaBar = ({ sess, therapistId, therapistName }) => {
   if (!sess.serviceType && !tName && !tId) return null
   return (
     <div style={{
-      display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14,
-      padding: '10px 14px', background: T.bg, borderRadius: 10,
+      display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10,
+      padding: '8px 12px', background: T.bgLight, borderRadius: 8,
       border: `1px solid ${T.border}`, alignItems: 'center',
     }}>
-      {sess.serviceType && <Chip label={`📋 ${sess.serviceType}`} color={T.primary} bg={T.accentLight} />}
-      {tName && <Chip label={`👤 ${tName}`} color={T.primary} bg="#f0f7ff" />}
+      {sess.serviceType && <Chip label={`📋 ${sess.serviceType}`} color={T.bgcolor} bg={T.bgLight} />}
+      {tName && <Chip label={`👤 ${tName}`} color={T.bgcolor} bg={T.orangeLight} />}
       {tId && <Chip label={`ID: ${tId}`} color={T.textMid} bg="#f3f4f6" />}
     </div>
   )
@@ -258,7 +258,7 @@ const SessionMetaBar = ({ sess, therapistId, therapistName }) => {
 
 const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) => {
   if (!sessionsList || sessionsList.length === 0) return (
-    <div style={{ padding: '16px', textAlign: 'center', color: T.textLight, fontSize: '0.85rem' }}>No therapy session data found.</div>
+    <div style={{ padding: '12px', textAlign: 'center', color: T.textLight, fontSize: '0.8rem' }}>No therapy session data found.</div>
   )
   return (
     <>
@@ -268,34 +268,31 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
 
         if (serviceType === 'package') {
           return (
-            <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
+            <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
               <div style={{
-                padding: '12px 18px', background: `linear-gradient(135deg, ${T.purple}, #a855f7)`,
-                borderRadius: '12px 12px 0 0', color: T.white, fontWeight: 700, fontSize: '1rem',
+                padding: '8px 14px', background: T.bgcolor,
+                borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                borderBottom: `2px solid ${T.orange}`,
               }}>
                 <span>📦 {sess.packageName || 'Package'}</span>
-                {sess.totalPrice > 0 && <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>₹ {sess.totalPrice}</span>}
+                {sess.totalPrice > 0 && <span style={{ fontSize: '0.75rem', background: T.orange, color: T.bgcolor, borderRadius: 10, padding: '2px 8px' }}>₹ {sess.totalPrice}</span>}
               </div>
-              <div style={{ border: `2px solid #c4b5fd`, borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
+              <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
                 {Array.isArray(sess.programs) && sess.programs.length > 0 && sess.programs.map((prog, pIdx) => (
-                  <div key={pIdx} style={{ marginBottom: pIdx < sess.programs.length - 1 ? 18 : 0 }}>
-                    <div style={{ padding: '9px 14px', background: `linear-gradient(135deg, ${T.primary}, ${T.accent})`, borderRadius: '8px 8px 0 0', color: T.white, fontWeight: 700 }}>
+                  <div key={pIdx} style={{ marginBottom: pIdx < sess.programs.length - 1 ? 14 : 0 }}>
+                    <div style={{ padding: '7px 12px', background: T.bgcolor, borderRadius: '7px 7px 0 0', color: T.white, fontWeight: 700, fontSize: '0.8rem' }}>
                       🎯 {prog.programName || `Program ${pIdx + 1}`}
-                      {prog.totalPrice > 0 && <span style={{ marginLeft: 8, opacity: 0.8, fontSize: '0.8rem' }}>₹ {prog.totalPrice}</span>}
+                      {prog.totalPrice > 0 && <span style={{ marginLeft: 6, background: T.orange, color: T.bgcolor, borderRadius: 8, padding: '1px 7px', fontSize: '0.7rem' }}>₹ {prog.totalPrice}</span>}
                     </div>
-                    <div style={{ border: `1.5px solid ${T.accentMid}`, borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '12px' }}>
+                    <div style={{ border: `1.5px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 7px 7px', padding: '10px' }}>
                       {Array.isArray(prog.therapyData ?? prog.therophyData) && (prog.therapyData ?? prog.therophyData ?? []).map((therapy, tIdx) => (
                         <TherapyBlock key={tIdx} therapyName={therapy.therapyName} exercises={therapy.exercises || []} totalPrice={therapy.totalPrice} />
                       ))}
                     </div>
                   </div>
                 ))}
-                {(!Array.isArray(sess.programs) || sess.programs.length === 0) && Array.isArray(sess.therapyData ?? sess.therophyData) &&
-                  (sess.therapyData ?? sess.therophyData ?? []).map((t, tIdx) => (
-                    <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} totalPrice={t.totalPrice} />
-                  ))}
               </div>
             </div>
           )
@@ -304,16 +301,16 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
         if (serviceType === 'program') {
           const therapies = sess.therapyData ?? sess.therophyData ?? []
           return (
-            <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
-              <div style={{ padding: '12px 18px', background: `linear-gradient(135deg, ${T.primary}, ${T.accent})`, borderRadius: '12px 12px 0 0', color: T.white, fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
+              <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>🎯 {sess.programName || 'Program'}</span>
-                {(sess.totalPrice || sess.totalTherapyPrice) > 0 && <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>₹ {sess.totalPrice || sess.totalTherapyPrice}</span>}
+                {(sess.totalPrice || sess.totalTherapyPrice) > 0 && <span style={{ fontSize: '0.75rem', background: T.orange, color: T.bgcolor, borderRadius: 10, padding: '2px 8px' }}>₹ {sess.totalPrice || sess.totalTherapyPrice}</span>}
               </div>
-              <div style={{ border: `2px solid ${T.accentMid}`, borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
+              <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
                 {Array.isArray(therapies) && therapies.length > 0
                   ? therapies.map((t, tIdx) => <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} totalPrice={t.totalPrice} />)
-                  : <div style={{ color: T.textLight, fontSize: '0.82rem', fontStyle: 'italic', padding: '8px' }}>No therapies found.</div>}
+                  : <div style={{ color: T.textLight, fontSize: '0.78rem', fontStyle: 'italic', padding: '6px' }}>No therapies found.</div>}
               </div>
             </div>
           )
@@ -321,16 +318,16 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
 
         if (serviceType === 'therapy') {
           return (
-            <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
-              <div style={{ padding: '12px 18px', background: `linear-gradient(135deg, #5b21b6, ${T.purple})`, borderRadius: '12px 12px 0 0', color: T.white, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
+              <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>💊 {sess.therapyName || 'Therapy Session'}</span>
-                {sess.totalPrice > 0 && <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>₹ {sess.totalPrice}</span>}
+                {sess.totalPrice > 0 && <span style={{ fontSize: '0.75rem', background: T.orange, color: T.bgcolor, borderRadius: 10, padding: '2px 8px' }}>₹ {sess.totalPrice}</span>}
               </div>
-              <div style={{ border: '2px solid #c4b5fd', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
+              <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
                 {Array.isArray(sess.exercises) && sess.exercises.length > 0
-                  ? <div style={{ border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden' }}><ExerciseTableDisplay exercises={sess.exercises} /></div>
-                  : <div style={{ color: T.textLight, fontSize: '0.82rem', fontStyle: 'italic', padding: '8px' }}>No exercises found.</div>}
+                  ? <div style={{ border: `1px solid ${T.border}`, borderRadius: 7, overflow: 'hidden' }}><ExerciseTableDisplay exercises={sess.exercises} /></div>
+                  : <div style={{ color: T.textLight, fontSize: '0.78rem', fontStyle: 'italic', padding: '6px' }}>No exercises found.</div>}
               </div>
             </div>
           )
@@ -338,12 +335,12 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
 
         if (serviceType === 'exercise') {
           return (
-            <div key={si} style={{ marginBottom: isLast ? 0 : 28 }}>
-              <div style={{ padding: '12px 18px', background: 'linear-gradient(135deg,#065f46,#10b981)', borderRadius: '12px 12px 0 0', color: T.white, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
+              <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>🏋️ Exercise Session</span>
-                {sess.totalPrice > 0 && <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>₹ {sess.totalPrice}</span>}
+                {sess.totalPrice > 0 && <span style={{ fontSize: '0.75rem', background: T.orange, color: T.bgcolor, borderRadius: 10, padding: '2px 8px' }}>₹ {sess.totalPrice}</span>}
               </div>
-              <div style={{ border: '2px solid #6ee7b7', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
+              <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
                 <ExerciseTableDisplay exercises={sess.exercises || []} />
               </div>
@@ -352,7 +349,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
         }
 
         return (
-          <div key={si} style={{ marginBottom: isLast ? 0 : 24 }}>
+          <div key={si} style={{ marginBottom: isLast ? 0 : 18 }}>
             <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
             {Array.isArray(sess.therapyData) && sess.therapyData.map((t, tIdx) => (
               <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} totalPrice={t.totalPrice} />
@@ -377,8 +374,7 @@ const QuestionnaireSection = ({ therapyGroups }) => {
 
   return (
     <Section icon="📝" title="Therapy Questionnaire" badge={`${validGroups.length} categories`}>
-      {/* Category tabs */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
         {validGroups.map(({ category, questions: qs }, idx) => {
           const vqs = qs.filter(q => isValid(q.question))
           const ans = vqs.filter(q => isValid(q.answer) && q.answer.toLowerCase() !== 'undefined').length
@@ -388,49 +384,48 @@ const QuestionnaireSection = ({ therapyGroups }) => {
               key={category}
               onClick={() => setActiveTab(idx)}
               style={{
-                border: `2px solid ${isActive ? T.accent : T.border}`,
-                borderRadius: 12, padding: '7px 16px', cursor: 'pointer',
-                background: isActive ? T.accent : T.white,
+                border: `2px solid ${isActive ? T.orange : T.border}`,
+                borderRadius: 10, padding: '5px 12px', cursor: 'pointer',
+                background: isActive ? T.bgcolor : T.white,
                 color: isActive ? T.white : T.textMid,
-                fontWeight: 700, fontSize: 12, transition: 'all 0.2s',
-                display: 'flex', alignItems: 'center', gap: 8,
+                fontWeight: 700, fontSize: 11, transition: 'all 0.2s',
+                display: 'flex', alignItems: 'center', gap: 6,
                 textTransform: 'capitalize',
               }}
             >
               {category}
               <span style={{
-                background: isActive ? 'rgba(255,255,255,0.3)' : T.accentLight,
-                color: isActive ? T.white : T.accent,
-                borderRadius: 10, padding: '1px 7px', fontSize: 10, fontWeight: 800,
+                background: isActive ? T.orange : T.bgLight,
+                color: T.bgcolor,
+                borderRadius: 10, padding: '1px 6px', fontSize: 10, fontWeight: 800,
               }}>{ans}/{vqs.length}</span>
             </button>
           )
         })}
       </div>
 
-      {/* Questions */}
-      <div style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${T.border}` }}>
+      <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${T.border}` }}>
         {validQs.map((q, idx) => {
           const hasAns = isValid(q.answer) && q.answer.toLowerCase() !== 'undefined'
           return (
             <div
               key={q.questionId ?? idx}
               style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16,
-                padding: '12px 18px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14,
+                padding: '9px 14px',
                 borderBottom: idx < validQs.length - 1 ? `1px solid ${T.borderLight}` : 'none',
-                background: idx % 2 === 0 ? T.bg : T.white,
+                background: idx % 2 === 0 ? T.bgLight : T.white,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flex: 1 }}>
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  minWidth: 22, height: 22, borderRadius: '50%',
-                  background: hasAns ? T.accent : T.border,
+                  minWidth: 20, height: 20, borderRadius: '50%',
+                  background: hasAns ? T.bgcolor : T.border,
                   color: hasAns ? T.white : T.textLight,
-                  fontSize: 10, fontWeight: 800, flexShrink: 0, marginTop: 1,
+                  fontSize: 9, fontWeight: 800, flexShrink: 0, marginTop: 1,
                 }}>{idx + 1}</span>
-                <span style={{ fontSize: 13, color: T.text, fontWeight: 500, lineHeight: 1.5 }}>
+                <span style={{ fontSize: 12, color: T.text, fontWeight: 500, lineHeight: 1.4 }}>
                   {q.question || `Question ${q.questionId}`}
                 </span>
               </div>
@@ -660,35 +655,65 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     isValid(allergies) || isValid(occupation) || isValid(insuranceProvider) ||
     isValid(effectivePain) || activityLevels.length > 0
 
-  return (
-    <div style={{ background: T.bg, minHeight: '100vh', paddingBottom: 100, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+  // Format display name clearly
+  const displayName = patientName ? capitalizeEachWord(patientName) : ''
+  const displayAge = patientAge ? `${patientAge}yr` : ''
+  const displaySex = patientSex ? patientSex.charAt(0).toUpperCase() : ''
+  const patientTag = [displayName, [displayAge, displaySex].filter(Boolean).join(' ')].filter(Boolean).join(' · ')
 
-      {/* Header */}
+  return (
+    <div style={{ background: T.bgLight, minHeight: '100vh', paddingBottom: 100, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+
+      {/* ── Page Header ── */}
       <div style={{
-        background: T.headerBg, padding: '16px 28px',
+        background: T.bgcolor,
+        padding: '8px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)', marginBottom: 24,
-        borderBottom: '1px solid rgba(255,255,255,0.3)',
+        boxShadow: '0 2px 12px rgba(27,79,138,0.18)',
+        marginBottom: 16,
+        borderBottom: `2px solid ${T.orange}`,
+        minHeight: 48,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>📋</div>
+        {/* Left: icon + title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 30, height: 30, borderRadius: 8,
+            background: 'rgba(249,197,113,0.18)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+            border: '1px solid rgba(249,197,113,0.3)',
+          }}>📋</div>
           <div>
-            <div style={{ fontSize: 11, color: T.text, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>Review Before Saving</div>
-            <div style={{ color: T.primary, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Physiotherapy Summary</div>
+            <div style={{ fontSize: 9, color: T.orange, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', lineHeight: 1.2 }}>Review Before Saving</div>
+            <div style={{ color: T.white, fontSize: 13, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.3 }}>Physiotherapy Summary</div>
           </div>
         </div>
+
+        {/* Right: patient pill + status */}
         {patientName && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ background: T.white, borderRadius: 24, padding: '7px 18px', color: T.text, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
-              {capitalizeEachWord(patientName)} · {patientAge}yr {patientSex?.charAt(0)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              background: T.white,
+              borderRadius: 20,
+              padding: '4px 14px',
+              display: 'flex', alignItems: 'center', gap: 7,
+              boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
+              maxWidth: 320,
+            }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: T.orange, flexShrink: 0 }} />
+              <span style={{
+                color: T.bgcolor, fontSize: 12, fontWeight: 700,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                maxWidth: 260,
+              }}>
+                {patientTag}
+              </span>
             </div>
             <StatusDot status={overallStatus || patientData?.status || 'Pending'} />
           </div>
         )}
       </div>
 
-      <CContainer fluid style={{ maxWidth: 1100, padding: '0 20px' }}>
+      <CContainer fluid style={{ maxWidth: 1100, padding: '0 16px' }}>
 
         {/* 1. Patient Info */}
         <Section icon="👤" title="Patient & Booking Information">
@@ -708,7 +733,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           </Grid>
         </Section>
 
-        {/* 2. Complaints — only if data exists */}
+        {/* 2. Complaints */}
         {isValid(complaintDetails) && (
           <Section icon="🩺" title="Complaints & Symptoms">
             <Grid cols={2}>
@@ -718,29 +743,29 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               {reportImages.length > 0 && <Row label="Report Images" value={`${reportImages.length} image(s)`} />}
             </Grid>
             {parts.length > 0 && (
-              <div style={{ marginTop: 10 }}>
-                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Affected Parts: </span>
-                {parts.map(p => <Chip key={p} label={p} color="#5b21b6" bg="#ede9fe" />)}
+              <div style={{ marginTop: 8 }}>
+                <span style={{ fontWeight: 700, fontSize: '0.72rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Affected Parts: </span>
+                {parts.map(p => <Chip key={p} label={p} color={T.bgcolor} bg={T.bgLight} />)}
               </div>
             )}
             {toImageSrc(partImage) && (
-              <div style={{ marginTop: 16 }}>
-                <div style={{ fontWeight: 700, fontSize: '0.8rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Body Part Diagram</div>
-                <div style={{ background: T.accentLight + '55', borderRadius: 10, overflow: 'hidden', display: 'flex', justifyContent: 'center', border: `1px solid ${T.border}`, padding: 8, maxWidth: 360 }}>
-                  <img src={toImageSrc(partImage)} alt="Body Part Diagram" style={{ maxHeight: 220, maxWidth: '100%', objectFit: 'contain', display: 'block', borderRadius: 8 }} />
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.72rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Body Part Diagram</div>
+                <div style={{ background: T.bgLight, borderRadius: 8, overflow: 'hidden', display: 'flex', justifyContent: 'center', border: `1px solid ${T.border}`, padding: 6, maxWidth: 320 }}>
+                  <img src={toImageSrc(partImage)} alt="Body Part Diagram" style={{ maxHeight: 180, maxWidth: '100%', objectFit: 'contain', display: 'block', borderRadius: 6 }} />
                 </div>
               </div>
             )}
             {attachments.length > 0 && (
-              <div style={{ marginTop: 14 }}>
-                <div style={{ fontWeight: 700, fontSize: '0.8rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Attachments</div>
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.72rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Attachments</div>
                 <FileUploader attachments={attachments} accept=".pdf,image/*" />
               </div>
             )}
           </Section>
         )}
 
-        {/* 3. Patient Background — only if any data */}
+        {/* 3. Patient Background */}
         {hasBackgroundData && (
           <Section icon="📋" title="Patient Background">
             <Grid cols={3}>
@@ -752,26 +777,26 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               {isValid(effectivePain) && <Row label="Pain Type" value={PAIN_LABEL_MAP[effectivePain] || effectivePain} highlight />}
             </Grid>
             {activityLevels.length > 0 && (
-              <div style={{ marginTop: 8 }}>
-                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Activity Levels: </span>
-                {activityLevels.map(lvl => <Chip key={lvl} label={lvl} color="#5b21b6" bg="#ede9fe" />)}
+              <div style={{ marginTop: 6 }}>
+                <span style={{ fontWeight: 700, fontSize: '0.72rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Activity Levels: </span>
+                {activityLevels.map(lvl => <Chip key={lvl} label={lvl} color={T.bgcolor} bg={T.bgLight} />)}
               </div>
             )}
           </Section>
         )}
 
-        {/* 4. Therapy Questionnaire — only if data exists */}
+        {/* 4. Therapy Questionnaire */}
         <QuestionnaireSection therapyGroups={therapyGroups} />
 
-        {/* 5. Investigation — only if has data */}
+        {/* 5. Investigation */}
         {(investigationTestsArray.length > 0 || isValid(investigationReason)) && (
           <Section icon="🔬" title="Investigation">
             {investigationTestsArray.length > 0 && (
-              <div style={{ marginBottom: investigationReason ? 14 : 0 }}>
-                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recommended Tests:</span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+              <div style={{ marginBottom: investigationReason ? 10 : 0 }}>
+                <span style={{ fontWeight: 700, fontSize: '0.72rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recommended Tests:</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 6 }}>
                   {investigationTestsArray.map((test, i) => (
-                    <span key={i} style={{ background: T.tealLight, color: T.teal, borderRadius: 20, padding: '4px 14px', fontSize: '0.82rem', fontWeight: 700, border: `1px solid #5eead4`, display: 'inline-flex', alignItems: 'center', gap: 6 }}>🔬 {test}</span>
+                    <span key={i} style={{ background: T.tealLight, color: T.teal, borderRadius: 20, padding: '3px 12px', fontSize: '0.75rem', fontWeight: 700, border: `1px solid #5eead4`, display: 'inline-flex', alignItems: 'center', gap: 5 }}>🔬 {test}</span>
                   ))}
                 </div>
               </div>
@@ -780,11 +805,11 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           </Section>
         )}
 
-        {/* 6. Assessment — only if has data */}
+        {/* 6. Assessment */}
         {hasAssessmentData && (
           <Section icon="📊" title="Assessment">
-            <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ fontWeight: 700, fontSize: '0.82rem', color: T.accent, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>📋 Subjective Assessment</div>
+            <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.bgcolor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>📋 Subjective Assessment</div>
               <Grid cols={2}>
                 {isValid(assessment.chiefComplaint) && <Row label="Chief Complaint" value={assessment.chiefComplaint} highlight />}
                 {isValid(assessment.painScale) && <Row label="Pain Scale" value={assessment.painScale} highlight />}
@@ -798,13 +823,13 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             </div>
 
             {(difficultiesIn.length > 0 || isValid(otherDifficulty) || isValid(dailyLivingAffected)) && (
-              <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${T.border}` }}>
-                <div style={{ fontWeight: 700, fontSize: '0.82rem', color: T.teal, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>🏃 Functional Assessment</div>
+              <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${T.border}` }}>
+                <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.teal, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🏃 Functional Assessment</div>
                 {difficultiesIn.length > 0 && (
-                  <div style={{ marginBottom: 10 }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.8rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Difficulties in: </span>
-                    {difficultiesIn.map(d => <Chip key={d} label={d} color={T.accent} bg={T.accentLight} />)}
-                    {isValid(otherDifficulty) && <Chip label={`Other: ${otherDifficulty}`} color={T.accent} bg={T.accentLight} />}
+                  <div style={{ marginBottom: 8 }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.72rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Difficulties in: </span>
+                    {difficultiesIn.map(d => <Chip key={d} label={d} color={T.bgcolor} bg={T.bgLight} />)}
+                    {isValid(otherDifficulty) && <Chip label={`Other: ${otherDifficulty}`} color={T.bgcolor} bg={T.bgLight} />}
                   </div>
                 )}
                 {isValid(dailyLivingAffected) && <Row label="Daily Living Affected" value={dailyLivingAffected} full highlight />}
@@ -812,19 +837,19 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             )}
 
             {(postureAssessment.length > 0 || romStatus.length > 0 || muscleStrength.length > 0 || neurologicalSigns.length > 0) && (
-              <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${T.border}` }}>
-                <div style={{ fontWeight: 700, fontSize: '0.82rem', color: T.purple, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>🔬 Physical Examination</div>
-                <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.purple, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🔬 Physical Examination</div>
+                <div style={{ background: T.bgLight, border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden' }}>
                   {[
                     { label: 'Posture Assessment', opts: ['Normal', 'Deviations'], sel: postureAssessment, note: postureDeviations },
                     { label: 'Range of Motion', opts: ['Normal', 'Restricted'], sel: romStatus, note: romRestricted },
                     { label: 'Muscle Strength', opts: ['Normal', 'Weakness in'], sel: muscleStrength, note: muscleWeakness },
                     { label: 'Neurological Signs', opts: ['Normal', 'Balance', 'Coordination', 'Sensation issues'], sel: neurologicalSigns, note: '' },
                   ].map((row, ri, arr) => (
-                    <div key={ri} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: ri < arr.length - 1 ? `1px solid ${T.border}` : 'none', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.82rem', color: T.text, minWidth: 160 }}>{row.label}:</span>
+                    <div key={ri} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderBottom: ri < arr.length - 1 ? `1px solid ${T.border}` : 'none', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.75rem', color: T.text, minWidth: 140 }}>{row.label}:</span>
                       {row.opts.map(opt => <CheckChip key={opt} label={opt} checked={row.sel.includes(opt)} />)}
-                      {isValid(row.note) && <span style={{ fontSize: '0.82rem', color: T.textMid, fontStyle: 'italic' }}>— {row.note}</span>}
+                      {isValid(row.note) && <span style={{ fontSize: '0.75rem', color: T.textMid, fontStyle: 'italic' }}>— {row.note}</span>}
                     </div>
                   ))}
                 </div>
@@ -832,8 +857,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             )}
 
             {effectivePain === 'chronicPain' && (isValid(painTriggers) || isValid(chronicRelieving)) && (
-              <div style={{ marginBottom: 16, background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 10, padding: '14px 18px' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.82rem', color: T.rose, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>🔴 Chronic Pain Assessment</div>
+              <div style={{ marginBottom: 12, background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 8, padding: '10px 14px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.rose, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🔴 Chronic Pain Assessment</div>
                 <Grid cols={2}>
                   {isValid(painTriggers) && <Row label="Pain Triggers" value={painTriggers} highlight />}
                   {isValid(chronicRelieving) && <Row label="Relieving Factors" value={chronicRelieving} highlight />}
@@ -841,8 +866,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               </div>
             )}
             {effectivePain === 'sportsRehab' && (isValid(typeOfSport) || isValid(recurringInjuries) || isValid(returnToSportGoals)) && (
-              <div style={{ marginBottom: 16, background: '#f0fff4', border: '1.5px solid #6ee7b7', borderRadius: 10, padding: '14px 18px' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.82rem', color: T.green, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>🟢 Sports Rehab Assessment</div>
+              <div style={{ marginBottom: 12, background: '#f0fff4', border: '1.5px solid #6ee7b7', borderRadius: 8, padding: '10px 14px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.green, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🟢 Sports Rehab Assessment</div>
                 <Grid cols={2}>
                   {isValid(typeOfSport) && <Row label="Type of Sport" value={typeOfSport} highlight />}
                   {isValid(recurringInjuries) && <Row label="Recurring Injuries" value={recurringInjuries} highlight />}
@@ -851,8 +876,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               </div>
             )}
             {effectivePain === 'neuroRehab' && (isValid(neuroDiagnosis) || isValid(neuroOnset) || isValid(mobilityStatus) || isValid(cognitiveStatus)) && (
-              <div style={{ marginBottom: 16, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 10, padding: '14px 18px' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.82rem', color: T.purple, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>🟣 Neuro Rehab Assessment</div>
+              <div style={{ marginBottom: 12, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 8, padding: '10px 14px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.purple, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🟣 Neuro Rehab Assessment</div>
                 <Grid cols={2}>
                   {isValid(neuroDiagnosis) && <Row label="Diagnosis" value={neuroDiagnosis} highlight />}
                   {isValid(neuroOnset) && <Row label="Onset" value={neuroOnset} highlight />}
@@ -884,12 +909,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                     const [tBg, tFg] = stagColor[d.stage] || ['#f3f4f6', '#374151']
                     return (
                       <tr key={i}>
-                        <td style={{ ...tdStyle(i), fontWeight: 700, color: T.accent }}>{i + 1}</td>
+                        <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
                         <td style={{ ...tdStyle(i), fontWeight: 600 }}>{d.physioDiagnosis || '—'}</td>
                         <td style={tdStyle(i)}>{d.affectedArea || '—'}</td>
-                        <td style={tdStyle(i)}>{d.severity ? <span style={{ background: sBg, color: sFg, borderRadius: 20, padding: '2px 10px', fontWeight: 700, fontSize: '0.78rem' }}>{d.severity}</span> : '—'}</td>
-                        <td style={tdStyle(i)}>{d.stage ? <span style={{ background: tBg, color: tFg, borderRadius: 20, padding: '2px 10px', fontWeight: 700, fontSize: '0.78rem' }}>{d.stage}</span> : '—'}</td>
-                        <td style={{ ...tdStyle(i), maxWidth: 200, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{d.notes || '—'}</td>
+                        <td style={tdStyle(i)}>{d.severity ? <span style={{ background: sBg, color: sFg, borderRadius: 20, padding: '2px 8px', fontWeight: 700, fontSize: '0.7rem' }}>{d.severity}</span> : '—'}</td>
+                        <td style={tdStyle(i)}>{d.stage ? <span style={{ background: tBg, color: tFg, borderRadius: 20, padding: '2px 8px', fontWeight: 700, fontSize: '0.7rem' }}>{d.stage}</span> : '—'}</td>
+                        <td style={{ ...tdStyle(i), maxWidth: 180, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{d.notes || '—'}</td>
                       </tr>
                     )
                   })}
@@ -899,7 +924,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           </Section>
         )}
 
-        {/* 8. Treatment Plan — only if therapist info present */}
+        {/* 8. Treatment Plan */}
         {(isValid(treatmentPlanDisplay.therapistId) || isValid(treatmentPlanDisplay.therapistName)) && (
           <Section icon="🧑‍⚕️" title="Treatment Plan">
             <Grid cols={2}>
@@ -914,19 +939,19 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         {/* 9. Therapy Sessions */}
         <Section icon="🏥" title="Therapy Sessions" badge={sessionsList.length ? `${sessionsList.length} session(s)` : null}>
           {isValid(overallStatus) && (
-            <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontWeight: 700, fontSize: '0.8rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Overall Status:</span>
+            <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontWeight: 700, fontSize: '0.72rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Overall Status:</span>
               <StatusDot status={overallStatus} />
             </div>
           )}
           <TherapySessionsDisplay sessionsList={sessionsList} therapistId={topTherapistId} therapistName={topTherapistName} />
         </Section>
 
-        {/* 10. Exercise Plan — only if has data */}
+        {/* 10. Exercise Plan */}
         {(homeExercises.length > 0 || isValid(homeAdvice)) && (
           <Section icon="🏋️" title="Exercise Plan">
             {homeExercises.length > 0 && (
-              <div style={{ overflowX: 'auto', marginBottom: isValid(homeAdvice) ? 16 : 0 }}>
+              <div style={{ overflowX: 'auto', marginBottom: isValid(homeAdvice) ? 12 : 0 }}>
                 <table style={tableStyle}>
                   <thead>
                     <tr>{['#', 'Exercise', 'Sets', 'Reps', 'Frequency', 'Instructions'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
@@ -936,10 +961,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                       <tr key={i}>
                         <td style={{ ...tdStyle(i), fontWeight: 700 }}>{i + 1}</td>
                         <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.name || '—'}</td>
-                        <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.accent} bg={T.accentLight} /> : '—'}</td>
+                        <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
                         <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.reps ? <Chip label={`🔄 ${ex.reps}`} color={T.teal} bg={T.tealLight} /> : '—'}</td>
-                        <td style={tdStyle(i)}>{ex.frequency ? <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>📆 {ex.frequency}</span> : '—'}</td>
-                        <td style={{ ...tdStyle(i), maxWidth: 260 }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>{ex.instructions || '—'}</div></td>
+                        <td style={tdStyle(i)}>{ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600 }}>📆 {ex.frequency}</span> : '—'}</td>
+                        <td style={{ ...tdStyle(i), maxWidth: 220 }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>{ex.instructions || '—'}</div></td>
                       </tr>
                     ))}
                   </tbody>
@@ -950,7 +975,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           </Section>
         )}
 
-        {/* 11. Follow Up — only if has data */}
+        {/* 11. Follow Up */}
         {(isValid(followUpEntry.nextVisitDate) || isValid(followUpEntry.reviewNotes)) && (
           <Section icon="📅" title="Follow Up">
             <Grid cols={2}>
@@ -960,15 +985,15 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             {isValid(followUpEntry.nextVisitDate) && (() => {
               const urgency = getVisitUrgency(followUpEntry.nextVisitDate)
               return urgency ? (
-                <div style={{ marginTop: 8 }}>
-                  <span style={{ background: urgency.bg, color: urgency.color, border: `1px solid ${urgency.border}`, borderRadius: 12, padding: '3px 12px', fontSize: '0.78rem', fontWeight: 700 }}>{urgency.icon} {urgency.label}</span>
+                <div style={{ marginTop: 6 }}>
+                  <span style={{ background: urgency.bg, color: urgency.color, border: `1px solid ${urgency.border}`, borderRadius: 10, padding: '2px 10px', fontSize: '0.72rem', fontWeight: 700 }}>{urgency.icon} {urgency.label}</span>
                 </div>
               ) : null
             })()}
           </Section>
         )}
 
-        {/* 12. Treatment Templates — only if has data */}
+        {/* 12. Treatment Templates */}
         {treatmentTemplates.length > 0 && (
           <Section icon="📁" title="Treatment Templates">
             <div style={{ overflowX: 'auto' }}>
@@ -981,7 +1006,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                     <tr key={i}>
                       <td style={{ ...tdStyle(i), fontWeight: 700 }}>{i + 1}</td>
                       <td style={{ ...tdStyle(i), fontWeight: 600 }}>{t.condition || '—'}</td>
-                      <td style={tdStyle(i)}>{Array.isArray(t.modalities) && t.modalities.length ? t.modalities.map(m => <Chip key={m} label={m} color={T.accent} bg={T.accentLight} />) : '—'}</td>
+                      <td style={tdStyle(i)}>{Array.isArray(t.modalities) && t.modalities.length ? t.modalities.map(m => <Chip key={m} label={m} color={T.bgcolor} bg={T.bgLight} />) : '—'}</td>
                       <td style={tdStyle(i)}>{t.manualTherapy || '—'}</td>
                       <td style={tdStyle(i)}>{Array.isArray(t.exercises) && t.exercises.length ? t.exercises.map(e => <Chip key={e} label={e} color={T.green} bg={T.greenLight} />) : '—'}</td>
                       <td style={{ ...tdStyle(i), whiteSpace: 'nowrap' }}>{t.duration || '—'}</td>
@@ -996,45 +1021,52 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
       </CContainer>
 
-      {/* Sticky bottom */}
+      {/* ── Sticky Bottom Bar ── */}
       <div style={{
         position: 'fixed', bottom: 0, left: sidebarWidth ? `${sidebarWidth}px` : 0,
         width: sidebarWidth ? `calc(100vw - ${sidebarWidth}px)` : '100vw',
-        background: T.headerBg,
+        background: '#FFFFFF',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 28px', zIndex: 999, boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
+        padding: '8px 24px', zIndex: 999,
+        boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
+        borderTop: '2px solid #1B4F8A',
       }}>
-        <Button customColor={T.white} color={T.primary}
-          style={{ borderRadius: '20px', fontWeight: 700, padding: '7px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+        <Button
+          customColor="#1B4F8A" color="#FFFFFF"
+          style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
           onClick={() => { setClickedSaveTemplate(true); onSaveTemplate?.(); info('Template saved!', { title: 'Template' }) }}>
           {!updateTemplate ? '💾 Save as Template' : '🔄 Update Template'}
         </Button>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          {saving && <CSpinner size="sm" style={{ color: T.primary }} />}
-          <Button customColor={T.white} color={T.primary}
-            style={{ borderRadius: '20px', fontWeight: 700, padding: '7px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
-            onClick={() => { setPendingAction(ACTIONS.SAVE); clickedSaveTemplate ? doSave() : setShowTemplateModal(true) }} disabled={saving}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {saving && <CSpinner size="sm" style={{ color: '#1B4F8A' }} />}
+          <Button
+            customColor="#1B4F8A" color="#FFFFFF"
+            style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
+            onClick={() => { setPendingAction(ACTIONS.SAVE); clickedSaveTemplate ? doSave() : setShowTemplateModal(true) }}
+            disabled={saving}>
             ✅ Save
           </Button>
-          <Button customColor={T.white} color={T.primary}
-            style={{ borderRadius: '20px', fontWeight: 700, padding: '7px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
-            onClick={() => { setPendingAction(ACTIONS.SAVE_PRINT); clickedSaveTemplate ? doSave({ downloadAfter: true }) : setShowTemplateModal(true) }} disabled={saving}>
+          <Button
+            customColor="#1B4F8A" color="#FFFFFF"
+            style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
+            onClick={() => { setPendingAction(ACTIONS.SAVE_PRINT); clickedSaveTemplate ? doSave({ downloadAfter: true }) : setShowTemplateModal(true) }}
+            disabled={saving}>
             📄 Save & Download PDF
           </Button>
         </div>
       </div>
 
-      {/* Template modal */}
+      {/* ── Template modal ── */}
       {showTemplateModal && !clickedSaveTemplate && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: T.white, borderRadius: 20, padding: '32px 36px', maxWidth: 420, width: '90%', boxShadow: '0 24px 64px rgba(0,0,0,0.2)', border: `1px solid ${T.border}`, position: 'relative' }}>
-            <button onClick={() => setShowTemplateModal(false)} style={{ position: 'absolute', top: 14, right: 18, background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: T.textLight, lineHeight: 1 }}>✕</button>
-            <div style={{ fontSize: 36, marginBottom: 14, textAlign: 'center' }}>📋</div>
-            <h6 style={{ margin: '0 0 8px', color: T.text, fontWeight: 800, textAlign: 'center', fontSize: 18 }}>Save as Template?</h6>
-            <p style={{ color: T.textMid, fontSize: '0.88rem', textAlign: 'center', marginBottom: 24, lineHeight: 1.6 }}>Reuse this layout for faster entry next time.</p>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-              <button onClick={skipTemplate} style={{ padding: '10px 24px', borderRadius: 10, cursor: 'pointer', border: `1.5px solid ${T.border}`, background: T.bg, color: T.text, fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit' }}>No, just save</button>
-              <button onClick={confirmSaveAsTemplate} style={{ padding: '10px 24px', borderRadius: 10, cursor: 'pointer', border: 'none', background: `linear-gradient(135deg, ${T.primary}, ${T.accent})`, color: T.white, fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit' }}>Yes, save template</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(27,79,138,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: T.white, borderRadius: 16, padding: '24px 28px', maxWidth: 400, width: '90%', boxShadow: '0 24px 64px rgba(27,79,138,0.25)', border: `2px solid ${T.orange}`, position: 'relative' }}>
+            <button onClick={() => setShowTemplateModal(false)} style={{ position: 'absolute', top: 12, right: 14, background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: T.textLight, lineHeight: 1 }}>✕</button>
+            <div style={{ fontSize: 30, marginBottom: 10, textAlign: 'center' }}>📋</div>
+            <h6 style={{ margin: '0 0 6px', color: T.bgcolor, fontWeight: 800, textAlign: 'center', fontSize: 16 }}>Save as Template?</h6>
+            <p style={{ color: T.textMid, fontSize: '0.82rem', textAlign: 'center', marginBottom: 20, lineHeight: 1.5 }}>Reuse this layout for faster entry next time.</p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button onClick={skipTemplate} style={{ padding: '8px 20px', borderRadius: 8, cursor: 'pointer', border: `1.5px solid ${T.border}`, background: T.bgLight, color: T.text, fontWeight: 600, fontSize: '0.82rem', fontFamily: 'inherit' }}>No, just save</button>
+              <button onClick={confirmSaveAsTemplate} style={{ padding: '8px 20px', borderRadius: 8, cursor: 'pointer', border: 'none', background: T.bgcolor, color: T.white, fontWeight: 700, fontSize: '0.82rem', fontFamily: 'inherit', boxShadow: `0 2px 8px rgba(249,197,113,0.3)`, outline: `2px solid ${T.orange}`, outlineOffset: 2 }}>Yes, save template</button>
             </div>
           </div>
         </div>

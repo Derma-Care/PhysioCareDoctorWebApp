@@ -33,7 +33,7 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Help Centre',
+    name: 'Help Center',
     to: '/helpCentre',
     icon: <CIcon icon={cilCommentSquare} customClassName="nav-icon" style={{ color: COLORS.white }} />,
     style: { color: COLORS.white },

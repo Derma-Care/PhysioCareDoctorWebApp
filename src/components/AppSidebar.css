@@ -52,7 +52,7 @@
 
 .sidebar-header div[style*="textAlign"] h6 strong,
 .sidebar-header .w-100.px-2 h6 strong {
-  color: #f9c571 !important;
+  color: #fff !important;
   font-weight: 600;
 }
 
@@ -64,7 +64,7 @@
 
 /* ── Vitals section header inside sidebar ───────────────────────────────── */
 .sidebar-header .w-100.px-2 > h4 {
-  color: #f9c571 !important;
+  color: #fff !important;
   font-size: 0.82rem !important;
   font-weight: 700 !important;
   text-transform: uppercase;

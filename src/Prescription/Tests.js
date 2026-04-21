@@ -20,33 +20,34 @@ const ONSET_OPTIONS = [
 ]
 const PATIENT_PAIN_OPTIONS = [
   { label: 'Select patient pain type...', value: '' },
-  { label: 'Chronic Pain', value: 'chronicPain' },
-  { label: 'Sports Rehab', value: 'sportsRehab' },
-  { label: 'Neuro Rehab', value: 'neuroRehab' },
+  { label: 'Chronic Pain',  value: 'chronicPain' },
+  { label: 'Sports Rehab',  value: 'sportsRehab' },
+  { label: 'Neuro Rehab',   value: 'neuroRehab' },
 ]
 const FUNCTIONAL_DIFFICULTIES = [
   'Walking', 'Climbing stairs', 'Sitting/Standing', 'Lifting/Carrying', 'Sports/Training',
 ]
-const POSTURE_OPTIONS = ['Normal', 'Deviations']
-const ROM_OPTIONS = ['Normal', 'Restricted']
+const POSTURE_OPTIONS  = ['Normal', 'Deviations']
+const ROM_OPTIONS      = ['Normal', 'Restricted']
 const STRENGTH_OPTIONS = ['Normal', 'Weakness in']
-const NEURO_OPTIONS = ['Normal', 'Balance', 'Coordination', 'Sensation issues']
+const NEURO_OPTIONS    = ['Normal', 'Balance', 'Coordination', 'Sensation issues']
 
 /* ─── Styles ─────────────────────────────────────────────────────────────── */
 const inputStyle = {
   border: '1.5px solid #b6cfe8', borderRadius: 7, fontSize: '0.875rem',
-  color: '#1a3a5c', backgroundColor: '#f5f9ff', padding: '7px 11px',
+  color: '#1a3a5c', backgroundColor: '#FFFFFF', padding: '7px 11px',
   width: '100%', boxSizing: 'border-box', height: 38,
   outline: 'none', fontFamily: 'inherit',
 }
 const labelStyle = {
-  fontWeight: 700, fontSize: '0.82rem', color: '#1a3a5c',
-  marginBottom: 4, display: 'block', letterSpacing: '0.01em',
+  fontWeight: 700, fontSize: '0.82rem', color: '#1B4F8A',
+  marginBottom: 4, display: 'block', letterSpacing: '0.08em',
+  textTransform: 'uppercase',
 }
 const sectionHeaderStyle = {
   display: 'flex', alignItems: 'center', gap: 8,
   marginBottom: 14, marginTop: 8, paddingBottom: 8,
-  borderBottom: '1.5px solid #e3eef8',
+  borderBottom: '1.5px solid #dceeff',
 }
 const checkboxRowStyle = {
   display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
@@ -67,29 +68,40 @@ const Field = ({ label, children }) => (
     {children}
   </div>
 )
+
 const TextInput = ({ value, onChange, placeholder = '' }) => (
   <input value={value} onChange={e => onChange(e.target.value)}
-    placeholder={placeholder} style={inputStyle} />
+    placeholder={placeholder} style={inputStyle}
+    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')} />
 )
+
 const NativeSelect = ({ value, onChange, options }) => (
   <select value={value} onChange={e => onChange(e.target.value)}
-    style={{ ...inputStyle, cursor: 'pointer', appearance: 'auto' }}>
+    style={{ ...inputStyle, cursor: 'pointer', appearance: 'auto' }}
+    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}>
     {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
   </select>
 )
+
 const Textarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
   <textarea value={value} onChange={e => onChange(e.target.value)}
     placeholder={placeholder} rows={rows}
-    style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }} />
+    style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
+    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')} />
 )
-const SectionHeader = ({ icon, title, color = '#1a5fa8' }) => (
+
+const SectionHeader = ({ icon, title, color = '#1B4F8A' }) => (
   <div style={sectionHeaderStyle}>
     <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, flexShrink: 0 }} />
-    <h6 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '0.95rem' }}>
+    <h6 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '0.95rem' }}>
       {icon} {title}
     </h6>
   </div>
 )
+
 const toggleItem = (arr, item) =>
   arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item]
 
@@ -109,47 +121,43 @@ const UnderlineInput = ({ value, onChange, placeholder = '' }) => (
 ═══════════════════════════════════════════════════════════════════════════ */
 const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
-  const [chiefComplaint, setChiefComplaint] = useState(seed.chiefComplaint ?? '')
-  const [painScale, setPainScale] = useState(seed.painScale ?? '')
-  const [painType, setPainType] = useState(seed.painType ?? '')
-  const [durationValue, setDurationValue] = useState('')
-  const [durationUnit, setDurationUnit] = useState('day')
-  const [onset, setOnset] = useState(seed.onset ?? '')
-  const [aggravatingFactors, setAggravatingFactors] = useState(seed.aggravatingFactors ?? '')
-  const [relievingFactors, setRelievingFactors] = useState(seed.relievingFactors ?? '')
-  const [observations, setObservations] = useState(seed.observations ?? '')
-  const [posture, setPosture] = useState(seed.posture ?? '')
-  const [rangeOfMotion, setRangeOfMotion] = useState(seed.rangeOfMotion ?? '')
-  const [specialTests, setSpecialTests] = useState(seed.specialTests ?? '')
-  const [difficultiesIn, setDifficultiesIn] = useState(seed.difficultiesIn ?? [])
-  const [otherDifficulty, setOtherDifficulty] = useState(seed.otherDifficulty ?? '')
-  const [dailyLivingAffected, setDailyLivingAffected] = useState(seed.dailyLivingAffected ?? '')
-  const [postureAssessment, setPostureAssessment] = useState(seed.postureAssessment ?? [])
-  const [postureDeviations, setPostureDeviations] = useState(seed.postureDeviations ?? '')
-  const [romStatus, setRomStatus] = useState(seed.romStatus ?? [])
-  const [romRestricted, setRomRestricted] = useState(seed.romRestricted ?? '')
-  const [romJoints, setRomJoints] = useState(seed.romJoints ?? '')
-  const [muscleStrength, setMuscleStrength] = useState(seed.muscleStrength ?? [])
-  const [muscleWeakness, setMuscleWeakness] = useState(seed.muscleWeakness ?? '')
-  const [neurologicalSigns, setNeurologicalSigns] = useState(seed.neurologicalSigns ?? [])
-
-  // ✅ patientPain local state — only used when NOT from backend
-  const [patientPain, setPatientPain] = useState(seed.patientPain ?? '')
-
-  const [painTriggers, setPainTriggers] = useState(seed.painTriggers ?? '')
-  const [chronicRelieving, setChronicRelieving] = useState(seed.chronicRelieving ?? '')
-  const [typeOfSport, setTypeOfSport] = useState(seed.typeOfSport ?? '')
-  const [recurringInjuries, setRecurringInjuries] = useState(seed.recurringInjuries ?? '')
-  const [returnToSportGoals, setReturnToSportGoals] = useState(seed.returnToSportGoals ?? '')
-  const [neuroDiagnosis, setNeuroDiagnosis] = useState(seed.neuroDiagnosis ?? '')
-  const [neuroOnset, setNeuroOnset] = useState(seed.neuroOnset ?? '')
-  const [mobilityStatus, setMobilityStatus] = useState(seed.mobilityStatus ?? '')
-  const [cognitiveStatus, setCognitiveStatus] = useState(seed.cognitiveStatus ?? '')
-  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
+  const [chiefComplaint,     setChiefComplaint]     = useState(seed.chiefComplaint     ?? '')
+  const [painScale,          setPainScale]           = useState(seed.painScale          ?? '')
+  const [painType,           setPainType]            = useState(seed.painType           ?? '')
+  const [durationValue,      setDurationValue]       = useState('')
+  const [durationUnit,       setDurationUnit]        = useState('day')
+  const [onset,              setOnset]               = useState(seed.onset              ?? '')
+  const [aggravatingFactors, setAggravatingFactors]  = useState(seed.aggravatingFactors ?? '')
+  const [relievingFactors,   setRelievingFactors]    = useState(seed.relievingFactors   ?? '')
+  const [observations,       setObservations]        = useState(seed.observations       ?? '')
+  const [posture,            setPosture]             = useState(seed.posture            ?? '')
+  const [rangeOfMotion,      setRangeOfMotion]       = useState(seed.rangeOfMotion      ?? '')
+  const [specialTests,       setSpecialTests]        = useState(seed.specialTests       ?? '')
+  const [difficultiesIn,     setDifficultiesIn]      = useState(seed.difficultiesIn     ?? [])
+  const [otherDifficulty,    setOtherDifficulty]     = useState(seed.otherDifficulty    ?? '')
+  const [dailyLivingAffected,setDailyLivingAffected] = useState(seed.dailyLivingAffected ?? '')
+  const [postureAssessment,  setPostureAssessment]   = useState(seed.postureAssessment  ?? [])
+  const [postureDeviations,  setPostureDeviations]   = useState(seed.postureDeviations  ?? '')
+  const [romStatus,          setRomStatus]           = useState(seed.romStatus          ?? [])
+  const [romRestricted,      setRomRestricted]       = useState(seed.romRestricted      ?? '')
+  const [romJoints,          setRomJoints]           = useState(seed.romJoints          ?? '')
+  const [muscleStrength,     setMuscleStrength]      = useState(seed.muscleStrength     ?? [])
+  const [muscleWeakness,     setMuscleWeakness]      = useState(seed.muscleWeakness     ?? '')
+  const [neurologicalSigns,  setNeurologicalSigns]   = useState(seed.neurologicalSigns  ?? [])
+  const [patientPain,        setPatientPain]         = useState(seed.patientPain        ?? '')
+  const [painTriggers,       setPainTriggers]        = useState(seed.painTriggers       ?? '')
+  const [chronicRelieving,   setChronicRelieving]    = useState(seed.chronicRelieving   ?? '')
+  const [typeOfSport,        setTypeOfSport]         = useState(seed.typeOfSport        ?? '')
+  const [recurringInjuries,  setRecurringInjuries]   = useState(seed.recurringInjuries  ?? '')
+  const [returnToSportGoals, setReturnToSportGoals]  = useState(seed.returnToSportGoals ?? '')
+  const [neuroDiagnosis,     setNeuroDiagnosis]      = useState(seed.neuroDiagnosis     ?? '')
+  const [neuroOnset,         setNeuroOnset]          = useState(seed.neuroOnset         ?? '')
+  const [mobilityStatus,     setMobilityStatus]      = useState(seed.mobilityStatus     ?? '')
+  const [cognitiveStatus,    setCognitiveStatus]     = useState(seed.cognitiveStatus    ?? '')
+  const [snackbar,           setSnackbar]            = useState({ show: false, message: '', type: '' })
 
   const { patientData } = useDoctorContext()
 
-  /* ── Sync seed changes ── */
   useEffect(() => {
     const s = seed || {}
     if (s.duration) {
@@ -178,7 +186,6 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
     setMuscleStrength(s.muscleStrength ?? [])
     setMuscleWeakness(s.muscleWeakness ?? '')
     setNeurologicalSigns(s.neurologicalSigns ?? [])
-    // ✅ sync patientPain from seed (comes from Complaints tab via backend)
     if (s.patientPain) setPatientPain(s.patientPain)
     setPainTriggers(s.painTriggers ?? '')
     setChronicRelieving(s.chronicRelieving ?? '')
@@ -191,19 +198,13 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
     setCognitiveStatus(s.cognitiveStatus ?? '')
   }, [seed])
 
-  /* ✅ KEY LOGIC:
-     - cameFromBackend = true  → seed.patientPain was set from API in SymptomsDiseases
-       → show read-only badge + auto-expand corresponding fields
-     - cameFromBackend = false → show dropdown for doctor to select manually */
   const cameFromBackend = isValid(seed.patientPain)
-  const effectivePain = cameFromBackend ? seed.patientPain : patientPain
+  const effectivePain   = cameFromBackend ? seed.patientPain : patientPain
 
-  /* ── handleNext ── */
   const handleNext = () => {
     const finalDuration = durationValue && durationUnit
       ? `${durationValue} ${durationUnit}${Number(durationValue) > 1 ? 's' : ''}`
       : ''
-
     const payload = {
       chiefComplaint, painScale, painType,
       duration: finalDuration,
@@ -216,14 +217,14 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       patientPain: effectivePain,
       ...(effectivePain === 'chronicPain' && { painTriggers, chronicRelieving }),
       ...(effectivePain === 'sportsRehab' && { typeOfSport, recurringInjuries, returnToSportGoals }),
-      ...(effectivePain === 'neuroRehab' && { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }),
+      ...(effectivePain === 'neuroRehab'  && { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }),
     }
     onNext?.(payload)
   }
 
   /* ═══════════ RENDER ═══════════ */
   return (
-    <div className="tests-wrapper pb-5" style={{ paddingBottom: '90px' }}>
+    <div className="tests-wrapper pb-5" style={{ paddingBottom: '90px', backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
 
       {snackbar.show && (
         <CAlert color={snackbar.type === 'error' ? 'danger' : snackbar.type || 'info'} className="mb-2">
@@ -234,13 +235,26 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       <CContainer fluid className="p-0">
         <CRow className="g-3">
           <CCol xs={12}>
-            <CCard className="h-100" style={{ border: '1.5px solid #c8ddf0', borderRadius: 12, boxShadow: '0 4px 24px rgba(26,90,168,0.08)' }}>
+            {/* Card: white bg, blue border */}
+            <CCard className="h-100" style={{
+              border: '1.5px solid #b6cfe8', borderRadius: 12,
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0 4px 24px rgba(27,79,138,0.08)',
+            }}>
               <CCardBody>
 
                 {/* Card header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22, borderBottom: '2px solid #e3eef8', paddingBottom: 14 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🩺</div>
-                  <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.1rem' }}>Assessment</h5>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  marginBottom: 22, borderBottom: '2px solid #dceeff', paddingBottom: 14,
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 8,
+                    background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18, boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+                  }}>🩺</div>
+                  <h5 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '1.1rem' }}>Assessment</h5>
                 </div>
 
                 <CForm>
@@ -260,9 +274,13 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                     <Field label="Duration">
                       <div style={{ display: 'flex', gap: 8 }}>
                         <input type="number" value={durationValue} onChange={e => setDurationValue(e.target.value)}
-                          placeholder="Value" style={{ ...inputStyle, flex: 1 }} />
+                          placeholder="Value" style={{ ...inputStyle, flex: 1 }}
+                          onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+                          onBlur={e  => (e.target.style.borderColor = '#b6cfe8')} />
                         <select value={durationUnit} onChange={e => setDurationUnit(e.target.value)}
-                          style={{ ...inputStyle, flex: 1 }}>
+                          style={{ ...inputStyle, flex: 1 }}
+                          onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+                          onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}>
                           <option value="day">Day</option>
                           <option value="week">Week</option>
                           <option value="month">Month</option>
@@ -290,19 +308,22 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 28px', marginBottom: 24 }}>
                     <div>
                       <label style={labelStyle}>Difficulties in:</label>
-                      <div style={{ background: '#f5f9ff', border: '1.5px solid #b6cfe8', borderRadius: 8, padding: '12px 14px' }}>
+                      <div style={{
+                        background: '#EFF6FF', border: '1.5px solid #b6cfe8',
+                        borderRadius: 8, padding: '12px 14px',
+                      }}>
                         {FUNCTIONAL_DIFFICULTIES.map(item => (
                           <label key={item} style={checkboxRowStyle}>
                             <input type="checkbox" checked={difficultiesIn.includes(item)}
                               onChange={() => setDifficultiesIn(toggleItem(difficultiesIn, item))}
-                              style={{ width: 15, height: 15, accentColor: '#1a5fa8', cursor: 'pointer' }} />
+                              style={{ width: 15, height: 15, accentColor: '#1B4F8A', cursor: 'pointer' }} />
                             {item}
                           </label>
                         ))}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                           <input type="checkbox" checked={!!otherDifficulty}
                             onChange={e => !e.target.checked && setOtherDifficulty('')}
-                            style={{ width: 15, height: 15, accentColor: '#1a5fa8', cursor: 'pointer' }} />
+                            style={{ width: 15, height: 15, accentColor: '#1B4F8A', cursor: 'pointer' }} />
                           <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#1a3a5c' }}>Other:</span>
                           <UnderlineInput value={otherDifficulty} onChange={setOtherDifficulty} placeholder="specify..." />
                         </div>
@@ -316,15 +337,18 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
                   {/* ══ Section 3: Physical Examination ══ */}
                   <SectionHeader icon="🔬" title="Physical Examination" color="#7c3aed" />
-                  <div style={{ marginBottom: 24, background: '#f5f9ff', border: '1.5px solid #b6cfe8', borderRadius: 10, overflow: 'hidden' }}>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #e3eef8', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1a3a5c', minWidth: 160 }}>Posture Assessment:</span>
+                  <div style={{
+                    marginBottom: 24, background: '#EFF6FF',
+                    border: '1.5px solid #b6cfe8', borderRadius: 10, overflow: 'hidden',
+                  }}>
+                    {/* Posture */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #dceeff', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1B4F8A', minWidth: 160 }}>Posture Assessment:</span>
                       {POSTURE_OPTIONS.map(opt => (
                         <label key={opt} style={{ ...checkboxRowStyle, marginBottom: 0 }}>
                           <input type="checkbox" checked={postureAssessment.includes(opt)}
                             onChange={() => setPostureAssessment(toggleItem(postureAssessment, opt))}
-                            style={{ width: 15, height: 15, accentColor: '#1a5fa8', cursor: 'pointer' }} />
+                            style={{ width: 15, height: 15, accentColor: '#1B4F8A', cursor: 'pointer' }} />
                           {opt}
                         </label>
                       ))}
@@ -333,30 +357,32 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #e3eef8', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1a3a5c', minWidth: 160 }}>Range of Motion (ROM):</span>
+                    {/* ROM */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #dceeff', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1B4F8A', minWidth: 160 }}>Range of Motion (ROM):</span>
                       {ROM_OPTIONS.map(opt => (
                         <label key={opt} style={{ ...checkboxRowStyle, marginBottom: 0 }}>
                           <input type="checkbox" checked={romStatus.includes(opt)}
                             onChange={() => setRomStatus(toggleItem(romStatus, opt))}
-                            style={{ width: 15, height: 15, accentColor: '#1a5fa8', cursor: 'pointer' }} />
+                            style={{ width: 15, height: 15, accentColor: '#1B4F8A', cursor: 'pointer' }} />
                           {opt}
                         </label>
                       ))}
                       {romStatus.includes('Restricted') && (
                         <UnderlineInput value={romRestricted} onChange={setRomRestricted} placeholder="describe restriction..." />
                       )}
-                      <span style={{ fontWeight: 600, fontSize: '0.85rem', color: '#1a3a5c' }}>Joints affected:</span>
+                      <span style={{ fontWeight: 600, fontSize: '0.85rem', color: '#1B4F8A' }}>Joints affected:</span>
                       <UnderlineInput value={romJoints} onChange={setRomJoints} placeholder="e.g. knee, shoulder..." />
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #e3eef8', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1a3a5c', minWidth: 160 }}>Muscle Strength:</span>
+                    {/* Muscle Strength */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #dceeff', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1B4F8A', minWidth: 160 }}>Muscle Strength:</span>
                       {STRENGTH_OPTIONS.map(opt => (
                         <label key={opt} style={{ ...checkboxRowStyle, marginBottom: 0 }}>
                           <input type="checkbox" checked={muscleStrength.includes(opt)}
                             onChange={() => setMuscleStrength(toggleItem(muscleStrength, opt))}
-                            style={{ width: 15, height: 15, accentColor: '#1a5fa8', cursor: 'pointer' }} />
+                            style={{ width: 15, height: 15, accentColor: '#1B4F8A', cursor: 'pointer' }} />
                           {opt}
                         </label>
                       ))}
@@ -365,13 +391,14 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                       )}
                     </div>
 
+                    {/* Neurological */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1a3a5c', minWidth: 160 }}>Neurological Signs:</span>
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1B4F8A', minWidth: 160 }}>Neurological Signs:</span>
                       {NEURO_OPTIONS.map(opt => (
                         <label key={opt} style={{ ...checkboxRowStyle, marginBottom: 0 }}>
                           <input type="checkbox" checked={neurologicalSigns.includes(opt)}
                             onChange={() => setNeurologicalSigns(toggleItem(neurologicalSigns, opt))}
-                            style={{ width: 15, height: 15, accentColor: '#1a5fa8', cursor: 'pointer' }} />
+                            style={{ width: 15, height: 15, accentColor: '#1B4F8A', cursor: 'pointer' }} />
                           {opt}
                         </label>
                       ))}
@@ -401,51 +428,38 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
                   {/* ══ Section 5: Patient Pain Classification ══ */}
                   <SectionHeader icon="💊" title="Patient Pain Classification" color="#dc2626" />
-
                   <div style={{ marginBottom: 20 }}>
                     {cameFromBackend ? (
-                      /* ✅ CASE 1: Backend sent patientPain →
-                         Show read-only badge, auto-expand fields below */
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-                        background: '#fff7ed', border: '1.5px solid #fed7aa',
+                        background: '#EFF6FF', border: '1.5px solid #b6cfe8',
                         borderRadius: 10, padding: '12px 16px',
                       }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#92400e' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1B4F8A' }}>
                           Pain type received from consultation:
                         </span>
                         <span style={{
-                          background: '#fee2e2', color: '#991b1b',
-                          border: '1px solid #fecaca', borderRadius: 20,
+                          background: '#dceeff', color: '#1B4F8A',
+                          border: '1px solid #b6cfe8', borderRadius: 20,
                           padding: '4px 16px', fontSize: 13, fontWeight: 700,
                         }}>
                           {getPainLabel(effectivePain)}
                         </span>
                         <span style={{
-                          fontSize: '0.75rem', color: '#b45309',
-                          background: '#fef3c7', border: '1px solid #fcd34d',
+                          fontSize: '0.75rem', color: '#1B4F8A',
+                          background: '#EFF6FF', border: '1px solid #b6cfe8',
                           borderRadius: 20, padding: '2px 10px',
                         }}>
                           Auto-filled from Complaints tab
                         </span>
                       </div>
                     ) : (
-                      /* ✅ CASE 2: No backend value →
-                         Show dropdown for doctor to pick manually */
                       <div style={{ maxWidth: 400 }}>
                         <Field label="Select Patient Pain Type">
-                          <NativeSelect
-                            value={patientPain}
-                            onChange={setPatientPain}
-                            options={PATIENT_PAIN_OPTIONS}
-                          />
+                          <NativeSelect value={patientPain} onChange={setPatientPain} options={PATIENT_PAIN_OPTIONS} />
                         </Field>
-                        {/* Hint when nothing selected yet */}
                         {!patientPain && (
-                          <p style={{
-                            marginTop: 8, fontSize: '0.8rem', color: '#6b7280',
-                            fontStyle: 'italic',
-                          }}>
+                          <p style={{ marginTop: 8, fontSize: '0.8rem', color: '#6b7280', fontStyle: 'italic' }}>
                             Select a type to reveal additional fields below.
                           </p>
                         )}
@@ -453,7 +467,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                     )}
                   </div>
 
-                  {/* ══ Chronic Pain — auto-shown if effectivePain = chronicPain ══ */}
+                  {/* Chronic Pain */}
                   {effectivePain === 'chronicPain' && (
                     <div style={{ marginBottom: 24, background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 10, padding: '16px 20px' }}>
                       <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#991b1b', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -472,7 +486,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                     </div>
                   )}
 
-                  {/* ══ Sports Rehab — auto-shown if effectivePain = sportsRehab ══ */}
+                  {/* Sports Rehab */}
                   {effectivePain === 'sportsRehab' && (
                     <div style={{ marginBottom: 24, background: '#f0fff4', border: '1.5px solid #6ee7b7', borderRadius: 10, padding: '16px 20px' }}>
                       <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#065f46', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -493,7 +507,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                     </div>
                   )}
 
-                  {/* ══ Neuro Rehab — auto-shown if effectivePain = neuroRehab ══ */}
+                  {/* Neuro Rehab */}
                   {effectivePain === 'neuroRehab' && (
                     <div style={{ marginBottom: 24, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 10, padding: '16px 20px' }}>
                       <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#5b21b6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -523,16 +537,26 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
         </CRow>
       </CContainer>
 
-      {/* Sticky bottom bar */}
+      {/* ── Sticky bottom bar ── */}
       <div className="position-fixed bottom-0" style={{
-        left: 0, right: 0, background: '#a5c4d4ff',
+        left: 0, right: 0,
+        background: '#FFFFFF',
+        borderTop: '2px solid #1B4F8A',
         display: 'flex', justifyContent: 'flex-end', gap: 12,
-        padding: '10px 20px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
+        padding: '10px 20px',
+        boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
       }}>
         <Button
-          customColor="#ffffff"
-          style={{ color: COLORS.bgcolor, borderRadius: '18px', padding: '6px 18px', fontWeight: 600 }}
+          customColor="#1B4F8A"
           onClick={handleNext}
+          style={{
+            color: '#FFFFFF',                              // ← white text forced inline
+            borderRadius: '18px',
+            padding: '6px 24px',
+            fontWeight: 700,
+            boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
+            border: '1.5px solid #1B4F8A',
+          }}
         >
           Next
         </Button>

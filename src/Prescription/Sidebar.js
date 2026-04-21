@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import './Sidebar.css'
 import { FaBars } from 'react-icons/fa'
+import { COLORS } from '../Themes'
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -25,7 +26,7 @@ const Sidebar = () => {
 
         <div className="vitals-section">
           <h6>Vitals</h6>
-          <p><strong>Height:</strong> -</p>
+          <p><strong style={{color:COLORS.bgcolor}}>Height:</strong> -</p>
           <p><strong>Weight:</strong> -</p>
           <p><strong>Temperature:</strong> -</p>
           <p><strong>BMI:</strong> -</p>

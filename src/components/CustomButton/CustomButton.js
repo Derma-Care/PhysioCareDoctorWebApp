@@ -17,10 +17,10 @@ const Button = ({
 
   if (variant === 'primary' && customGradient) {
     customStyle.background = customGradient
-    customStyle.color = '#7e3a93'
+    customStyle.color = '#FFF'
   } else if (variant === 'primary' && customColor) {
     customStyle.background = customColor
-    customStyle.color = '#7e3a93'
+    customStyle.color = '#FFF'
   }
 
   if (variant === 'outline' && customColor) {

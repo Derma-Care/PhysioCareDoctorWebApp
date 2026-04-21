@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import Button from '../components/CustomButton/CustomButton'
-import { COLORS } from '../Themes'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
 import { getTherapyExercises, getTodayAppointments } from '../Auth/Auth'
 
@@ -10,36 +9,53 @@ const EMPTY_EXERCISE = {
   instructions: '', videoUrl: '', thumbnail: '',
 }
 
-/* ─── Styles ─────────────────────────────────────────────────────────────── */
+/* ─── Styles (matching PrescriptionTab) ─────────────────────────────────── */
 const inputStyle = {
-  border: '1.5px solid #b6cfe8', borderRadius: 7, fontSize: '0.875rem',
-  color: '#1a3a5c', backgroundColor: '#f5f9ff', padding: '7px 11px',
-  width: '100%', boxSizing: 'border-box', height: 38,
-  outline: 'none', fontFamily: 'inherit',
+  border: '1.5px solid #b6cfe8',
+  borderRadius: 7,
+  fontSize: '0.875rem',
+  color: '#1a3a5c',
+  backgroundColor: '#FFFFFF',
+  padding: '7px 11px',
+  width: '100%',
+  boxSizing: 'border-box',
+  height: 38,
+  outline: 'none',
+  fontFamily: 'inherit',
+  transition: 'border-color 0.18s ease',
 }
 
 const labelStyle = {
-  fontWeight: 700, fontSize: '0.875rem', color: '#1a3a5c',
-  marginBottom: 6, display: 'block',
+  fontWeight: 700,
+  fontSize: '0.82rem',
+  color: '#1B4F8A',
+  marginBottom: 4,
+  display: 'block',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
 }
 
 const gridThree = {
-  display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-  gap: '16px 28px', marginBottom: 16,
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr 1fr',
+  gap: '16px 28px',
+  marginBottom: 16,
 }
 
 const cardStyle = {
-  border: '1px solid #d8e8f5', borderRadius: 14,
-  boxShadow: '0 2px 16px rgba(26,90,168,0.07)',
+  border: '1.5px solid #b6cfe8',
+  borderRadius: 12,
+  backgroundColor: '#FFFFFF',
+  boxShadow: '0 4px 24px rgba(27,79,138,0.10)',
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 const Field = ({ label, children, error }) => (
-  <div style={{ display: 'flex', flexDirection: 'column' }}>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
     {label && <label style={labelStyle}>{label}</label>}
     {children}
     {error && (
-      <span style={{ marginTop: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
+      <span style={{ marginTop: 2, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
         ⚠ {error}
       </span>
     )}
@@ -47,19 +63,37 @@ const Field = ({ label, children, error }) => (
 )
 
 const Textarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
-  <textarea value={value} onChange={e => onChange(e.target.value)}
-    placeholder={placeholder} rows={rows}
-    style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }} />
+  <textarea
+    value={value}
+    onChange={e => onChange(e.target.value)}
+    placeholder={placeholder}
+    rows={rows}
+    style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
+    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+  />
 )
 
+/* ─── Section header (matching PrescriptionTab) ──────────────────────────── */
 const CardHeader = ({ emoji, title }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, borderBottom: '1.5px solid #e3eef8', paddingBottom: 16 }}>
-    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{emoji}</div>
-    <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>{title}</h5>
+  <div style={{
+    display: 'flex', alignItems: 'center', gap: 10,
+    marginBottom: 20,
+    borderBottom: '2px solid #dceeff',
+    paddingBottom: 12,
+  }}>
+    <div style={{
+      width: 34, height: 34, borderRadius: 8,
+      background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 17,
+      boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+    }}>{emoji}</div>
+    <h5 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '1.05rem' }}>{title}</h5>
   </div>
 )
 
-/* ─── Validated Number Input ────────────────────────────────────────────── */
+/* ─── Validated Number Input ─────────────────────────────────────────────── */
 const NumberInput = ({ value, onChange, min = 1, max, placeholder }) => {
   const [touched, setTouched] = useState(false)
   const num = parseInt(value)
@@ -80,10 +114,11 @@ const NumberInput = ({ value, onChange, min = 1, max, placeholder }) => {
           const raw = e.target.value
           if (raw === '' || /^\d+$/.test(raw)) onChange(raw)
         }}
+        onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
         style={{
           ...inputStyle,
           borderColor: error ? '#fc8181' : value && !error ? '#68d391' : '#b6cfe8',
-          backgroundColor: error ? '#fff5f5' : value && !error ? '#f0fff4' : '#f5f9ff',
+          backgroundColor: error ? '#fff5f5' : value && !error ? '#f0fff4' : '#FFFFFF',
         }}
       />
     </Field>
@@ -136,18 +171,16 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
   const set = field => val => setForm(f => ({ ...f, [field]: val }))
 
-  /* Already-added names (excluding the one being edited) */
   const addedNames = new Set(
     exercises.filter((_, i) => i !== editingIdx).map(e => e.name?.trim().toLowerCase())
   )
 
-  /* Library filtered by search, excluding already-added */
   const filteredLibrary = exerciseLibrary.filter(ex => {
     const n = (ex.name || '').trim().toLowerCase()
     return n.includes(search.toLowerCase()) && !addedNames.has(n)
   })
 
-  /* ── Single-exercise save (form) ── */
+  /* ── Single-exercise save ── */
   const handleSave = () => {
     if (!form.name.trim()) return
     if (editingIdx !== null) {
@@ -160,7 +193,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
     setSearch('')
   }
 
-  /* ── Bulk add from library panel ── */
+  /* ── Bulk add ── */
   const handleBulkAdd = () => {
     const toAdd = exerciseLibrary
       .filter(ex => bulkSelected.has(ex.name))
@@ -190,10 +223,10 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   }
 
   const toggleSelectAll = () => {
-    if (bulkSelected.size === filteredLibrary.length) {
+    if (bulkSelected.size === bulkLibrary.length) {
       setBulkSelected(new Set())
     } else {
-      setBulkSelected(new Set(filteredLibrary.map(ex => ex.name)))
+      setBulkSelected(new Set(bulkLibrary.map(ex => ex.name)))
     }
   }
 
@@ -217,7 +250,6 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
     onNext?.(payload)
   }
 
-  /* ── Library panel filtered for bulk ── */
   const bulkLibrary = exerciseLibrary.filter(ex => {
     const n = (ex.name || '').trim().toLowerCase()
     const alreadyAdded = exercises.some(e => e.name?.trim().toLowerCase() === n)
@@ -225,32 +257,45 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   })
 
   return (
-    <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div
+      className="pb-5"
+      style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", backgroundColor: '#FFFFFF', minHeight: '100vh' }}
+    >
       <CContainer fluid className="p-1">
 
         {/* ══ FORM CARD ══════════════════════════════════════════════════ */}
         <CCard className="mb-4" style={cardStyle}>
           <CCardBody style={{ padding: '28px 32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, borderBottom: '1.5px solid #e3eef8', paddingBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏋️</div>
-                <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>
+
+            {/* Card header row */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: 20, borderBottom: '2px solid #dceeff', paddingBottom: 12,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: 8,
+                  background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 17, boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+                }}>🏋️</div>
+                <h5 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '1.05rem' }}>
                   {editingIdx !== null ? `Editing Exercise #${editingIdx + 1}` : 'Add Exercise'}
                 </h5>
               </div>
 
-              {/* ── Select from Library button ── */}
               {exerciseLibrary.length > 0 && editingIdx === null && (
                 <button
                   type="button"
                   onClick={() => { setShowBulkPanel(v => !v); setSearch(''); setBulkSelected(new Set()) }}
                   style={{
                     padding: '7px 18px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
-                    border: '1.5px solid #1a5fa8',
-                    background: showBulkPanel ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#f0f7ff',
-                    color: showBulkPanel ? '#fff' : '#1a5fa8',
+                    border: '1.5px solid #1B4F8A',
+                    background: showBulkPanel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
+                    color: showBulkPanel ? '#fff' : '#1B4F8A',
                     fontWeight: 700, fontSize: '0.85rem',
                     display: 'flex', alignItems: 'center', gap: 6,
+                    boxShadow: showBulkPanel ? '0 2px 8px rgba(27,79,138,0.25)' : 'none',
                   }}
                 >
                   📚 {showBulkPanel ? '✕ Close' : 'Browse Exercises'}
@@ -260,24 +305,26 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
             {/* ══ BULK LIBRARY PANEL ══════════════════════════════════════ */}
             {showBulkPanel && (
-              <div style={{ marginBottom: 24, border: '1.5px solid #b6cfe8', borderRadius: 10, overflow: 'hidden', background: '#f5f9ff' }}>
+              <div style={{ marginBottom: 24, border: '1.5px solid #b6cfe8', borderRadius: 10, overflow: 'hidden', background: '#FFFFFF' }}>
 
                 {/* Panel toolbar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#e8f1fb', borderBottom: '1px solid #b6cfe8', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#f0f6ff', borderBottom: '1px solid #b6cfe8', flexWrap: 'wrap' }}>
                   <input
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Search exercises..."
                     style={{ ...inputStyle, width: 220, height: 34 }}
+                    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+                    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
                   />
                   <button
                     type="button"
                     onClick={toggleSelectAll}
-                    style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1a5fa8', background: '#fff', color: '#1a5fa8', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     {bulkSelected.size === bulkLibrary.length && bulkLibrary.length > 0 ? '☑ Deselect All' : '☐ Select All'}
                   </button>
-                  <span style={{ fontSize: '0.8rem', color: '#5a7fa8', fontWeight: 600 }}>
+                  <span style={{ fontSize: '0.8rem', color: '#1B4F8A', fontWeight: 600 }}>
                     {bulkSelected.size} selected
                   </span>
                   <button
@@ -286,7 +333,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                     disabled={bulkSelected.size === 0}
                     style={{
                       marginLeft: 'auto', padding: '6px 20px', borderRadius: 8, border: 'none',
-                      background: bulkSelected.size > 0 ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#c8ddf0',
+                      background: bulkSelected.size > 0 ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#b6cfe8',
                       color: '#fff', fontWeight: 700, fontSize: '0.85rem',
                       cursor: bulkSelected.size > 0 ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
                     }}
@@ -297,7 +344,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
                 {/* Exercise checkboxes */}
                 {loadingLibrary ? (
-                  <div style={{ padding: 20, textAlign: 'center', color: '#8aaac8', fontSize: '0.875rem' }}>Loading exercises…</div>
+                  <div style={{ padding: 20, textAlign: 'center', color: '#4a7abf', fontSize: '0.875rem' }}>Loading exercises…</div>
                 ) : bulkLibrary.length === 0 ? (
                   <div style={{ padding: 20, textAlign: 'center', color: '#8aaac8', fontSize: '0.875rem' }}>No exercises found.</div>
                 ) : (
@@ -316,8 +363,8 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                           style={{
                             display: 'flex', alignItems: 'center', gap: 12,
                             padding: '10px 14px', cursor: 'pointer',
-                            borderBottom: '1px solid #e3eef8',
-                            background: isChecked ? '#dbeafe' : i % 2 === 0 ? '#f5f9ff' : '#fff',
+                            borderBottom: '1px solid #dceeff',
+                            background: isChecked ? '#dceeff' : i % 2 === 0 ? '#f0f6ff' : '#FFFFFF',
                             transition: 'background 0.15s',
                           }}
                         >
@@ -325,7 +372,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => toggleBulk(exName)}
-                            style={{ width: 16, height: 16, accentColor: '#1a5fa8', cursor: 'pointer', flexShrink: 0 }}
+                            style={{ width: 16, height: 16, accentColor: '#1B4F8A', cursor: 'pointer', flexShrink: 0 }}
                           />
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1a3a5c' }}>{exName}</div>
@@ -338,7 +385,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                               ].filter(Boolean).join('  ·  ') || 'No details'}
                             </div>
                           </div>
-                          {isChecked && <span style={{ color: '#1a5fa8', fontWeight: 700, fontSize: '1rem' }}>✓</span>}
+                          {isChecked && <span style={{ color: '#1B4F8A', fontWeight: 700, fontSize: '1rem' }}>✓</span>}
                         </label>
                       )
                     })}
@@ -347,7 +394,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
               </div>
             )}
 
-            {/* ══ SINGLE EXERCISE FORM (hidden while bulk panel open) ═════ */}
+            {/* ══ SINGLE EXERCISE FORM ════════════════════════════════════ */}
             {!showBulkPanel && (
               <>
                 {/* Exercise Name */}
@@ -363,6 +410,8 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                         }}
                         onFocus={() => setShowDropdown(true)}
                         onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                        onFocusCapture={e => (e.target.style.borderColor = '#1B4F8A')}
+                        onBlurCapture={e  => (e.target.style.borderColor = '#b6cfe8')}
                         placeholder={
                           loadingLibrary
                             ? 'Loading exercises...'
@@ -378,7 +427,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                           position: 'absolute', top: '100%', left: 0, right: 0,
                           background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8,
                           maxHeight: 260, overflowY: 'auto', zIndex: 1000,
-                          boxShadow: '0 4px 16px rgba(26,90,168,0.12)',
+                          boxShadow: '0 4px 16px rgba(27,79,138,0.12)',
                         }}>
                           {filteredLibrary.map((ex, i) => {
                             const exId = ex.therapyExercisesId
@@ -412,15 +461,15 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                                 }}
                                 style={{
                                   padding: '9px 12px', cursor: 'pointer',
-                                  borderBottom: '1px solid #eee',
-                                  background: isSelected ? '#e0f2fe' : '#fff',
+                                  borderBottom: '1px solid #dceeff',
+                                  background: isSelected ? '#dceeff' : '#fff',
                                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                 }}
-                                onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f0f7ff' }}
-                                onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isSelected ? '#e0f2fe' : '#fff' }}
+                                onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f0f6ff' }}
+                                onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isSelected ? '#dceeff' : '#fff' }}
                               >
                                 <div>
-                                  <strong style={{ color: '#1a5fa8', fontSize: '0.88rem' }}>{exName}</strong>
+                                  <strong style={{ color: '#1B4F8A', fontSize: '0.88rem' }}>{exName}</strong>
                                   <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
                                     {[
                                       exSets && `🔁 ${exSets} sets`,
@@ -457,10 +506,12 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                         value={form.frequency}
                         onChange={e => set('frequency')(e.target.value)}
                         placeholder="e.g. 2 time/ day"
+                        onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+                        onBlur={e  => (e.target.style.borderColor = form.frequency ? '#68d391' : '#b6cfe8')}
                         style={{
                           ...inputStyle,
                           borderColor: form.frequency ? '#68d391' : '#b6cfe8',
-                          backgroundColor: form.frequency ? '#f0fff4' : '#f5f9ff',
+                          backgroundColor: form.frequency ? '#f0fff4' : '#FFFFFF',
                         }}
                       />
                     </Field>
@@ -469,32 +520,33 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
 
                 {/* Video URL */}
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <label style={labelStyle}>Video URL</label>
+                  <Field label="Video URL">
                     <input
                       value={form.videoUrl}
                       onChange={e => set('videoUrl')(e.target.value)}
                       placeholder="https://example.com/video"
                       style={inputStyle}
+                      onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+                      onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
                     />
-                  </div>
+                  </Field>
                 </div>
 
                 {/* Instructions */}
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <label style={labelStyle}>Instructions</label>
+                  <Field label="Instructions">
                     <Textarea value={form.instructions} onChange={set('instructions')}
                       placeholder="e.g. Lie on back and tilt pelvis upward" rows={3} />
-                  </div>
+                  </Field>
                 </div>
 
                 <div style={{ display: 'flex', gap: 12 }}>
                   <button type="button" onClick={handleSave}
                     style={{
                       padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                      background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
+                      background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
                       color: '#fff', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit',
+                      boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
                     }}>
                     {editingIdx !== null ? '✅ Update Exercise' : '➕ Add Exercise'}
                   </button>
@@ -502,8 +554,8 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                     <button type="button" onClick={handleCancel}
                       style={{
                         padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
-                        border: '1.5px solid #b6cfe8', background: '#f5f9ff',
-                        color: '#1a3a5c', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                        border: '1.5px solid #b6cfe8', background: '#FFFFFF',
+                        color: '#1B4F8A', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
                       }}>
                       Cancel
                     </button>
@@ -523,7 +575,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
-                    <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+                    <tr style={{ background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)', color: '#fff' }}>
                       {['#', 'Name', 'Sets', 'Reps', 'Frequency', 'Instructions', 'Video', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
@@ -531,19 +583,19 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                   </thead>
                   <tbody>
                     {exercises.map((ex, idx) => (
-                      <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
-                        <td style={{ padding: '10px 14px', fontWeight: 700 }}>{idx + 1}</td>
+                      <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f0f6ff' : '#FFFFFF', borderBottom: '1px solid #dceeff' }}>
+                        <td style={{ padding: '10px 14px', fontWeight: 700, color: '#1B4F8A' }}>{idx + 1}</td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 600 }}>{ex.name || '—'}</td>
                         <td style={{ padding: '10px 14px', textAlign: 'center' }}>
-                          {ex.sets ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span> : '—'}
+                          {ex.sets ? <span style={{ background: '#dceeff', color: '#1B4F8A', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔁 {ex.sets}</span> : '—'}
                         </td>
                         <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                           {ex.reps !== '' && ex.reps !== null && ex.reps !== undefined
-                            ? <span style={{ background: '#dbeafe', color: '#1a5fa8', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.reps}</span>
+                            ? <span style={{ background: '#dceeff', color: '#1B4F8A', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.reps}</span>
                             : '—'}
                         </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          {ex.frequency ? <span style={{ background: '#f0f7ff', color: '#1a3a5c', borderRadius: 8, padding: '2px 9px', fontWeight: 600, fontSize: '0.78rem' }}>📆 {ex.frequency}</span> : '—'}
+                          {ex.frequency ? <span style={{ background: '#f0f6ff', color: '#1a3a5c', borderRadius: 8, padding: '2px 9px', fontWeight: 600, fontSize: '0.78rem' }}>📆 {ex.frequency}</span> : '—'}
                         </td>
                         <td style={{ padding: '10px 14px', maxWidth: 200 }}>
                           <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>
@@ -551,11 +603,11 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
                           </div>
                         </td>
                         <td style={{ padding: '10px 14px' }}>
-                          {ex.videoUrl ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem' }}>▶ Watch</a> : '—'}
+                          {ex.videoUrl ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: '#1B4F8A', fontWeight: 600, fontSize: '0.8rem' }}>▶ Watch</a> : '—'}
                         </td>
                         <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                           <button onClick={() => handleEdit(idx)}
-                            style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: '#f0f7ff', color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
                             ✏️ Edit
                           </button>
                           <button onClick={() => handleDelete(idx)}
@@ -576,26 +628,41 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
         <CCard style={cardStyle}>
           <CCardBody style={{ padding: '24px 32px' }}>
             <CardHeader emoji="🏠" title="Home Advice" />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <label style={labelStyle}>Home Advice</label>
+            <Field label="Home Advice">
               <Textarea value={homeAdvice} onChange={setHomeAdvice}
                 placeholder="e.g. Maintain correct posture and do exercises daily" rows={4} />
-            </div>
+            </Field>
           </CCardBody>
         </CCard>
 
       </CContainer>
 
-      {/* ══ STICKY BOTTOM BAR ══ */}
-      <div className="position-fixed bottom-0"
+      {/* ══ STICKY BOTTOM BAR (matching PrescriptionTab) ══════════════════ */}
+      <div
+        className="position-fixed bottom-0"
         style={{
-          left: 0, right: 0, background: '#a5c4d4ff',
-          display: 'flex', justifyContent: 'flex-end', gap: 16,
-          padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
+          left: 0, right: 0,
+          background: '#FFFFFF',
+          borderTop: '2px solid #1B4F8A',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
         }}
       >
-        <Button customColor="#ffffff" color="#7e3a93" onClick={handleNext}
-          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+        <Button
+          customColor="#1B4F8A"
+          color="#FFFFFF"
+          onClick={handleNext}
+          style={{
+            borderRadius: '20px',
+            fontWeight: 700,
+            padding: '6px 24px',
+            boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
+            border: '1.5px solid #1B4F8A',
+          }}
+        >
           Next
         </Button>
       </div>

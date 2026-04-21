@@ -570,21 +570,21 @@ const Login = () => {
                     fontFamily:"'Outfit',sans-serif",
                   }}>Username</label>
                   <div style={{ position:'relative' }}>
-                    <CFormInput
-                      className="login-input"
-                      type="text"
-                      placeholder="Username or Mobile"
-                      value={userName}
-                      onChange={(e) => { setUserName(e.target.value); setErrors(p=>({...p,userName:'',login:''})) }}
-                      style={{
-                        paddingRight:'2.5rem', paddingLeft:'0.9rem',
-                        paddingTop:'0.66rem', paddingBottom:'0.66rem',
-                        borderRadius:10, fontSize:14,
-                        borderColor: errors.userName ? '#dc3545' : 'rgba(255,255,255,0.14)',
-                        color:'#fff',
-                        fontFamily:"'Outfit',sans-serif",
-                      }}
-                    />
+                  <CFormInput
+   className="li"
+  type="text"
+  placeholder="Username or Mobile"
+  value={userName}
+  onChange={(e) => { setUserName(e.target.value); setErrors(p=>({...p,userName:'',login:''})) }}
+  style={{
+    paddingRight:'2.5rem', paddingLeft:'0.9rem',
+    paddingTop:'0.66rem', paddingBottom:'0.66rem',
+    borderRadius:10, fontSize:14,
+    borderColor: errors.userName ? '#dc3545' : 'rgba(255,255,255,0.14)',
+       color:'#1a1a2e',     // ← was '#fff', change to dark color
+  
+  }}
+/>
                       <CIcon icon={cilUser} style={{ position:'absolute', top:'50%', right:'0.8rem', transform:'translateY(-50%)', color:'#1B4F8A', pointerEvents:'none' }}/>
                   </div>
                   {errors.userName && <div style={{ fontSize:11.5, color:'#ff8a8a', marginTop:4 }}>{errors.userName}</div>}
@@ -594,9 +594,11 @@ const Login = () => {
                  {/* Password */}
                 <div style={{ marginBottom:6 }}>
                   <label style={{
-                    fontSize:11, fontWeight:700, color:'#1B4F8A',
-                    letterSpacing:'.08em', textTransform:'uppercase',
+                     fontSize:10.5, fontWeight:700,
+                    color:'rgba(245,166,35,0.85)',
+                    letterSpacing:'.1em', textTransform:'uppercase',
                     display:'block', marginBottom:6,
+                    fontFamily:"'Outfit',sans-serif",
                   }}>Password</label>
                   <div style={{ position:'relative' }}>
                     <CFormInput

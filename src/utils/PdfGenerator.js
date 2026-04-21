@@ -1,40 +1,37 @@
-// src/utils/PdfGenerator.jsx  — PREMIUM REDESIGN v4 (Page-break fixed)
+// src/utils/PdfGenerator.jsx  — BRAND REDESIGN v5
 import React from "react";
 import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import { capitalizeEachWord } from "./CaptalZeWord";
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  BRAND COLOR PALETTE  (matches your COLORS export)
+// ─────────────────────────────────────────────────────────────────────────────
 const C = {
+  // Brand
+  navy:      "#1B4F8A",   // bgcolor / primary
+  navyDark:  "#163f70",   // darker navy for hover/depth
+  navyDeep:  "#0f2d52",   // deepest navy (header bg)
+  navyMid:   "#2A6DB5",   // secondary / lighter navy
+  orange:    "#f9c571",   // accent orange
+  orangeDk:  "#e8a93a",   // darker orange for borders/text
+  orangeLt:  "#fdf3dc",   // very light orange tint
   white:     "#ffffff",
-  paper:     "#fafafa",
-  ink:       "#0a0f1a",
-  slate50:   "#f8fafc",
-  slate100:  "#f1f5f9",
-  slate150:  "#e9eef5",
-  slate200:  "#e2e8f0",
-  slate300:  "#cbd5e1",
-  slate400:  "#94a3b8",
-  slate500:  "#64748b",
-  slate600:  "#475569",
-  slate700:  "#334155",
-  slate800:  "#1e293b",
-  slate850:  "#172032",
-  slate900:  "#0f172a",
-  slate950:  "#080d18",
-  em50:      "#ecfdf5",
-  em100:     "#d1fae5",
-  em200:     "#a7f3d0",
-  em300:     "#6ee7b7",
-  em400:     "#34d399",
-  em500:     "#10b981",
-  em600:     "#059669",
-  em700:     "#047857",
-  em800:     "#065f46",
-  em900:     "#064e3b",
-  gold400:   "#fbbf24",
-  gold500:   "#f59e0b",
-  gold600:   "#d97706",
-  gold100:   "#fef3c7",
-  gold50:    "#fffbeb",
+  // Light blues (for programs)
+  skyBrand:  "#e8f1fb",   // light blue bg for programs
+  skyBorder: "#b8d0f0",   // border for light blue cards
+  skyText:   "#1B4F8A",   // text on light blue
+  // Grays
+  gray50:    "#f8fafc",
+  gray100:   "#f0f4f8",
+  gray150:   "#e5ecf3",
+  gray200:   "#d4dfec",
+  gray300:   "#b0c1d4",
+  gray400:   "#7a94b0",
+  gray500:   "#5a7592",
+  gray600:   "#3d5a75",
+  gray700:   "#2a3f55",
+  gray800:   "#1a2a3a",
+  // Semantic
   red50:     "#fef2f2",
   red100:    "#fee2e2",
   red500:    "#ef4444",
@@ -44,23 +41,27 @@ const C = {
   amber100:  "#fef3c7",
   amber600:  "#d97706",
   amber700:  "#b45309",
-  blue50:    "#eff6ff",
-  blue100:   "#dbeafe",
-  blue600:   "#2563eb",
-  blue700:   "#1d4ed8",
+  em50:      "#ecfdf5",
+  em100:     "#d1fae5",
+  em200:     "#a7f3d0",
+  em400:     "#34d399",
+  em500:     "#10b981",
+  em600:     "#059669",
+  em700:     "#047857",
+  em800:     "#065f46",
   purple50:  "#faf5ff",
   purple100: "#ede9fe",
   purple600: "#7c3aed",
   purple700: "#6d28d9",
-  sky50:     "#f0f9ff",
-  sky100:    "#e0f2fe",
-  sky600:    "#0284c7",
-  sky700:    "#0369a1",
+  blue50:    "#eff6ff",
+  blue100:   "#dbeafe",
+  blue600:   "#2563eb",
+  blue700:   "#1d4ed8",
+  teal:      "#16a085",
 };
 
 const L = {
   pageP: 32,
-  colGap: 10,
   sectionGap: 14,
   cardR: 4,
 };
@@ -73,58 +74,65 @@ const S = StyleSheet.create({
     padding: 0,
   },
 
-  // ── HEADER (fixed) ──
+  // ── HEADER ──
   header: {
-    backgroundColor: C.slate900,
+    backgroundColor: C.navyDeep,
     flexDirection: "column",
   },
   headerAccentBar: {
-    height: 3,
+    height: 4,
     flexDirection: "row",
   },
-  headerAccentSeg1: { flex: 3, backgroundColor: C.em500 },
-  headerAccentSeg2: { flex: 1, backgroundColor: C.em700 },
-  headerAccentSeg3: { flex: 5, backgroundColor: C.slate700 },
+  headerAccentSeg1: { flex: 3, backgroundColor: C.orange },
+  headerAccentSeg2: { flex: 1, backgroundColor: C.orangeDk },
+  headerAccentSeg3: { flex: 5, backgroundColor: C.navyMid },
   headerInner: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingTop: 14,
     paddingBottom: 14,
     paddingLeft: L.pageP,
     paddingRight: L.pageP,
   },
-  hLeft: { flex: 1 },
+  hLeft: { flex: 1, paddingRight: 16 },
   hClinicName: {
     fontSize: 14,
     fontFamily: "Helvetica-Bold",
     color: C.white,
     letterSpacing: -0.2,
-    marginBottom: 3,
+    marginBottom: 4,
   },
-  hMeta: { fontSize: 7, color: C.slate400, lineHeight: 1.7 },
-  hRight: { alignItems: "flex-end" },
+  // address rendered as multiple Text lines so it wraps naturally
+  hAddress: {
+    fontSize: 7,
+    color: C.gray300,
+    lineHeight: 1.8,
+    flexWrap: "wrap",
+  },
+  hMeta: { fontSize: 7, color: C.gray400, lineHeight: 1.7 },
+  hRight: { alignItems: "flex-end", flexShrink: 0 },
   hDocType: {
     fontSize: 7,
     fontFamily: "Helvetica-Bold",
-    color: C.em400,
+    color: C.orange,
     letterSpacing: 3,
     textTransform: "uppercase",
     marginBottom: 4,
   },
-  hDate:      { fontSize: 7.5, color: C.slate300, textAlign: "right", marginBottom: 2 },
-  hRef:       { fontSize: 7,   color: C.slate500, textAlign: "right", marginBottom: 2 },
-  hStatusWrap:{ flexDirection: "row", justifyContent: "flex-end", marginTop: 3 },
-  hStatusPill:{
+  hDate:       { fontSize: 7.5, color: C.gray300, textAlign: "right", marginBottom: 2 },
+  hRef:        { fontSize: 7,   color: C.gray500, textAlign: "right", marginBottom: 2 },
+  hStatusWrap: { flexDirection: "row", justifyContent: "flex-end", marginTop: 3 },
+  hStatusPill: {
     borderRadius: 2,
     paddingTop: 2, paddingBottom: 2,
     paddingLeft: 8, paddingRight: 8,
   },
-  hStatusTx:  { fontSize: 6.5, fontFamily: "Helvetica-Bold", letterSpacing: 1.2 },
+  hStatusTx: { fontSize: 6.5, fontFamily: "Helvetica-Bold", letterSpacing: 1.2 },
 
   // ── PATIENT BANNER ──
   patientBanner: {
-    backgroundColor: C.slate900,
+    backgroundColor: C.navy,
     paddingTop: 10,
     paddingBottom: 12,
     paddingLeft: L.pageP,
@@ -133,36 +141,36 @@ const S = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 3,
-    borderBottomColor: C.em600,
+    borderBottomColor: C.orange,
   },
   pbLeft: { flexDirection: "row", alignItems: "center" },
   pbAvatar: {
     width: 38, height: 38,
     borderRadius: 4,
-    backgroundColor: C.em800,
+    backgroundColor: C.navyDark,
     alignItems: "center", justifyContent: "center",
     marginRight: 12, flexShrink: 0,
-    borderTopWidth: 1, borderRightWidth: 1,
-    borderBottomWidth: 1, borderLeftWidth: 1,
-    borderTopColor: C.em600, borderRightColor: C.em600,
-    borderBottomColor: C.em600, borderLeftColor: C.em600,
+    borderTopWidth: 2, borderRightWidth: 2,
+    borderBottomWidth: 2, borderLeftWidth: 2,
+    borderTopColor: C.orange, borderRightColor: C.orange,
+    borderBottomColor: C.orange, borderLeftColor: C.orange,
   },
-  pbAvatarTx: { fontSize: 12, fontFamily: "Helvetica-Bold", color: C.em300 },
+  pbAvatarTx: { fontSize: 12, fontFamily: "Helvetica-Bold", color: C.orange },
   pbName:     { fontSize: 14, fontFamily: "Helvetica-Bold", color: C.white, letterSpacing: -0.1 },
-  pbMeta:     { fontSize: 7.5, color: C.slate400, marginTop: 3, letterSpacing: 0.2 },
+  pbMeta:     { fontSize: 7.5, color: C.gray300, marginTop: 3, letterSpacing: 0.2 },
   pbRight:    { alignItems: "flex-end" },
   pbIdWrap: {
-    backgroundColor: C.slate800,
+    backgroundColor: C.navyDark,
     borderRadius: 3,
     paddingTop: 5, paddingBottom: 5,
     paddingLeft: 10, paddingRight: 10,
     borderTopWidth: 1, borderRightWidth: 1,
     borderBottomWidth: 1, borderLeftWidth: 1,
-    borderTopColor: C.slate700, borderRightColor: C.slate700,
-    borderBottomColor: C.slate700, borderLeftColor: C.slate700,
+    borderTopColor: C.orange, borderRightColor: C.orange,
+    borderBottomColor: C.orange, borderLeftColor: C.orange,
   },
-  pbIdLbl:    { fontSize: 6, color: C.slate500, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2, fontFamily: "Helvetica-Bold" },
-  pbIdVal:    { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.em400, letterSpacing: 0.5 },
+  pbIdLbl: { fontSize: 6, color: C.gray400, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2, fontFamily: "Helvetica-Bold" },
+  pbIdVal: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.orange, letterSpacing: 0.5 },
 
   // ── BODY ──
   bodyWrap: {
@@ -174,65 +182,64 @@ const S = StyleSheet.create({
     backgroundColor: C.white,
   },
 
-  // ── SECTION WRAPPER — key fix: no wrap split ──
-  sec: {
-    marginBottom: L.sectionGap,
-  },
+  sec: { marginBottom: L.sectionGap },
 
-  // ── SECTION HEADER — kept together with content via secInner ──
+  // ── SECTION HEADER — with background highlight ──
   secHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
+    backgroundColor: C.navy,
+    borderRadius: 3,
+    paddingTop: 6,
+    paddingBottom: 6,
+    paddingLeft: 10,
+    paddingRight: 10,
   },
   secNumBox: {
     width: 18, height: 18,
-    backgroundColor: C.slate900,
+    backgroundColor: C.orange,
     borderRadius: 2,
     alignItems: "center", justifyContent: "center",
     marginRight: 8,
     flexShrink: 0,
   },
-  secNum: { fontSize: 7, fontFamily: "Helvetica-Bold", color: C.em400 },
+  secNum: { fontSize: 7, fontFamily: "Helvetica-Bold", color: C.navyDeep },
   secTitleWrap: { flex: 1, flexDirection: "row", alignItems: "center" },
   secTitle: {
-    fontSize: 8.5, fontFamily: "Helvetica-Bold", color: C.slate800,
+    fontSize: 8.5, fontFamily: "Helvetica-Bold", color: C.white,
     textTransform: "uppercase", letterSpacing: 1.5,
   },
   secRule: {
     flex: 1, height: 1,
-    backgroundColor: C.slate200,
+    backgroundColor: C.navyMid,
     marginLeft: 10,
   },
   secBadge: {
-    backgroundColor: C.em50,
+    backgroundColor: C.orange,
     borderRadius: 12,
     paddingTop: 2, paddingBottom: 2,
     paddingLeft: 8, paddingRight: 8,
     marginLeft: 8,
-    borderTopWidth: 1, borderRightWidth: 1,
-    borderBottomWidth: 1, borderLeftWidth: 1,
-    borderTopColor: C.em200, borderRightColor: C.em200,
-    borderBottomColor: C.em200, borderLeftColor: C.em200,
   },
-  secBadgeTx: { fontSize: 6, color: C.em700, fontFamily: "Helvetica-Bold", letterSpacing: 0.3 },
+  secBadgeTx: { fontSize: 6, color: C.navyDeep, fontFamily: "Helvetica-Bold", letterSpacing: 0.3 },
 
   subSecTitle: {
-    fontSize: 7, fontFamily: "Helvetica-Bold", color: C.slate500,
+    fontSize: 7, fontFamily: "Helvetica-Bold", color: C.navy,
     textTransform: "uppercase", letterSpacing: 1,
     marginBottom: 8, marginTop: 2,
     paddingBottom: 5,
-    borderBottomWidth: 1, borderBottomColor: C.slate100,
+    borderBottomWidth: 1, borderBottomColor: C.gray150,
   },
 
   // ── CARDS ──
   card: {
-    backgroundColor: C.slate50,
+    backgroundColor: C.gray50,
     borderRadius: L.cardR,
     borderTopWidth: 1, borderRightWidth: 1,
     borderBottomWidth: 1, borderLeftWidth: 1,
-    borderTopColor: C.slate200, borderRightColor: C.slate200,
-    borderBottomColor: C.slate200, borderLeftColor: C.slate200,
+    borderTopColor: C.gray200, borderRightColor: C.gray200,
+    borderBottomColor: C.gray200, borderLeftColor: C.gray200,
     padding: 14,
     marginBottom: 6,
   },
@@ -241,19 +248,20 @@ const S = StyleSheet.create({
     borderRadius: L.cardR,
     borderTopWidth: 1, borderRightWidth: 1,
     borderBottomWidth: 1, borderLeftWidth: 2,
-    borderTopColor: C.slate150, borderRightColor: C.slate150,
-    borderBottomColor: C.slate150, borderLeftColor: C.slate200,
+    borderTopColor: C.gray150, borderRightColor: C.gray150,
+    borderBottomColor: C.gray150, borderLeftColor: C.gray200,
     padding: 12,
     marginBottom: 6,
   },
   cEm:     { borderLeftColor: C.em500,     borderLeftWidth: 3 },
-  cGold:   { borderLeftColor: C.gold500,   borderLeftWidth: 3 },
+  cGold:   { borderLeftColor: C.orange,    borderLeftWidth: 3 },
   cRed:    { borderLeftColor: C.red500,    borderLeftWidth: 3 },
   cAmber:  { borderLeftColor: C.amber600,  borderLeftWidth: 3 },
-  cBlue:   { borderLeftColor: C.blue600,   borderLeftWidth: 3 },
+  cBlue:   { borderLeftColor: C.navyMid,   borderLeftWidth: 3 },
   cPurple: { borderLeftColor: C.purple600, borderLeftWidth: 3 },
-  cSky:    { borderLeftColor: C.sky600,    borderLeftWidth: 3 },
-  cSlate:  { borderLeftColor: C.slate400,  borderLeftWidth: 3 },
+  cSky:    { borderLeftColor: C.teal,      borderLeftWidth: 3 },
+  cSlate:  { borderLeftColor: C.gray400,   borderLeftWidth: 3 },
+  cNavy:   { borderLeftColor: C.navy,      borderLeftWidth: 3 },
 
   complaintBox: {
     backgroundColor: C.red50,
@@ -271,18 +279,23 @@ const S = StyleSheet.create({
   c3:  { width: "33.33%", marginBottom: 10, paddingRight: 10 },
   c4:  { width: "25%",    marginBottom: 10, paddingRight: 8  },
 
+  // ── FIELD: label clearly visible ──
   fieldBox: { marginBottom: 4 },
   lbl: {
-    fontSize: 6,
-    color: C.slate400,
+    fontSize: 6.5,
+    color: C.navyMid,                 // brand navy — clearly visible
     textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 2,
+    letterSpacing: 0.9,
+    marginBottom: 3,
     fontFamily: "Helvetica-Bold",
+    backgroundColor: C.gray100,       // subtle bg so it stands out
+    paddingTop: 2, paddingBottom: 2,
+    paddingLeft: 4, paddingRight: 4,
+    borderRadius: 2,
   },
-  val:   { fontSize: 8, color: C.slate700, lineHeight: 1.5 },
-  valB:  { fontSize: 8, color: C.slate900, fontFamily: "Helvetica-Bold", lineHeight: 1.5 },
-  valXL: { fontSize: 12, color: C.slate900, fontFamily: "Helvetica-Bold" },
+  val:   { fontSize: 8, color: C.gray700, lineHeight: 1.5 },
+  valB:  { fontSize: 8, color: C.navyDeep, fontFamily: "Helvetica-Bold", lineHeight: 1.5 },
+  valXL: { fontSize: 12, color: C.navy, fontFamily: "Helvetica-Bold" },
 
   chipRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 3 },
   chip: {
@@ -294,106 +307,110 @@ const S = StyleSheet.create({
     borderBottomWidth: 1, borderLeftWidth: 1,
   },
   chipTx: { fontSize: 6.5, fontFamily: "Helvetica-Bold" },
-  chipEm:     { backgroundColor: C.em50,     borderTopColor: C.em200,    borderRightColor: C.em200,    borderBottomColor: C.em200,    borderLeftColor: C.em200    },
-  chipEmTx:   { color: C.em700 },
-  chipGold:   { backgroundColor: C.gold50,   borderTopColor: C.gold100,  borderRightColor: C.gold100,  borderBottomColor: C.gold100,  borderLeftColor: C.gold100  },
-  chipGoldTx: { color: C.gold600 },
-  chipRed:    { backgroundColor: C.red50,    borderTopColor: C.red100,   borderRightColor: C.red100,   borderBottomColor: C.red100,   borderLeftColor: C.red100   },
-  chipRedTx:  { color: C.red700 },
-  chipAmb:    { backgroundColor: C.amber50,  borderTopColor: C.amber100, borderRightColor: C.amber100, borderBottomColor: C.amber100, borderLeftColor: C.amber100 },
-  chipAmbTx:  { color: C.amber700 },
-  chipBlue:   { backgroundColor: C.blue50,   borderTopColor: C.blue100,  borderRightColor: C.blue100,  borderBottomColor: C.blue100,  borderLeftColor: C.blue100  },
-  chipBlueTx: { color: C.blue700 },
-  chipPur:    { backgroundColor: C.purple50, borderTopColor: C.purple100,borderRightColor: C.purple100,borderBottomColor: C.purple100,borderLeftColor: C.purple100},
-  chipPurTx:  { color: C.purple700 },
-  chipSky:    { backgroundColor: C.sky50,    borderTopColor: C.sky100,   borderRightColor: C.sky100,   borderBottomColor: C.sky100,   borderLeftColor: C.sky100   },
-  chipSkyTx:  { color: C.sky700 },
-  chipSlate:  { backgroundColor: C.slate100, borderTopColor: C.slate200, borderRightColor: C.slate200, borderBottomColor: C.slate200, borderLeftColor: C.slate200 },
-  chipSlateTx:{ color: C.slate600 },
+  // Brand chips
+  chipNavy:    { backgroundColor: C.navy,    borderTopColor: C.navyDark, borderRightColor: C.navyDark, borderBottomColor: C.navyDark, borderLeftColor: C.navyDark },
+  chipNavyTx:  { color: C.white },
+  chipOrange:  { backgroundColor: C.orangeLt,borderTopColor: C.orangeDk, borderRightColor: C.orangeDk, borderBottomColor: C.orangeDk, borderLeftColor: C.orangeDk },
+  chipOrangeTx:{ color: C.orangeDk },
+  // Semantic chips
+  chipEm:      { backgroundColor: C.em50,     borderTopColor: C.em200,    borderRightColor: C.em200,    borderBottomColor: C.em200,    borderLeftColor: C.em200    },
+  chipEmTx:    { color: C.em700 },
+  chipRed:     { backgroundColor: C.red50,    borderTopColor: C.red100,   borderRightColor: C.red100,   borderBottomColor: C.red100,   borderLeftColor: C.red100   },
+  chipRedTx:   { color: C.red700 },
+  chipAmb:     { backgroundColor: C.amber50,  borderTopColor: C.amber100, borderRightColor: C.amber100, borderBottomColor: C.amber100, borderLeftColor: C.amber100 },
+  chipAmbTx:   { color: C.amber700 },
+  chipBlue:    { backgroundColor: C.blue50,   borderTopColor: C.blue100,  borderRightColor: C.blue100,  borderBottomColor: C.blue100,  borderLeftColor: C.blue100  },
+  chipBlueTx:  { color: C.blue700 },
+  chipPur:     { backgroundColor: C.purple50, borderTopColor: C.purple100,borderRightColor: C.purple100,borderBottomColor: C.purple100,borderLeftColor: C.purple100},
+  chipPurTx:   { color: C.purple700 },
+  chipSky:     { backgroundColor: C.skyBrand, borderTopColor: C.skyBorder,borderRightColor: C.skyBorder,borderBottomColor: C.skyBorder,borderLeftColor: C.skyBorder},
+  chipSkyTx:   { color: C.skyText },
+  chipSlate:   { backgroundColor: C.gray100,  borderTopColor: C.gray200,  borderRightColor: C.gray200,  borderBottomColor: C.gray200,  borderLeftColor: C.gray200  },
+  chipSlateTx: { color: C.gray600 },
 
-  divider: { borderBottomWidth: 1, borderBottomColor: C.slate100, marginTop: 8, marginBottom: 8 },
+  divider: { borderBottomWidth: 1, borderBottomColor: C.gray100, marginTop: 8, marginBottom: 8 },
 
-  pbTrack:  { height: 7, backgroundColor: C.slate100, borderRadius: 3.5, marginTop: 4, marginBottom: 3, overflow: "hidden" },
+  pbTrack:  { height: 7, backgroundColor: C.gray100, borderRadius: 3.5, marginTop: 4, marginBottom: 3, overflow: "hidden" },
   pbFill:   { height: 7, borderRadius: 3.5 },
   pbLabels: { flexDirection: "row", justifyContent: "space-between" },
-  pbLblTx:  { fontSize: 6, color: C.slate400 },
+  pbLblTx:  { fontSize: 6, color: C.gray400 },
 
   checkRow: {
     flexDirection: "row", alignItems: "flex-start",
     marginBottom: 6, paddingBottom: 6,
-    borderBottomWidth: 1, borderBottomColor: C.slate50,
+    borderBottomWidth: 1, borderBottomColor: C.gray50,
   },
-  checkLabel: { fontSize: 7.5, color: C.slate600, fontFamily: "Helvetica-Bold", width: 120, marginTop: 2, flexShrink: 0 },
+  checkLabel: { fontSize: 7.5, color: C.navy, fontFamily: "Helvetica-Bold", width: 120, marginTop: 2, flexShrink: 0 },
   checkPills: { flexDirection: "row", flexWrap: "wrap", flex: 1 },
   checkOn: {
-    backgroundColor: C.em50, borderRadius: 3,
+    backgroundColor: C.navy, borderRadius: 3,
     paddingTop: 2, paddingBottom: 2, paddingLeft: 7, paddingRight: 7,
     marginRight: 4, marginBottom: 3,
     borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1,
-    borderTopColor: C.em200, borderRightColor: C.em200, borderBottomColor: C.em200, borderLeftColor: C.em200,
+    borderTopColor: C.navyDark, borderRightColor: C.navyDark, borderBottomColor: C.navyDark, borderLeftColor: C.navyDark,
   },
   checkOff: {
-    backgroundColor: C.slate50, borderRadius: 3,
+    backgroundColor: C.gray50, borderRadius: 3,
     paddingTop: 2, paddingBottom: 2, paddingLeft: 7, paddingRight: 7,
     marginRight: 4, marginBottom: 3,
     borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1,
-    borderTopColor: C.slate150, borderRightColor: C.slate150, borderBottomColor: C.slate150, borderLeftColor: C.slate150,
+    borderTopColor: C.gray150, borderRightColor: C.gray150, borderBottomColor: C.gray150, borderLeftColor: C.gray150,
   },
-  checkOnTx:  { fontSize: 7, color: C.em700, fontFamily: "Helvetica-Bold" },
-  checkOffTx: { fontSize: 7, color: C.slate400 },
-  checkNote:  { fontSize: 6, color: C.slate500, fontStyle: "italic", marginTop: 3, flex: 1 },
+  checkOnTx:  { fontSize: 7, color: C.white, fontFamily: "Helvetica-Bold" },
+  checkOffTx: { fontSize: 7, color: C.gray400 },
+  checkNote:  { fontSize: 6, color: C.gray500, fontStyle: "italic", marginTop: 3, flex: 1 },
 
   qaWrap: {
     borderRadius: L.cardR, overflow: "hidden", marginBottom: 6,
     borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1,
-    borderTopColor: C.slate200, borderRightColor: C.slate200, borderBottomColor: C.slate200, borderLeftColor: C.slate200,
+    borderTopColor: C.gray200, borderRightColor: C.gray200, borderBottomColor: C.gray200, borderLeftColor: C.gray200,
   },
   qaHead: {
-    backgroundColor: C.slate800,
+    backgroundColor: C.navy,
     paddingTop: 7, paddingBottom: 7, paddingLeft: 12, paddingRight: 12,
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
   qaHeadTx:    { fontSize: 8, fontFamily: "Helvetica-Bold", color: C.white },
-  qaHeadCount: { fontSize: 6.5, color: C.em400 },
+  qaHeadCount: { fontSize: 6.5, color: C.orange },
   qaRow: {
     flexDirection: "row", alignItems: "center",
     paddingTop: 6, paddingBottom: 6, paddingLeft: 12, paddingRight: 12,
-    borderTopWidth: 1, borderTopColor: C.slate100,
+    borderTopWidth: 1, borderTopColor: C.gray100,
   },
-  qaRowAlt: { backgroundColor: C.slate50 },
+  qaRowAlt: { backgroundColor: C.gray50 },
   qaNum: {
     width: 15, height: 15, borderRadius: 2,
-    backgroundColor: C.em100, alignItems: "center", justifyContent: "center",
+    backgroundColor: C.orangeLt, alignItems: "center", justifyContent: "center",
     marginRight: 8, flexShrink: 0,
   },
-  qaNumTx: { fontSize: 6, color: C.em700, fontFamily: "Helvetica-Bold" },
-  qaQ:     { fontSize: 7.5, color: C.slate600, flex: 1, paddingRight: 12, lineHeight: 1.5 },
+  qaNumTx: { fontSize: 6, color: C.navyDeep, fontFamily: "Helvetica-Bold" },
+  qaQ:    { fontSize: 7.5, color: C.gray600, flex: 1, paddingRight: 12, lineHeight: 1.5 },
 
   tbl: {
     borderRadius: L.cardR, overflow: "hidden", marginBottom: 6,
     borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1,
-    borderTopColor: C.slate200, borderRightColor: C.slate200, borderBottomColor: C.slate200, borderLeftColor: C.slate200,
+    borderTopColor: C.gray200, borderRightColor: C.gray200, borderBottomColor: C.gray200, borderLeftColor: C.gray200,
   },
   tHead: {
     flexDirection: "row",
-    backgroundColor: C.slate800,
+    backgroundColor: C.navy,
     paddingTop: 7, paddingBottom: 7, paddingLeft: 12, paddingRight: 12,
   },
-  tHCell:  { fontSize: 6.5, color: C.slate300, fontFamily: "Helvetica-Bold", paddingRight: 6, letterSpacing: 0.5, textTransform: "uppercase" },
+  tHCell:  { fontSize: 6.5, color: C.orange, fontFamily: "Helvetica-Bold", paddingRight: 6, letterSpacing: 0.5, textTransform: "uppercase" },
   tRow: {
     flexDirection: "row",
-    borderTopWidth: 1, borderTopColor: C.slate100,
+    borderTopWidth: 1, borderTopColor: C.gray100,
     paddingTop: 6, paddingBottom: 6, paddingLeft: 12, paddingRight: 12,
   },
-  tRowAlt: { backgroundColor: C.slate50 },
-  tCell:   { fontSize: 7.5, color: C.slate500, paddingRight: 6, lineHeight: 1.4 },
-  tCellB:  { fontSize: 7.5, color: C.slate800, fontFamily: "Helvetica-Bold", paddingRight: 6 },
+  tRowAlt: { backgroundColor: C.gray50 },
+  tCell:   { fontSize: 7.5, color: C.gray500, paddingRight: 6, lineHeight: 1.4 },
+  tCellB:  { fontSize: 7.5, color: C.navyDeep, fontFamily: "Helvetica-Bold", paddingRight: 6 },
   tCellEm: { fontSize: 7.5, color: C.em600,    fontFamily: "Helvetica-Bold", paddingRight: 6 },
-  tCellNum:{ fontSize: 7,   color: C.slate400, paddingRight: 6 },
+  tCellNum:{ fontSize: 7,   color: C.gray400,  paddingRight: 6 },
 
-  sevMild:        { backgroundColor: C.em50,     borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
-  sevModerate:    { backgroundColor: C.amber50,  borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
-  sevSevere:      { backgroundColor: C.red50,    borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
+  sevMild:        { backgroundColor: C.em50,    borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
+  sevModerate:    { backgroundColor: C.amber50, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
+  sevSevere:      { backgroundColor: C.red50,   borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
   sevMildTx:      { fontSize: 6.5, color: C.em700,    fontFamily: "Helvetica-Bold" },
   sevModerateTx:  { fontSize: 6.5, color: C.amber700, fontFamily: "Helvetica-Bold" },
   sevSevereTx:    { fontSize: 6.5, color: C.red700,   fontFamily: "Helvetica-Bold" },
@@ -405,24 +422,27 @@ const S = StyleSheet.create({
   stageSubTx:     { fontSize: 6.5, color: C.amber700,  fontFamily: "Helvetica-Bold" },
   stageChronicTx: { fontSize: 6.5, color: C.purple700, fontFamily: "Helvetica-Bold" },
 
+  // ── PACKAGE — navy themed ──
   pkgWrap:   { marginBottom: 8 },
   pkgHeader: {
-    backgroundColor: C.slate800,
+    backgroundColor: C.navyDeep,
     paddingTop: 9, paddingBottom: 9, paddingLeft: 14, paddingRight: 14,
     borderTopLeftRadius: L.cardR, borderTopRightRadius: L.cardR,
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
   pkgTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.white },
-  pkgPrice: { fontSize: 7.5, color: C.em400 },
+  pkgPrice: { fontSize: 7.5, color: C.orange },
   pkgBody: {
     borderTopWidth: 0,
     borderRightWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1,
-    borderRightColor: C.slate200, borderBottomColor: C.slate200, borderLeftColor: C.slate200,
+    borderRightColor: C.gray200, borderBottomColor: C.gray200, borderLeftColor: C.gray200,
     borderBottomLeftRadius: L.cardR, borderBottomRightRadius: L.cardR,
-    padding: 12, backgroundColor: C.slate50,
+    padding: 12, backgroundColor: C.gray50,
   },
+
+  // ── PROGRAM — LIGHT BLUE ──
   progHeader: {
-    backgroundColor: C.em700,
+    backgroundColor: C.navyMid,          // medium navy header
     paddingTop: 6, paddingBottom: 6, paddingLeft: 12, paddingRight: 12,
     borderTopLeftRadius: 3, borderTopRightRadius: 3,
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
@@ -431,33 +451,37 @@ const S = StyleSheet.create({
   progBody: {
     borderTopWidth: 0,
     borderRightWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1,
-    borderRightColor: C.em200, borderBottomColor: C.em200, borderLeftColor: C.em200,
+    borderRightColor: C.skyBorder, borderBottomColor: C.skyBorder, borderLeftColor: C.skyBorder,
     borderBottomLeftRadius: 3, borderBottomRightRadius: 3,
-    padding: 9, marginBottom: 8, backgroundColor: C.white,
+    padding: 9, marginBottom: 8,
+    backgroundColor: C.skyBrand,         // ← LIGHT BLUE background
   },
+
+  // ── THERAPY — orange-accented ──
   therapyHeader: {
-    backgroundColor: C.em50,
+    backgroundColor: C.orangeLt,
     paddingTop: 6, paddingBottom: 6, paddingLeft: 10, paddingRight: 10,
     borderTopLeftRadius: 3, borderTopRightRadius: 3,
     flexDirection: "row", justifyContent: "space-between",
     borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 0, borderLeftWidth: 1,
-    borderTopColor: C.em200, borderRightColor: C.em200, borderLeftColor: C.em200,
+    borderTopColor: C.orangeDk, borderRightColor: C.orangeDk, borderLeftColor: C.orangeDk,
   },
-  therapyTitle: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: C.em700 },
+  therapyTitle: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: C.navyDeep },
   therapyBody: {
     borderTopWidth: 0,
     borderRightWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1,
-    borderRightColor: C.em200, borderBottomColor: C.em200, borderLeftColor: C.em200,
+    borderRightColor: C.orangeDk, borderBottomColor: C.orangeDk, borderLeftColor: C.orangeDk,
     borderBottomLeftRadius: 3, borderBottomRightRadius: 3,
     overflow: "hidden", marginBottom: 6,
   },
+
   metaBar: {
     flexDirection: "row", flexWrap: "wrap", marginBottom: 8,
     paddingTop: 5, paddingBottom: 5, paddingLeft: 8, paddingRight: 8,
     backgroundColor: C.white, borderRadius: 3,
     borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1,
-    borderTopColor: C.slate150, borderRightColor: C.slate150,
-    borderBottomColor: C.slate150, borderLeftColor: C.slate150,
+    borderTopColor: C.gray150, borderRightColor: C.gray150,
+    borderBottomColor: C.gray150, borderLeftColor: C.gray150,
   },
   imgContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 6 },
   img: { width: 75, height: 75, borderRadius: 4, marginRight: 8, marginBottom: 6 },
@@ -465,28 +489,28 @@ const S = StyleSheet.create({
   sigSection: { marginTop: 20, flexDirection: "row", justifyContent: "flex-end" },
   sigBox:     { alignItems: "center", width: 140, marginLeft: 32 },
   sigLine: {
-    borderTopWidth: 1, borderTopColor: C.slate300,
+    borderTopWidth: 2, borderTopColor: C.orange,
     width: "100%", marginBottom: 6, marginTop: 28,
   },
-  sigRole: { fontSize: 6, color: C.slate400, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.8 },
-  sigName: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.slate800, textAlign: "center", marginTop: 2 },
-  sigSub:  { fontSize: 6.5, color: C.slate500, textAlign: "center", marginTop: 1 },
+  sigRole: { fontSize: 6, color: C.gray400, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.8 },
+  sigName: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.navy, textAlign: "center", marginTop: 2 },
+  sigSub:  { fontSize: 6.5, color: C.gray500, textAlign: "center", marginTop: 1 },
 
   footer: {
-    backgroundColor: C.slate900,
+    backgroundColor: C.navyDeep,
     paddingTop: 7, paddingBottom: 7,
     paddingLeft: L.pageP, paddingRight: L.pageP,
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    borderTopWidth: 1, borderTopColor: C.slate800,
+    borderTopWidth: 1, borderTopColor: C.navy,
   },
-  footerAccentLine: { height: 2, backgroundColor: C.em600 },
-  ftLeft:  { fontSize: 7,   color: C.em500 },
-  ftMid:   { fontSize: 6,   color: C.slate600, textAlign: "center", letterSpacing: 0.3 },
-  ftRight: { fontSize: 6.5, color: C.slate500 },
+  footerAccentLine: { height: 2, backgroundColor: C.orange },
+  ftLeft:  { fontSize: 7,   color: C.orange },
+  ftMid:   { fontSize: 6,   color: C.gray500, textAlign: "center", letterSpacing: 0.3 },
+  ftRight: { fontSize: 6.5, color: C.gray400 },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  DATA RESOLVER
+//  DATA RESOLVER  (unchanged logic)
 // ─────────────────────────────────────────────────────────────────────────────
 function resolve(props) {
   const { bookingData, formData, patientData } = props;
@@ -611,13 +635,27 @@ const getInitials = (name) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  ADDRESS HELPER — splits long address into max 4 lines
+// ─────────────────────────────────────────────────────────────────────────────
+function splitAddress(address) {
+  if (!address) return [];
+  // Split on commas, then group into ~4 segments
+  const parts = address.split(",").map((s) => s.trim()).filter(Boolean);
+  if (parts.length <= 4) return parts;
+  // Merge groups so we get max 4 lines
+  const result = [];
+  const groupSize = Math.ceil(parts.length / 4);
+  for (let i = 0; i < parts.length; i += groupSize) {
+    result.push(parts.slice(i, i + groupSize).join(", "));
+  }
+  return result.slice(0, 4);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
-
-// ✅ KEY FIX: SH + content wrapped together so header never orphans
 const SectionBlock = ({ num, title, badge, children }) => (
   <View style={S.sec} wrap={false}>
-    {/* Section header */}
     <View style={S.secHeader}>
       {num && (
         <View style={S.secNumBox}>
@@ -634,15 +672,12 @@ const SectionBlock = ({ num, title, badge, children }) => (
         )}
       </View>
     </View>
-    {/* First child rendered together, rest can wrap */}
     {children}
   </View>
 );
 
-// For large sections that MUST allow page breaks inside (therapy sessions, exercises)
 const SectionBlockWrap = ({ num, title, badge, children }) => (
   <View style={S.sec}>
-    {/* Header is kept together with at least first card via minPresenceAhead */}
     <View style={S.secHeader} minPresenceAhead={40}>
       {num && (
         <View style={S.secNumBox}>
@@ -675,14 +710,16 @@ const FV = ({ label, value, bold = false }) => {
 
 const Chip = ({ text, variant = "em" }) => {
   const map = {
-    em:    [S.chipEm,    S.chipEmTx],
-    gold:  [S.chipGold,  S.chipGoldTx],
-    red:   [S.chipRed,   S.chipRedTx],
-    amber: [S.chipAmb,   S.chipAmbTx],
-    blue:  [S.chipBlue,  S.chipBlueTx],
-    purple:[S.chipPur,   S.chipPurTx],
-    sky:   [S.chipSky,   S.chipSkyTx],
-    slate: [S.chipSlate, S.chipSlateTx],
+    navy:   [S.chipNavy,   S.chipNavyTx],
+    orange: [S.chipOrange, S.chipOrangeTx],
+    em:     [S.chipEm,     S.chipEmTx],
+    red:    [S.chipRed,    S.chipRedTx],
+    amber:  [S.chipAmb,    S.chipAmbTx],
+    blue:   [S.chipBlue,   S.chipBlueTx],
+    purple: [S.chipPur,    S.chipPurTx],
+    sky:    [S.chipSky,    S.chipSkyTx],
+    slate:  [S.chipSlate,  S.chipSlateTx],
+    gold:   [S.chipOrange, S.chipOrangeTx],
   };
   const [bg, tx] = map[variant] || map.em;
   return <View style={[S.chip, bg]}><Text style={[S.chipTx, tx]}>{text}</Text></View>;
@@ -713,7 +750,7 @@ const PainBar = ({ scaleText }) => {
         <Text style={S.lbl}>Pain Scale</Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Text style={{ fontSize: 14, fontFamily: "Helvetica-Bold", color }}>{num}</Text>
-          <Text style={{ fontSize: 8, color: C.slate400 }}> / {max}  </Text>
+          <Text style={{ fontSize: 8, color: C.gray400 }}> / {max}  </Text>
           <View style={{ backgroundColor: bgColor, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 }}>
             <Text style={{ fontSize: 6.5, color: labelColor, fontFamily: "Helvetica-Bold", letterSpacing: 0.8 }}>{labelText}</Text>
           </View>
@@ -762,9 +799,9 @@ const SevBadge = ({ sev }) => {
 const StageBadge = ({ stage }) => {
   if (!hv(stage)) return <Text style={S.tCell}>—</Text>;
   const map = {
-    Acute:      [S.stageAcute,   S.stageAcuteTx],
-    "Sub-acute":[S.stageSub,     S.stageSubTx],
-    Chronic:    [S.stageChronic, S.stageChronicTx],
+    Acute:       [S.stageAcute,   S.stageAcuteTx],
+    "Sub-acute": [S.stageSub,     S.stageSubTx],
+    Chronic:     [S.stageChronic, S.stageChronicTx],
   };
   const [bg, tx] = map[stage] || map["Sub-acute"];
   return <View style={bg}><Text style={tx}>{stage}</Text></View>;
@@ -777,7 +814,7 @@ const ExerciseTable = ({ exercises }) => {
   if (!exercises || exercises.length === 0)
     return (
       <View style={{ paddingTop: 8, paddingBottom: 8, paddingLeft: 12 }}>
-        <Text style={{ fontSize: 7, color: C.slate400, fontStyle: "italic" }}>No exercises recorded.</Text>
+        <Text style={{ fontSize: 7, color: C.gray400, fontStyle: "italic" }}>No exercises recorded.</Text>
       </View>
     );
   return (
@@ -814,7 +851,7 @@ const TherapyBlock = ({ therapy }) => (
     <View style={S.therapyHeader}>
       <Text style={S.therapyTitle}>{therapy.therapyName || "Therapy"}</Text>
       {therapy.totalPrice > 0 && (
-        <Text style={{ fontSize: 7, color: C.em600 }}>Rs. {therapy.totalPrice}</Text>
+        <Text style={{ fontSize: 7, color: C.navyDeep, fontFamily: "Helvetica-Bold" }}>Rs. {therapy.totalPrice}</Text>
       )}
     </View>
     <View style={S.therapyBody}>
@@ -830,7 +867,7 @@ const MetaBar = ({ sess, therapistId, therapistName }) => {
   return (
     <View style={S.metaBar}>
       {sess.serviceType && <Chip text={`Type: ${sess.serviceType}`} variant="slate" />}
-      {tName && <Chip text={`Therapist: ${tName}`} variant="em" />}
+      {tName && <Chip text={`Therapist: ${tName}`} variant="navy" />}
       {tId   && <Chip text={`ID: ${tId}`}           variant="sky" />}
     </View>
   );
@@ -853,18 +890,18 @@ const SessionBlock = ({ sess, isLast, therapistId, therapistName }) => {
                 <View key={pi} style={{ marginBottom: pi < sess.programs.length - 1 ? 10 : 0 }}>
                   <View style={S.progHeader} wrap={false}>
                     <Text style={S.progTitle}>{prog.programName || `Program ${pi + 1}`}</Text>
-                    {prog.totalPrice > 0 && <Text style={{ fontSize: 7, color: "rgba(255,255,255,0.75)" }}>Rs. {prog.totalPrice}</Text>}
+                    {prog.totalPrice > 0 && <Text style={{ fontSize: 7, color: C.orange }}>Rs. {prog.totalPrice}</Text>}
                   </View>
                   <View style={S.progBody}>
                     {Array.isArray(prog.therapyData ?? prog.therophyData)
                       ? (prog.therapyData ?? prog.therophyData).map((t, ti) => <TherapyBlock key={ti} therapy={t} />)
-                      : <Text style={{ fontSize: 7, color: C.slate400, fontStyle: "italic" }}>No therapy data.</Text>}
+                      : <Text style={{ fontSize: 7, color: C.gray400, fontStyle: "italic" }}>No therapy data.</Text>}
                   </View>
                 </View>
               ))
             : Array.isArray(sess.therapyData ?? sess.therophyData)
             ? (sess.therapyData ?? sess.therophyData).map((t, ti) => <TherapyBlock key={ti} therapy={t} />)
-            : <Text style={{ fontSize: 7, color: C.slate400, fontStyle: "italic" }}>No data.</Text>}
+            : <Text style={{ fontSize: 7, color: C.gray400, fontStyle: "italic" }}>No data.</Text>}
         </View>
       </View>
     );
@@ -877,7 +914,7 @@ const SessionBlock = ({ sess, isLast, therapistId, therapistName }) => {
         <View style={S.progHeader} wrap={false}>
           <Text style={S.progTitle}>{sess.programName || "Program"}</Text>
           {(sess.totalPrice || sess.totalTherapyPrice) > 0 && (
-            <Text style={{ fontSize: 7, color: "rgba(255,255,255,0.75)" }}>
+            <Text style={{ fontSize: 7, color: C.orange }}>
               Rs. {sess.totalPrice || sess.totalTherapyPrice}
             </Text>
           )}
@@ -886,7 +923,7 @@ const SessionBlock = ({ sess, isLast, therapistId, therapistName }) => {
           <MetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
           {Array.isArray(therapies) && therapies.length > 0
             ? therapies.map((t, ti) => <TherapyBlock key={ti} therapy={t} />)
-            : <Text style={{ fontSize: 7, color: C.slate400, fontStyle: "italic" }}>No therapies.</Text>}
+            : <Text style={{ fontSize: 7, color: C.gray400, fontStyle: "italic" }}>No therapies.</Text>}
         </View>
       </View>
     );
@@ -895,15 +932,15 @@ const SessionBlock = ({ sess, isLast, therapistId, therapistName }) => {
   if (sType === "therapy") {
     return (
       <View style={{ marginBottom: isLast ? 0 : 12 }}>
-        <View style={[S.progHeader, { backgroundColor: C.purple700 }]} wrap={false}>
+        <View style={[S.progHeader, { backgroundColor: C.purple600 }]} wrap={false}>
           <Text style={S.progTitle}>{sess.therapyName || "Therapy Session"}</Text>
-          {sess.totalPrice > 0 && <Text style={{ fontSize: 7, color: "rgba(255,255,255,0.75)" }}>Rs. {sess.totalPrice}</Text>}
+          {sess.totalPrice > 0 && <Text style={{ fontSize: 7, color: C.orange }}>Rs. {sess.totalPrice}</Text>}
         </View>
         <View style={[S.progBody, { borderRightColor: C.purple100, borderBottomColor: C.purple100, borderLeftColor: C.purple100 }]}>
           <MetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
           {Array.isArray(sess.exercises) && sess.exercises.length > 0
             ? <ExerciseTable exercises={sess.exercises} />
-            : <Text style={{ fontSize: 7, color: C.slate400, fontStyle: "italic" }}>No exercises.</Text>}
+            : <Text style={{ fontSize: 7, color: C.gray400, fontStyle: "italic" }}>No exercises.</Text>}
         </View>
       </View>
     );
@@ -914,7 +951,7 @@ const SessionBlock = ({ sess, isLast, therapistId, therapistName }) => {
       <View style={{ marginBottom: isLast ? 0 : 12 }}>
         <View style={[S.progHeader, { backgroundColor: C.em600 }]} wrap={false}>
           <Text style={S.progTitle}>Exercise Session</Text>
-          {sess.totalPrice > 0 && <Text style={{ fontSize: 7, color: "rgba(255,255,255,0.75)" }}>Rs. {sess.totalPrice}</Text>}
+          {sess.totalPrice > 0 && <Text style={{ fontSize: 7, color: C.orange }}>Rs. {sess.totalPrice}</Text>}
         </View>
         <View style={[S.progBody, { borderRightColor: C.em200, borderBottomColor: C.em200, borderLeftColor: C.em200 }]}>
           <MetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
@@ -1011,20 +1048,23 @@ const PrescriptionPDF = (props) => {
   const therapistName = treatmentPlan?.therapistName || topTherapistName || "";
   const initials      = getInitials(patientName);
 
+  // Address split into lines
+  const addressLines = splitAddress(clicniData?.address);
+
   const statusColor =
     overallStatus === "Completed"   ? C.em600    :
     overallStatus === "Cancelled"   ? C.red600   :
-    overallStatus === "In Progress" ? C.sky600   : C.amber600;
+    overallStatus === "In Progress" ? C.navyMid  : C.amber600;
   const statusBg =
     overallStatus === "Completed"   ? C.em50     :
     overallStatus === "Cancelled"   ? C.red50    :
-    overallStatus === "In Progress" ? C.sky50    : C.amber50;
+    overallStatus === "In Progress" ? C.skyBrand : C.amber50;
 
   return (
     <Document>
       <Page size="A4" style={S.page} wrap>
 
-        {/* ══ HEADER (fixed — repeats on every page) ══ */}
+        {/* ══ HEADER (fixed) ══ */}
         <View style={S.header} fixed>
           <View style={S.headerAccentBar}>
             <View style={S.headerAccentSeg1} />
@@ -1034,8 +1074,16 @@ const PrescriptionPDF = (props) => {
           <View style={S.headerInner}>
             <View style={S.hLeft}>
               <Text style={S.hClinicName}>{clicniData?.name || "PhysioCare Clinic"}</Text>
-              {hv(clicniData?.address) && <Text style={S.hMeta}>{clicniData.address}</Text>}
-              <View style={{ flexDirection: "row", marginTop: 2 }}>
+              {/* Address rendered line by line so it wraps in 3-4 lines */}
+              {addressLines.length > 0
+                ? addressLines.map((line, i) => (
+                    <Text key={i} style={S.hAddress}>{line}</Text>
+                  ))
+                : hv(clicniData?.address) && (
+                    <Text style={S.hAddress}>{clicniData.address}</Text>
+                  )
+              }
+              <View style={{ flexDirection: "row", marginTop: 3 }}>
                 {hv(clicniData?.phone) && <Text style={[S.hMeta, { marginRight: 14 }]}>T: {clicniData.phone}</Text>}
                 {hv(clicniData?.email) && <Text style={S.hMeta}>E: {clicniData.email}</Text>}
               </View>
@@ -1046,7 +1094,7 @@ const PrescriptionPDF = (props) => {
               {bookingId && <Text style={S.hRef}>REF #{String(bookingId).slice(-8).toUpperCase()}</Text>}
               {hv(overallStatus) && (
                 <View style={S.hStatusWrap}>
-                  <View style={[S.hStatusPill, { backgroundColor: statusColor + "25" }]}>
+                  <View style={[S.hStatusPill, { backgroundColor: statusColor + "30" }]}>
                     <Text style={[S.hStatusTx, { color: statusColor }]}>{overallStatus.toUpperCase()}</Text>
                   </View>
                 </View>
@@ -1055,7 +1103,7 @@ const PrescriptionPDF = (props) => {
           </View>
         </View>
 
-        {/* ══ PATIENT BANNER (non-fixed, first page only) ══ */}
+        {/* ══ PATIENT BANNER ══ */}
         {hv(patientName) && (
           <View style={S.patientBanner} wrap={false}>
             <View style={S.pbLeft}>
@@ -1112,7 +1160,7 @@ const PrescriptionPDF = (props) => {
               {hv(complaints.complaintDetails) && (
                 <View style={S.complaintBox} wrap={false}>
                   <Text style={S.lbl}>Chief Complaint</Text>
-                  <Text style={[S.val, { fontSize: 9, lineHeight: 1.7, marginTop: 3, color: C.slate700 }]}>
+                  <Text style={[S.val, { fontSize: 9, lineHeight: 1.7, marginTop: 3, color: C.gray700 }]}>
                     {complaints.complaintDetails}
                   </Text>
                 </View>
@@ -1173,7 +1221,7 @@ const PrescriptionPDF = (props) => {
                 {background.activityLevels.length > 0 && (
                   <View style={{ marginTop: 4 }}>
                     <Text style={S.lbl}>Activity Level</Text>
-                    <View style={S.chipRow}>{background.activityLevels.map((lvl, i) => <Chip key={i} text={lvl} variant="em" />)}</View>
+                    <View style={S.chipRow}>{background.activityLevels.map((lvl, i) => <Chip key={i} text={lvl} variant="navy" />)}</View>
                   </View>
                 )}
               </View>
@@ -1209,11 +1257,11 @@ const PrescriptionPDF = (props) => {
           {/* ── 05 · INVESTIGATION ── */}
           {(investigation.tests.length > 0 || hv(investigation.reason)) && (
             <SectionBlock num="05" title="Investigation & Tests">
-              <View style={[S.cardAccent, S.cEm]} wrap={false}>
+              <View style={[S.cardAccent, S.cNavy]} wrap={false}>
                 {investigation.tests.length > 0 && (
                   <View style={{ marginBottom: hv(investigation.reason) ? 9 : 0 }}>
                     <Text style={S.lbl}>Recommended Tests</Text>
-                    <View style={S.chipRow}>{investigation.tests.map((t, i) => <Chip key={i} text={t} variant="em" />)}</View>
+                    <View style={S.chipRow}>{investigation.tests.map((t, i) => <Chip key={i} text={t} variant="navy" />)}</View>
                   </View>
                 )}
                 {hv(investigation.reason) && (
@@ -1285,7 +1333,7 @@ const PrescriptionPDF = (props) => {
 
               {/* Sports */}
               {patientPain === "sportsRehab" && (hv(typeOfSport) || hv(recurringInjuries) || hv(returnToSportGoals)) && (
-                <View style={[S.cardAccent, S.cEm]} wrap={false}>
+                <View style={[S.cardAccent, S.cNavy]} wrap={false}>
                   <Text style={S.subSecTitle}>Sports Rehabilitation Assessment</Text>
                   <View style={S.grid}>
                     {hv(typeOfSport)        && <View style={S.c2}><FV label="Type of Sport"       value={typeOfSport} /></View>}
@@ -1339,7 +1387,7 @@ const PrescriptionPDF = (props) => {
           {/* ── 08 · TREATMENT PLAN ── */}
           {(hv(therapistName) || hv(treatmentPlan?.manualTherapy) || hv(treatmentPlan?.precautions)) && (
             <SectionBlock num="08" title="Treatment Plan">
-              <View style={[S.cardAccent, S.cEm]} wrap={false}>
+              <View style={[S.cardAccent, S.cNavy]} wrap={false}>
                 <View style={S.grid}>
                   {hv(doctorName)               && <View style={S.c2}><FV label="Assigned Doctor"   value={doctorName} bold /></View>}
                   {hv(doctorData?.doctorId)     && <View style={S.c2}><FV label="Doctor ID"          value={doctorData.doctorId} /></View>}
@@ -1417,7 +1465,7 @@ const PrescriptionPDF = (props) => {
                 </View>
               )}
               {hv(homeAdvice) && (
-                <View style={[S.cardAccent, S.cEm, { marginTop: homeExercises.length > 0 ? 6 : 0 }]} wrap={false}>
+                <View style={[S.cardAccent, S.cNavy, { marginTop: homeExercises.length > 0 ? 6 : 0 }]} wrap={false}>
                   <Text style={S.lbl}>Home Advice & Instructions</Text>
                   <Text style={[S.val, { lineHeight: 1.7, marginTop: 3 }]}>{homeAdvice}</Text>
                 </View>
@@ -1433,7 +1481,7 @@ const PrescriptionPDF = (props) => {
                   {hv(followUpEntry.nextVisitDate) && (
                     <View style={S.c2}>
                       <Text style={S.lbl}>Next Visit Date</Text>
-                      <Text style={[S.valXL, { color: C.purple700 }]}>{followUpEntry.nextVisitDate}</Text>
+                      <Text style={[S.valXL, { color: C.navy }]}>{followUpEntry.nextVisitDate}</Text>
                     </View>
                   )}
                   {hv(followUpEntry.treatmentStatus) && (

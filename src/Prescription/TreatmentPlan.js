@@ -67,30 +67,69 @@ const parseFrequency = (raw) => {
   return { count, unit }
 }
 
-/* ─── Styles ─────────────────────────────────────────────────────────────── */
+/* ─── Styles (matching PrescriptionTab) ─────────────────────────────────── */
 const inputStyle = {
-  border: '1.5px solid #b6cfe8', borderRadius: 7, fontSize: '0.875rem',
-  color: '#1a3a5c', backgroundColor: '#f5f9ff', padding: '7px 11px',
-  width: '100%', boxSizing: 'border-box', height: 38,
-  outline: 'none', fontFamily: 'inherit',
+  border: '1.5px solid #b6cfe8',
+  borderRadius: 7,
+  fontSize: '0.875rem',
+  color: '#1a3a5c',
+  backgroundColor: '#FFFFFF',
+  padding: '7px 11px',
+  width: '100%',
+  boxSizing: 'border-box',
+  height: 38,
+  outline: 'none',
+  fontFamily: 'inherit',
+  transition: 'border-color 0.18s ease',
 }
-const labelStyle = { fontWeight: 700, fontSize: '0.875rem', color: '#1a3a5c', marginBottom: 6, display: 'block' }
-const cardStyle = { border: '1px solid #d8e8f5', borderRadius: 14, boxShadow: '0 2px 16px rgba(26,90,168,0.07)', marginBottom: 20 }
+
+const labelStyle = {
+  fontWeight: 700,
+  fontSize: '0.82rem',
+  color: '#1B4F8A',
+  marginBottom: 4,
+  display: 'block',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+}
+
+const cardStyle = {
+  border: '1.5px solid #b6cfe8',
+  borderRadius: 12,
+  backgroundColor: '#FFFFFF',
+  boxShadow: '0 4px 24px rgba(27,79,138,0.10)',
+  marginBottom: 20,
+}
 
 /* ─── Field ──────────────────────────────────────────────────────────────── */
 const Field = ({ label, children, required, style = {} }) => (
   <div style={{ display: 'flex', flexDirection: 'column', ...style }}>
-    <label style={labelStyle}>{label}{required && <span style={{ color: '#e53e3e', marginLeft: 3 }}>*</span>}</label>
+    <label style={labelStyle}>
+      {label}
+      {required && <span style={{ color: '#e53e3e', marginLeft: 3 }}>*</span>}
+    </label>
     {children}
   </div>
 )
 
+/* ─── SectionHeader (matching PrescriptionTab) ───────────────────────────── */
 const SectionHeader = ({ emoji, title, subtitle }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, paddingBottom: 14, borderBottom: '1.5px solid #e3eef8' }}>
-    <div style={{ width: 36, height: 36, borderRadius: 9, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>{emoji}</div>
+  <div style={{
+    display: 'flex', alignItems: 'center', gap: 10,
+    marginBottom: 20,
+    borderBottom: '2px solid #dceeff',
+    paddingBottom: 12,
+  }}>
+    <div style={{
+      width: 34, height: 34, borderRadius: 8,
+      background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 17, flexShrink: 0,
+      boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+    }}>{emoji}</div>
     <div>
-      <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.05rem' }}>{title}</h5>
-      {subtitle && <span style={{ fontSize: '0.8rem', color: '#6b9fc7', fontWeight: 500 }}>{subtitle}</span>}
+      <h5 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '1.05rem' }}>{title}</h5>
+      {subtitle && <span style={{ fontSize: '0.8rem', color: '#4a7abf', fontWeight: 500 }}>{subtitle}</span>}
     </div>
   </div>
 )
@@ -98,14 +137,19 @@ const SectionHeader = ({ emoji, title, subtitle }) => (
 /* ─── Radio Button ───────────────────────────────────────────────────────── */
 const RadioBtn = ({ label, emoji, value, active, onClick }) => (
   <button type="button" onClick={() => onClick(value)} style={{
-    display: 'flex', alignItems: 'center', gap: 10, padding: '11px 28px', borderRadius: 10,
+    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 24px', borderRadius: 10,
     cursor: 'pointer', fontFamily: 'inherit',
-    border: `2px solid ${active ? '#1a5fa8' : '#c8ddf0'}`,
-    background: active ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#f5f9ff',
+    border: `2px solid ${active ? '#1B4F8A' : '#b6cfe8'}`,
+    background: active ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
     color: active ? '#fff' : '#4a6a8a', fontWeight: active ? 700 : 500, fontSize: '0.95rem',
-    transition: 'all 0.18s', boxShadow: active ? '0 3px 12px rgba(26,90,168,0.22)' : 'none',
+    transition: 'all 0.18s', boxShadow: active ? '0 3px 12px rgba(27,79,138,0.25)' : 'none',
   }}>
-    <span style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${active ? 'rgba(255,255,255,0.7)' : '#b6cfe8'}`, background: active ? 'rgba(255,255,255,0.25)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+    <span style={{
+      width: 18, height: 18, borderRadius: '50%',
+      border: `2px solid ${active ? 'rgba(255,255,255,0.7)' : '#b6cfe8'}`,
+      background: active ? 'rgba(255,255,255,0.25)' : 'transparent',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    }}>
       {active && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', display: 'block' }} />}
     </span>
     {emoji} {label}
@@ -138,7 +182,7 @@ const TherapistSearch = ({ therapists, loading, value, name, onChange, hasError 
           style={{
             ...inputStyle, paddingRight: value ? 36 : 11, opacity: loading ? 0.6 : 1,
             borderColor: hasError ? '#e53e3e' : value ? '#38a169' : '#b6cfe8',
-            backgroundColor: hasError ? '#fff5f5' : value ? '#f0fff4' : '#f5f9ff',
+            backgroundColor: hasError ? '#fff5f5' : value ? '#f0fff4' : '#FFFFFF',
             boxShadow: hasError ? '0 0 0 3px rgba(229,62,62,0.12)' : 'none',
           }}
         />
@@ -154,16 +198,16 @@ const TherapistSearch = ({ therapists, loading, value, name, onChange, hasError 
         </div>
       )}
       {open && !loading && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8, maxHeight: 220, overflowY: 'auto', zIndex: 1000, boxShadow: '0 4px 16px rgba(26,90,168,0.12)', marginTop: 2 }}>
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8, maxHeight: 220, overflowY: 'auto', zIndex: 1000, boxShadow: '0 4px 16px rgba(27,79,138,0.12)', marginTop: 2 }}>
           {filtered.length > 0 ? filtered.map((t, i) => {
             const isSel = value === t.therapistId
             return (
               <div key={i}
                 onMouseDown={e => { e.preventDefault(); onChange(t.therapistId, t.fullName); setSearch(`${t.therapistId} - ${t.fullName}`); setOpen(false) }}
-                style={{ padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid #eee', background: isSel ? '#e0f2fe' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                style={{ padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid #eee', background: isSel ? '#dceeff' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                 onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = '#f0f7ff' }}
-                onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isSel ? '#e0f2fe' : '#fff' }}>
-                <span><strong style={{ color: '#1a5fa8' }}>{t.therapistId}</strong><span style={{ color: '#1a3a5c' }}> — {t.fullName}</span></span>
+                onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isSel ? '#dceeff' : '#fff' }}>
+                <span><strong style={{ color: '#1B4F8A' }}>{t.therapistId}</strong><span style={{ color: '#1a3a5c' }}> — {t.fullName}</span></span>
                 {isSel && <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.8rem' }}>✓ Selected</span>}
               </div>
             )
@@ -214,8 +258,8 @@ const getModeEmoji = (mode) => {
 const NumCell = ({ value, onChange }) => (
   <input type="number" min="0" value={value ?? ''}
     onChange={e => onChange(e.target.value)}
-    style={{ width: 64, textAlign: 'center', fontFamily: 'inherit', border: '1.5px solid #1a5fa8', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none' }}
-    onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(26,95,168,0.15)' }}
+    style={{ width: 64, textAlign: 'center', fontFamily: 'inherit', border: '1.5px solid #1B4F8A', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none' }}
+    onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(27,79,138,0.15)' }}
     onBlur={e => { e.target.style.boxShadow = 'none' }}
   />
 )
@@ -225,12 +269,12 @@ const FreqCell = ({ count, unit, onCountChange, onUnitChange }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
     <input type="number" min="0" value={count ?? ''} placeholder="0"
       onChange={e => onCountChange(e.target.value)}
-      style={{ width: 50, textAlign: 'center', border: '1.5px solid #1a5fa8', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit' }}
-      onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(26,95,168,0.15)' }}
+      style={{ width: 50, textAlign: 'center', border: '1.5px solid #1B4F8A', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit' }}
+      onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(27,79,138,0.15)' }}
       onBlur={e => { e.target.style.boxShadow = 'none' }}
     />
     <select value={unit ?? 'Day'} onChange={e => onUnitChange(e.target.value)}
-      style={{ border: '1.5px solid #1a5fa8', borderRadius: 6, padding: '4px 6px', fontSize: '0.78rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
+      style={{ border: '1.5px solid #1B4F8A', borderRadius: 6, padding: '4px 6px', fontSize: '0.78rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
       {FREQ_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
     </select>
   </div>
@@ -240,8 +284,8 @@ const FreqCell = ({ count, unit, onCountChange, onUnitChange }) => (
 const ExerciseCheckbox = ({ checked, onChange }) => (
   <div onClick={onChange} style={{
     width: 18, height: 18, borderRadius: 4, flexShrink: 0, cursor: 'pointer',
-    border: `2px solid ${checked ? '#1a5fa8' : '#a0bcda'}`,
-    background: checked ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#fff',
+    border: `2px solid ${checked ? '#1B4F8A' : '#a0bcda'}`,
+    background: checked ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#fff',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     transition: 'all 0.18s', margin: 'auto',
   }}>
@@ -268,24 +312,24 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
 
   return (
     <div style={{ overflowX: 'auto', marginTop: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, padding: '5px 10px', background: '#f8fbff', borderRadius: 6, border: '1px solid #e0ecf8' }}>
-        <span style={{ fontSize: '0.78rem', color: '#4a6a8a', fontWeight: 600 }}>{checkedCount} of {exercises.length} exercise{exercises.length !== 1 ? 's' : ''} selected</span>
-        <button type="button" onClick={toggleAll} style={{ padding: '3px 12px', borderRadius: 5, border: '1.5px solid #1a5fa8', background: allChecked ? '#1a5fa8' : '#f0f7ff', color: allChecked ? '#fff' : '#1a5fa8', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, padding: '5px 10px', background: '#f0f6ff', borderRadius: 6, border: '1px solid #d0e4f7' }}>
+        <span style={{ fontSize: '0.78rem', color: '#1B4F8A', fontWeight: 600 }}>{checkedCount} of {exercises.length} exercise{exercises.length !== 1 ? 's' : ''} selected</span>
+        <button type="button" onClick={toggleAll} style={{ padding: '3px 12px', borderRadius: 5, border: '1.5px solid #1B4F8A', background: allChecked ? '#1B4F8A' : '#FFFFFF', color: allChecked ? '#fff' : '#1B4F8A', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
           {allChecked ? '☑ Deselect All' : '☐ Select All'}
         </button>
       </div>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: '#1a3a5c' }}>
         <thead>
-          <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+          <tr style={{ background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)', color: '#fff' }}>
             <TH center><div onClick={toggleAll} style={{ width: 16, height: 16, borderRadius: 3, cursor: 'pointer', border: `2px solid ${allChecked ? '#fff' : 'rgba(255,255,255,0.6)'}`, background: allChecked ? 'rgba(255,255,255,0.3)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 'auto' }}>{allChecked && <span style={{ color: '#fff', fontSize: '0.6rem' }}>✓</span>}</div></TH>
             <TH>#</TH><TH>Exercise Name</TH><TH center>Sessions</TH><TH center>Sets</TH><TH center>Reps</TH><TH>Frequency</TH><TH>Notes</TH>
           </tr>
         </thead>
         <tbody>
           {exercises.map((ex, idx) => (
-            <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
+            <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f0f6ff' : '#FFFFFF', borderBottom: '1px solid #dceeff' }}>
               <TD style={{ textAlign: 'center', width: 32 }}><ExerciseCheckbox checked={ex._checked !== false} onChange={() => toggleExercise(idx)} /></TD>
-              <TD style={{ fontWeight: 700, color: '#1a5fa8' }}>{idx + 1}</TD>
+              <TD style={{ fontWeight: 700, color: '#1B4F8A' }}>{idx + 1}</TD>
               <TD style={{ fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</TD>
               <TD style={{ textAlign: 'center' }}><NumCell value={ex.sessions} onChange={v => setField(idx, 'sessions', v)} /></TD>
               <TD style={{ textAlign: 'center' }}><NumCell value={ex.sets} onChange={v => setField(idx, 'sets', v)} /></TD>
@@ -315,19 +359,19 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
 
 /* ─── TherapyBlock ───────────────────────────────────────────────────────── */
 const TherapyBlock = ({ therapyKey, therapy, checked, onToggle, exercises, onUpdateExercises, loading }) => (
-  <div style={{ border: `2px solid ${checked ? '#1a5fa8' : '#dde8f2'}`, borderRadius: 10, overflow: 'hidden', transition: 'border-color 0.18s', marginBottom: 12 }}>
+  <div style={{ border: `2px solid ${checked ? '#1B4F8A' : '#dde8f2'}`, borderRadius: 10, overflow: 'hidden', transition: 'border-color 0.18s', marginBottom: 12 }}>
     <div
       onClick={(e) => { e.stopPropagation(); onToggle(therapyKey) }}
-      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 18px', background: checked ? 'linear-gradient(135deg,#eef5ff,#ddeeff)' : '#f5f8fc', cursor: 'pointer', userSelect: 'none', borderBottom: checked ? '1.5px solid #c8ddf0' : 'none' }}>
+      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 18px', background: checked ? '#dceeff' : '#f5f8fc', cursor: 'pointer', userSelect: 'none', borderBottom: checked ? '1.5px solid #b6cfe8' : 'none' }}>
       <div
         onClick={(e) => { e.stopPropagation(); onToggle(therapyKey) }}
-        style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, border: `2px solid ${checked ? '#1a5fa8' : '#a0bcda'}`, background: checked ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, border: `2px solid ${checked ? '#1B4F8A' : '#a0bcda'}`, background: checked ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {checked && <span style={{ color: '#fff', fontSize: '0.72rem', lineHeight: 1, fontWeight: 700 }}>✓</span>}
       </div>
-      <span style={{ fontWeight: 700, fontSize: '0.93rem', color: '#1a3a5c', flex: 1 }}>{therapy}</span>
+      <span style={{ fontWeight: 700, fontSize: '0.93rem', color: '#1B4F8A', flex: 1 }}>{therapy}</span>
       {loading
-        ? <span style={{ fontSize: '0.78rem', color: '#6b9fc7', fontWeight: 500 }}>Loading exercises...</span>
-        : <span style={{ fontSize: '0.78rem', color: checked ? '#1a5fa8' : '#8fa8c0', fontWeight: 600 }}>
+        ? <span style={{ fontSize: '0.78rem', color: '#4a7abf', fontWeight: 500 }}>Loading exercises...</span>
+        : <span style={{ fontSize: '0.78rem', color: checked ? '#1B4F8A' : '#8fa8c0', fontWeight: 600 }}>
           {checked ? (() => {
             const total = exercises.length
             const active = exercises.filter(ex => ex._checked !== false).length
@@ -335,12 +379,12 @@ const TherapyBlock = ({ therapyKey, therapy, checked, onToggle, exercises, onUpd
           })() : 'Hidden'}
         </span>
       }
-      <span style={{ fontSize: '0.8rem', color: checked ? '#1a5fa8' : '#b0c4d8', transform: checked ? 'rotate(0deg)' : 'rotate(-90deg)', display: 'inline-block', transition: 'transform 0.2s' }}>▼</span>
+      <span style={{ fontSize: '0.8rem', color: checked ? '#1B4F8A' : '#b0c4d8', transform: checked ? 'rotate(0deg)' : 'rotate(-90deg)', display: 'inline-block', transition: 'transform 0.2s' }}>▼</span>
     </div>
     {checked && (
       <div style={{ padding: '4px 18px 16px' }}>
         {loading
-          ? <div style={{ padding: '16px', textAlign: 'center', color: '#6b9fc7', fontSize: '0.85rem' }}>⏳ Loading exercises...</div>
+          ? <div style={{ padding: '16px', textAlign: 'center', color: '#4a7abf', fontSize: '0.85rem' }}>⏳ Loading exercises...</div>
           : <ExerciseTable exercises={exercises} onUpdate={onUpdateExercises} />
         }
       </div>
@@ -348,15 +392,7 @@ const TherapyBlock = ({ therapyKey, therapy, checked, onToggle, exercises, onUpd
   </div>
 )
 
-/* ══════════════════════════════════════════════════════════════════════════
-   RESTORE HELPERS
-   KEY: keys MUST use the same double-underscore format as fetchItemDetail:
-     package:  "${packageId}__${programName}__${therapyName}__${tIdx}"
-     program:  "${programId}__${therapyName}__${tIdx}"
-     exercise: "${exerciseId}__${exName}__0"
-   This ensures key.split('__')[0] always gives the correct service item ID
-   for grouping in handleNext, and handleRemoveItem cleanup works correctly.
-══════════════════════════════════════════════════════════════════════════ */
+/* ─── restoreTherophyDataState ───────────────────────────────────────────── */
 const restoreTherophyDataState = (sessions) => {
   if (!Array.isArray(sessions) || sessions.length === 0) return {}
   const mapped = {}
@@ -367,7 +403,6 @@ const restoreTherophyDataState = (sessions) => {
       sess.programs.forEach((prog) => {
         const progName = prog.programName || ''
         ;(prog.therapyData || []).forEach((therapy, tIdx) => {
-          // ← SAME format as fetchItemDetail package branch
           const key = `${pkgId}__${progName}__${therapy.therapyName}__${tIdx}`
           mapped[key] = {
             checked: true,
@@ -388,7 +423,6 @@ const restoreTherophyDataState = (sessions) => {
     } else if (sess.serviceType === 'program' && Array.isArray(sess.therapyData)) {
       const progId = sess.programId || ''
       sess.therapyData.forEach((therapy, tIdx) => {
-        // ← SAME format as fetchItemDetail program branch
         const key = `${progId}__${therapy.therapyName}__${tIdx}`
         mapped[key] = {
           checked: true,
@@ -406,7 +440,6 @@ const restoreTherophyDataState = (sessions) => {
       })
     } else if (sess.serviceType === 'exercise' && Array.isArray(sess.exercises)) {
       const exId = sess.exerciseId || 'exercise'
-      // ← SAME format as fetchItemDetail exercise branch
       const key = `${exId}__exercise__0`
       mapped[key] = {
         checked: true, therapyName: 'Exercise',
@@ -420,7 +453,6 @@ const restoreTherophyDataState = (sessions) => {
         }))
       }
     } else {
-      // fallback / therapy mode — use therapyId as prefix
       const therapyData = Array.isArray(sess.therapyData) ? sess.therapyData : []
       const sessId = sess.therapyId || sess.programId || sess.packageId || 'unknown'
       therapyData.forEach((therapy, tIndex) => {
@@ -444,10 +476,6 @@ const restoreTherophyDataState = (sessions) => {
   return mapped
 }
 
-/* ── restoreSelectedItems: rebuild the selectedItems Map from saved sessions ──
-   Returns a Map of serviceItemId → { packageId/programId/etc, name, _restored }
-   so SelectedChips can display the correct chips after navigating back.
-── */
 const restoreSelectedItems = (sessions) => {
   if (!Array.isArray(sessions) || sessions.length === 0) return new Map()
   const map = new Map()
@@ -469,10 +497,7 @@ const restoreSelectedItems = (sessions) => {
   return map
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   MULTI-SELECT BROWSE PANEL
-   — Like HomePlan's "Browse Exercises" panel but for packages/programs/etc.
-══════════════════════════════════════════════════════════════════════════ */
+/* ─── BrowsePanel ────────────────────────────────────────────────────────── */
 const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm, onClose, search, onSearch }) => {
   const emoji = getModeEmoji(mode)
   const filtered = programs.filter(p => getName(p, mode).toLowerCase().includes(search.toLowerCase()))
@@ -487,9 +512,9 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
   }
 
   return (
-    <div style={{ marginBottom: 20, border: '1.5px solid #b6cfe8', borderRadius: 10, overflow: 'hidden', background: '#f5f9ff' }}>
+    <div style={{ marginBottom: 20, border: '1.5px solid #b6cfe8', borderRadius: 10, overflow: 'hidden', background: '#FFFFFF' }}>
       {/* Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#e8f1fb', borderBottom: '1px solid #b6cfe8', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#f0f6ff', borderBottom: '1px solid #b6cfe8', flexWrap: 'wrap' }}>
         <input
           value={search}
           onChange={e => onSearch(e.target.value)}
@@ -499,11 +524,11 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
         <button
           type="button"
           onClick={toggleAll}
-          style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1a5fa8', background: '#fff', color: '#1a5fa8', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {allSelected ? '☑ Deselect All' : '☐ Select All'}
         </button>
-        <span style={{ fontSize: '0.8rem', color: '#5a7fa8', fontWeight: 600 }}>
+        <span style={{ fontSize: '0.8rem', color: '#1B4F8A', fontWeight: 600 }}>
           {selectedIds.size} selected
         </span>
         <button
@@ -512,7 +537,7 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
           disabled={selectedIds.size === 0}
           style={{
             marginLeft: 'auto', padding: '6px 20px', borderRadius: 8, border: 'none',
-            background: selectedIds.size > 0 ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#c8ddf0',
+            background: selectedIds.size > 0 ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#b6cfe8',
             color: '#fff', fontWeight: 700, fontSize: '0.85rem',
             cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
           }}
@@ -523,7 +548,7 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
 
       {/* List */}
       {loading ? (
-        <div style={{ padding: 24, textAlign: 'center', color: '#8aaac8', fontSize: '0.875rem' }}>
+        <div style={{ padding: 24, textAlign: 'center', color: '#4a7abf', fontSize: '0.875rem' }}>
           ⏳ Loading {mode}s…
         </div>
       ) : filtered.length === 0 ? (
@@ -542,8 +567,8 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '10px 16px', cursor: 'pointer',
-                  borderBottom: '1px solid #e3eef8',
-                  background: isChecked ? '#dbeafe' : i % 2 === 0 ? '#f5f9ff' : '#fff',
+                  borderBottom: '1px solid #dceeff',
+                  background: isChecked ? '#dceeff' : i % 2 === 0 ? '#f0f6ff' : '#FFFFFF',
                   transition: 'background 0.15s',
                 }}
               >
@@ -551,7 +576,7 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
                   type="checkbox"
                   checked={isChecked}
                   onChange={() => onToggle(id, p)}
-                  style={{ width: 16, height: 16, accentColor: '#1a5fa8', cursor: 'pointer', flexShrink: 0 }}
+                  style={{ width: 16, height: 16, accentColor: '#1B4F8A', cursor: 'pointer', flexShrink: 0 }}
                 />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1a3a5c' }}>
@@ -561,7 +586,7 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
                     ID: {id}
                   </div>
                 </div>
-                {isChecked && <span style={{ color: '#1a5fa8', fontWeight: 700, fontSize: '1rem' }}>✓</span>}
+                {isChecked && <span style={{ color: '#1B4F8A', fontWeight: 700, fontSize: '1rem' }}>✓</span>}
               </label>
             )
           })}
@@ -571,9 +596,7 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
   )
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   SELECTED ITEMS CHIPS
-══════════════════════════════════════════════════════════════════════════ */
+/* ─── SelectedChips ──────────────────────────────────────────────────────── */
 const SelectedChips = ({ items, mode, onRemove }) => {
   if (!items.length) return null
   const emoji = getModeEmoji(mode)
@@ -585,15 +608,15 @@ const SelectedChips = ({ items, mode, onRemove }) => {
         return (
           <div key={id} style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: '#eef5ff', border: '1.5px solid #a8c6f0',
+            background: '#dceeff', border: '1.5px solid #b6cfe8',
             borderRadius: 20, padding: '4px 12px',
-            fontSize: '0.8rem', color: '#1a3a5c', fontWeight: 600,
+            fontSize: '0.8rem', color: '#1B4F8A', fontWeight: 600,
           }}>
             {emoji} {label}
             <button
               type="button"
               onClick={() => onRemove(id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', fontWeight: 700, fontSize: 13, padding: '0 2px', lineHeight: 1 }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1B4F8A', fontWeight: 700, fontSize: 13, padding: '0 2px', lineHeight: 1 }}
             >✕</button>
           </div>
         )
@@ -621,35 +644,29 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   const branchId = patientData?.branchId
   const idsReady = !!(clinicId && branchId)
 
-  /* ── Therapists ── */
   const [therapists,        setTherapists]        = useState([])
   const [loadingTherapists, setLoadingTherapists] = useState(false)
   const [therapistId,       setTherapistId]       = useState(seed.therapistId ?? '')
   const [therapistName,     setTherapistName]     = useState(seed.therapistName ?? '')
 
-  /* ── Programs list ── */
   const [programs,        setPrograms]        = useState([])
   const [loadingPrograms, setLoadingPrograms] = useState(false)
 
-  /* ── All exercises (cached) ── */
   const [allExercises,        setAllExercises]        = useState([])
   const [loadingAllExercises, setLoadingAllExercises] = useState(false)
   const exercisesFetchedRef = useRef(false)
 
-  /* ── Multi-select: selectedItems is initialized from seed on first render ── */
   const [selectedItems, setSelectedItems] = useState(() => restoreSelectedItems(savedSessions))
   const [showBrowsePanel, setShowBrowsePanel] = useState(false)
   const [browseSearch,    setBrowseSearch]    = useState('')
   const [bulkPending,     setBulkPending]     = useState(new Set())
 
-  /* ── therophyDataState — keyed per selected service item ── */
   const [therophyDataState, setTherophyDataState] = useState(() => {
     const restored = restoreTherophyDataState(savedSessions)
     console.log('🔄 Restored therophyDataState:', restored)
     return restored
   })
 
-  /* ── therapyLibrary / therapyState (therapy mode) ── */
   const [therapyLibrary, setTherapyLibrary] = useState([])
   const [therapyState,   setTherapyState]   = useState(() => {
     if (savedSession.serviceType === 'therapy') {
@@ -671,11 +688,9 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     return {}
   })
 
-  /* ── Loading state per item id ── */
   const [loadingByItemId, setLoadingByItemId] = useState({})
   const restoredFromSeedRef = useRef(savedSessions.length > 0)
 
-  /* ── Refs always in sync ── */
   const therophyDataStateRef = useRef(therophyDataState)
   useEffect(() => { therophyDataStateRef.current = therophyDataState }, [therophyDataState])
   const therapyStateRef = useRef(therapyState)
@@ -697,7 +712,6 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ── Fetch therapists + programs list ── */
   useEffect(() => {
     if (!idsReady) return
     fetchDataByMode()
@@ -731,7 +745,6 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     }
   }
 
-  /* ── Pre-fetch ALL exercises ── */
   useEffect(() => {
     if (!idsReady || exercisesFetchedRef.current) return
     exercisesFetchedRef.current = true
@@ -745,7 +758,6 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     })()
   }, [idsReady, clinicId, branchId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ── Filter cached exercises for therapy mode ── */
   useEffect(() => {
     if (!therapyLibrary.length || loadingAllExercises) return
     const hasExisting = therapyLibrary.some(({ therapyName }) => Array.isArray(therapyState[therapyName]?.exercises) && therapyState[therapyName].exercises.length > 0)
@@ -768,9 +780,6 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     })
   }, [therapyLibrary, allExercises, loadingAllExercises]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ══════════════════════════════════════════════════════════════════════
-     FETCH DETAIL FOR ONE ITEM and merge into therophyDataState
-  ══════════════════════════════════════════════════════════════════════ */
   const fetchItemDetail = async (id, obj) => {
     setLoadingByItemId(prev => ({ ...prev, [id]: true }))
     try {
@@ -882,67 +891,42 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     }
   }
 
-  /* ══════════════════════════════════════════════════════════════════════
-     BROWSE PANEL HANDLERS
-  ══════════════════════════════════════════════════════════════════════ */
   const handleTogglePending = useCallback((id, obj) => {
     setBulkPending(prev => {
       const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
+      if (next.has(id)) { next.delete(id) } else { next.add(id) }
       return next
     })
   }, [])
 
-  /* When user clicks "Add N items" in browse panel */
   const handleConfirmBulk = useCallback(async () => {
-    const currentSelected = selectedItemsRef.current          // ← always fresh
+    const currentSelected = selectedItemsRef.current
     const itemsToAdd = programs.filter(p => {
       const id = getId(p, mode)
-      return bulkPending.has(id) && !currentSelected.has(id) // ← only truly new ones
+      return bulkPending.has(id) && !currentSelected.has(id)
     })
-
-    // Update selectedItems map
     setSelectedItems(prev => {
       const next = new Map(prev)
-      itemsToAdd.forEach(p => {
-        const id = getId(p, mode)
-        next.set(id, p)
-      })
+      itemsToAdd.forEach(p => { const id = getId(p, mode); next.set(id, p) })
       return next
     })
-
     setBulkPending(new Set())
     setShowBrowsePanel(false)
     setBrowseSearch('')
     restoredFromSeedRef.current = false
     setErrors(prev => ({ ...prev, service: undefined }))
-
-    // Fetch details for each new item sequentially
     for (const p of itemsToAdd) {
       await fetchItemDetail(getId(p, mode), p)
     }
   }, [bulkPending, programs, mode]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* Remove a selected item and clean up its therapy data */
   const handleRemoveItem = useCallback((id) => {
-    setSelectedItems(prev => {
-      const next = new Map(prev)
-      next.delete(id)
-      return next
-    })
-    // Remove all therophyDataState keys prefixed with this id
+    setSelectedItems(prev => { const next = new Map(prev); next.delete(id); return next })
     setTherophyDataState(prev => {
       const next = { ...prev }
-      Object.keys(next).forEach(k => {
-        if (k.startsWith(`${id}__`)) delete next[k]
-      })
+      Object.keys(next).forEach(k => { if (k.startsWith(`${id}__`)) delete next[k] })
       return next
     })
-    // For therapy mode remove from therapyLibrary
     if (mode === 'therapy') {
       setTherapyLibrary(prev => prev.filter(t => String(t.therapyId) !== String(id)))
       setTherapyState(prev => {
@@ -954,12 +938,8 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     }
   }, [mode, therapyLibrary])
 
-  /* ── Toggle/update helpers ── */
   const toggleTherophyData = useCallback((key) => {
-    setTherophyDataState(prev => ({
-      ...prev,
-      [key]: { ...prev[key], checked: !prev[key].checked }
-    }))
+    setTherophyDataState(prev => ({ ...prev, [key]: { ...prev[key], checked: !prev[key].checked } }))
     setErrors(prev => ({ ...prev, therapies: undefined }))
   }, [])
 
@@ -976,7 +956,6 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     setTherapyState(prev => ({ ...prev, [name]: { ...prev[name], exercises: updated } }))
   }, [])
 
-  /* ── Derived counts ── */
   const hasTherophyData = Object.keys(therophyDataState).length > 0
   const tdKeys          = Object.keys(therophyDataState)
   const tdCheckedCnt    = tdKeys.filter(k => therophyDataState[k]?.checked).length
@@ -990,22 +969,13 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   const toggleAll = () => {
     const next = !allChecked
     if (hasTherophyData) {
-      setTherophyDataState(prev => {
-        const u = { ...prev }
-        tdKeys.forEach(k => { u[k] = { ...u[k], checked: next } })
-        return u
-      })
+      setTherophyDataState(prev => { const u = { ...prev }; tdKeys.forEach(k => { u[k] = { ...u[k], checked: next } }); return u })
     } else {
-      setTherapyState(prev => {
-        const u = { ...prev }
-        therapyLibrary.forEach(({ therapyName }) => { u[therapyName] = { ...u[therapyName], checked: next } })
-        return u
-      })
+      setTherapyState(prev => { const u = { ...prev }; therapyLibrary.forEach(({ therapyName }) => { u[therapyName] = { ...u[therapyName], checked: next } }); return u })
     }
     if (next) setErrors(prev => ({ ...prev, therapies: undefined }))
   }
 
-  /* ── Mode change ── */
   const handleModeChange = (val) => {
     setMode(val)
     setSelectedItems(new Map())
@@ -1019,7 +989,6 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     setErrors({})
   }
 
-  /* ── Validation ── */
   const validate = () => {
     const newErrors = {}
     const curMode  = modeRef.current
@@ -1030,9 +999,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     const curTname = therapistNameRef.current
     const curItems = selectedItemsRef.current
 
-    if (curItems.size === 0) {
-      newErrors.service = `Please select at least one ${curMode}`
-    }
+    if (curItems.size === 0) newErrors.service = `Please select at least one ${curMode}`
 
     if (curItems.size > 0) {
       const curHasTD = Object.keys(curTDS).length > 0
@@ -1045,12 +1012,10 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     }
 
     if (!curTid || !curTname) newErrors.therapist = 'Please assign a therapist'
-
     setErrors(newErrors)
     return { isValid: Object.keys(newErrors).length === 0, newErrors }
   }
 
-  /* ── handleNext ── */
   const handleNext = () => {
     const { isValid, newErrors } = validate()
     if (!isValid) {
@@ -1065,16 +1030,9 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     const latestTL     = therapyLibraryRef.current
     const latestTdKeys = Object.keys(latestTDS)
     const latestMode   = modeRef.current
-    const latestItems  = selectedItemsRef.current   // always the latest Map
+    const latestItems  = selectedItemsRef.current
     const latestTid    = therapistIdRef.current
     const latestTname  = therapistNameRef.current
-
-    console.log('🔍 handleNext state:', {
-      mode: latestMode,
-      selectedItems: Array.from(latestItems.entries()),
-      therophyDataKeys: latestTdKeys,
-      therapyLibrary: latestTL,
-    })
 
     const formatExercise = (ex) => ({
       exerciseId: ex.therapyExercisesId || ex.therapyExerciseId || ex.id || '',
@@ -1092,107 +1050,52 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     let therapySessions = []
 
     if (latestMode === 'package' || latestMode === 'program') {
-      /* ── KEY FIX: always derive itemId from the key prefix (first segment
-         before "__"), never from item.packageId/programId which may be "".
-         Key format: "${serviceItemId}__${programName}__${therapyName}__${idx}"
-         OR "${serviceItemId}__${therapyName}__${idx}"
-      ── */
       const byItemId = {}
       latestTdKeys.forEach(key => {
         const item = latestTDS[key]
         if (!item?.checked) return
-        // First segment of the key is always the service item id we passed to fetchItemDetail
         const itemId = key.split('__')[0]
         if (!byItemId[itemId]) byItemId[itemId] = []
         byItemId[itemId].push({ key, item })
       })
 
       Object.entries(byItemId).forEach(([itemId, entries]) => {
-        // Look up the original program/package object from selectedItems map
         const serviceObj = latestItems.get(itemId) || {}
-
         if (latestMode === 'package') {
-          // Group therapies by their programId within this package
           const groupedPrograms = {}
           entries.forEach(({ key, item }) => {
-            // Use programId from item; fallback to programName as grouping key
             const progKey = item.programId || item.programName || 'default'
             if (!groupedPrograms[progKey]) {
-              groupedPrograms[progKey] = {
-                programId:   item.programId   || '',
-                programName: item.programName || '',
-                totalPrice: 0,
-                therapyData: [],
-              }
+              groupedPrograms[progKey] = { programId: item.programId || '', programName: item.programName || '', totalPrice: 0, therapyData: [] }
             }
             const exercises = (item.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
             const therapyTotal = exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0)
-            groupedPrograms[progKey].therapyData.push({
-              therapyId:   item.therapyId   || '',
-              therapyName: item.therapyName || '',
-              totalPrice:  therapyTotal,
-              exercises,
-            })
+            groupedPrograms[progKey].therapyData.push({ therapyId: item.therapyId || '', therapyName: item.therapyName || '', totalPrice: therapyTotal, exercises })
             groupedPrograms[progKey].totalPrice += therapyTotal
           })
           const pkgPrograms = Object.values(groupedPrograms)
-          therapySessions.push({
-            packageId:   itemId,
-            packageName: serviceObj.packageName || serviceObj.name || getName(serviceObj, 'package') || '',
-            serviceType: 'package',
-            totalPrice:  pkgPrograms.reduce((s, p) => s + p.totalPrice, 0),
-            programs:    pkgPrograms,
-          })
-
+          therapySessions.push({ packageId: itemId, packageName: serviceObj.packageName || serviceObj.name || getName(serviceObj, 'package') || '', serviceType: 'package', totalPrice: pkgPrograms.reduce((s, p) => s + p.totalPrice, 0), programs: pkgPrograms })
         } else {
-          // program mode — each entry is a therapy row under this program
           const selectedTherapies = entries.map(({ key, item }) => {
             const exercises = (item.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
-            return {
-              therapyId:   item.therapyId   || '',
-              therapyName: item.therapyName || '',
-              totalPrice:  exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0),
-              exercises,
-            }
+            return { therapyId: item.therapyId || '', therapyName: item.therapyName || '', totalPrice: exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0), exercises }
           })
-          therapySessions.push({
-            programId:         itemId,
-            programName:       serviceObj.programName || serviceObj.name || getName(serviceObj, 'program') || '',
-            serviceType:       'program',
-            totalTherapyPrice: selectedTherapies.reduce((s, t) => s + t.totalPrice, 0),
-            therapyData:       selectedTherapies,
-          })
+          therapySessions.push({ programId: itemId, programName: serviceObj.programName || serviceObj.name || getName(serviceObj, 'program') || '', serviceType: 'program', totalTherapyPrice: selectedTherapies.reduce((s, t) => s + t.totalPrice, 0), therapyData: selectedTherapies })
         }
       })
 
     } else if (latestMode === 'therapy') {
-      // Each entry in therapyLibrary is a separately selected therapy item
-      therapySessions = latestTL
-        .filter(t => latestTS[t.therapyName]?.checked)
-        .map(t => {
-          const exercises = (latestTS[t.therapyName]?.exercises || [])
-            .filter(ex => ex._checked !== false)
-            .map(formatExercise)
-          return {
-            therapyId:   t.therapyId   || '',
-            therapyName: t.therapyName || '',
-            serviceType: 'therapy',
-            totalPrice:  exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0),
-            exercises,
-          }
-        })
+      therapySessions = latestTL.filter(t => latestTS[t.therapyName]?.checked).map(t => {
+        const exercises = (latestTS[t.therapyName]?.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
+        return { therapyId: t.therapyId || '', therapyName: t.therapyName || '', serviceType: 'therapy', totalPrice: exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0), exercises }
+      })
 
     } else if (latestMode === 'exercise') {
-      // Each key in therophyDataState is a selected exercise item
       latestTdKeys.forEach(key => {
         const item = latestTDS[key]
         if (!item?.checked) return
         const exercises = (item.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
-        therapySessions.push({
-          serviceType: 'exercise',
-          totalPrice:  exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0),
-          exercises,
-        })
+        therapySessions.push({ serviceType: 'exercise', totalPrice: exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0), exercises })
       })
     }
 
@@ -1210,22 +1113,22 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     })
   }
 
-  /* ── Derived flags ── */
   const anyLoading       = Object.values(loadingByItemId).some(Boolean)
   const loadingAnything  = loadingPrograms || loadingAllExercises || anyLoading
   const hasSelectedItems = selectedItems.size > 0 || restoredFromSeedRef.current
   const showTherapies    = !loadingAnything && hasSelectedItems && (
     Object.keys(therophyDataState).length > 0 || therapyLibrary.length > 0
   )
-
-  /* ── Items not yet in browse pending (for panel) ── */
   const availablePrograms = programs.filter(p => !selectedItems.has(getId(p, mode)))
 
   /* ════════════════════════════════════════════════════════════════════════
      RENDER
   ════════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div
+      className="pb-5"
+      style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", backgroundColor: '#FFFFFF', minHeight: '100vh' }}
+    >
       <style>{`@keyframes toastSlide { from { opacity:0; transform:translateX(40px) } to { opacity:1; transform:translateX(0) } }`}</style>
       <ToastContainer toasts={toasts} />
       <CContainer fluid className="p-1">
@@ -1250,7 +1153,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         {/* ══ 1. SESSION TYPE ══ */}
         <CCard style={cardStyle}>
           <CCardBody style={{ padding: '22px 28px' }}>
-            <SectionHeader emoji="⚙️" title="Session Type" />
+            <SectionHeader emoji="⚙️" title="Session Type"/>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               <RadioBtn label="Package"  emoji="📦" value="package"  active={mode === 'package'}  onClick={handleModeChange} />
               <RadioBtn label="Program"  emoji="🎯" value="program"  active={mode === 'program'}  onClick={handleModeChange} />
@@ -1258,29 +1161,28 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
               <RadioBtn label="Exercise" emoji="🏋️" value="exercise" active={mode === 'exercise'} onClick={handleModeChange} />
             </div>
 
-            {/* ── Multi-select area ── */}
-            <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1.5px solid #e3eef8' }}>
+            {/* Multi-select area */}
+            <div style={{ marginTop: 22, paddingTop: 18, borderTop: '2px solid #dceeff' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <label style={labelStyle}>
                   Select {mode.charAt(0).toUpperCase() + mode.slice(1)}(s)
                   <span style={{ color: '#e53e3e', marginLeft: 3 }}>*</span>
-                  <span style={{ marginLeft: 8, fontWeight: 400, fontSize: '0.78rem', color: '#6b9fc7' }}>
+                  <span style={{ marginLeft: 8, fontWeight: 400, fontSize: '0.78rem', color: '#4a7abf', textTransform: 'none', letterSpacing: 0 }}>
                     (multiple selection allowed)
                   </span>
                 </label>
-
-                {/* Browse button — like HomePlan's "Browse Exercises" */}
                 {programs.length > 0 && (
                   <button
                     type="button"
                     onClick={() => { setShowBrowsePanel(v => !v); setBrowseSearch(''); setBulkPending(new Set()) }}
                     style={{
                       padding: '7px 18px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
-                      border: '1.5px solid #1a5fa8',
-                      background: showBrowsePanel ? 'linear-gradient(135deg,#1a5fa8,#3a8fd4)' : '#f0f7ff',
-                      color: showBrowsePanel ? '#fff' : '#1a5fa8',
+                      border: '1.5px solid #1B4F8A',
+                      background: showBrowsePanel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
+                      color: showBrowsePanel ? '#fff' : '#1B4F8A',
                       fontWeight: 700, fontSize: '0.85rem',
                       display: 'flex', alignItems: 'center', gap: 6,
+                      boxShadow: showBrowsePanel ? '0 2px 8px rgba(27,79,138,0.25)' : 'none',
                     }}
                   >
                     📚 {showBrowsePanel ? '✕ Close' : `Browse ${mode.charAt(0).toUpperCase() + mode.slice(1)}s`}
@@ -1288,14 +1190,12 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                 )}
               </div>
 
-              {/* Error */}
               {errors.service && (
                 <div style={{ marginBottom: 8, fontSize: '0.78rem', color: '#e53e3e', fontWeight: 600 }}>
                   ⚠️ {errors.service}
                 </div>
               )}
 
-              {/* Browse panel */}
               {showBrowsePanel && (
                 <BrowsePanel
                   mode={mode}
@@ -1310,15 +1210,10 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                 />
               )}
 
-              {/* Selected items chips */}
               {selectedItems.size > 0 ? (
-                <SelectedChips
-                  items={Array.from(selectedItems.values())}
-                  mode={mode}
-                  onRemove={handleRemoveItem}
-                />
+                <SelectedChips items={Array.from(selectedItems.values())} mode={mode} onRemove={handleRemoveItem} />
               ) : !showBrowsePanel && (
-                <div style={{ padding: '14px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '0.83rem', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1' }}>
+                <div style={{ padding: '14px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '0.83rem', background: '#FFFFFF', borderRadius: 8, border: '1px dashed #b6cfe8' }}>
                   Click <strong>Browse {mode.charAt(0).toUpperCase() + mode.slice(1)}s</strong> to select one or more {mode}s
                 </div>
               )}
@@ -1331,7 +1226,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         </CCard>
 
         {/* ══ 2. ASSIGN THERAPIST ══ */}
-        <CCard style={{ ...cardStyle, borderColor: errors.therapist ? '#fecaca' : '#d8e8f5' }}>
+        <CCard style={{ ...cardStyle, borderColor: errors.therapist ? '#fecaca' : '#b6cfe8' }}>
           <CCardBody style={{ padding: '22px 28px' }}>
             <SectionHeader emoji="👤" title="Assign Therapist" subtitle="Required *" />
             <TherapistSearch
@@ -1347,7 +1242,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         </CCard>
 
         {/* ══ 3. THERAPIES & EXERCISES ══ */}
-        <CCard style={{ ...cardStyle, borderColor: errors.therapies ? '#fecaca' : '#d8e8f5' }}>
+        <CCard style={{ ...cardStyle, borderColor: errors.therapies ? '#fecaca' : '#b6cfe8' }}>
           <CCardBody style={{ padding: '22px 28px' }}>
             <SectionHeader
               emoji={mode === 'program' ? '🎯' : '📦'}
@@ -1368,22 +1263,21 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
             )}
 
             {selectedItems.size === 0 && !restoredFromSeedRef.current && !anyLoading && (
-              <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
+              <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#FFFFFF', borderRadius: 10, border: '1px dashed #b6cfe8' }}>
                 <div style={{ fontSize: '2rem', marginBottom: 10 }}>{getModeEmoji(mode)}</div>
                 Please select one or more {mode}s above to load their therapies and exercises.
               </div>
             )}
 
             {(loadingPrograms || anyLoading) && selectedItems.size === 0 && (
-              <div style={{ padding: '28px', textAlign: 'center', color: '#6b9fc7', fontSize: '0.9rem' }}>
+              <div style={{ padding: '28px', textAlign: 'center', color: '#4a7abf', fontSize: '0.9rem' }}>
                 <div style={{ fontSize: '1.6rem', marginBottom: 10 }}>⏳</div>
                 Loading…
               </div>
             )}
 
-            {/* Per-item loading indicators */}
             {anyLoading && selectedItems.size > 0 && (
-              <div style={{ marginBottom: 12, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7', fontSize: '0.82rem', color: '#4a6a8a', fontWeight: 600 }}>
+              <div style={{ marginBottom: 12, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7', fontSize: '0.82rem', color: '#1B4F8A', fontWeight: 600 }}>
                 ⏳ Loading details for {Object.keys(loadingByItemId).filter(k => loadingByItemId[k]).length} item(s)…
               </div>
             )}
@@ -1391,18 +1285,16 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
             {showTherapies && (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7' }}>
-                  <span style={{ fontSize: '0.83rem', color: '#4a6a8a', fontWeight: 600 }}>
+                  <span style={{ fontSize: '0.83rem', color: '#1B4F8A', fontWeight: 600 }}>
                     {checkedCount} of {totalCount} therapies selected
                     <span style={{ marginLeft: 6, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 700 }}>(select at least 1, multiple allowed)</span>
                   </span>
-                  <button type="button" onClick={toggleAll} style={{ padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: allChecked ? '#1a5fa8' : '#f0f7ff', color: allChecked ? '#fff' : '#1a5fa8', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button type="button" onClick={toggleAll} style={{ padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: allChecked ? '#1B4F8A' : '#FFFFFF', color: allChecked ? '#fff' : '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {allChecked ? '☑ Deselect All' : '☐ Select All'}
                   </button>
                 </div>
 
-                {/* therophyData path — grouped by service item (package/program) */}
                 {hasTherophyData && (() => {
-                  // Group keys by their service item id (key prefix before first __)
                   const groups = {}
                   tdKeys.forEach(key => {
                     const itemId = key.split('__')[0]
@@ -1411,22 +1303,17 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                   })
 
                   return Object.entries(groups).map(([itemId, keys]) => {
-                    // Get the service item display name from selectedItems map
                     const itemObj = selectedItems.get(itemId) || {}
-                    const groupLabel = itemObj.packageName || itemObj.programName ||
-                      getName(itemObj, mode) || itemId
-
-                    // Count checked therapies in this group
+                    const groupLabel = itemObj.packageName || itemObj.programName || getName(itemObj, mode) || itemId
                     const groupChecked = keys.filter(k => therophyDataState[k]?.checked).length
 
                     return (
                       <div key={itemId} style={{ marginBottom: 20 }}>
-                        {/* Group header — only shown when multiple items selected */}
                         {selectedItems.size > 1 && (
                           <div style={{
                             display: 'flex', alignItems: 'center', gap: 8,
                             padding: '7px 14px', marginBottom: 8,
-                            background: 'linear-gradient(135deg,#1a3a5c,#1a5fa8)',
+                            background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
                             borderRadius: 8, color: '#fff',
                           }}>
                             <span style={{ fontSize: 15 }}>{getModeEmoji(mode)}</span>
@@ -1436,17 +1323,12 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                             </span>
                           </div>
                         )}
-
                         {keys.map(key => {
                           const ts = therophyDataState[key]
-                          const displayName = ts.therapyName || key
                           return (
                             <TherapyBlock
-                              key={key}
-                              therapyKey={key}
-                              therapy={displayName}
-                              checked={ts.checked}
-                              onToggle={toggleTherophyData}
+                              key={key} therapyKey={key} therapy={ts.therapyName || key}
+                              checked={ts.checked} onToggle={toggleTherophyData}
                               exercises={ts.exercises || []}
                               onUpdateExercises={updated => updateTherophyDataExercises(key, updated)}
                               loading={false}
@@ -1458,7 +1340,6 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                   })
                 })()}
 
-                {/* therapy[] path */}
                 {!hasTherophyData && therapyLibrary.map((t, index) => (
                   <TherapyBlock
                     key={t.therapyId || index}
@@ -1475,7 +1356,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
             )}
 
             {selectedItems.size > 0 && !anyLoading && !showTherapies && (
-              <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#f8fafc', borderRadius: 10, border: '1px dashed #cbd5e1' }}>
+              <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#FFFFFF', borderRadius: 10, border: '1px dashed #b6cfe8' }}>
                 <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>🔍</div>
                 No therapies found in the selected {mode}(s).
               </div>
@@ -1485,9 +1366,32 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
 
       </CContainer>
 
-      {/* Sticky bottom */}
-      <div className="position-fixed bottom-0" style={{ left: 0, right: 0, background: '#a5c4d4', display: 'flex', justifyContent: 'flex-end', gap: 16, padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)' }}>
-        <Button customColor="#ffffff" color="#7e3a93" onClick={handleNext} style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+      {/* Sticky bottom bar — matching PrescriptionTab */}
+      <div
+        className="position-fixed bottom-0"
+        style={{
+          left: 0, right: 0,
+          background: '#FFFFFF',
+          borderTop: '2px solid #1B4F8A',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
+        }}
+      >
+        <Button
+          customColor="#1B4F8A"
+          color="#FFFFFF"
+          onClick={handleNext}
+          style={{
+            borderRadius: '20px',
+            fontWeight: 700,
+            padding: '6px 24px',
+            boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
+            border: '1.5px solid #1B4F8A',
+          }}
+        >
           Next
         </Button>
       </div>

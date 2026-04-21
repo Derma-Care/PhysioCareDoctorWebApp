@@ -248,7 +248,7 @@ const AppSidebar = () => {
                     Vitals
                   </h4>
                   <h6 className="mb-1" style={{ color: COLORS.black, fontSize: SIZES.small }}>
-                    <strong>Height:</strong> <span>{display.vitals?.height ? display.vitals.height : 0} cm</span>
+                    <strong >Height:</strong> <span>{display.vitals?.height ? display.vitals.height : 0} cm</span>
                   </h6>
                   <h6 className="mb-1" style={{ color: COLORS.black, fontSize: SIZES.small }}>
                     <strong>Weight:</strong> <span>{display.vitals?.weight ? display.vitals.weight : 0} kg</span>

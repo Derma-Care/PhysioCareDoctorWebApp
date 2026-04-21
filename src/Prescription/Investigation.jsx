@@ -6,32 +6,49 @@ import { addLabTest, getLabTests } from '../../src/Auth/Auth'
 import { COLORS } from '../Themes'
 import { useDoctorContext } from '../Context/DoctorContext'
 
-/* ─── Styles (matching HomePlan / Diagnosis) ─────────────────────────────── */
+/* ─── Styles (matching PrescriptionTab) ──────────────────────────────────── */
 const inputStyle = {
-  border: '1.5px solid #b6cfe8', borderRadius: 7, fontSize: '0.875rem',
-  color: '#1a3a5c', backgroundColor: '#f5f9ff', padding: '7px 11px',
-  width: '100%', boxSizing: 'border-box', height: 38,
-  outline: 'none', fontFamily: 'inherit',
+  border: '1.5px solid #b6cfe8',
+  borderRadius: 7,
+  fontSize: '0.875rem',
+  color: '#1a3a5c',
+  backgroundColor: '#FFFFFF',
+  padding: '7px 11px',
+  width: '100%',
+  boxSizing: 'border-box',
+  height: 38,
+  outline: 'none',
+  fontFamily: 'inherit',
+  transition: 'border-color 0.18s ease',
 }
 
 const labelStyle = {
-  fontWeight: 700, fontSize: '0.875rem', color: '#1a3a5c',
-  marginBottom: 6, display: 'block',
+  fontWeight: 700,
+  fontSize: '0.82rem',
+  color: '#1B4F8A',
+  marginBottom: 4,
+  display: 'block',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
 }
 
 const cardStyle = {
-  border: '1px solid #d8e8f5', borderRadius: 14,
-  boxShadow: '0 2px 16px rgba(26,90,168,0.07)',
+  border: '1.5px solid #b6cfe8',
+  borderRadius: 12,
+  backgroundColor: '#FFFFFF',
+  boxShadow: '0 4px 24px rgba(27,79,138,0.10)',
 }
 
 const gridTwo = {
-  display: 'grid', gridTemplateColumns: '1fr 1fr',
-  gap: '16px 28px', marginBottom: 16,
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '16px 28px',
+  marginBottom: 16,
 }
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 const Field = ({ label, children }) => (
-  <div style={{ display: 'flex', flexDirection: 'column' }}>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
     <label style={labelStyle}>{label}</label>
     {children}
   </div>
@@ -39,15 +56,24 @@ const Field = ({ label, children }) => (
 
 const CardHeader = ({ emoji, title }) => (
   <div style={{
-    display: 'flex', alignItems: 'center', gap: 12,
-    marginBottom: 24, borderBottom: '1.5px solid #e3eef8', paddingBottom: 16,
+    display: 'flex', alignItems: 'center', gap: 10,
+    marginBottom: 20,
+    borderBottom: '2px solid #dceeff',
+    paddingBottom: 12,
   }}>
     <div style={{
-      width: 40, height: 40, borderRadius: 10,
-      background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+      width: 34, height: 34, borderRadius: 8,
+      background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 17,
+      boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
     }}>{emoji}</div>
-    <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>{title}</h5>
+    <h5 style={{
+      margin: 0,
+      color: '#1B4F8A',
+      fontWeight: 700,
+      fontSize: '1.05rem',
+    }}>{title}</h5>
   </div>
 )
 
@@ -132,7 +158,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
 <title>Investigation – ${escapeHtml(patientData?.name ?? '')}</title>
 <style>
-:root{--ink:#0f172a;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;--bg:#fff;}
+:root{--ink:#0f172a;--muted:#6b7280;--line:#e5e7eb;--accent:#1B4F8A;--bg:#fff;}
 *{box-sizing:border-box;}html,body{margin:0;padding:0;}
 body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;color:var(--ink);background:var(--bg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 @page{size:A4;margin:12mm;}
@@ -144,7 +170,7 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
 .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:16px;}
 .kv{display:flex;flex-direction:column;margin-bottom:10px;}.kv .label{font-size:12px;color:var(--muted);}.kv .value{font-size:14px;font-weight:600;padding-top:2px;}
 .section-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;margin-bottom:14px;}
-.section-title{font-size:14px;font-weight:700;margin:0 0 12px 0;color:#1a3a5c;padding-bottom:8px;border-bottom:1px solid var(--line);}
+.section-title{font-size:14px;font-weight:700;margin:0 0 12px 0;color:#1B4F8A;padding-bottom:8px;border-bottom:1px solid var(--line);}
 .notes-box{background:#f5f9ff;border:1px solid #b6cfe8;border-radius:8px;padding:10px 14px;font-size:14px;line-height:1.6;color:#1a3a5c;white-space:pre-wrap;}
 .footer{margin-top:22px;padding-top:12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--muted);}
 @media print{.no-print{display:none!important;}.page{border:none;padding:0;}}
@@ -188,7 +214,7 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
 </div>
 
 <div class="no-print" style="margin-top:12px;text-align:right;">
-  <button onclick="window.print()" style="background:#2563eb;color:#fff;border:0;padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer;">Print</button>
+  <button onclick="window.print()" style="background:#1B4F8A;color:#fff;border:0;padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer;">Print</button>
 </div>
 
 </div></body></html>`
@@ -203,7 +229,14 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
 
   /* ── RENDER ──────────────────────────────────────────────────────────── */
   return (
-    <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div
+      className="container pb-5"
+      style={{
+        fontFamily: "'Segoe UI', system-ui, sans-serif",
+        backgroundColor: '#FFFFFF',
+        minHeight: '100vh',
+      }}
+    >
 
       {snackbar.show && (
         <CAlert color={snackbar.type === 'error' ? 'danger' : snackbar.type || 'info'} className="mb-2">
@@ -211,161 +244,197 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
         </CAlert>
       )}
 
-      <CContainer fluid className="p-1">
-        <CCard className="mb-4" style={cardStyle}>
-          <CCardBody style={{ padding: '28px 32px' }}>
-            <CardHeader emoji="🔬" title="Investigation" />
+      <CCard className="mb-4" style={cardStyle}>
+        <CCardBody>
+          <CardHeader emoji="🔬" title="Investigation" />
 
-            {/* Row 1: Recommended Test | Selected Tests */}
-            <div style={gridTwo}>
+          {/* Row 1: Recommended Test | Selected Tests */}
+          <div style={gridTwo}>
 
-              {/* Recommended Test */}
-              <Field label="Recommended Test (Optional)">
-                <CreatableSelect
-                  options={availableTests.map((t) => ({ label: t.testName, value: t.testName }))}
-                  placeholder="Select or add tests…"
-                  value={selectedTestOption}
-                  isClearable
-                  isSearchable
-                  formatCreateLabel={(v) => `Add "${v}"`}
-                  styles={{
-                    control: (base, state) => ({
-                      ...base,
-                      border: '1.5px solid #b6cfe8',
-                      borderRadius: 7,
-                      backgroundColor: '#f5f9ff',
-                      fontSize: '0.875rem',
-                      color: '#1a3a5c',
-                      minHeight: 38,
-                      height: 38,
-                      boxShadow: 'none',
-                      '&:hover': { borderColor: '#3a8fd4' },
-                    }),
-                    valueContainer: (base) => ({ ...base, padding: '0 8px' }),
-                    placeholder: (base) => ({ ...base, color: '#8aaac8', fontSize: '0.875rem' }),
-                    indicatorSeparator: () => ({ display: 'none' }),
-                    dropdownIndicator: (base) => ({ ...base, padding: '0 6px', color: '#8aaac8' }),
-                    menu: (base) => ({ ...base, borderRadius: 8, border: '1px solid #b6cfe8', boxShadow: '0 4px 16px rgba(26,90,168,0.12)', zIndex: 1000 }),
-                    option: (base, state) => ({
-                      ...base, fontSize: '0.875rem', color: '#1a3a5c',
-                      backgroundColor: state.isFocused ? '#e0f2fe' : '#fff',
+            {/* Recommended Test */}
+            <Field label="Recommended Test (Optional)">
+              <CreatableSelect
+                options={availableTests.map((t) => ({ label: t.testName, value: t.testName }))}
+                placeholder="Select or add tests…"
+                value={selectedTestOption}
+                isClearable
+                isSearchable
+                formatCreateLabel={(v) => `Add "${v}"`}
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    border: state.isFocused ? '1.5px solid #1B4F8A' : '1.5px solid #b6cfe8',
+                    borderRadius: 7,
+                    backgroundColor: '#FFFFFF',
+                    fontSize: '0.875rem',
+                    color: '#1a3a5c',
+                    minHeight: 38,
+                    height: 38,
+                    boxShadow: 'none',
+                    transition: 'border-color 0.18s ease',
+                    '&:hover': { borderColor: '#1B4F8A' },
+                  }),
+                  valueContainer: (base) => ({ ...base, padding: '0 8px' }),
+                  placeholder: (base) => ({ ...base, color: '#8aaac8', fontSize: '0.875rem' }),
+                  indicatorSeparator: () => ({ display: 'none' }),
+                  dropdownIndicator: (base) => ({ ...base, padding: '0 6px', color: '#8aaac8' }),
+                  menu: (base) => ({
+                    ...base, borderRadius: 8,
+                    border: '1px solid #b6cfe8',
+                    boxShadow: '0 4px 16px rgba(27,79,138,0.12)',
+                    zIndex: 1000,
+                  }),
+                  option: (base, state) => ({
+                    ...base, fontSize: '0.875rem', color: '#1a3a5c',
+                    backgroundColor: state.isFocused ? '#dceeff' : '#fff',
+                    cursor: 'pointer',
+                  }),
+                }}
+                onChange={(selected) => {
+                  if (!selected) { setSelectedTestOption(null); return }
+                  if (!selectedTests.includes(selected.value)) {
+                    setSelectedTests((prev) => [...prev, selected.value])
+                  }
+                  setSelectedTestOption(null)
+                }}
+                onCreateOption={async (inputValue) => {
+                  if (!inputValue) return
+                  const added = await addLabTest(inputValue)
+                  setAvailableTests((prev) => [...prev, { testName: added }])
+                  setSelectedTests((prev) => [...prev, added])
+                  setSelectedTestOption(null)
+                  showSnackbar(`Added new test: ${added}`, 'success')
+                }}
+              />
+            </Field>
+
+            {/* Selected Tests chips */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <label style={labelStyle}>Selected Tests</label>
+                {selectedTests.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearAllTests}
+                    style={{
+                      background: 'none',
+                      border: '1.5px solid #1B4F8A',
+                      color: '#1B4F8A',
+                      borderRadius: 6,
+                      fontSize: '0.75rem',
+                      padding: '2px 10px',
                       cursor: 'pointer',
-                    }),
-                  }}
-                  onChange={(selected) => {
-                    if (!selected) { setSelectedTestOption(null); return }
-                    if (!selectedTests.includes(selected.value)) {
-                      setSelectedTests((prev) => [...prev, selected.value])
-                    }
-                    setSelectedTestOption(null)
-                  }}
-                  onCreateOption={async (inputValue) => {
-                    if (!inputValue) return
-                    const added = await addLabTest(inputValue)
-                    setAvailableTests((prev) => [...prev, { testName: added }])
-                    setSelectedTests((prev) => [...prev, added])
-                    setSelectedTestOption(null)
-                    showSnackbar(`Added new test: ${added}`, 'success')
-                  }}
-                />
-              </Field>
-
-              {/* Selected Tests chips */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <label style={labelStyle}>Selected Tests</label>
-                  {selectedTests.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={clearAllTests}
-                      style={{
-                        background: 'none', border: '1.5px solid #f97316',
-                        color: '#f97316', borderRadius: 6, fontSize: '0.75rem',
-                        padding: '2px 10px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
-                      }}
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-
-                {selectedTests.length === 0 ? (
-                  <div style={{
-                    border: '1.5px dashed #b6cfe8', borderRadius: 7,
-                    background: '#f5f9ff', height: 38, display: 'flex',
-                    alignItems: 'center', paddingLeft: 11,
-                    fontSize: '0.875rem', color: '#8aaac8',
-                  }}>
-                    No tests selected yet.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {selectedTests.map((test) => (
-                      <div
-                        key={test}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 6,
-                          background: '#dbeafe', border: '1px solid #b6cfe8',
-                          borderRadius: 20, padding: '3px 10px',
-                          fontSize: '0.78rem', color: '#1a3a5c', fontWeight: 600,
-                        }}
-                      >
-                        {test}
-                        <button
-                          type="button"
-                          aria-label={`Remove ${test}`}
-                          onClick={() => handleRemoveTest(test)}
-                          style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            color: '#5a7fa8', fontWeight: 700, fontSize: 14,
-                            padding: 0, lineHeight: 1, fontFamily: 'inherit',
-                          }}
-                        >×</button>
-                      </div>
-                    ))}
-                  </div>
+                      fontFamily: 'inherit',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Clear all
+                  </button>
                 )}
               </div>
+
+              {selectedTests.length === 0 ? (
+                <div style={{
+                  border: '1.5px dashed #b6cfe8',
+                  borderRadius: 7,
+                  background: '#FFFFFF',
+                  height: 38,
+                  display: 'flex',
+                  alignItems: 'center',
+                  paddingLeft: 11,
+                  fontSize: '0.875rem',
+                  color: '#8aaac8',
+                }}>
+                  No tests selected yet.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {selectedTests.map((test) => (
+                    <div
+                      key={test}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: '#dceeff',
+                        border: '1px solid #b6cfe8',
+                        borderRadius: 20, padding: '3px 10px',
+                        fontSize: '0.78rem', color: '#1B4F8A', fontWeight: 600,
+                      }}
+                    >
+                      {test}
+                      <button
+                        type="button"
+                        aria-label={`Remove ${test}`}
+                        onClick={() => handleRemoveTest(test)}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: '#1B4F8A', fontWeight: 700, fontSize: 14,
+                          padding: 0, lineHeight: 1, fontFamily: 'inherit',
+                        }}
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Row 2: Notes — full width */}
-            <div style={{ marginBottom: 16 }}>
-              <Field label="Notes / Reason for Recommendation (Optional)">
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. Evaluate for suspected infection or fracture"
-                  rows={4}
-                  style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
-                />
-              </Field>
-            </div>
+          {/* Row 2: Notes — full width */}
+          <div style={{ marginBottom: 16 }}>
+            <Field label="Notes / Reason for Recommendation (Optional)">
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. Evaluate for suspected infection or fracture"
+                rows={4}
+                style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
+                onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+                onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+              />
+            </Field>
+          </div>
 
-          </CCardBody>
-        </CCard>
-      </CContainer>
+        </CCardBody>
+      </CCard>
 
-      {/* Sticky bottom bar */}
+      {/* Sticky bottom bar — matching PrescriptionTab */}
       <div
         className="position-fixed bottom-0"
         style={{
-          left: 0, right: 0, background: '#a5c4d4',
-          display: 'flex', justifyContent: 'flex-end', gap: 16,
-          padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
+          left: 0, right: 0,
+          background: '#FFFFFF',
+          borderTop: '2px solid #1B4F8A',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
         }}
       >
         <Button
-          customColor="#ffffff"
-          style={{ color: COLORS.bgcolor, borderRadius: '18px', padding: '6px 16px', fontWeight: 600, border: '1px solid #7e3a93' }}
+          
+          style={{
+             background: '#FFFFFF',
+            color: '#1B4F8A',
+            borderRadius: '20px',
+            padding: '6px 24px',
+            fontWeight: 700,
+            border: '1.5px solid #1B4F8A',
+          }}
           onClick={handlePrint}
         >
           Print
         </Button>
         <Button
-          customColor="#ffffff"
-          color="#7e3a93"
+          customColor="#1B4F8A"
+          color="#FFFFFF"
           onClick={handleNext}
-          style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
+          style={{
+            borderRadius: '20px',
+            fontWeight: 700,
+            padding: '6px 24px',
+            boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
+            border: '1.5px solid #1B4F8A',
+          }}
         >
           Next
         </Button>

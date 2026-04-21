@@ -197,17 +197,8 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Investigation')
     },
 
-    /* ── Plan ──────────────────────────────────────────────────────────────
-       KEY FIX: TherapySession calls onNext({ therapySessions, therapistId, ... })
-       We store it as formData.therapySessions = { sessions, therapistId, ... }
-       The sessions array IS data.therapySessions (the array from TreatmentPlan).
-       We must NOT nest it again.
-    ────────────────────────────────────────────────────────────────────── */
     Plan: (data = {}) => {
       console.log('🔄 [Plan] onNext data:', data)
-
-      // data.therapySessions is the sessions ARRAY from TreatmentPlan
-      // data.therapistId, data.therapistName etc are top-level
       const patch = {
         therapySessions: {
           sessions:       Array.isArray(data.therapySessions) ? data.therapySessions : [],
@@ -219,7 +210,6 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           patientResponse: data.patientResponse ?? '',
         },
       }
-
       mergeAndLog('Plan', patch)
       goToNext('Plan')
     },
@@ -314,19 +304,47 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppSidebar />
 
-      {/* Tabs */}
+      {/* ── Tabs ── */}
       <div className="w-100" style={{ position: 'sticky', top: 110, zIndex: 10 }}>
         <CContainer fluid className="p-0">
-          <CCard style={{ border: 0, borderRadius: 0, backgroundColor: COLORS.theme }}>
-            <CCardBody className="p-0 pt-3">
-              <CNav variant="tabs" role="tablist" style={{ whiteSpace: 'nowrap' }}>
+          <CCard style={{ border: 0, borderRadius: 0, backgroundColor: COLORS.bgcolor }}>
+            <CCardBody className="p-0" style={{ paddingLeft: '12px', paddingTop: '8px', paddingRight: '12px' }}>
+              <CNav variant="tabs" role="tablist" style={{ whiteSpace: 'nowrap', borderBottom: 'none', gap: '3px', flexWrap: 'nowrap', overflowX: 'auto' }}>
                 {TABS.map((t) => {
                   const active = t === activeTab
                   return (
-                    <CNavItem key={t}>
-                      <CNavLink active={active} onClick={() => setActiveTab(t)}
-                        style={{ padding: '.5rem .85rem', cursor: 'pointer', borderRadius: '6px 6px 0 0', color: active ? '#000' : '#7e3a93' }}>
-                        <span style={{ fontSize: 16, fontWeight: active ? 700 : 500 }}>{t}</span>
+                    <CNavItem key={t} style={{ flex: '0 0 auto' }}>
+                      <CNavLink
+                        active={active}
+                        onClick={() => setActiveTab(t)}
+                        style={{
+                          padding: '.5rem 1rem',
+                          cursor: 'pointer',
+                          borderRadius: '8px 8px 0 0',
+                          border: 'none',
+                          outline: 'none',
+                          backgroundColor: active ? COLORS.orange : 'rgba(255,255,255,0.13)',
+                          color: active ? COLORS.bgcolor : COLORS.white,
+                          transition: 'background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease',
+                          boxShadow: active ? '0 -3px 10px rgba(249,197,113,0.45)' : 'none',
+                          textDecoration: 'none',
+                        }}
+                        onMouseEnter={e => {
+                          if (!active) {
+                            e.currentTarget.style.backgroundColor = 'rgba(249,197,113,0.22)'
+                            e.currentTarget.style.color = COLORS.orange
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (!active) {
+                            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.13)'
+                            e.currentTarget.style.color = COLORS.white
+                          }
+                        }}
+                      >
+                        <span style={{ fontSize: 14, fontWeight: active ? 700 : 500, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
+                          {t}
+                        </span>
                       </CNavLink>
                     </CNavItem>
                   )

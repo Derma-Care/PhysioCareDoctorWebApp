@@ -37,6 +37,7 @@ import {
   therapyUrlId,
   exerciseUrlId,
   packageUrlId,
+  getInProgressDetailsEndpoint,
 } from './BaseUrl'
 
 export const postLogin = async (payload, endpoint) => {
@@ -599,15 +600,16 @@ export const getAvailableSlots = async (hospitalId, doctorId) => {
 export const getInProgressDetails = async (patientId, bookingId) => {
   try {
     const response = await api.get(
-      `${baseUrl}/doctor In-progressDetails/${patientId}/${bookingId}`
-    )
-    console.log("✅ In-progress details:", response.data.data)
-    return response.data.data
+      `${getInProgressDetailsEndpoint}/${patientId}/${bookingId}`
+    );
+
+    console.log("✅ In-progress details:", response.data.data);
+    return response.data.data;
   } catch (error) {
-    console.error("❌ Error fetching in-progress details:", error)
-    throw error
+    console.error("❌ Error fetching in-progress details:", error);
+    throw error;
   }
-}
+};
 
 export const getMedicineTypes = async () => {
   const clinicId = localStorage.getItem("hospitalId")

@@ -2,13 +2,23 @@ import React, { useState, useEffect } from 'react'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 
+/* ─── Theme ─────────────────────────────────────────────────────────────── */
+const T = {
+  bgcolor:  '#1B4F8A',
+  orange:   '#f9c571',
+  white:    '#FFFFFF',
+  bgLight:  '#F0F6FF',
+  border:   '#c2d8f0',
+  textDark: '#1B4F8A',
+}
+
 /* ─── Styles ───────────────────────────────────────────────────────────── */
 const inputStyle = {
-  border: '1.5px solid #b6cfe8',
+  border: `1.5px solid ${T.border}`,
   borderRadius: 7,
   fontSize: '0.875rem',
-  color: '#1a3a5c',
-  backgroundColor: '#f5f9ff',
+  color: T.textDark,
+  backgroundColor: T.bgLight,
   padding: '7px 11px',
   width: '100%',
   height: 38,
@@ -20,15 +30,15 @@ const inputStyle = {
 const labelStyle = {
   fontWeight: 700,
   fontSize: '0.875rem',
-  color: '#1a3a5c',
+  color: T.textDark,
   marginBottom: 6,
   display: 'block',
 }
 
 const cardStyle = {
-  border: '1px solid #d8e8f5',
+  border: `1px solid ${T.border}`,
   borderRadius: 14,
-  boxShadow: '0 2px 16px rgba(26,90,168,0.07)',
+  boxShadow: '0 2px 16px rgba(27,79,138,0.10)',
 }
 
 /* ─── Visit urgency ──────────────────────────────────────────────────── */
@@ -131,9 +141,9 @@ const FollowUpnew = ({ seed = [], onNext }) => {
           <CCardBody style={{ padding: '28px 32px' }}>
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, borderBottom: '1.5px solid #e3eef8', paddingBottom: 16 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📅</div>
-              <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, borderBottom: `1.5px solid ${T.border}`, paddingBottom: 16 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: T.bgcolor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📅</div>
+              <h5 style={{ margin: 0, color: T.textDark, fontWeight: 700, fontSize: '1.15rem' }}>
                 {editIndex !== null ? `Editing Entry #${editIndex + 1}` : 'Follow Up'}
               </h5>
             </div>
@@ -174,11 +184,26 @@ const FollowUpnew = ({ seed = [], onNext }) => {
 
             {/* Buttons */}
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={handleSave} style={{ padding: '8px 24px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff', fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button
+                onClick={handleSave}
+                style={{
+                  padding: '8px 24px', borderRadius: 8, border: 'none',
+                  background: T.bgcolor, color: T.white,
+                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 2px 8px rgba(249,197,113,0.4)',
+                }}
+              >
                 {editIndex !== null ? '✅ Update' : '➕ Add'}
               </button>
               {editIndex !== null && (
-                <button onClick={handleCancel} style={{ padding: '8px 24px', borderRadius: 8, cursor: 'pointer', border: '1.5px solid #b6cfe8', background: '#f5f9ff', color: '#1a3a5c', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit' }}>
+                <button
+                  onClick={handleCancel}
+                  style={{
+                    padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
+                    border: `1.5px solid ${T.border}`, background: T.bgLight,
+                    color: T.textDark, fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                  }}
+                >
                   Cancel
                 </button>
               )}
@@ -192,15 +217,15 @@ const FollowUpnew = ({ seed = [], onNext }) => {
           <CCard style={cardStyle}>
             <CCardBody style={{ padding: '24px 32px' }}>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, borderBottom: '1.5px solid #e3eef8', paddingBottom: 16 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📋</div>
-                <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.15rem' }}>Follow Up List ({data.length})</h5>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, borderBottom: `1.5px solid ${T.border}`, paddingBottom: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: T.bgcolor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📋</div>
+                <h5 style={{ margin: 0, color: T.textDark, fontWeight: 700, fontSize: '1.15rem' }}>Follow Up List ({data.length})</h5>
               </div>
 
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: T.textDark }}>
                   <thead>
-                    <tr style={{ background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', color: '#fff' }}>
+                    <tr style={{ background: T.bgcolor, color: T.white }}>
                       {['#', 'Next Visit Date', 'Urgency', 'Review Notes', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
@@ -210,7 +235,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                     {data.map((item, i) => {
                       const u = getVisitUrgency(item.nextVisitDate)
                       return (
-                        <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f5f9ff' : '#fff', borderBottom: '1px solid #e3eef8' }}>
+                        <tr key={i} style={{ backgroundColor: i % 2 === 0 ? T.bgLight : T.white, borderBottom: `1px solid ${T.border}` }}>
                           <td style={{ padding: '10px 14px', fontWeight: 700 }}>{i + 1}</td>
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>{item.nextVisitDate || '—'}</td>
                           <td style={{ padding: '10px 14px' }}>
@@ -224,8 +249,22 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                             </div>
                           </td>
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                            <button onClick={() => handleEdit(i)} style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1a5fa8', background: '#f0f7ff', color: '#1a5fa8', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
-                            <button onClick={() => handleDelete(i)} style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️ Delete</button>
+                            <button
+                              onClick={() => handleEdit(i)}
+                              style={{
+                                marginRight: 6, padding: '4px 12px', borderRadius: 6,
+                                border: `1.5px solid ${T.bgcolor}`, background: T.bgLight,
+                                color: T.bgcolor, fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit',
+                              }}
+                            >✏️ Edit</button>
+                            <button
+                              onClick={() => handleDelete(i)}
+                              style={{
+                                padding: '4px 12px', borderRadius: 6,
+                                border: '1.5px solid #e53e3e', background: '#fff5f5',
+                                color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit',
+                              }}
+                            >🗑️ Delete</button>
                           </td>
                         </tr>
                       )
@@ -240,10 +279,33 @@ const FollowUpnew = ({ seed = [], onNext }) => {
       </CContainer>
 
       {/* Fixed Bottom Bar */}
-      <div className="position-fixed bottom-0" style={{ left: 0, right: 0, background: '#a5c4d4ff', display: 'flex', justifyContent: 'flex-end', gap: 16, padding: '10px 24px', boxShadow: '0 -2px 10px rgba(0,0,0,0.08)' }}>
-        <Button customColor="#ffffff" color="#7e3a93" onClick={handleNext} style={{ borderRadius: '20px', fontWeight: 600, padding: '6px 18px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
-          Next
-        </Button>
+      <div
+        className="position-fixed bottom-0"
+        style={{
+          left: 0, right: 0,
+          background: '#FFFFFF',
+          borderTop: '2px solid #1B4F8A',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
+        }}
+      >
+        <Button
+                 customColor="#1B4F8A"
+                 color="#FFFFFF"
+                 onClick={handleNext}
+                 style={{
+                   borderRadius: '20px',
+                   fontWeight: 700,
+                   padding: '6px 24px',
+                   boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
+                   border: '1.5px solid #1B4F8A',
+                 }}
+               >
+                 Next
+               </Button>
       </div>
     </div>
   )

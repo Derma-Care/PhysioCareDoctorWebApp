@@ -7,16 +7,16 @@ import { useToast } from '../utils/Toaster'
 /* ─── Diagnosis static options ─────────────────────────────────────────── */
 const SEVERITY_OPTIONS = [
   { label: 'Select severity...', value: '' },
-  { label: 'Mild', value: 'Mild' },
+  { label: 'Mild',     value: 'Mild' },
   { label: 'Moderate', value: 'Moderate' },
-  { label: 'Severe', value: 'Severe' },
+  { label: 'Severe',   value: 'Severe' },
 ]
 
 const STAGE_OPTIONS = [
   { label: 'Select stage...', value: '' },
-  { label: 'Acute', value: 'Acute' },
+  { label: 'Acute',     value: 'Acute' },
   { label: 'Sub-acute', value: 'Sub-acute' },
-  { label: 'Chronic', value: 'Chronic' },
+  { label: 'Chronic',   value: 'Chronic' },
 ]
 
 /* ─── Styles ─────────────────────────────────────────────────────────── */
@@ -25,22 +25,24 @@ const diagInputStyle = {
   borderRadius: 7,
   fontSize: '0.875rem',
   color: '#1a3a5c',
-  backgroundColor: '#f5f9ff',
+  backgroundColor: '#FFFFFF',
   padding: '7px 11px',
   width: '100%',
   boxSizing: 'border-box',
   height: 38,
   outline: 'none',
   fontFamily: 'inherit',
+  transition: 'border-color 0.18s ease',
 }
 
 const diagLabelStyle = {
   fontWeight: 700,
   fontSize: '0.82rem',
-  color: '#1a3a5c',
+  color: '#1B4F8A',
   marginBottom: 4,
   display: 'block',
-  letterSpacing: '0.01em',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
 }
 
 /* ─── Tiny helpers ──────────────────────────────────────────────────────── */
@@ -57,6 +59,8 @@ const DiagTextInput = ({ value, onChange, placeholder = '' }) => (
     onChange={e => onChange(e.target.value)}
     placeholder={placeholder}
     style={diagInputStyle}
+    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
   />
 )
 
@@ -65,6 +69,8 @@ const DiagSelect = ({ value, onChange, options }) => (
     value={value}
     onChange={e => onChange(e.target.value)}
     style={{ ...diagInputStyle, cursor: 'pointer', appearance: 'auto' }}
+    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
   >
     {options.map(o => (
       <option key={o.value} value={o.value}>{o.label}</option>
@@ -79,6 +85,8 @@ const DiagTextarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
     placeholder={placeholder}
     rows={rows}
     style={{ ...diagInputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
+    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
   />
 )
 
@@ -89,47 +97,30 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
 
   /* ── State ── */
   const [physioDiagnosis, setPhysioDiagnosis] = useState(seed.diagnosis?.physioDiagnosis ?? '')
-  const [affectedArea, setAffectedArea]       = useState(seed.diagnosis?.affectedArea ?? '')
-  const [severity, setSeverity]               = useState(seed.diagnosis?.severity ?? '')
-  const [stage, setStage]                     = useState(seed.diagnosis?.stage ?? '')
-  const [diagNotes, setDiagNotes]             = useState(seed.diagnosis?.notes ?? '')
+  const [affectedArea,    setAffectedArea]    = useState(seed.diagnosis?.affectedArea    ?? '')
+  const [severity,        setSeverity]        = useState(seed.diagnosis?.severity        ?? '')
+  const [stage,           setStage]           = useState(seed.diagnosis?.stage           ?? '')
+  const [diagNotes,       setDiagNotes]       = useState(seed.diagnosis?.notes           ?? '')
 
   const { warning } = useToast()
-
-  /* ─────────────────────────────────────────────────────────────────────
-     KEY FIX: use a ref to track the previous seed reference.
-     Only re-sync when the seed reference actually changes AND the new
-     seed carries real diagnosis data — this prevents a parent re-render
-     (e.g. after onNext fires) from wiping fields that the user just filled.
-  ───────────────────────────────────────────────────────────────────── */
   const seedRef = useRef(null)
 
   useEffect(() => {
-    // Skip if seed reference hasn't changed
     if (seed === seedRef.current) return
     seedRef.current = seed
-
-    // Only overwrite if the incoming seed actually carries diagnosis values
-    // (guards against the parent passing a fresh empty `{}` after Next)
     if (!seed?.diagnosis) return
 
     setPhysioDiagnosis(seed.diagnosis.physioDiagnosis ?? '')
-    setAffectedArea(seed.diagnosis.affectedArea ?? '')
-    setSeverity(seed.diagnosis.severity ?? '')
-    setStage(seed.diagnosis.stage ?? '')
-    setDiagNotes(seed.diagnosis.notes ?? '')
+    setAffectedArea(seed.diagnosis.affectedArea       ?? '')
+    setSeverity(seed.diagnosis.severity               ?? '')
+    setStage(seed.diagnosis.stage                     ?? '')
+    setDiagNotes(seed.diagnosis.notes                 ?? '')
   }, [seed])
 
   /* ── handleNext ── */
   const handleNext = () => {
     const payload = {
-      diagnosis: {
-        physioDiagnosis,
-        affectedArea,
-        severity,
-        stage,
-        notes: diagNotes,
-      },
+      diagnosis: { physioDiagnosis, affectedArea, severity, stage, notes: diagNotes },
     }
     onNext?.(payload)
     console.log('🚀 PrescriptionTab payload:', payload)
@@ -139,19 +130,48 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
      RENDER
   ════════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="container pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div
+      className="container pb-5"
+      style={{
+        fontFamily: "'Segoe UI', system-ui, sans-serif",
+        backgroundColor: '#FFFFFF',
+        minHeight: '100vh',
+      }}
+    >
 
       {/* ── DIAGNOSIS SECTION ─────────────────────────────────────────────── */}
       <CCard
         className="mb-4"
-        style={{ border: '1.5px solid #c8ddf0', borderRadius: 12, boxShadow: '0 4px 24px rgba(26,90,168,0.08)' }}
+        style={{
+          border: '1.5px solid #b6cfe8',
+          borderRadius: 12,
+          backgroundColor: '#FFFFFF',
+          boxShadow: '0 4px 24px rgba(27,79,138,0.10)',
+        }}
       >
         <CCardBody>
 
           {/* Section header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, borderBottom: '2px solid #e3eef8', paddingBottom: 12 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 8, background: 'linear-gradient(135deg,#1a5fa8,#3a8fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>📝</div>
-            <h5 style={{ margin: 0, color: '#1a3a5c', fontWeight: 700, fontSize: '1.05rem' }}>Diagnosis</h5>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            marginBottom: 20,
+            borderBottom: '2px solid #dceeff',
+            paddingBottom: 12,
+          }}>
+            {/* Icon badge: blue gradient */}
+            <div style={{
+              width: 34, height: 34, borderRadius: 8,
+              background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 17,
+              boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+            }}>📝</div>
+            <h5 style={{
+              margin: 0,
+              color: '#1B4F8A',
+              fontWeight: 700,
+              fontSize: '1.05rem',
+            }}>Diagnosis</h5>
           </div>
 
           {/* 2-col grid */}
@@ -174,19 +194,11 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
             </DiagField>
 
             <DiagField label="Severity">
-              <DiagSelect
-                value={severity}
-                onChange={setSeverity}
-                options={SEVERITY_OPTIONS}
-              />
+              <DiagSelect value={severity} onChange={setSeverity} options={SEVERITY_OPTIONS} />
             </DiagField>
 
             <DiagField label="Stage">
-              <DiagSelect
-                value={stage}
-                onChange={setStage}
-                options={STAGE_OPTIONS}
-              />
+              <DiagSelect value={stage} onChange={setStage} options={STAGE_OPTIONS} />
             </DiagField>
 
           </div>
@@ -208,25 +220,26 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
       <div
         className="position-fixed bottom-0"
         style={{
-          left: 0,
-          right: 0,
-          background: '#a5c4d4ff',
+          left: 0, right: 0,
+          background: '#FFFFFF',
+          borderTop: '2px solid #1B4F8A',
           display: 'flex',
           justifyContent: 'flex-end',
           gap: 16,
           padding: '10px 24px',
-          boxShadow: '0 -2px 10px rgba(0,0,0,0.08)',
+          boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
         }}
       >
         <Button
-          customColor="#ffffff"
-          color="#7e3a93"
+          customColor="#1B4F8A"
+          color="#FFFFFF"
           onClick={handleNext}
           style={{
             borderRadius: '20px',
-            fontWeight: 600,
-            padding: '6px 18px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            fontWeight: 700,
+            padding: '6px 24px',
+            boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
+            border: '1.5px solid #1B4F8A',
           }}
         >
           Next
