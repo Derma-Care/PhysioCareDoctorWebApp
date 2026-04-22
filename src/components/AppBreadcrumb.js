@@ -115,7 +115,11 @@ const AppBreadcrumb = () => {
 
       {/* Date & Back Button */}
       <div className="d-flex align-items-center gap-3">
-        {showBackButton && (
+       
+        <small style={{ fontWeight: 600, color: COLORS.black, fontSize: '0.9rem' }}>
+          {dateTime}
+        </small>
+         {showBackButton && (
           <button
             className="btn btn-sm btn-outline-primary d-flex align-items-center px-3"
             onClick={handleBack}
@@ -129,9 +133,6 @@ const AppBreadcrumb = () => {
             Back
           </button>
         )}
-        <small style={{ fontWeight: 600, color: COLORS.black, fontSize: '0.9rem' }}>
-          {dateTime}
-        </small>
       </div>
     </div>
   )

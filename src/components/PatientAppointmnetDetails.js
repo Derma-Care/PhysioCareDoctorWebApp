@@ -3,7 +3,7 @@ import TabContent from '../Prescription/TabContent'
 import Snackbar from '../components/Snackbar'
 import AppSidebar from './AppSidebar'
 import { COLORS } from '../Themes'
-import { CCard, CCardBody, CNav, CNavItem, CNavLink, CContainer } from '@coreui/react'
+import { CCard, CCardBody, CContainer } from '@coreui/react'
 import { useLocation, useParams } from 'react-router-dom'
 import { useDoctorContext } from '../Context/DoctorContext'
 import { SavePatientPrescription, getInProgressDetails } from '../Auth/Auth'
@@ -308,48 +308,57 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       <div className="w-100" style={{ position: 'sticky', top: 110, zIndex: 10 }}>
         <CContainer fluid className="p-0">
           <CCard style={{ border: 0, borderRadius: 0, backgroundColor: COLORS.bgcolor }}>
-            <CCardBody className="p-0" style={{ paddingLeft: '12px', paddingTop: '8px', paddingRight: '12px' }}>
-              <CNav variant="tabs" role="tablist" style={{ whiteSpace: 'nowrap', borderBottom: 'none', gap: '3px', flexWrap: 'nowrap', overflowX: 'auto' }}>
+            <CCardBody className="p-0" style={{ paddingLeft: '8px', paddingTop: '8px', paddingRight: '8px' }}>
+              <div
+                role="tablist"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${TABS.length}, 1fr)`,
+                  gap: '4px',
+                  width: '100%',
+                }}
+              >
                 {TABS.map((t) => {
                   const active = t === activeTab
                   return (
-                    <CNavItem key={t} style={{ flex: '0 0 auto' }}>
-                      <CNavLink
-                        active={active}
-                        onClick={() => setActiveTab(t)}
-                        style={{
-                          padding: '.5rem 1rem',
-                          cursor: 'pointer',
-                          borderRadius: '8px 8px 0 0',
-                          border: 'none',
-                          outline: 'none',
-                          backgroundColor: active ? COLORS.orange : 'rgba(255,255,255,0.13)',
-                          color: active ? COLORS.bgcolor : COLORS.white,
-                          transition: 'background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease',
-                          boxShadow: active ? '0 -3px 10px rgba(249,197,113,0.45)' : 'none',
-                          textDecoration: 'none',
-                        }}
-                        onMouseEnter={e => {
-                          if (!active) {
-                            e.currentTarget.style.backgroundColor = 'rgba(249,197,113,0.22)'
-                            e.currentTarget.style.color = COLORS.orange
-                          }
-                        }}
-                        onMouseLeave={e => {
-                          if (!active) {
-                            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.13)'
-                            e.currentTarget.style.color = COLORS.white
-                          }
-                        }}
-                      >
-                        <span style={{ fontSize: 14, fontWeight: active ? 700 : 500, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
-                          {t}
-                        </span>
-                      </CNavLink>
-                    </CNavItem>
+                    <div
+                      key={t}
+                      role="tab"
+                      onClick={() => setActiveTab(t)}
+                      style={{
+                        padding: '10px 6px',
+                        cursor: 'pointer',
+                        borderRadius: '8px 8px 0 0',
+                        backgroundColor: active ? COLORS.orange : 'rgba(255,255,255,0.13)',
+                        color: active ? COLORS.bgcolor : COLORS.white,
+                        transition: 'background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease',
+                        boxShadow: active ? '0 -3px 10px rgba(249,197,113,0.45)' : 'none',
+                        textAlign: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        userSelect: 'none',
+                      }}
+                      onMouseEnter={e => {
+                        if (!active) {
+                          e.currentTarget.style.backgroundColor = 'rgba(249,197,113,0.22)'
+                          e.currentTarget.style.color = COLORS.orange
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (!active) {
+                          e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.13)'
+                          e.currentTarget.style.color = COLORS.white
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: 15, fontWeight: active ? 700 : 500, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
+                        {t}
+                      </span>
+                    </div>
                   )
                 })}
-              </CNav>
+              </div>
             </CCardBody>
           </CCard>
         </CContainer>

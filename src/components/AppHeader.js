@@ -169,7 +169,7 @@ const AppHeader = () => {
               <>
                 <h5
                   style={{
-                    fontSize: SIZES.large,
+                    fontSize: SIZES.medium,
                     color: COLORS.white,
                     fontWeight: '700',
                     margin: 0,
