@@ -93,8 +93,6 @@ const Appointments = ({ searchTerm = '' }) => {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 10000)
-    return () => clearInterval(interval)
   }, [fetchData])
 
   useEffect(() => {

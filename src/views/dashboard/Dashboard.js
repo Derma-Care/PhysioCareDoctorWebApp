@@ -67,10 +67,6 @@ const Dashboard = () => {
     if (!doctorDetails) return;
     setPatientData(null);
     fetchAppointments();
-    const interval = setInterval(() => {
-      fetchAppointments();
-    }, 10000);
-    return () => clearInterval(interval);
   }, [doctorDetails?.id]);
 
   useEffect(() => {
@@ -105,10 +101,6 @@ const Dashboard = () => {
 
   return (
     <div className="container-fluid mt-3">
-      {/* <h5 className="mb-4" style={{ fontSize: SIZES.medium, color: COLORS.black, fontWeight: '600' }}>
-        Today Appointments
-      </h5> */}
-
       <div className="d-flex flex-wrap flex-md-nowrap gap-3">
         <div className="flex-grow-1" style={{ flexBasis: '60%' }}>
 
@@ -245,7 +237,7 @@ const Dashboard = () => {
                 </CDropdownMenu>
               </CDropdown>
 
-              {/* My Calendar button — yellow */}
+              {/* My Calendar button */}
               <button
                 onClick={() => { fetchFutureAppointments(); setShowCalendar(true); }}
                 style={{
