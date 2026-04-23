@@ -449,7 +449,7 @@ const Login = () => {
               marginBottom:32, letterSpacing:'.04em',
               fontFamily:"'Outfit',sans-serif", fontWeight:300,
             }}>
-              Powered by Chiselon Technologies · Hyderabad
+              Powered by Chiselon Technologies
             </p>
           </div>
 
