@@ -197,16 +197,22 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Investigation')
     },
 
+    // ── Plan: preserve the full multi-therapist payload ──────────────────────
     Plan: (data = {}) => {
       console.log('🔄 [Plan] onNext data:', data)
       const patch = {
         therapySessions: {
-          sessions:       Array.isArray(data.therapySessions) ? data.therapySessions : [],
-          therapistId:    data.therapistId    ?? '',
-          therapistName:  data.therapistName  ?? '',
-          manualTherapy:  data.manualTherapy  ?? '',
-          precautions:    data.precautions    ?? [],
-          modalitiesUsed: data.modalitiesUsed ?? [],
+          sessions:        Array.isArray(data.therapySessions) ? data.therapySessions : [],
+          // ── Multi-therapist: keep the full array ──
+          therapists:      Array.isArray(data.therapists)      ? data.therapists      : [],
+          therapistIds:    Array.isArray(data.therapistIds)    ? data.therapistIds    : [],
+          therapistNames:  Array.isArray(data.therapistNames)  ? data.therapistNames  : [],
+          // Single-value back-compat (first therapist in the list)
+          therapistId:     data.therapistId    ?? (data.therapists?.[0]?.therapistId  ?? ''),
+          therapistName:   data.therapistName  ?? (data.therapists?.[0]?.fullName     ?? ''),
+          manualTherapy:   data.manualTherapy  ?? '',
+          precautions:     Array.isArray(data.precautions)    ? data.precautions     : [],
+          modalitiesUsed:  Array.isArray(data.modalitiesUsed) ? data.modalitiesUsed  : [],
           patientResponse: data.patientResponse ?? '',
         },
       }

@@ -53,25 +53,36 @@ const TabContent = ({
      2. The parent's onNextMap handler then does its own mergeAndLog — which
         is also safe because deepMerge is idempotent.
 
-     IMPORTANT: For the Plan tab, TherapySession calls onNext with:
-       { therapySessions: [...], therapistId, therapistName, ... }
-     We must NOT wrap this payload in another layer here.
-     The parent's Plan handler wraps it into { therapySessions: { sessions, ... } }.
+     For the Plan tab, TherapySession calls onNext with:
+       {
+         therapySessions: [...],   ← array of session objects
+         therapists:      [...],   ← full multi-therapist array  ✅
+         therapistIds:    [...],
+         therapistNames:  [...],
+         therapistId:     '...',   ← single back-compat
+         therapistName:   '...',
+         ...
+       }
+     We pre-merge using the same shape the parent stores so returning to Plan
+     restores ALL selected therapists correctly.
   ─────────────────────────────────────────────────────────────────────────── */
   const handleNext = (payload) => {
     if (setFormData && payload && typeof payload === 'object') {
-      // For Plan tab: payload has therapySessions as an ARRAY
-      // We pre-merge it so returning to Plan shows saved data.
-      // We use the same shape the parent uses: { therapySessions: { sessions: [...], ... } }
       if (activeTab === 'Plan') {
+        // Build the same shape that PatientAppointmentDetails.Plan handler stores
         const planPatch = {
           therapySessions: {
             sessions:        Array.isArray(payload.therapySessions) ? payload.therapySessions : [],
-            therapistId:     payload.therapistId    ?? '',
-            therapistName:   payload.therapistName  ?? '',
+            // ── Preserve the full multi-therapist array ──────────────────
+            therapists:      Array.isArray(payload.therapists)     ? payload.therapists      : [],
+            therapistIds:    Array.isArray(payload.therapistIds)   ? payload.therapistIds    : [],
+            therapistNames:  Array.isArray(payload.therapistNames) ? payload.therapistNames  : [],
+            // Single back-compat (first in list)
+            therapistId:     payload.therapistId   ?? (payload.therapists?.[0]?.therapistId ?? ''),
+            therapistName:   payload.therapistName ?? (payload.therapists?.[0]?.fullName    ?? ''),
             manualTherapy:   payload.manualTherapy  ?? '',
-            precautions:     payload.precautions    ?? [],
-            modalitiesUsed:  payload.modalitiesUsed ?? [],
+            precautions:     Array.isArray(payload.precautions)    ? payload.precautions     : [],
+            modalitiesUsed:  Array.isArray(payload.modalitiesUsed) ? payload.modalitiesUsed  : [],
             patientResponse: payload.patientResponse ?? '',
           },
         }
@@ -109,10 +120,10 @@ const TabContent = ({
     case 'Plan':
       /* ── KEY FIX: pass formData.therapySessions as seed ──────────────────
          TherapySession reads:
-           seed.sessions[0].serviceType  → restores mode
-           seed.therapistId / therapistName → restores therapist
+           seed.sessions[0].serviceType     → restores mode
+           seed.therapists                  → restores ALL selected therapists ✅
+           seed.therapistId / therapistName → single back-compat fallback
            restoreTherophyDataState(seed.sessions) → rebuilds exercise table
-         This ensures all edits survive tab navigation.
       ────────────────────────────────────────────────────────────────────── */
       content = fromDoctorTemplate ? (
         <DoctorFollowUp seed={formData.therapySessions || {}} onNext={handleNext} patientData={patientData} formData={formData} setFormData={setFormData} />

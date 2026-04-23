@@ -104,19 +104,40 @@ const Section = ({ icon, title, children, badge = null }) => (
 )
 
 // ─── Row Component ────────────────────────────────────────────────────────────
+// FIX: Consistent label/value alignment — label always top-aligned, value properly spaced
 const Row = ({ label, value, full = false, highlight = false }) => {
   if (!isValid(value) && value !== 0) return null
   return (
     <div style={{
-      display: full ? 'block' : 'flex', gap: 6, marginBottom: 7,
+      display: 'flex',
+      flexDirection: full ? 'column' : 'row',
+      gap: full ? 2 : 6,
+      marginBottom: 7,
       padding: highlight ? '5px 10px' : 0,
       background: highlight ? T.orangeLight : 'transparent',
       borderRadius: highlight ? 6 : 0,
       borderLeft: highlight ? `3px solid ${T.orange}` : 'none',
       paddingLeft: highlight ? 10 : 0,
+      alignItems: full ? 'flex-start' : 'flex-start',
     }}>
-      <span style={{ fontWeight: 700, fontSize: '0.72rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', flexShrink: 0 }}>{label}:</span>
-      <span style={{ fontSize: '0.82rem', color: T.text, wordBreak: 'break-word', marginLeft: full ? 0 : 4 }}>{dash(value)}</span>
+      <span style={{
+        fontWeight: 700,
+        fontSize: '0.72rem',
+        color: T.textLight,
+        textTransform: 'uppercase',
+        letterSpacing: '0.06em',
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+        lineHeight: 1.5,
+        minWidth: full ? 'auto' : 110,
+      }}>{label}:</span>
+      <span style={{
+        fontSize: '0.82rem',
+        color: T.text,
+        wordBreak: 'break-word',
+        lineHeight: 1.5,
+        flex: 1,
+      }}>{dash(value)}</span>
     </div>
   )
 }
@@ -226,14 +247,14 @@ const ExerciseTableDisplay = ({ exercises }) => {
   )
 }
 
-const TherapyBlock = ({ therapyName, exercises, totalPrice }) => (
+// FIX: Removed totalPrice display from TherapyBlock
+const TherapyBlock = ({ therapyName, exercises }) => (
   <div style={{ marginBottom: 10, borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '7px 12px', background: T.bgLight, borderBottom: `1px solid ${T.border}`,
     }}>
       <span style={{ fontWeight: 700, color: T.bgcolor, fontSize: '0.8rem' }}>💊 {therapyName || 'Therapy'}</span>
-      {totalPrice > 0 && <span style={{ fontSize: '0.72rem', color: T.textMid, fontWeight: 600 }}>₹ {totalPrice}</span>}
     </div>
     <ExerciseTableDisplay exercises={exercises} />
   </div>
@@ -269,6 +290,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
         if (serviceType === 'package') {
           return (
             <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
+              {/* FIX: Removed price badge from package header */}
               <div style={{
                 padding: '8px 14px', background: T.bgcolor,
                 borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem',
@@ -276,19 +298,18 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
                 borderBottom: `2px solid ${T.orange}`,
               }}>
                 <span>📦 {sess.packageName || 'Package'}</span>
-                {sess.totalPrice > 0 && <span style={{ fontSize: '0.75rem', background: T.orange, color: T.bgcolor, borderRadius: 10, padding: '2px 8px' }}>₹ {sess.totalPrice}</span>}
               </div>
               <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
                 {Array.isArray(sess.programs) && sess.programs.length > 0 && sess.programs.map((prog, pIdx) => (
                   <div key={pIdx} style={{ marginBottom: pIdx < sess.programs.length - 1 ? 14 : 0 }}>
+                    {/* FIX: Removed price badge from program header */}
                     <div style={{ padding: '7px 12px', background: T.bgcolor, borderRadius: '7px 7px 0 0', color: T.white, fontWeight: 700, fontSize: '0.8rem' }}>
                       🎯 {prog.programName || `Program ${pIdx + 1}`}
-                      {prog.totalPrice > 0 && <span style={{ marginLeft: 6, background: T.orange, color: T.bgcolor, borderRadius: 8, padding: '1px 7px', fontSize: '0.7rem' }}>₹ {prog.totalPrice}</span>}
                     </div>
                     <div style={{ border: `1.5px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 7px 7px', padding: '10px' }}>
                       {Array.isArray(prog.therapyData ?? prog.therophyData) && (prog.therapyData ?? prog.therophyData ?? []).map((therapy, tIdx) => (
-                        <TherapyBlock key={tIdx} therapyName={therapy.therapyName} exercises={therapy.exercises || []} totalPrice={therapy.totalPrice} />
+                        <TherapyBlock key={tIdx} therapyName={therapy.therapyName} exercises={therapy.exercises || []} />
                       ))}
                     </div>
                   </div>
@@ -302,14 +323,14 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
           const therapies = sess.therapyData ?? sess.therophyData ?? []
           return (
             <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
+              {/* FIX: Removed price badge from program header */}
               <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>🎯 {sess.programName || 'Program'}</span>
-                {(sess.totalPrice || sess.totalTherapyPrice) > 0 && <span style={{ fontSize: '0.75rem', background: T.orange, color: T.bgcolor, borderRadius: 10, padding: '2px 8px' }}>₹ {sess.totalPrice || sess.totalTherapyPrice}</span>}
               </div>
               <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
                 {Array.isArray(therapies) && therapies.length > 0
-                  ? therapies.map((t, tIdx) => <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} totalPrice={t.totalPrice} />)
+                  ? therapies.map((t, tIdx) => <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} />)
                   : <div style={{ color: T.textLight, fontSize: '0.78rem', fontStyle: 'italic', padding: '6px' }}>No therapies found.</div>}
               </div>
             </div>
@@ -319,9 +340,9 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
         if (serviceType === 'therapy') {
           return (
             <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
+              {/* FIX: Removed price badge from therapy header */}
               <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>💊 {sess.therapyName || 'Therapy Session'}</span>
-                {sess.totalPrice > 0 && <span style={{ fontSize: '0.75rem', background: T.orange, color: T.bgcolor, borderRadius: 10, padding: '2px 8px' }}>₹ {sess.totalPrice}</span>}
               </div>
               <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
@@ -336,9 +357,9 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
         if (serviceType === 'exercise') {
           return (
             <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
+              {/* FIX: Removed price badge from exercise header */}
               <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>🏋️ Exercise Session</span>
-                {sess.totalPrice > 0 && <span style={{ fontSize: '0.75rem', background: T.orange, color: T.bgcolor, borderRadius: 10, padding: '2px 8px' }}>₹ {sess.totalPrice}</span>}
               </div>
               <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
@@ -352,7 +373,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
           <div key={si} style={{ marginBottom: isLast ? 0 : 18 }}>
             <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
             {Array.isArray(sess.therapyData) && sess.therapyData.map((t, tIdx) => (
-              <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} totalPrice={t.totalPrice} />
+              <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} />
             ))}
           </div>
         )
@@ -665,6 +686,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     <div style={{ background: T.bgLight, minHeight: '100vh', paddingBottom: 100, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* ── Page Header ── */}
+      {/* FIX: "Review Before Saving" moved below "Physiotherapy Summary" */}
       <div style={{
         background: T.bgcolor,
         padding: '8px 20px',
@@ -674,7 +696,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         borderBottom: `2px solid ${T.orange}`,
         minHeight: 48,
       }}>
-        {/* Left: icon + title */}
+        {/* Left: icon + title — Physiotherapy Summary on top, Review Before Saving below */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 30, height: 30, borderRadius: 8,
@@ -683,8 +705,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             border: '1px solid rgba(249,197,113,0.3)',
           }}>📋</div>
           <div>
-            <div style={{ fontSize: 9, color: T.orange, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', lineHeight: 1.2 }}>Review Before Saving</div>
             <div style={{ color: T.white, fontSize: 13, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.3 }}>Physiotherapy Summary</div>
+            <div style={{ fontSize: 9, color: T.orange, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', lineHeight: 1.2 }}>Review Before Saving</div>
           </div>
         </div>
 
@@ -716,12 +738,13 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       <CContainer fluid style={{ maxWidth: 1100, padding: '0 16px' }}>
 
         {/* 1. Patient Info */}
+        {/* FIX: "Sex" replaced with "Gender"; value alignment fixed via Row component */}
         <Section icon="👤" title="Patient & Booking Information">
           <Grid cols={3}>
             {isValid(patientId) && <Row label="Patient ID" value={patientId} />}
             {isValid(bookingId) && <Row label="Booking ID" value={bookingId} />}
             {isValid(patientName) && <Row label="Name" value={capitalizeEachWord(patientName)} />}
-            {isValid(patientAge) && <Row label="Age / Sex" value={`${patientAge} yrs / ${patientSex}`} />}
+            {isValid(patientAge) && <Row label="Age / Gender" value={`${patientAge} yrs / ${patientSex}`} />}
             {isValid(patientMobile) && <Row label="Mobile" value={patientMobile} />}
             {isValid(clinicId) && <Row label="Clinic ID" value={clinicId} />}
             {isValid(clinicName) && <Row label="Clinic" value={clinicName} />}
@@ -1022,11 +1045,13 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       </CContainer>
 
       {/* ── Sticky Bottom Bar ── */}
+      {/* FIX: All three buttons centered using justify-content: center with even gap */}
       <div style={{
         position: 'fixed', bottom: 0, left: sidebarWidth ? `${sidebarWidth}px` : 0,
         width: sidebarWidth ? `calc(100vw - ${sidebarWidth}px)` : '100vw',
         background: '#FFFFFF',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        gap: 12,
         padding: '8px 24px', zIndex: 999,
         boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
         borderTop: '2px solid #1B4F8A',
@@ -1037,23 +1062,21 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           onClick={() => { setClickedSaveTemplate(true); onSaveTemplate?.(); info('Template saved!', { title: 'Template' }) }}>
           {!updateTemplate ? '💾 Save as Template' : '🔄 Update Template'}
         </Button>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {saving && <CSpinner size="sm" style={{ color: '#1B4F8A' }} />}
-          <Button
-            customColor="#1B4F8A" color="#FFFFFF"
-            style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
-            onClick={() => { setPendingAction(ACTIONS.SAVE); clickedSaveTemplate ? doSave() : setShowTemplateModal(true) }}
-            disabled={saving}>
-            ✅ Save
-          </Button>
-          <Button
-            customColor="#1B4F8A" color="#FFFFFF"
-            style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
-            onClick={() => { setPendingAction(ACTIONS.SAVE_PRINT); clickedSaveTemplate ? doSave({ downloadAfter: true }) : setShowTemplateModal(true) }}
-            disabled={saving}>
-            📄 Save & Download PDF
-          </Button>
-        </div>
+        {saving && <CSpinner size="sm" style={{ color: '#1B4F8A' }} />}
+        <Button
+          customColor="#1B4F8A" color="#FFFFFF"
+          style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
+          onClick={() => { setPendingAction(ACTIONS.SAVE); clickedSaveTemplate ? doSave() : setShowTemplateModal(true) }}
+          disabled={saving}>
+          ✅ Save
+        </Button>
+        <Button
+          customColor="#1B4F8A" color="#FFFFFF"
+          style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
+          onClick={() => { setPendingAction(ACTIONS.SAVE_PRINT); clickedSaveTemplate ? doSave({ downloadAfter: true }) : setShowTemplateModal(true) }}
+          disabled={saving}>
+          📄 Save & Download PDF
+        </Button>
       </div>
 
       {/* ── Template modal ── */}

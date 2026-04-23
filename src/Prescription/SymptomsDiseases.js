@@ -42,8 +42,12 @@ const isValid = (v) =>
 const SLabel = ({ text }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
     <span style={{
-      fontSize: 10, fontWeight: 700, letterSpacing: '0.09em',
-      textTransform: 'uppercase', color: '#1B4F8A', fontFamily: 'inherit',
+      fontSize: '0.82rem',      // ← match Investigation tab
+      fontWeight: 700,
+      letterSpacing: '0.08em',  // ← match Investigation tab
+      textTransform: 'uppercase',
+      color: '#1B4F8A',
+      fontFamily: 'inherit',
     }}>{text}</span>
     <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,#b6cfe8,transparent)' }} />
   </div>
@@ -106,7 +110,8 @@ const card = {
 
 const inputBase = {
   width: '100%', borderRadius: 10, border: '1.5px solid #b6cfe8',
-  padding: '10px 13px', fontSize: 16, fontFamily: 'inherit',
+  padding: '10px 13px', fontSize: '0.875rem',  // ← change 16 to '0.875rem'
+  fontFamily: 'inherit',
   outline: 'none', background: '#FFFFFF', color: '#1a3a5c',
   boxSizing: 'border-box', resize: 'vertical',
 }

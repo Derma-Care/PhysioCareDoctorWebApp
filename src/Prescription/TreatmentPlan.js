@@ -67,7 +67,7 @@ const parseFrequency = (raw) => {
   return { count, unit }
 }
 
-/* ─── Styles (matching PrescriptionTab) ─────────────────────────────────── */
+/* ─── Styles ─────────────────────────────────────────────────────────────── */
 const inputStyle = {
   border: '1.5px solid #b6cfe8',
   borderRadius: 7,
@@ -112,7 +112,7 @@ const Field = ({ label, children, required, style = {} }) => (
   </div>
 )
 
-/* ─── SectionHeader (matching PrescriptionTab) ───────────────────────────── */
+/* ─── SectionHeader ──────────────────────────────────────────────────────── */
 const SectionHeader = ({ emoji, title, subtitle }) => (
   <div style={{
     display: 'flex', alignItems: 'center', gap: 10,
@@ -156,59 +156,105 @@ const RadioBtn = ({ label, emoji, value, active, onClick }) => (
   </button>
 )
 
-/* ─── Therapist Search ───────────────────────────────────────────────────── */
-const TherapistSearch = ({ therapists, loading, value, name, onChange, hasError }) => {
+/* ─── Multi-Therapist Search ─────────────────────────────────────────────── */
+const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChange, hasError }) => {
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState(false)
-
-  useEffect(() => { setSearch(value && name ? `${value} - ${name}` : '') }, [value, name])
 
   const filtered = therapists.filter(t => {
     const q = search.toLowerCase()
     return (t.therapistId || '').toLowerCase().includes(q) || (t.fullName || '').toLowerCase().includes(q)
   })
-  const clear = () => { onChange('', ''); setSearch(''); setOpen(true) }
+
+  const isSelected = (id) => selectedTherapists.some(t => t.therapistId === id)
+
+  const toggleTherapist = (t) => {
+    if (isSelected(t.therapistId)) {
+      onChange(selectedTherapists.filter(st => st.therapistId !== t.therapistId))
+    } else {
+      onChange([...selectedTherapists, { therapistId: t.therapistId, fullName: t.fullName }])
+    }
+  }
+
+  const removeTherapist = (id) => {
+    onChange(selectedTherapists.filter(t => t.therapistId !== id))
+  }
 
   return (
     <div style={{ position: 'relative' }}>
+      {/* Input */}
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
         <input
           value={search}
-          onChange={e => { setSearch(e.target.value); if (value) onChange('', ''); setOpen(true) }}
+          onChange={e => { setSearch(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 200)}
-          placeholder={loading ? 'Loading therapists...' : !therapists.length ? 'No therapists available' : 'Search by ID or name...'}
+          placeholder={
+            loading
+              ? 'Loading therapists...'
+              : !therapists.length
+                ? 'No therapists available'
+                : 'Search by ID or name to add therapist...'
+          }
           disabled={loading}
           style={{
-            ...inputStyle, paddingRight: value ? 36 : 11, opacity: loading ? 0.6 : 1,
-            borderColor: hasError ? '#e53e3e' : value ? '#38a169' : '#b6cfe8',
-            backgroundColor: hasError ? '#fff5f5' : value ? '#f0fff4' : '#FFFFFF',
+            ...inputStyle,
+            opacity: loading ? 0.6 : 1,
+            borderColor: hasError ? '#e53e3e' : selectedTherapists.length > 0 ? '#38a169' : '#b6cfe8',
+            backgroundColor: hasError ? '#fff5f5' : '#FFFFFF',
             boxShadow: hasError ? '0 0 0 3px rgba(229,62,62,0.12)' : 'none',
           }}
         />
-        {value && (
-          <button type="button" onMouseDown={e => { e.preventDefault(); clear() }}
-            style={{ position: 'absolute', right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', fontWeight: 700, fontSize: 16, padding: '2px 4px' }}>✕</button>
+        {search && (
+          <button
+            type="button"
+            onMouseDown={e => { e.preventDefault(); setSearch('') }}
+            style={{ position: 'absolute', right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontWeight: 700, fontSize: 14, padding: '2px 4px' }}
+          >✕</button>
         )}
       </div>
-      {hasError && <div style={{ marginTop: 5, fontSize: '0.78rem', color: '#e53e3e', fontWeight: 600 }}>⚠️ Please assign a therapist</div>}
-      {value && name && (
-        <div style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6, background: '#e6fffa', border: '1px solid #81e6d9', borderRadius: 20, padding: '3px 12px', fontSize: '0.8rem', color: '#234e52', fontWeight: 600 }}>
-          ✅ {value} — {name}
+
+      {hasError && (
+        <div style={{ marginTop: 5, fontSize: '0.78rem', color: '#e53e3e', fontWeight: 600 }}>
+          ⚠️ Please assign at least one therapist
         </div>
       )}
+
+      {/* Dropdown */}
       {open && !loading && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8, maxHeight: 220, overflowY: 'auto', zIndex: 1000, boxShadow: '0 4px 16px rgba(27,79,138,0.12)', marginTop: 2 }}>
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff',
+          border: '1px solid #b6cfe8', borderRadius: 8, maxHeight: 220, overflowY: 'auto',
+          zIndex: 1000, boxShadow: '0 4px 16px rgba(27,79,138,0.12)', marginTop: 2,
+        }}>
           {filtered.length > 0 ? filtered.map((t, i) => {
-            const isSel = value === t.therapistId
+            const sel = isSelected(t.therapistId)
             return (
-              <div key={i}
-                onMouseDown={e => { e.preventDefault(); onChange(t.therapistId, t.fullName); setSearch(`${t.therapistId} - ${t.fullName}`); setOpen(false) }}
-                style={{ padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid #eee', background: isSel ? '#dceeff' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = '#f0f7ff' }}
-                onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isSel ? '#dceeff' : '#fff' }}>
-                <span><strong style={{ color: '#1B4F8A' }}>{t.therapistId}</strong><span style={{ color: '#1a3a5c' }}> — {t.fullName}</span></span>
-                {isSel && <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.8rem' }}>✓ Selected</span>}
+              <div
+                key={i}
+                onMouseDown={e => { e.preventDefault(); toggleTherapist(t) }}
+                style={{
+                  padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid #eee',
+                  background: sel ? '#dceeff' : i % 2 === 0 ? '#f8fbff' : '#fff',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}
+                onMouseEnter={e => { if (!sel) e.currentTarget.style.background = '#f0f7ff' }}
+                onMouseLeave={e => { if (!sel) e.currentTarget.style.background = i % 2 === 0 ? '#f8fbff' : '#fff' }}
+              >
+                {/* checkbox-style indicator */}
+                <div style={{
+                  width: 16, height: 16, borderRadius: 4, flexShrink: 0,
+                  border: `2px solid ${sel ? '#1B4F8A' : '#a0bcda'}`,
+                  background: sel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {sel && <span style={{ color: '#fff', fontSize: '0.6rem', fontWeight: 700 }}>✓</span>}
+                </div>
+                <span style={{ flex: 1 }}>
+                  <strong style={{ color: '#1B4F8A' }}>{t.therapistId}</strong>
+                  <span style={{ color: '#1a3a5c' }}> — {t.fullName}</span>
+                </span>
+                {sel && <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.8rem' }}>Selected</span>}
               </div>
             )
           }) : (
@@ -216,6 +262,27 @@ const TherapistSearch = ({ therapists, loading, value, name, onChange, hasError 
               {!therapists.length ? 'No therapists found for this branch' : 'No match — try a different name'}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Selected chips */}
+      {selectedTherapists.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+          {selectedTherapists.map(t => (
+            <div key={t.therapistId} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: '#e6fffa', border: '1px solid #81e6d9',
+              borderRadius: 20, padding: '4px 12px',
+              fontSize: '0.8rem', color: '#234e52', fontWeight: 600,
+            }}>
+              👤 {t.therapistId} — {t.fullName}
+              <button
+                type="button"
+                onClick={() => removeTherapist(t.therapistId)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', fontWeight: 700, fontSize: 13, padding: '0 2px', lineHeight: 1 }}
+              >✕</button>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -293,6 +360,58 @@ const ExerciseCheckbox = ({ checked, onChange }) => (
   </div>
 )
 
+/* ─── NotesCell — editable inline ────────────────────────────────────────── */
+const NotesCell = ({ value, onChange }) => {
+  const [editing, setEditing] = useState(false)
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (editing && inputRef.current) inputRef.current.focus()
+  }, [editing])
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value)}
+        onBlur={() => setEditing(false)}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditing(false) }}
+        placeholder="Add notes..."
+        style={{
+          width: '100%', minWidth: 120,
+          border: '1.5px solid #1B4F8A', borderRadius: 6,
+          padding: '4px 8px', fontSize: '0.82rem',
+          color: '#1a3a5c', background: '#fff', outline: 'none',
+          fontFamily: 'inherit',
+          boxShadow: '0 0 0 3px rgba(27,79,138,0.15)',
+        }}
+      />
+    )
+  }
+
+  return (
+    <div
+      onClick={() => setEditing(true)}
+      title="Click to edit notes"
+      style={{
+        cursor: 'pointer', minWidth: 100, padding: '4px 6px',
+        borderRadius: 6, border: '1.5px dashed #b6cfe8',
+        fontSize: '0.82rem', color: value ? '#1a3a5c' : '#94a3b8',
+        background: '#f8fafc', display: 'flex', alignItems: 'center', gap: 4,
+        transition: 'border-color 0.15s, background 0.15s',
+        whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = '#1B4F8A'; e.currentTarget.style.background = '#f0f6ff' }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = '#b6cfe8'; e.currentTarget.style.background = '#f8fafc' }}
+    >
+      <span style={{ fontSize: 11, flexShrink: 0, color: '#94a3b8' }}>✏️</span>
+      <span>{value || 'Add notes...'}</span>
+    </div>
+  )
+}
+
 /* ─── ExerciseTable ──────────────────────────────────────────────────────── */
 const ExerciseTable = ({ exercises, onUpdate }) => {
   const setField = (idx, field, val) =>
@@ -303,17 +422,27 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
   const toggleAll = () => onUpdate(exercises.map(ex => ({ ...ex, _checked: !allChecked })))
 
   if (!Array.isArray(exercises) || exercises.length === 0) {
-    return <div style={{ padding: '14px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '0.83rem', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1', marginTop: 8 }}>No exercises available</div>
+    return (
+      <div style={{ padding: '14px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '0.83rem', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1', marginTop: 8 }}>
+        No exercises available
+      </div>
+    )
   }
 
   const checkedCount = exercises.filter(ex => ex._checked !== false).length
-  const TH = ({ children, center }) => <th style={{ padding: '9px 10px', textAlign: center ? 'center' : 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem' }}>{children}</th>
-  const TD = ({ children, style = {} }) => <td style={{ padding: '7px 10px', verticalAlign: 'middle', ...style }}>{children}</td>
+  const TH = ({ children, center }) => (
+    <th style={{ padding: '9px 10px', textAlign: center ? 'center' : 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem' }}>{children}</th>
+  )
+  const TD = ({ children, style = {} }) => (
+    <td style={{ padding: '7px 10px', verticalAlign: 'middle', ...style }}>{children}</td>
+  )
 
   return (
     <div style={{ overflowX: 'auto', marginTop: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, padding: '5px 10px', background: '#f0f6ff', borderRadius: 6, border: '1px solid #d0e4f7' }}>
-        <span style={{ fontSize: '0.78rem', color: '#1B4F8A', fontWeight: 600 }}>{checkedCount} of {exercises.length} exercise{exercises.length !== 1 ? 's' : ''} selected</span>
+        <span style={{ fontSize: '0.78rem', color: '#1B4F8A', fontWeight: 600 }}>
+          {checkedCount} of {exercises.length} exercise{exercises.length !== 1 ? 's' : ''} selected
+        </span>
         <button type="button" onClick={toggleAll} style={{ padding: '3px 12px', borderRadius: 5, border: '1.5px solid #1B4F8A', background: allChecked ? '#1B4F8A' : '#FFFFFF', color: allChecked ? '#fff' : '#1B4F8A', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
           {allChecked ? '☑ Deselect All' : '☐ Select All'}
         </button>
@@ -321,21 +450,48 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', color: '#1a3a5c' }}>
         <thead>
           <tr style={{ background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)', color: '#fff' }}>
-            <TH center><div onClick={toggleAll} style={{ width: 16, height: 16, borderRadius: 3, cursor: 'pointer', border: `2px solid ${allChecked ? '#fff' : 'rgba(255,255,255,0.6)'}`, background: allChecked ? 'rgba(255,255,255,0.3)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 'auto' }}>{allChecked && <span style={{ color: '#fff', fontSize: '0.6rem' }}>✓</span>}</div></TH>
-            <TH>#</TH><TH>Exercise Name</TH><TH center>Sessions</TH><TH center>Sets</TH><TH center>Reps</TH><TH>Frequency</TH><TH>Notes</TH>
+            <TH center>
+              <div onClick={toggleAll} style={{ width: 16, height: 16, borderRadius: 3, cursor: 'pointer', border: `2px solid ${allChecked ? '#fff' : 'rgba(255,255,255,0.6)'}`, background: allChecked ? 'rgba(255,255,255,0.3)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 'auto' }}>
+                {allChecked && <span style={{ color: '#fff', fontSize: '0.6rem' }}>✓</span>}
+              </div>
+            </TH>
+            <TH>#</TH>
+            <TH>Exercise Name</TH>
+            <TH center>Sessions</TH>
+            <TH center>Sets</TH>
+            <TH center>Reps</TH>
+            <TH>Frequency</TH>
+            <TH>Notes</TH>
           </tr>
         </thead>
         <tbody>
           {exercises.map((ex, idx) => (
             <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f0f6ff' : '#FFFFFF', borderBottom: '1px solid #dceeff' }}>
-              <TD style={{ textAlign: 'center', width: 32 }}><ExerciseCheckbox checked={ex._checked !== false} onChange={() => toggleExercise(idx)} /></TD>
+              <TD style={{ textAlign: 'center', width: 32 }}>
+                <ExerciseCheckbox checked={ex._checked !== false} onChange={() => toggleExercise(idx)} />
+              </TD>
               <TD style={{ fontWeight: 700, color: '#1B4F8A' }}>{idx + 1}</TD>
               <TD style={{ fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</TD>
-              <TD style={{ textAlign: 'center' }}><NumCell value={ex.sessions} onChange={v => setField(idx, 'sessions', v)} /></TD>
-              <TD style={{ textAlign: 'center' }}><NumCell value={ex.sets} onChange={v => setField(idx, 'sets', v)} /></TD>
-              <TD style={{ textAlign: 'center' }}><NumCell value={ex.reps} onChange={v => setField(idx, 'reps', v)} /></TD>
-              <TD><FreqCell count={ex.frequencyCount} unit={ex.frequencyUnit} onCountChange={v => setField(idx, 'frequencyCount', v)} onUnitChange={v => setField(idx, 'frequencyUnit', v)} /></TD>
-              <TD>{ex.notes || '-'}</TD>
+              <TD style={{ textAlign: 'center' }}>
+                <NumCell value={ex.sessions} onChange={v => setField(idx, 'sessions', v)} />
+              </TD>
+              <TD style={{ textAlign: 'center' }}>
+                <NumCell value={ex.sets} onChange={v => setField(idx, 'sets', v)} />
+              </TD>
+              <TD style={{ textAlign: 'center' }}>
+                <NumCell value={ex.reps} onChange={v => setField(idx, 'reps', v)} />
+              </TD>
+              <TD>
+                <FreqCell
+                  count={ex.frequencyCount} unit={ex.frequencyUnit}
+                  onCountChange={v => setField(idx, 'frequencyCount', v)}
+                  onUnitChange={v => setField(idx, 'frequencyUnit', v)}
+                />
+              </TD>
+              {/* ── Notes: now fully editable ── */}
+              <TD style={{ minWidth: 130 }}>
+                <NotesCell value={ex.notes} onChange={v => setField(idx, 'notes', v)} />
+              </TD>
             </tr>
           ))}
         </tbody>
@@ -646,8 +802,18 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
 
   const [therapists,        setTherapists]        = useState([])
   const [loadingTherapists, setLoadingTherapists] = useState(false)
-  const [therapistId,       setTherapistId]       = useState(seed.therapistId ?? '')
-  const [therapistName,     setTherapistName]     = useState(seed.therapistName ?? '')
+
+  // ── Multi-therapist: array of { therapistId, fullName } ──
+  // Restore priority: seed.therapists (full array) → single back-compat fields
+  const [selectedTherapists, setSelectedTherapists] = useState(() => {
+    if (Array.isArray(seed.therapists) && seed.therapists.length > 0) {
+      return seed.therapists.map(t => ({ therapistId: t.therapistId || '', fullName: t.fullName || '' }))
+    }
+    if (seed.therapistId && seed.therapistName) {
+      return [{ therapistId: seed.therapistId, fullName: seed.therapistName }]
+    }
+    return []
+  })
 
   const [programs,        setPrograms]        = useState([])
   const [loadingPrograms, setLoadingPrograms] = useState(false)
@@ -691,6 +857,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   const [loadingByItemId, setLoadingByItemId] = useState({})
   const restoredFromSeedRef = useRef(savedSessions.length > 0)
 
+  // ── Refs for validate() to read latest state ──
   const therophyDataStateRef = useRef(therophyDataState)
   useEffect(() => { therophyDataStateRef.current = therophyDataState }, [therophyDataState])
   const therapyStateRef = useRef(therapyState)
@@ -701,10 +868,8 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   useEffect(() => { selectedItemsRef.current = selectedItems }, [selectedItems])
   const modeRef = useRef(mode)
   useEffect(() => { modeRef.current = mode }, [mode])
-  const therapistIdRef = useRef(therapistId)
-  useEffect(() => { therapistIdRef.current = therapistId }, [therapistId])
-  const therapistNameRef = useRef(therapistName)
-  useEffect(() => { therapistNameRef.current = therapistName }, [therapistName])
+  const selectedTherapistsRef = useRef(selectedTherapists)
+  useEffect(() => { selectedTherapistsRef.current = selectedTherapists }, [selectedTherapists])
 
   useEffect(() => {
     if (savedSession.serviceType === 'therapy' && savedSession.therapyName) {
@@ -989,29 +1154,43 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     setErrors({})
   }
 
+  /* ── Validate ── only flag therapies error when user has ZERO checked ── */
   const validate = () => {
     const newErrors = {}
     const curMode  = modeRef.current
     const curTDS   = therophyDataStateRef.current
     const curTS    = therapyStateRef.current
     const curTL    = therapyLibraryRef.current
-    const curTid   = therapistIdRef.current
-    const curTname = therapistNameRef.current
+    const curTherapists = selectedTherapistsRef.current
     const curItems = selectedItemsRef.current
 
-    if (curItems.size === 0) newErrors.service = `Please select at least one ${curMode}`
+    // Must select at least one service item
+    if (curItems.size === 0) {
+      newErrors.service = `Please select at least one ${curMode}`
+    }
 
+    // Must have at least one therapy checked — only if therapies actually exist
     if (curItems.size > 0) {
       const curHasTD = Object.keys(curTDS).length > 0
       if (curHasTD) {
-        if (!Object.keys(curTDS).some(k => curTDS[k]?.checked))
+        const anyChecked = Object.keys(curTDS).some(k => curTDS[k]?.checked === true)
+        if (!anyChecked) {
           newErrors.therapies = 'Please select at least one therapy'
-      } else if (curTL.length > 0 && !curTL.some(t => curTS[t.therapyName]?.checked)) {
-        newErrors.therapies = 'Please select at least one therapy'
+        }
+      } else if (curTL.length > 0) {
+        const anyChecked = curTL.some(t => curTS[t.therapyName]?.checked === true)
+        if (!anyChecked) {
+          newErrors.therapies = 'Please select at least one therapy'
+        }
       }
+      // If no therapies loaded at all, don't block submission
     }
 
-    if (!curTid || !curTname) newErrors.therapist = 'Please assign a therapist'
+    // Must have at least one therapist assigned
+    if (!curTherapists || curTherapists.length === 0) {
+      newErrors.therapist = 'Please assign at least one therapist'
+    }
+
     setErrors(newErrors)
     return { isValid: Object.keys(newErrors).length === 0, newErrors }
   }
@@ -1031,8 +1210,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     const latestTdKeys = Object.keys(latestTDS)
     const latestMode   = modeRef.current
     const latestItems  = selectedItemsRef.current
-    const latestTid    = therapistIdRef.current
-    const latestTname  = therapistNameRef.current
+    const latestTherapists = selectedTherapistsRef.current
 
     const formatExercise = (ex) => ({
       exerciseId: ex.therapyExercisesId || ex.therapyExerciseId || ex.id || '',
@@ -1104,8 +1282,13 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
 
     onNext({
       therapySessions,
-      therapistId:  latestTid  || '',
-      therapistName: latestTname || '',
+      // Pass array of therapist IDs and names
+      therapistIds:   latestTherapists.map(t => t.therapistId),
+      therapistNames: latestTherapists.map(t => t.fullName),
+      // Keep single for backward compat (first selected)
+      therapistId:    latestTherapists[0]?.therapistId  || '',
+      therapistName:  latestTherapists[0]?.fullName || '',
+      therapists:     latestTherapists,
       modalitiesUsed: [],
       patientResponse: '',
       manualTherapy: '',
@@ -1139,6 +1322,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           </div>
         )}
 
+        {/* ── Error summary — only show if errors exist ── */}
         {Object.keys(errors).length > 0 && (
           <div style={{ marginBottom: 16, padding: '12px 18px', background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 10, fontSize: '0.85rem', color: '#991b1b' }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>⚠️ Please fix the following before proceeding:</div>
@@ -1225,23 +1409,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           </CCardBody>
         </CCard>
 
-        {/* ══ 2. ASSIGN THERAPIST ══ */}
-        <CCard style={{ ...cardStyle, borderColor: errors.therapist ? '#fecaca' : '#b6cfe8' }}>
-          <CCardBody style={{ padding: '22px 28px' }}>
-            <SectionHeader emoji="👤" title="Assign Therapist" subtitle="Required *" />
-            <TherapistSearch
-              therapists={therapists} loading={loadingTherapists}
-              value={therapistId} name={therapistName}
-              hasError={!!errors.therapist}
-              onChange={(id, nm) => {
-                setTherapistId(id); setTherapistName(nm)
-                if (id) setErrors(prev => ({ ...prev, therapist: undefined }))
-              }}
-            />
-          </CCardBody>
-        </CCard>
-
-        {/* ══ 3. THERAPIES & EXERCISES ══ */}
+        {/* ══ 2. THERAPIES & EXERCISES ══ */}
         <CCard style={{ ...cardStyle, borderColor: errors.therapies ? '#fecaca' : '#b6cfe8' }}>
           <CCardBody style={{ padding: '22px 28px' }}>
             <SectionHeader
@@ -1249,7 +1417,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
               title={mode === 'package' ? 'Package — Therapies & Exercises' : mode === 'program' ? 'Program — Therapies & Exercises' : mode === 'therapy' ? 'Therapy — Exercises' : 'Exercise Details'}
               subtitle={
                 showTherapies
-                  ? `${checkedCount} / ${totalCount} therapies selected (min. 1 required)`
+                  ? `${checkedCount} / ${totalCount} therapies selected`
                   : selectedItems.size > 0 && anyLoading
                     ? 'Loading details…'
                     : `Select ${mode}(s) above to view therapies`
@@ -1284,10 +1452,13 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
 
             {showTherapies && (
               <>
+                {/* ── Summary bar — no error hint, just informational ── */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, padding: '8px 14px', background: '#f0f6ff', borderRadius: 8, border: '1px solid #d0e4f7' }}>
                   <span style={{ fontSize: '0.83rem', color: '#1B4F8A', fontWeight: 600 }}>
-                    {checkedCount} of {totalCount} therapies selected
-                    <span style={{ marginLeft: 6, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 700 }}>(select at least 1, multiple allowed)</span>
+                    {checkedCount} of {totalCount} ther{totalCount !== 1 ? 'apies' : 'apy'} selected
+                    {checkedCount === 0 && (
+                      <span style={{ marginLeft: 6, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 700 }}>(select at least 1)</span>
+                    )}
                   </span>
                   <button type="button" onClick={toggleAll} style={{ padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: allChecked ? '#1B4F8A' : '#FFFFFF', color: allChecked ? '#fff' : '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {allChecked ? '☑ Deselect All' : '☐ Select All'}
@@ -1364,9 +1535,26 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           </CCardBody>
         </CCard>
 
+        {/* ══ 3. ASSIGN THERAPIST — moved to bottom ══ */}
+        <CCard style={{ ...cardStyle, borderColor: errors.therapist ? '#fecaca' : '#b6cfe8' }}>
+          <CCardBody style={{ padding: '22px 28px' }}>
+            <SectionHeader emoji="👤" title="Assign Therapist" subtitle="Required — multiple therapists allowed *" />
+            <TherapistMultiSearch
+              therapists={therapists}
+              loading={loadingTherapists}
+              selectedTherapists={selectedTherapists}
+              hasError={!!errors.therapist}
+              onChange={(updated) => {
+                setSelectedTherapists(updated)
+                if (updated.length > 0) setErrors(prev => ({ ...prev, therapist: undefined }))
+              }}
+            />
+          </CCardBody>
+        </CCard>
+
       </CContainer>
 
-      {/* Sticky bottom bar — matching PrescriptionTab */}
+      {/* Sticky bottom bar */}
       <div
         className="position-fixed bottom-0"
         style={{

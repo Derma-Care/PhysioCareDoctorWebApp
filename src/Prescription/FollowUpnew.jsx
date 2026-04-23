@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 
 /* ─── Theme ─────────────────────────────────────────────────────────────── */
 const T = {
-  bgcolor:  '#1B4F8A',
-  orange:   '#f9c571',
-  white:    '#FFFFFF',
-  bgLight:  '#F0F6FF',
-  border:   '#c2d8f0',
+  bgcolor: '#1B4F8A',
+  orange: '#f9c571',
+  white: '#FFFFFF',
+  bgLight: '#F0F6FF',
+  border: '#c2d8f0',
   textDark: '#1B4F8A',
 }
 
@@ -41,22 +41,28 @@ const cardStyle = {
   boxShadow: '0 2px 16px rgba(27,79,138,0.10)',
 }
 
+/* ─── Today's date string (yyyy-mm-dd) ───────────────────────────────── */
+const todayStr = () => {
+  const d = new Date()
+  return d.toISOString().split('T')[0]
+}
+
 /* ─── Visit urgency ──────────────────────────────────────────────────── */
 const getVisitUrgency = (dateStr) => {
   if (!dateStr) return null
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const visit = new Date(dateStr); visit.setHours(0, 0, 0, 0)
   const diffDays = Math.round((visit - today) / (1000 * 60 * 60 * 24))
-  if (diffDays < 0)   return { label: 'Overdue',   bg: '#fff5f5', color: '#c53030', border: '#fc8181', icon: '⚠️' }
-  if (diffDays === 0) return { label: 'Today',     bg: '#f0fff4', color: '#276749', border: '#68d391', icon: '📍' }
-  if (diffDays <= 3)  return { label: 'Very Soon', bg: '#fffbeb', color: '#7b341e', border: '#f6ad55', icon: '🔔' }
-  if (diffDays <= 7)  return { label: 'This Week', bg: '#ebf8ff', color: '#2a4365', border: '#63b3ed', icon: '📅' }
-  return               { label: 'Upcoming',  bg: '#f5f0ff', color: '#44337a', border: '#b794f4', icon: '🗓️' }
+  if (diffDays < 0) return { label: 'Overdue', bg: '#fff5f5', color: '#c53030', border: '#fc8181', icon: '⚠️' }
+  if (diffDays === 0) return { label: 'Today', bg: '#f0fff4', color: '#276749', border: '#68d391', icon: '📍' }
+  if (diffDays <= 3) return { label: 'Very Soon', bg: '#fffbeb', color: '#7b341e', border: '#f6ad55', icon: '🔔' }
+  if (diffDays <= 7) return { label: 'This Week', bg: '#ebf8ff', color: '#2a4365', border: '#63b3ed', icon: '📅' }
+  return { label: 'Upcoming', bg: '#f5f0ff', color: '#44337a', border: '#b794f4', icon: '🗓️' }
 }
 
 const EMPTY_FORM = {
   nextVisitDate: '',
-  reviewNotes:   '',
+  reviewNotes: '',
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -64,10 +70,16 @@ const EMPTY_FORM = {
 ══════════════════════════════════════════════════════════════════════ */
 const FollowUpnew = ({ seed = [], onNext }) => {
 
-  const [form,      setForm]      = useState({ ...EMPTY_FORM })
-  const [data,      setData]      = useState(Array.isArray(seed) ? seed : [])
+  const [form, setForm]           = useState({ ...EMPTY_FORM })
+  const [data, setData]           = useState(Array.isArray(seed) ? seed : [])
   const [editIndex, setEditIndex] = useState(null)
-  const [dupError,  setDupError]  = useState(false)
+  const [dupError, setDupError]   = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
+
+  /* delete-confirmation state */
+  const [confirmDelete, setConfirmDelete] = useState(null) // index or null
+
+  const dateInputRef = useRef(null)
 
   useEffect(() => {
     if (Array.isArray(seed)) setData(seed)
@@ -75,6 +87,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
 
   const set = field => val => {
     setDupError(false)
+    setFieldErrors(prev => ({ ...prev, [field]: false }))
     setForm(prev => ({ ...prev, [field]: val }))
   }
 
@@ -85,12 +98,18 @@ const FollowUpnew = ({ seed = [], onNext }) => {
       if (i === excludeIdx) return false
       return (
         (e.nextVisitDate || '') === (entry.nextVisitDate || '') &&
-        (e.reviewNotes   || '').trim().toLowerCase() === (entry.reviewNotes || '').trim().toLowerCase()
+        (e.reviewNotes || '').trim().toLowerCase() === (entry.reviewNotes || '').trim().toLowerCase()
       )
     })
 
+  /* ── Validate & save ── */
   const handleSave = () => {
-    if (!form.nextVisitDate) return
+    const errors = {}
+    if (!form.nextVisitDate) errors.nextVisitDate = true
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors)
+      return
+    }
     if (isDuplicate(form, editIndex ?? null)) { setDupError(true); return }
 
     if (editIndex !== null) {
@@ -101,28 +120,39 @@ const FollowUpnew = ({ seed = [], onNext }) => {
     }
     setForm({ ...EMPTY_FORM })
     setDupError(false)
+    setFieldErrors({})
   }
 
   const handleEdit = (index) => {
     setForm({ ...data[index] })
     setEditIndex(index)
     setDupError(false)
+    setFieldErrors({})
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleDelete = (index) => {
+  /* ── Delete with confirmation ── */
+  const handleDeleteRequest = (index) => setConfirmDelete(index)
+
+  const handleDeleteConfirm = () => {
+    const index = confirmDelete
     setData(prev => prev.filter((_, i) => i !== index))
     if (editIndex === index) {
       setForm({ ...EMPTY_FORM })
       setEditIndex(null)
       setDupError(false)
+      setFieldErrors({})
     }
+    setConfirmDelete(null)
   }
+
+  const handleDeleteCancel = () => setConfirmDelete(null)
 
   const handleCancel = () => {
     setForm({ ...EMPTY_FORM })
     setEditIndex(null)
     setDupError(false)
+    setFieldErrors({})
   }
 
   const handleNext = () => {
@@ -155,46 +185,64 @@ const FollowUpnew = ({ seed = [], onNext }) => {
               </div>
             )}
 
-            {/* Next Visit Date */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Next Visit Date</label>
-              <input
-                type="date"
-                value={form.nextVisitDate}
-                onChange={e => set('nextVisitDate')(e.target.value)}
-                style={inputStyle}
-              />
-              {urgency && (
-                <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, background: urgency.bg, border: `1px solid ${urgency.border}`, borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', color: urgency.color, fontWeight: 700 }}>
-                  {urgency.icon} {urgency.label}
+            {/* ── Two-column layout ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 28px', marginBottom: 20 }}>
+
+              {/* Next Visit Date — shrunk with calendar icon */}
+              <div>
+                <label style={labelStyle}>
+                  Next Visit Date
+                  {fieldErrors.nextVisitDate && (
+                    <span style={{ color: '#e53e3e', marginLeft: 8, fontWeight: 600, fontSize: '0.8rem' }}>* Required</span>
+                  )}
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {/* shrunk date input */}
+                  <div style={{ position: 'relative', width: 180, flexShrink: 0 }}>
+                    <input
+                      ref={dateInputRef}
+                      type="date"
+                      value={form.nextVisitDate}
+                      min={todayStr()}
+                      onChange={e => set('nextVisitDate')(e.target.value)}
+                      style={{
+                        ...inputStyle,
+                        width: 180,
+                        borderColor: fieldErrors.nextVisitDate ? '#e53e3e' : T.border,
+                        paddingRight: 10,
+                      }}
+                    />
+                  </div>
+                  
+                  {/* urgency badge */}
+                  {urgency && (
+                    <div style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      background: urgency.bg, border: `1px solid ${urgency.border}`,
+                      borderRadius: 20, padding: '3px 12px',
+                      fontSize: '0.78rem', color: urgency.color, fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {urgency.icon} {urgency.label}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+
+              {/* Review Notes */}
+              <div>
+                <label style={labelStyle}>Review Notes</label>
+                <textarea
+                  value={form.reviewNotes}
+                  onChange={e => set('reviewNotes')(e.target.value)}
+                  placeholder="e.g. Patient showing improvement in mobility"
+                  style={{ ...inputStyle, height: 90, resize: 'vertical' }}
+                />
+              </div>
             </div>
 
-            {/* Review Notes */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={labelStyle}>Review Notes</label>
-              <textarea
-                value={form.reviewNotes}
-                onChange={e => set('reviewNotes')(e.target.value)}
-                placeholder="e.g. Patient showing improvement in mobility"
-                style={{ ...inputStyle, height: 90, resize: 'vertical' }}
-              />
-            </div>
-
-            {/* Buttons */}
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button
-                onClick={handleSave}
-                style={{
-                  padding: '8px 24px', borderRadius: 8, border: 'none',
-                  background: T.bgcolor, color: T.white,
-                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 2px 8px rgba(249,197,113,0.4)',
-                }}
-              >
-                {editIndex !== null ? '✅ Update' : '➕ Add'}
-              </button>
+            {/* Buttons — right-aligned */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
               {editIndex !== null && (
                 <button
                   onClick={handleCancel}
@@ -207,6 +255,17 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                   Cancel
                 </button>
               )}
+              <button
+                onClick={handleSave}
+                style={{
+                  padding: '8px 24px', borderRadius: 8, border: 'none',
+                  background: T.bgcolor, color: T.white,
+                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+                }}
+              >
+                {editIndex !== null ? '✅ Update' : '➕ Add'}
+              </button>
             </div>
 
           </CCardBody>
@@ -258,7 +317,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                               }}
                             >✏️ Edit</button>
                             <button
-                              onClick={() => handleDelete(i)}
+                              onClick={() => handleDeleteRequest(i)}
                               style={{
                                 padding: '4px 12px', borderRadius: 6,
                                 border: '1.5px solid #e53e3e', background: '#fff5f5',
@@ -278,6 +337,53 @@ const FollowUpnew = ({ seed = [], onNext }) => {
 
       </CContainer>
 
+      {/* ══ DELETE CONFIRMATION MODAL ══════════════════════════════════ */}
+      {confirmDelete !== null && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.35)',
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 14, padding: '32px 36px',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.18)', maxWidth: 380, width: '90%',
+            border: `1.5px solid ${T.border}`, textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🗑️</div>
+            <h6 style={{ color: T.textDark, fontWeight: 700, fontSize: '1rem', marginBottom: 8 }}>
+              Delete Follow-Up Record?
+            </h6>
+            <p style={{ color: '#4a5568', fontSize: '0.875rem', marginBottom: 24 }}>
+              Are you sure you want to delete entry <strong>#{confirmDelete + 1}</strong>?
+              This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+              <button
+                onClick={handleDeleteCancel}
+                style={{
+                  padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
+                  border: `1.5px solid ${T.border}`, background: T.bgLight,
+                  color: T.textDark, fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                style={{
+                  padding: '8px 24px', borderRadius: 8, border: 'none',
+                  background: '#e53e3e', color: '#fff',
+                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 2px 8px rgba(229,62,62,0.30)',
+                }}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Fixed Bottom Bar */}
       <div
         className="position-fixed bottom-0"
@@ -293,19 +399,19 @@ const FollowUpnew = ({ seed = [], onNext }) => {
         }}
       >
         <Button
-                 customColor="#1B4F8A"
-                 color="#FFFFFF"
-                 onClick={handleNext}
-                 style={{
-                   borderRadius: '20px',
-                   fontWeight: 700,
-                   padding: '6px 24px',
-                   boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
-                   border: '1.5px solid #1B4F8A',
-                 }}
-               >
-                 Next
-               </Button>
+          customColor="#1B4F8A"
+          color="#FFFFFF"
+          onClick={handleNext}
+          style={{
+            borderRadius: '20px',
+            fontWeight: 700,
+            padding: '6px 24px',
+            boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
+            border: '1.5px solid #1B4F8A',
+          }}
+        >
+          Next
+        </Button>
       </div>
     </div>
   )

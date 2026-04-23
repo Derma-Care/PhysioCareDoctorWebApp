@@ -6,7 +6,7 @@ import { addLabTest, getLabTests } from '../../src/Auth/Auth'
 import { COLORS } from '../Themes'
 import { useDoctorContext } from '../Context/DoctorContext'
 
-/* ─── Styles (matching PrescriptionTab) ──────────────────────────────────── */
+/* ─── Styles ──────────────────────────────────────────────────────────────── */
 const inputStyle = {
   border: '1.5px solid #b6cfe8',
   borderRadius: 7,
@@ -77,7 +77,6 @@ const CardHeader = ({ emoji, title }) => (
   </div>
 )
 
-/* ── escapeHtml ───────────────────────────────────────────────────────────── */
 function escapeHtml(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -93,6 +92,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
   const [notes, setNotes]                           = useState(seed.notes ?? '')
   const [snackbar, setSnackbar]                     = useState({ show: false, message: '', type: '' })
   const [availableTests, setAvailableTests]         = useState([])
+  const [sending, setSending]                       = useState(false)
 
   const seedRef = useRef(null)
 
@@ -140,6 +140,46 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
     const payload = { investigation: { selectedTests, notes } }
     setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
     onNext?.(payload)
+  }
+
+  // ── handleSend ─────────────────────────────────────────────────────────
+  const handleSend = async () => {
+    if (selectedTests.length === 0) {
+      showSnackbar('Please select at least one test before sending.', 'error')
+      return
+    }
+
+    setSending(true)
+    try {
+      // ── TODO: Replace mock with real API call when endpoint is ready ──
+      //
+      // Suggested payload:
+      // {
+      //   patientId:   patientData?.id,
+      //   bookingId:   patientData?.bookingId,
+      //   patientName: patientData?.name,
+      //   tests:       selectedTests,
+      //   notes:       notes,
+      //   doctorName:  doctorDetails?.doctorName,
+      //   clinicName:  clinicDetails?.name,
+      // }
+      //
+      // Example call (uncomment when API is ready):
+      // await sendInvestigationToLabTechnician(payload)
+      //   → POST /api/investigations/send-to-lab
+      //   → Backend looks up Lab Technician email from clinic admin settings
+      //   → Sends email with investigation details
+
+      // MOCK: simulate network delay
+      await new Promise((resolve) => setTimeout(resolve, 900))
+
+      showSnackbar('Investigation sent to Lab Technician successfully! ✉️', 'success')
+    } catch (err) {
+      console.error('Failed to send investigation:', err)
+      showSnackbar('Failed to send. Please try again.', 'error')
+    } finally {
+      setSending(false)
+    }
   }
 
   // ── handlePrint ────────────────────────────────────────────────────────
@@ -396,7 +436,7 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
         </CCardBody>
       </CCard>
 
-      {/* Sticky bottom bar — matching PrescriptionTab */}
+      {/* Sticky bottom bar */}
       <div
         className="position-fixed bottom-0"
         style={{
@@ -405,15 +445,15 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
           borderTop: '2px solid #1B4F8A',
           display: 'flex',
           justifyContent: 'flex-end',
-          gap: 16,
+          gap: 12,
           padding: '10px 24px',
           boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
         }}
       >
+        {/* Print */}
         <Button
-          
           style={{
-             background: '#FFFFFF',
+            background: '#FFFFFF',
             color: '#1B4F8A',
             borderRadius: '20px',
             padding: '6px 24px',
@@ -422,8 +462,43 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
           }}
           onClick={handlePrint}
         >
-          Print
+          🖨️ Print
         </Button>
+
+        {/* Send to Lab Technician */}
+        <Button
+          style={{
+            background: sending ? '#e8f0fb' : '#FFFFFF',
+            color: sending ? '#8aaac8' : '#1B4F8A',
+            borderRadius: '20px',
+            padding: '6px 24px',
+            fontWeight: 700,
+            border: `1.5px solid ${sending ? '#b6cfe8' : '#1B4F8A'}`,
+            cursor: sending ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            transition: 'all 0.2s',
+          }}
+          onClick={handleSend}
+          disabled={sending}
+        >
+          {sending ? (
+            <>
+              <span style={{
+                width: 14, height: 14, border: '2px solid #b6cfe8',
+                borderTop: '2px solid #1B4F8A', borderRadius: '50%',
+                display: 'inline-block',
+                animation: 'spin 0.7s linear infinite',
+              }} />
+              Sending…
+            </>
+          ) : (
+            '✉️ Send'
+          )}
+        </Button>
+
+        {/* Next */}
         <Button
           customColor="#1B4F8A"
           color="#FFFFFF"
@@ -439,6 +514,9 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
           Next
         </Button>
       </div>
+
+      {/* Spinner keyframe */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
