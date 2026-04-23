@@ -122,7 +122,7 @@ const AppHeader = () => {
         <CHeaderNav className="ms-auto gap-2 align-items-center">
 
           {/* Bell icon */}
-          <CNavItem>
+          {/* <CNavItem>
             <CNavLink
               onClick={(e) => e.preventDefault()}
               style={{ cursor: 'pointer', position: 'relative', padding: '4px 8px' }}
@@ -142,7 +142,7 @@ const AppHeader = () => {
                 <CIcon icon={cilBell} size="sm" style={{ color: COLORS.bgcolor }} />
               </div>
             </CNavLink>
-          </CNavItem>
+          </CNavItem> */}
 
           {/* Vertical divider */}
           <div

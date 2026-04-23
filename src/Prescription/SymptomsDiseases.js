@@ -13,7 +13,8 @@ import {
   CAccordionHeader,
   CAccordionBody,
 } from '@coreui/react'
-
+import { documentTextOutline } from "ionicons/icons";
+import { IonIcon } from "@ionic/react";
 // ─── helpers ────────────────────────────────────────────────────────────────
 const toImageSrc = (raw) => {
   if (!raw || typeof raw !== 'string') return null
@@ -129,6 +130,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const [loadingBooking, setLoadingBooking] = useState(false)
   const [bookingRecord, setBookingRecord] = useState(null)
   const [partImage, setPartImage] = useState(seed.partImage ?? '')
+  const [showDiagramModal, setShowDiagramModal] = useState(false)
   const [theraphyAnswers, setTheraphyAnswers] = useState(seed.theraphyAnswers ?? {})
   const [selectedTherapy, setSelectedTherapy] = useState(seed.selectedTherapy ?? '')
   const [parts, setParts] = useState(Array.isArray(seed.parts) ? seed.parts : [])
@@ -235,7 +237,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       {/* ── Header: white bg, blue bottom border ── */}
       <div style={{
         background: '#FFFFFF',
-       borderBottom: '2px solid #dceeff',
+        borderBottom: '2px solid #dceeff',
         padding: '16px 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         boxShadow: '0 4px 12px rgba(27,79,138,0.10)',
@@ -257,8 +259,8 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
 
           {/* Title */}
           <h5 style={{
-           color: '#1B4F8A', fontWeight: 700, fontSize: '1.1rem'
-            
+            color: '#1B4F8A', fontWeight: 700, fontSize: '1.1rem'
+
           }}>
             Patient Consultation
           </h5>
@@ -311,7 +313,45 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
                 style={{ ...inputBase, marginBottom: 14 }}
                 onFocus={focusBlue} onBlur={blurBlue}
               />
+ {/* Duration + Therapy */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+            <div style={card}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isValid(selectedTherapy || bk?.subServiceName) ? '1fr 1fr' : '1fr',
+                gap: 14,
+              }}>
+                <div>
+                  <SLabel text="Duration" />
+                  <input value={duration || '0 Days'} onChange={(e) => setDuration(e.target.value)}
+                    placeholder="e.g. 3 weeks" style={{ ...inputBase, resize: 'none' }}
+                    onFocus={focusBlue} onBlur={blurBlue} />
+                </div>
+                {isValid(selectedTherapy || bk?.subServiceName) && (
+                  <div>
+                    <SLabel text="Selected Therapy" />
+                    <div style={readonlyChip}>{selectedTherapy || bk?.subServiceName}</div>
+                  </div>
+                )}
+              </div>
+            </div>
 
+            {parts.length > 0 && (
+              <div style={card}>
+                <SLabel text="Affected Body Parts" />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 2 }}>
+                  {parts.map((p) => (
+                    <span key={p} style={{
+                      background: '#EFF6FF', color: '#1B4F8A',
+                      border: '1px solid #b6cfe8', borderRadius: 20,
+                      padding: '4px 14px', fontSize: 12, fontWeight: 700,
+                      textTransform: 'capitalize',
+                    }}>{p}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
               {isValid(patientPain) && (
                 <div style={{ marginBottom: 14 }}>
                   <SLabel text="Patient Pain" />
@@ -389,45 +429,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
             </div>
           )}
 
-          {/* Duration + Therapy */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
-            <div style={card}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isValid(selectedTherapy || bk?.subServiceName) ? '1fr 1fr' : '1fr',
-                gap: 14,
-              }}>
-                <div>
-                  <SLabel text="Duration" />
-                  <input value={duration || '0 Days'} onChange={(e) => setDuration(e.target.value)}
-                    placeholder="e.g. 3 weeks" style={{ ...inputBase, resize: 'none' }}
-                    onFocus={focusBlue} onBlur={blurBlue} />
-                </div>
-                {isValid(selectedTherapy || bk?.subServiceName) && (
-                  <div>
-                    <SLabel text="Selected Therapy" />
-                    <div style={readonlyChip}>{selectedTherapy || bk?.subServiceName}</div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {parts.length > 0 && (
-              <div style={card}>
-                <SLabel text="Affected Body Parts" />
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 2 }}>
-                  {parts.map((p) => (
-                    <span key={p} style={{
-                      background: '#EFF6FF', color: '#1B4F8A',
-                      border: '1px solid #b6cfe8', borderRadius: 20,
-                      padding: '4px 14px', fontSize: 12, fontWeight: 700,
-                      textTransform: 'capitalize',
-                    }}>{p}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+         
 
           {isValid(insuranceProvider) && (
             <div style={card}>
@@ -442,20 +444,88 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         {/* ════ RIGHT COLUMN ════ */}
         <div>
           {isValid(partImage) && (
-            <div style={card}>
-              <SLabel text="Body Part Diagram" />
-              <div style={{
-                background: '#EFF6FF', borderRadius: 10, overflow: 'hidden',
-                display: 'flex', justifyContent: 'center', border: '1px solid #b6cfe8',
-              }}>
-                <img src={toImageSrc(partImage)} alt="Body Part Diagram"
-                  style={{ maxHeight: 220, objectFit: 'contain', display: 'block' }} />
+            <>
+              <div style={card}>
+                <SLabel text="Body Part Diagram" />
+                <div
+                  onClick={() => setShowDiagramModal(true)}
+                  style={{
+                    background: '#EFF6FF', borderRadius: 10, overflow: 'hidden',
+                    display: 'flex', justifyContent: 'center', border: '1px solid #b6cfe8',
+                    cursor: 'zoom-in', position: 'relative',
+                  }}
+                >
+                  <img src={toImageSrc(partImage)} alt="Body Part Diagram"
+                    style={{ maxHeight: 220, objectFit: 'contain', display: 'block' }} />
+                  {/* <div style={{
+          position: 'absolute', bottom: 8, right: 8,
+          background: 'rgba(27,79,138,0.75)', borderRadius: 6,
+          padding: '3px 8px', color: '#fff', fontSize: 11, fontWeight: 600,
+        }}>
+          🔍 Click to expand
+        </div> */}
+                </div>
               </div>
-            </div>
+
+              {/* ── Lightbox Modal ── */}
+              {showDiagramModal && (
+                <div
+                  onClick={() => setShowDiagramModal(false)}
+                  style={{
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    background: 'rgba(10,30,60,0.75)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(4px)',
+                  }}
+                >
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      background: '#fff', borderRadius: 18,
+                      padding: 24, maxWidth: '90vw', maxHeight: '90vh',
+                      boxShadow: '0 16px 64px rgba(27,79,138,0.30)',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+                      position: 'relative',
+                    }}
+                  >
+                    {/* Close button */}
+                    <button
+                      onClick={() => setShowDiagramModal(false)}
+                      style={{
+                        position: 'absolute', top: 12, right: 12,
+                        background: '#FEE2E2', border: 'none', borderRadius: '50%',
+                        width: 32, height: 32, cursor: 'pointer',
+                        fontSize: 16, color: '#991B1B', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >✕</button>
+
+                    <span style={{ fontWeight: 700, color: '#1B4F8A', fontSize: 15 }}>
+                      Body Part Diagram
+                    </span>
+
+                    <img
+                      src={toImageSrc(partImage)}
+                      alt="Body Part Diagram"
+                      style={{
+                        maxWidth: '80vw', maxHeight: '75vh',
+                        objectFit: 'contain', borderRadius: 10,
+                        border: '1px solid #b6cfe8',
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           <div style={card}>
-            <SLabel text="Upload New Attachments" />
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              
+              <SLabel text="Records/reports" />
+              <IonIcon icon={documentTextOutline} style={{ fontSize: "18px" }} />
+            </div>
+
             <FileUploader attachments={attachments} setAttachments={setAttachments} />
           </div>
         </div>
