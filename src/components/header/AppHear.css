@@ -1,10 +1,51 @@
+/* Avatar (Profile Image) */
 .profile-image {
-  width: 50px; /* or 60px, adjust as needed */
+  width: 50px;
   height: 50px;
-  transition: transform 0.3s ease-in-out;
   border-radius: 50%;
+  cursor: pointer; /* 👆 Hand cursor */
+  transition: all 0.3s ease-in-out;
 }
 
 .profile-image:hover {
-  transform: scale(1.2); /* Slight zoom */
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Dropdown Menu */
+.dropdown-custom {
+  min-width: 180px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Header */
+.dropdown-header-custom {
+  font-weight: 600;
+  background-color: #f8f9fa;
+}
+
+/* Dropdown Items */
+.dropdown-item-custom {
+  display: flex;
+  align-items: center;
+  cursor: pointer; /* 👆 Hand cursor */
+  transition: all 0.3s ease;
+}
+
+/* Icon default */
+.icon-style {
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.dropdown-item-custom:hover {
+  background-color: #eef4ff;
+  color: #0d6efd;
+}
+
+/* Icon hover */
+.dropdown-item-custom:hover .icon-style {
+  color: #0d6efd;
+  transform: scale(1.1);
 }
