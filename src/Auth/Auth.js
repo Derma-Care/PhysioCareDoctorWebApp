@@ -12,7 +12,7 @@ import {
   ratingsbaseUrl,
   savePrescriptionbaseUrl,
   todayappointmentsbaseUrl,
-  addDiseaseUrl, getVisitHistoryByPatientIdAndDoctorIdEndpoint,
+  addDiseaseUrl,
   getdoctorSaveDetailsEndpoint,
   Get_ReportsByBookingId,
   reportbaseUrl,
@@ -38,6 +38,7 @@ import {
   exerciseUrlId,
   packageUrlId,
   getInProgressDetailsEndpoint,
+  visitHistoryByPatientIdAndBookingIdEndpoint,
 } from './BaseUrl'
 
 export const postLogin = async (payload, endpoint) => {
@@ -424,33 +425,33 @@ export const addDisease = async ({ diseaseName, probableSymptoms, notes }) => {
   }
 }
 
-export const getVisitHistoryByPatientIdAndDoctorId = async (patientId, doctorId) => {
-  console.log(patientId)
-  console.log(doctorId)
-  try {
-    const url = `${getVisitHistoryByPatientIdAndDoctorIdEndpoint}/${patientId}/${doctorId}`
-    console.log(url)
-    const response = await api.get(url)
-    console.log("visithistory response", response.data)
-    return {
-      success: response.data?.success ?? false,
-      status: response.status,
-      message: response.data?.message ?? "",
-      data: response.data?.data ?? {},
-    }
-  } catch (error) {
-    if (error.response?.status === 404) {
-      console.error("HTTP error:", error.response.status, error.response.data)
-      throw new Error("No visit history available")
-    } else if (error.request) {
-      console.error("No response received:", error.request)
-      throw new Error("No response received from server")
-    } else {
-      console.error("Error", error.message)
-      throw error
-    }
-  }
-}
+// export const getVisitHistoryByPatientIdAndDoctorId = async (patientId, doctorId) => {
+//   console.log(patientId)
+//   console.log(doctorId)
+//   try {
+//     const url = `${getVisitHistoryByPatientIdAndDoctorIdEndpoint}/${patientId}/${doctorId}`
+//     console.log(url)
+//     const response = await api.get(url)
+//     console.log("visithistory response", response.data)
+//     return {
+//       success: response.data?.success ?? false,
+//       status: response.status,
+//       message: response.data?.message ?? "",
+//       data: response.data?.data ?? {},
+//     }
+//   } catch (error) {
+//     if (error.response?.status === 404) {
+//       console.error("HTTP error:", error.response.status, error.response.data)
+//       throw new Error("No visit history available")
+//     } else if (error.request) {
+//       console.error("No response received:", error.request)
+//       throw new Error("No response received from server")
+//     } else {
+//       console.error("Error", error.message)
+//       throw error
+//     }
+//   }
+// }
 
 export const ReportsData = async () => {
   try {
@@ -926,3 +927,42 @@ export const getPrograms = async () => {
 }
 
 
+export const getVisitHistoryByPatientIdAndBookingId = async (patientId, bookingId) => {
+  console.log('Fetching visit history for patientId:', patientId, 'bookingId:', bookingId)
+  try {
+    const url = `${visitHistoryByPatientIdAndBookingIdEndpoint}/${patientId}/${bookingId}`
+    console.log('Visit history URL:', url)
+    const response = await api.get(url)
+    console.log('visithistory (by booking) response', response.data)
+    return {
+      success: response.data?.success ?? false,
+      status:  response.status,
+      message: response.data?.message ?? '',
+      data:    response.data?.data ?? {},
+    }
+  } catch (error) {
+    // ✅ Always return object, never throw
+    if (error.response?.status === 404) {
+      return {
+        success: false,
+        status:  404,
+        message: 'No visit history found',
+        data:    null,
+      }
+    } else if (error.request) {
+      return {
+        success: false,
+        status:  500,
+        message: 'No response received from server',
+        data:    null,
+      }
+    } else {
+      return {
+        success: false,
+        status:  500,
+        message: error.message ?? 'Something went wrong',
+        data:    null,
+      }
+    }
+  }
+}

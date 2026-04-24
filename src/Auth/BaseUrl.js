@@ -12,7 +12,7 @@ export const clinicbaseUrl = `${ipUrl}/admin/getClinicById`
 // Doctor
 export const doctorbaseUrl = `${ipUrl}/clinic-admin/doctor`
 export const getdoctorSaveDetailsEndpoint = `${ipUrl}/api/doctors/getDoctorSaveDetailsById`
-export const getVisitHistoryByPatientIdAndDoctorIdEndpoint = `${ipUrl}/api/doctors/getVisitHistoryByPatientIdAndDoctorId`
+// export const getVisitHistoryByPatientIdAndDoctorIdEndpoint = `${ipUrl}/api/doctors/getVisitHistoryByPatientIdAndDoctorId`
 export const visitHistoryBypatientIdAndBookingId = `${ipUrl}/api/doctors/visitHistoryBypatientIdAndBookingId`
 export const getDoctorSlotsEndpoint = `${ipUrl}/clinic-admin/getDoctorslots`
 
@@ -71,3 +71,5 @@ export const programAllUrl = `${ipUrl}/clinic-admin/program/getAll`
 
 // Physiotherapy — In Progress Details
 export const getInProgressDetailsEndpoint = `${ipUrl}/api/physiotherapy-doctor/getIn-progressByUsingPatientIdAndBookingId`
+
+export const visitHistoryByPatientIdAndBookingIdEndpoint = `${ipUrl}/api/physiotherapy-doctor/visitHistoryByUsingPatientIdAndBooking`

@@ -74,7 +74,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   /* ── Fetch in-progress ── */
   useEffect(() => {
     if (state?.fromTab === 'In-Progress' && patient && !details) {
-      ;(async () => {
+      ; (async () => {
         try {
           const data = await getInProgressDetails(patient.patientId, patient.bookingId)
           setDetails(data)
@@ -106,70 +106,78 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   /* ── onNextMap ── */
   const onNextMap = {
 
-    Complaints: (data = {}) => {
-      if (!data || typeof data !== 'object') { goToNext('Complaints'); return }
-      const patch = {
-        symptoms: {
-          symptomDetails: data.symptomDetails ?? '',
-          doctorObs: data.doctorObs ?? '',
-          complaints: data.complaints ?? '',
-          duration: data.duration ?? '',
-          attachments: data.attachments ?? [],
-          partImage: data.partImage ?? '',
-          parts: data.parts ?? [],
-          selectedTherapy: data.selectedTherapy ?? '',
-          selectedTherapyID: data.selectedTherapyID ?? '',
-          theraphyAnswers: data.theraphyAnswers ?? {},
-          attachmentImages: data.attachmentImages ?? [],
-          previousInjuries: data.previousInjuries ?? '',
-          currentMedications: data.currentMedications ?? '',
-          allergies: data.allergies ?? '',
-          occupation: data.occupation ?? '',
-          insuranceProvider: data.insuranceProvider ?? '',
-          activityLevels: Array.isArray(data.activityLevels) ? data.activityLevels : [],
-          patientPain: data.patientPain ?? '',
-        },
-        previousInjuries:   data.previousInjuries   ?? '',
-        currentMedications: data.currentMedications ?? '',
-        allergies:          data.allergies          ?? '',
-        occupation:         data.occupation         ?? '',
-        insuranceProvider:  data.insuranceProvider  ?? '',
-        activityLevels: Array.isArray(data.activityLevels) ? data.activityLevels : [],
-        patientPain:        data.patientPain        ?? '',
-      }
-      if (data.prescription?.medicines?.length) patch.prescription = { medicines: data.prescription.medicines }
-      if (data.tests?.selectedTests?.length || data.tests?.testReason) patch.tests = { selectedTests: data.tests?.selectedTests ?? [], testReason: data.tests?.testReason ?? '' }
-      if (data.treatments?.selectedTestTreatments?.length || data.treatments?.treatmentReason) patch.treatments = { generatedData: data.treatments?.generatedData ?? {}, selectedTestTreatments: data.treatments?.selectedTestTreatments ?? [], treatmentReason: data.treatments?.treatmentReason ?? '' }
-      if (data.followUp?.durationValue || data.followUp?.followUpNote) patch.followUp = { durationValue: data.followUp?.durationValue ?? '', durationUnit: data.followUp?.durationUnit ?? '', nextFollowUpDate: data.followUp?.nextFollowUpDate ?? '', followUpNote: data.followUp?.followUpNote ?? '' }
-      if (data.exercise && Object.keys(data.exercise).length) patch.exercise = data.exercise
-      if (data.summary?.complaints) patch.summary = { ...(data.summary ?? {}) }
-      mergeAndLog('Complaints', patch)
-      goToNext('Complaints')
+    // FIX: Complaints handler now also stores patientPain INSIDE symptoms{}
+    // so that when seed = formData.symptoms is passed back to SymptomsDiseases,
+    // seed.patientPain is defined and re-hydration works correctly.
+Complaints: (data = {}) => {
+  if (!data || typeof data !== 'object') {
+    goToNext('Complaints')
+    return
+  }
+
+  const patch = {
+    symptoms: {
+      ...(data.symptomDetails !== undefined && { symptomDetails: data.symptomDetails }),
+      ...(data.duration !== undefined && { duration: data.duration }),
+      ...(data.attachments !== undefined && { attachments: data.attachments }),
+      ...(data.partImage !== undefined && { partImage: data.partImage }),
+      ...(data.parts !== undefined && { parts: data.parts }),
+      ...(data.selectedTherapy !== undefined && { selectedTherapy: data.selectedTherapy }),
+      ...(data.selectedTherapyID !== undefined && { selectedTherapyID: data.selectedTherapyID }),
+      ...(data.theraphyAnswers !== undefined && { theraphyAnswers: data.theraphyAnswers }),
+      ...(data.attachmentImages !== undefined && { attachmentImages: data.attachmentImages }),
+      ...(data.previousInjuries !== undefined && { previousInjuries: data.previousInjuries }),
+      ...(data.currentMedications !== undefined && { currentMedications: data.currentMedications }),
+      ...(data.allergies !== undefined && { allergies: data.allergies }),
+      ...(data.occupation !== undefined && { occupation: data.occupation }),
+      ...(data.insuranceProvider !== undefined && { insuranceProvider: data.insuranceProvider }),
+      ...(data.activityLevels !== undefined && { activityLevels: data.activityLevels }),
+      ...(data.patientPain !== undefined && { patientPain: data.patientPain }),
+      ...(data.reasonforVisit !== undefined && { reasonforVisit: data.reasonforVisit }),
     },
 
+    ...(data.patientPain !== undefined && { patientPain: data.patientPain }),
+  }
+
+  mergeAndLog('Complaints', patch)
+  goToNext('Complaints')
+},
     Assessment: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Assessment'); return }
       const patch = {
         assessment: {
-          chiefComplaint: data.chiefComplaint ?? '', painScale: data.painScale ?? '',
-          painType: data.painType ?? '', duration: data.duration ?? '', onset: data.onset ?? '',
-          aggravatingFactors: data.aggravatingFactors ?? '', relievingFactors: data.relievingFactors ?? '',
+          chiefComplaint: data.chiefComplaint ?? '',
+          painScale: data.painScale ?? '',
+          painType: data.painType ?? '',
+          duration: data.duration ?? '',
+          onset: data.onset ?? '',
+          aggravatingFactors: data.aggravatingFactors ?? '',
+          relievingFactors: data.relievingFactors ?? '',
           observations: data.observations ?? '',
           difficultiesIn: Array.isArray(data.difficultiesIn) ? data.difficultiesIn : [],
-          otherDifficulty: data.otherDifficulty ?? '', dailyLivingAffected: data.dailyLivingAffected ?? '',
+          otherDifficulty: data.otherDifficulty ?? '',
+          dailyLivingAffected: data.dailyLivingAffected ?? '',
           postureAssessment: Array.isArray(data.postureAssessment) ? data.postureAssessment : [],
           postureDeviations: data.postureDeviations ?? '',
           romStatus: Array.isArray(data.romStatus) ? data.romStatus : [],
-          romRestricted: data.romRestricted ?? '', romJoints: data.romJoints ?? '',
+          romRestricted: data.romRestricted ?? '',
+          romJoints: data.romJoints ?? '',
           muscleStrength: Array.isArray(data.muscleStrength) ? data.muscleStrength : [],
           muscleWeakness: data.muscleWeakness ?? '',
           neurologicalSigns: Array.isArray(data.neurologicalSigns) ? data.neurologicalSigns : [],
-          posture: data.posture ?? '', rangeOfMotion: data.rangeOfMotion ?? '', specialTests: data.specialTests ?? '',
-          patientPain: data.patientPain ?? '', painTriggers: data.painTriggers ?? '',
-          chronicRelieving: data.chronicRelieving ?? '', typeOfSport: data.typeOfSport ?? '',
-          recurringInjuries: data.recurringInjuries ?? '', returnToSportGoals: data.returnToSportGoals ?? '',
-          neuroDiagnosis: data.neuroDiagnosis ?? '', neuroOnset: data.neuroOnset ?? '',
-          mobilityStatus: data.mobilityStatus ?? '', cognitiveStatus: data.cognitiveStatus ?? '',
+          posture: data.posture ?? '',
+          rangeOfMotion: data.rangeOfMotion ?? '',
+          specialTests: data.specialTests ?? '',
+          patientPain: data.patientPain ?? '',
+          painTriggers: data.painTriggers ?? '',
+          chronicRelieving: data.chronicRelieving ?? '',
+          typeOfSport: data.typeOfSport ?? '',
+          recurringInjuries: data.recurringInjuries ?? '',
+          returnToSportGoals: data.returnToSportGoals ?? '',
+          neuroDiagnosis: data.neuroDiagnosis ?? '',
+          neuroOnset: data.neuroOnset ?? '',
+          mobilityStatus: data.mobilityStatus ?? '',
+          cognitiveStatus: data.cognitiveStatus ?? '',
         },
         ...(data.patientPain ? { patientPain: data.patientPain } : {}),
       }
@@ -181,6 +189,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       if (!data || typeof data !== 'object') { goToNext('Diagnosis'); return }
       const patch = {
         diagnosis: {
+          // FIX: preserve full diagnosisRows array — not just first row
           diagnosisRows: Array.isArray(data.diagnosis?.diagnosisRows)
             ? data.diagnosis.diagnosisRows
             : [{ physioDiagnosis: data.diagnosis?.physioDiagnosis ?? '', affectedArea: data.diagnosis?.affectedArea ?? '', severity: data.diagnosis?.severity ?? '', stage: data.diagnosis?.stage ?? '', notes: data.diagnosis?.notes ?? '' }],
@@ -190,9 +199,19 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Diagnosis')
     },
 
+    // FIX: store investigation with BOTH key names (selectedTests for internal use, tests for API compat)
     Investigation: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Investigation'); return }
-      const patch = { investigation: { selectedTests: data.investigation?.selectedTests ?? [], notes: data.investigation?.notes ?? '' } }
+      const tests = data.investigation?.selectedTests ?? data.investigation?.tests ?? []
+      const notes = data.investigation?.notes ?? data.investigation?.reason ?? ''
+      const patch = {
+        investigation: {
+          selectedTests: tests,
+          tests: tests,   // duplicate so buildPayload finds it either way
+          notes: notes,
+          reason: notes,   // duplicate for same reason
+        },
+      }
       mergeAndLog('Investigation', patch)
       goToNext('Investigation')
     },
@@ -202,17 +221,15 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       console.log('🔄 [Plan] onNext data:', data)
       const patch = {
         therapySessions: {
-          sessions:        Array.isArray(data.therapySessions) ? data.therapySessions : [],
-          // ── Multi-therapist: keep the full array ──
-          therapists:      Array.isArray(data.therapists)      ? data.therapists      : [],
-          therapistIds:    Array.isArray(data.therapistIds)    ? data.therapistIds    : [],
-          therapistNames:  Array.isArray(data.therapistNames)  ? data.therapistNames  : [],
-          // Single-value back-compat (first therapist in the list)
-          therapistId:     data.therapistId    ?? (data.therapists?.[0]?.therapistId  ?? ''),
-          therapistName:   data.therapistName  ?? (data.therapists?.[0]?.fullName     ?? ''),
-          manualTherapy:   data.manualTherapy  ?? '',
-          precautions:     Array.isArray(data.precautions)    ? data.precautions     : [],
-          modalitiesUsed:  Array.isArray(data.modalitiesUsed) ? data.modalitiesUsed  : [],
+          sessions: Array.isArray(data.therapySessions) ? data.therapySessions : [],
+          therapists: Array.isArray(data.therapists) ? data.therapists : [],
+          therapistIds: Array.isArray(data.therapistIds) ? data.therapistIds : [],
+          therapistNames: Array.isArray(data.therapistNames) ? data.therapistNames : [],
+          therapistId: data.therapistId ?? (data.therapists?.[0]?.therapistId ?? ''),
+          therapistName: data.therapistName ?? (data.therapists?.[0]?.fullName ?? ''),
+          manualTherapy: data.manualTherapy ?? '',
+          precautions: Array.isArray(data.precautions) ? data.precautions : [],
+          modalitiesUsed: Array.isArray(data.modalitiesUsed) ? data.modalitiesUsed : [],
           patientResponse: data.patientResponse ?? '',
         },
       }
@@ -228,8 +245,14 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           homeAdvice: data.exercisePlan?.homeAdvice ?? data.homeAdvice ?? '',
           exercises: rawExercises,
           homeExercises: rawExercises.map(ex => ({
-            id: ex.id ?? ex._id ?? '', name: ex.name ?? '', sets: String(ex.sets ?? ''), reps: String(ex.reps ?? ''),
-            frequency: ex.frequency ?? '', instructions: ex.instructions ?? '', videoUrl: ex.videoUrl ?? '', thumbnail: ex.thumbnail ?? '',
+            id: ex.id ?? ex._id ?? '',
+            name: ex.name ?? '',
+            sets: String(ex.sets ?? ''),
+            reps: String(ex.reps ?? ''),
+            frequency: ex.frequency ?? '',
+            instructions: ex.instructions ?? '',
+            videoUrl: ex.videoUrl ?? '',
+            thumbnail: ex.thumbnail ?? '',
           })),
         },
       }
@@ -306,6 +329,26 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }) }, [activeTab])
 
+  // FIX: Build a richer seed for SymptomsDiseases so top-level fields
+  // (patientPain, previousInjuries, etc.) are visible inside seed when user
+  // navigates back to the Complaints tab.
+  const complaintsSeed = useMemo(() => ({
+    ...formData.symptoms,
+    // Merge top-level fields into seed — symptoms sub-object takes priority
+    // if both exist; otherwise fall back to top-level formData value.
+    patientPain: formData.symptoms?.patientPain ?? formData.patientPain ?? '',
+    previousInjuries: formData.symptoms?.previousInjuries ?? formData.previousInjuries ?? '',
+    currentMedications: formData.symptoms?.currentMedications ?? formData.currentMedications ?? '',
+    allergies: formData.symptoms?.allergies ?? formData.allergies ?? '',
+    occupation: formData.symptoms?.occupation ?? formData.occupation ?? '',
+    insuranceProvider: formData.symptoms?.insuranceProvider ?? formData.insuranceProvider ?? '',
+    activityLevels: (formData.symptoms?.activityLevels?.length
+      ? formData.symptoms.activityLevels
+      : formData.activityLevels) ?? [],
+  }), [formData.symptoms, formData.patientPain, formData.previousInjuries,
+  formData.currentMedications, formData.allergies, formData.occupation,
+  formData.insuranceProvider, formData.activityLevels])
+
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppSidebar />
@@ -370,11 +413,14 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
         </CContainer>
       </div>
 
-      {/* Tab content */}
+      {/* Tab content — pass complaintsSeed so SymptomsDiseases gets all fields */}
       <div style={{ flex: 1 }}>
         <TabContent
           activeTab={activeTab}
           formData={formData}
+          // FIX: pass complaintsSeed as a separate prop so TabContent can
+          // forward it to SymptomsDiseases instead of raw formData.symptoms
+          complaintsSeed={complaintsSeed}
           onNext={onNextMap[activeTab] || (() => console.warn('⚠️ No handler for tab:', activeTab))}
           setActiveTab={setActiveTab}
           onSaveTemplate={savePrescriptionTemplate}

@@ -15,6 +15,7 @@ import {
 } from '@coreui/react'
 import { documentTextOutline } from "ionicons/icons";
 import { IonIcon } from "@ionic/react";
+
 // ─── helpers ────────────────────────────────────────────────────────────────
 const toImageSrc = (raw) => {
   if (!raw || typeof raw !== 'string') return null
@@ -42,9 +43,9 @@ const isValid = (v) =>
 const SLabel = ({ text }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
     <span style={{
-      fontSize: '0.82rem',      // ← match Investigation tab
+      fontSize: '0.82rem',
       fontWeight: 700,
-      letterSpacing: '0.08em',  // ← match Investigation tab
+      letterSpacing: '0.08em',
       textTransform: 'uppercase',
       color: '#1B4F8A',
       fontFamily: 'inherit',
@@ -110,16 +111,17 @@ const card = {
 
 const inputBase = {
   width: '100%', borderRadius: 10, border: '1.5px solid #b6cfe8',
-  padding: '10px 13px', fontSize: '0.875rem',  // ← change 16 to '0.875rem'
+  padding: '10px 13px', fontSize: '0.875rem',
   fontFamily: 'inherit',
   outline: 'none', background: '#FFFFFF', color: '#1a3a5c',
   boxSizing: 'border-box', resize: 'vertical',
 }
 
-const readonlyChip = {
-  background: '#EFF6FF', border: '1px solid #b6cfe8',
-  borderRadius: 10, padding: '10px 14px',
-  fontSize: 13, fontWeight: 700, color: '#1B4F8A',
+const emptyPlaceholder = {
+  color: '#9CA3AF',
+  fontSize: 13,
+  fontStyle: 'italic',
+  padding: '8px 0',
 }
 
 // ─── main component ──────────────────────────────────────────────────────────
@@ -138,6 +140,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const [showDiagramModal, setShowDiagramModal] = useState(false)
   const [theraphyAnswers, setTheraphyAnswers] = useState(seed.theraphyAnswers ?? {})
   const [selectedTherapy, setSelectedTherapy] = useState(seed.selectedTherapy ?? '')
+  const [selectedTherapyID, setSelectedTherapyID] = useState(seed.selectedTherapyID ?? '')
   const [parts, setParts] = useState(Array.isArray(seed.parts) ? seed.parts : [])
   const [attachmentImages, setAttachmentImages] = useState(Array.isArray(seed.attachmentImages) ? seed.attachmentImages : [])
   const [previousInjuries, setPreviousInjuries] = useState(seed.previousInjuries ?? '')
@@ -146,10 +149,20 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const [occupation, setOccupation] = useState(seed.occupation ?? '')
   const [insuranceProvider, setInsuranceProvider] = useState(seed.insuranceProvider ?? '')
   const [activityLevels, setActivityLevels] = useState(Array.isArray(seed.activityLevels) ? seed.activityLevels : [])
-  const [patientPain, setPatientPain] = useState(seed.patientPain ?? '')
+
+  // FIX 1: Read patientPain from seed.patientPain (not seed.reasonforVisit)
+  const [patientPain, setPatientPain] = useState(
+    seed.patientPain ??
+    seed.reasonforVisit ??   // ✅ your field
+    patientData?.reasonforVisit ??  // ✅ ADD THIS
+    patientData?.patientPain ??
+    ''
+  )
+
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
   const { error } = useToast()
 
+  // FIX 2: Sync seed changes — patientPain now correctly reads seed.patientPain
   useEffect(() => {
     if (!seed || typeof seed !== 'object') return
     if (isValid(seed.symptomDetails)) setSymptomDetails(seed.symptomDetails)
@@ -158,6 +171,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
     if (isValid(seed.partImage)) setPartImage(seed.partImage)
     if (Array.isArray(seed.parts) && seed.parts.length) setParts(seed.parts)
     if (isValid(seed.selectedTherapy)) setSelectedTherapy(seed.selectedTherapy)
+    if (isValid(seed.selectedTherapyID)) setSelectedTherapyID(seed.selectedTherapyID)
     if (seed.theraphyAnswers && typeof seed.theraphyAnswers === 'object') setTheraphyAnswers(seed.theraphyAnswers)
     if (Array.isArray(seed.attachmentImages) && seed.attachmentImages.length) setAttachmentImages(seed.attachmentImages)
     if (isValid(seed.previousInjuries)) setPreviousInjuries(seed.previousInjuries)
@@ -166,8 +180,23 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
     if (isValid(seed.occupation)) setOccupation(seed.occupation)
     if (isValid(seed.insuranceProvider)) setInsuranceProvider(seed.insuranceProvider)
     if (Array.isArray(seed.activityLevels) && seed.activityLevels.length) setActivityLevels(seed.activityLevels)
-    if (isValid(seed.patientPain)) setPatientPain(seed.patientPain)
-  }, [seed])
+    // ✅ FIXED
+    if (isValid(seed.patientPain)) {
+      setPatientPain(seed.patientPain)
+    }
+    else if (isValid(seed.reasonforVisit)) {
+      setPatientPain(seed.reasonforVisit)
+    }
+    else if (isValid(patientData?.reasonforVisit)) {   // ⭐ IMPORTANT
+      setPatientPain(patientData.reasonforVisit)
+    }
+    else if (isValid(patientData?.patientPain)) {
+      setPatientPain(patientData.patientPain)
+    }
+    else if (isValid(patientData?.problem)) {          // fallback
+      setPatientPain(patientData.problem)
+    }
+  }, [seed, patientData])
 
   useEffect(() => {
     const clinicId = patientData?.clinicId
@@ -185,6 +214,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         if (isValid(record.symptomsDuration) && !isValid(seed.duration)) setDuration(record.symptomsDuration.trim())
         else if (!isValid(seed.duration)) setDuration('0 Days')
         if (isValid(record.subServiceName) && !isValid(seed.selectedTherapy)) setSelectedTherapy(record.subServiceName)
+        if (isValid(record.subServiceId) && !isValid(seed.selectedTherapyID)) setSelectedTherapyID(record.subServiceId)
         if (record.partImage && !isValid(seed.partImage)) setPartImage(record.partImage)
         if (Array.isArray(record.parts) && record.parts.length && !(Array.isArray(seed.parts) && seed.parts.length)) setParts(record.parts)
         if (record.theraphyAnswers && typeof record.theraphyAnswers === 'object' && !Object.keys(seed.theraphyAnswers ?? {}).length) setTheraphyAnswers(record.theraphyAnswers)
@@ -194,6 +224,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         if (isValid(record.occupation) && !isValid(seed.occupation)) setOccupation(record.occupation)
         if (isValid(record.insuranceProvider) && !isValid(seed.insuranceProvider)) setInsuranceProvider(record.insuranceProvider)
         if (Array.isArray(record.activityLevels) && record.activityLevels.length && !(Array.isArray(seed.activityLevels) && seed.activityLevels.length)) setActivityLevels(record.activityLevels)
+        // FIX: read patientPain from booking record
         if (isValid(record.patientPain) && !isValid(seed.patientPain)) setPatientPain(record.patientPain)
         if (Array.isArray(record.attachments) && record.attachments.length && !(Array.isArray(seed.attachmentImages) && seed.attachmentImages.length)) {
           setAttachmentImages(record.attachments)
@@ -216,11 +247,25 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   }, [patientData?.clinicId, patientData?.branchId, patientData?.bookingId])
 
   const handleNext = () => {
+    // FIX 3: include selectedTherapyID and patientPain correctly in payload
     const payload = {
-      symptomDetails, duration, attachments,
-      partImage, parts, selectedTherapy, theraphyAnswers, attachmentImages,
-      previousInjuries, currentMedications, allergies,
-      occupation, insuranceProvider, activityLevels, patientPain,
+      symptomDetails,
+      duration,
+      attachments,
+      partImage,
+      parts,
+      selectedTherapy,
+      selectedTherapyID,
+      theraphyAnswers,
+      attachmentImages,
+      previousInjuries,
+      currentMedications,
+      allergies,
+      occupation,
+      insuranceProvider,
+      activityLevels,
+      patientPain,       // correct key name — was previously sent as patientPain but state init was from reasonforVisit
+      reasonforVisit: patientPain, // keep for backward compat
     }
     onNext?.(payload)
   }
@@ -228,18 +273,13 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const therapyGroups = useMemo(() => flattenTherapyAnswers(theraphyAnswers), [theraphyAnswers])
   const bk = bookingRecord
 
-  const hasComplaintData =
-    isValid(symptomDetails) || isValid(patientPain) || isValid(previousInjuries) ||
-    isValid(currentMedications) || isValid(allergies) || isValid(occupation) ||
-    activityLevels.length > 0
-
   const focusBlue = (e) => (e.target.style.borderColor = '#1B4F8A')
   const blurBlue = (e) => (e.target.style.borderColor = '#b6cfe8')
 
   return (
     <div style={{ paddingBottom: '90px', backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
 
-      {/* ── Header: white bg, blue bottom border ── */}
+      {/* ── Header ── */}
       <div style={{
         background: '#FFFFFF',
         borderBottom: '2px solid #dceeff',
@@ -247,12 +287,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         boxShadow: '0 4px 12px rgba(27,79,138,0.10)',
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-        }}>
-          {/* Logo Icon */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 8,
             background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
@@ -261,12 +296,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           }}>
             🧑‍⚕️
           </div>
-
-          {/* Title */}
-          <h5 style={{
-            color: '#1B4F8A', fontWeight: 700, fontSize: '1.1rem'
-
-          }}>
+          <h5 style={{ color: '#1B4F8A', fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>
             Patient Consultation
           </h5>
         </div>
@@ -308,150 +338,164 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
 
         {/* ════ LEFT COLUMN ════ */}
         <div>
-          {hasComplaintData && (
-            <div style={card}>
-              <SLabel text="Complaint Details" />
-              <textarea
-                rows={4} value={symptomDetails}
-                onChange={(e) => setSymptomDetails(e.target.value)}
-                placeholder="Describe patient's main complaint…"
-                style={{ ...inputBase, marginBottom: 14 }}
-                onFocus={focusBlue} onBlur={blurBlue}
-              />
- {/* Duration + Therapy */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
-            <div style={card}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isValid(selectedTherapy || bk?.subServiceName) ? '1fr 1fr' : '1fr',
-                gap: 14,
-              }}>
-                <div>
-                  <SLabel text="Duration" />
-                  <input value={duration || '0 Days'} onChange={(e) => setDuration(e.target.value)}
-                    placeholder="e.g. 3 weeks" style={{ ...inputBase, resize: 'none' }}
-                    onFocus={focusBlue} onBlur={blurBlue} />
-                </div>
-                {isValid(selectedTherapy || bk?.subServiceName) && (
-                  <div>
-                    <SLabel text="Selected Therapy" />
-                    <div style={readonlyChip}>{selectedTherapy || bk?.subServiceName}</div>
+
+          {/* ── Chief Complaint Details ── */}
+          <div style={card}>
+            <SLabel text="Chief Complaint Details" />
+            <textarea
+              rows={4} value={symptomDetails}
+              onChange={(e) => setSymptomDetails(e.target.value)}
+              placeholder="Describe patient's main complaint…"
+              style={{ ...inputBase, marginBottom: 14 }}
+              onFocus={focusBlue} onBlur={blurBlue}
+            />
+
+            {/* ── Duration + Affected Body Parts ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div>
+                <SLabel text="Duration" />
+                <input
+                  value={duration || '0 Days'}
+                  onChange={(e) => setDuration(e.target.value)}
+                  placeholder="e.g. 3 weeks"
+                  style={{ ...inputBase, resize: 'none' }}
+                  onFocus={focusBlue} onBlur={blurBlue}
+                />
+              </div>
+              <div>
+                <SLabel text="Affected Body Parts" />
+                {parts.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 2 }}>
+                    {parts.map((p) => (
+                      <span key={p} style={{
+                        background: '#EFF6FF', color: '#1B4F8A',
+                        border: '1px solid #b6cfe8', borderRadius: 20,
+                        padding: '4px 12px', fontSize: 12, fontWeight: 700,
+                        textTransform: 'capitalize',
+                      }}>{p}</span>
+                    ))}
                   </div>
+                ) : (
+                  <div style={emptyPlaceholder}>No body parts selected</div>
                 )}
               </div>
             </div>
 
-            {parts.length > 0 && (
-              <div style={card}>
-                <SLabel text="Affected Body Parts" />
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 2 }}>
-                  {parts.map((p) => (
-                    <span key={p} style={{
+            {/* FIX 4: Patient Pain field — correctly bound to patientPain state */}
+            <div style={{ marginBottom: 14 }}>
+              <SLabel text="Patient Pain / Reason for Visit" />
+
+              <input
+                value={patientPain}
+                onChange={(e) => setPatientPain(e.target.value)}
+                placeholder="e.g. none"
+                style={{ ...inputBase, resize: 'none' }}
+                onFocus={focusBlue} onBlur={blurBlue}
+              />
+            </div>
+
+            {/* ── Previous Injuries + Current Medications ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div>
+                <SLabel text="Previous Injuries" />
+                <input
+                  value={previousInjuries}
+                  onChange={(e) => setPreviousInjuries(e.target.value)}
+                  placeholder="e.g. none"
+                  style={{ ...inputBase, resize: 'none' }}
+                  onFocus={focusBlue} onBlur={blurBlue}
+                />
+              </div>
+              <div>
+                <SLabel text="Current Medications" />
+                <input
+                  value={currentMedications}
+                  onChange={(e) => setCurrentMedications(e.target.value)}
+                  placeholder="e.g. none"
+                  style={{ ...inputBase, resize: 'none' }}
+                  onFocus={focusBlue} onBlur={blurBlue}
+                />
+              </div>
+            </div>
+
+            {/* ── Allergies + Occupation ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div>
+                <SLabel text="Allergies" />
+                <input
+                  value={allergies}
+                  onChange={(e) => setAllergies(e.target.value)}
+                  placeholder="e.g. none"
+                  style={{ ...inputBase, resize: 'none' }}
+                  onFocus={focusBlue} onBlur={blurBlue}
+                />
+              </div>
+              <div>
+                <SLabel text="Occupation" />
+                <input
+                  value={occupation}
+                  onChange={(e) => setOccupation(e.target.value)}
+                  placeholder="e.g. worker"
+                  style={{ ...inputBase, resize: 'none' }}
+                  onFocus={focusBlue} onBlur={blurBlue}
+                />
+              </div>
+            </div>
+
+            {/* ── Activity Levels ── */}
+            <div style={{ marginBottom: 14 }}>
+              <SLabel text="Activity Levels" />
+              {activityLevels.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {activityLevels.map((lvl) => (
+                    <span key={lvl} style={{
                       background: '#EFF6FF', color: '#1B4F8A',
                       border: '1px solid #b6cfe8', borderRadius: 20,
-                      padding: '4px 14px', fontSize: 12, fontWeight: 700,
-                      textTransform: 'capitalize',
-                    }}>{p}</span>
+                      padding: '4px 12px', fontSize: 12, fontWeight: 700,
+                    }}>{lvl}</span>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-              {isValid(patientPain) && (
-                <div style={{ marginBottom: 14 }}>
-                  <SLabel text="Patient Pain" />
-                  <input value={patientPain} onChange={(e) => setPatientPain(e.target.value)}
-                    placeholder="e.g. chronic pain, acute pain…"
-                    style={{ ...inputBase, resize: 'none' }}
-                    onFocus={focusBlue} onBlur={blurBlue} />
-                </div>
-              )}
-
-              {(isValid(previousInjuries) || isValid(currentMedications)) && (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: isValid(previousInjuries) && isValid(currentMedications) ? '1fr 1fr' : '1fr',
-                  gap: 14, marginBottom: 14,
-                }}>
-                  {isValid(previousInjuries) && (
-                    <div>
-                      <SLabel text="Previous Injuries" />
-                      <input value={previousInjuries} onChange={(e) => setPreviousInjuries(e.target.value)}
-                        placeholder="e.g. none" style={{ ...inputBase, resize: 'none' }}
-                        onFocus={focusBlue} onBlur={blurBlue} />
-                    </div>
-                  )}
-                  {isValid(currentMedications) && (
-                    <div>
-                      <SLabel text="Current Medications" />
-                      <input value={currentMedications} onChange={(e) => setCurrentMedications(e.target.value)}
-                        placeholder="e.g. none" style={{ ...inputBase, resize: 'none' }}
-                        onFocus={focusBlue} onBlur={blurBlue} />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {(isValid(allergies) || isValid(occupation)) && (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: isValid(allergies) && isValid(occupation) ? '1fr 1fr' : '1fr',
-                  gap: 14, marginBottom: 14,
-                }}>
-                  {isValid(allergies) && (
-                    <div>
-                      <SLabel text="Allergies" />
-                      <input value={allergies} onChange={(e) => setAllergies(e.target.value)}
-                        placeholder="e.g. none" style={{ ...inputBase, resize: 'none' }}
-                        onFocus={focusBlue} onBlur={blurBlue} />
-                    </div>
-                  )}
-                  {isValid(occupation) && (
-                    <div>
-                      <SLabel text="Occupation" />
-                      <input value={occupation} onChange={(e) => setOccupation(e.target.value)}
-                        placeholder="e.g. worker" style={{ ...inputBase, resize: 'none' }}
-                        onFocus={focusBlue} onBlur={blurBlue} />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activityLevels.length > 0 && (
-                <div>
-                  <SLabel text="Activity Levels" />
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {activityLevels.map((lvl) => (
-                      <span key={lvl} style={{
-                        background: '#EFF6FF', color: '#1B4F8A',
-                        border: '1px solid #b6cfe8', borderRadius: 20,
-                        padding: '4px 12px', fontSize: 12, fontWeight: 700,
-                      }}>{lvl}</span>
-                    ))}
-                  </div>
-                </div>
+              ) : (
+                <div style={emptyPlaceholder}>No activity levels recorded</div>
               )}
             </div>
-          )}
 
-         
-
-          {isValid(insuranceProvider) && (
-            <div style={card}>
+            {/* ── Insurance Provider ── */}
+            <div>
               <SLabel text="Insurance Provider" />
-              <input value={insuranceProvider} onChange={(e) => setInsuranceProvider(e.target.value)}
-                placeholder="e.g. none" style={{ ...inputBase, resize: 'none' }}
-                onFocus={focusBlue} onBlur={blurBlue} />
+              <input
+                value={insuranceProvider}
+                onChange={(e) => setInsuranceProvider(e.target.value)}
+                placeholder="e.g. none"
+                style={{ ...inputBase, resize: 'none' }}
+                onFocus={focusBlue} onBlur={blurBlue}
+              />
+            </div>
+          </div>
+
+          {/* ── Selected Therapy (read-only display) ── */}
+          {isValid(selectedTherapy) && (
+            <div style={card}>
+              <SLabel text="Selected Therapy" />
+              <div style={{
+                background: '#EFF6FF', border: '1px solid #b6cfe8',
+                borderRadius: 10, padding: '10px 14px',
+                fontSize: 13, fontWeight: 700, color: '#1B4F8A',
+              }}>
+                {selectedTherapy}
+              </div>
             </div>
           )}
         </div>
 
         {/* ════ RIGHT COLUMN ════ */}
         <div>
-          {isValid(partImage) && (
-            <>
-              <div style={card}>
-                <SLabel text="Body Part Diagram" />
+
+          {/* ── Body Part Diagram ── */}
+          <div style={card}>
+            <SLabel text="Body Part Diagram" />
+            {isValid(partImage) ? (
+              <>
                 <div
                   onClick={() => setShowDiagramModal(true)}
                   style={{
@@ -460,91 +504,95 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
                     cursor: 'zoom-in', position: 'relative',
                   }}
                 >
-                  <img src={toImageSrc(partImage)} alt="Body Part Diagram"
-                    style={{ maxHeight: 220, objectFit: 'contain', display: 'block' }} />
-                  {/* <div style={{
-          position: 'absolute', bottom: 8, right: 8,
-          background: 'rgba(27,79,138,0.75)', borderRadius: 6,
-          padding: '3px 8px', color: '#fff', fontSize: 11, fontWeight: 600,
-        }}>
-          🔍 Click to expand
-        </div> */}
+                  <img
+                    src={toImageSrc(partImage)}
+                    alt="Body Part Diagram"
+                    style={{ maxHeight: 220, objectFit: 'contain', display: 'block' }}
+                  />
                 </div>
-              </div>
 
-              {/* ── Lightbox Modal ── */}
-              {showDiagramModal && (
-                <div
-                  onClick={() => setShowDiagramModal(false)}
-                  style={{
-                    position: 'fixed', inset: 0, zIndex: 9999,
-                    background: 'rgba(10,30,60,0.75)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    backdropFilter: 'blur(4px)',
-                  }}
-                >
+                {/* ── Lightbox Modal ── */}
+                {showDiagramModal && (
                   <div
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={() => setShowDiagramModal(false)}
                     style={{
-                      background: '#fff', borderRadius: 18,
-                      padding: 24, maxWidth: '90vw', maxHeight: '90vh',
-                      boxShadow: '0 16px 64px rgba(27,79,138,0.30)',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
-                      position: 'relative',
+                      position: 'fixed', inset: 0, zIndex: 9999,
+                      background: 'rgba(10,30,60,0.75)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      backdropFilter: 'blur(4px)',
                     }}
                   >
-                    {/* Close button */}
-                    <button
-                      onClick={() => setShowDiagramModal(false)}
+                    <div
+                      onClick={(e) => e.stopPropagation()}
                       style={{
-                        position: 'absolute', top: 12, right: 12,
-                        background: '#FEE2E2', border: 'none', borderRadius: '50%',
-                        width: 32, height: 32, cursor: 'pointer',
-                        fontSize: 16, color: '#991B1B', fontWeight: 700,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: '#fff', borderRadius: 18,
+                        padding: 24, maxWidth: '90vw', maxHeight: '90vh',
+                        boxShadow: '0 16px 64px rgba(27,79,138,0.30)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+                        position: 'relative',
                       }}
-                    >✕</button>
-
-                    <span style={{ fontWeight: 700, color: '#1B4F8A', fontSize: 15 }}>
-                      Body Part Diagram
-                    </span>
-
-                    <img
-                      src={toImageSrc(partImage)}
-                      alt="Body Part Diagram"
-                      style={{
-                        maxWidth: '80vw', maxHeight: '75vh',
-                        objectFit: 'contain', borderRadius: 10,
-                        border: '1px solid #b6cfe8',
-                      }}
-                    />
+                    >
+                      <button
+                        onClick={() => setShowDiagramModal(false)}
+                        style={{
+                          position: 'absolute', top: 12, right: 12,
+                          background: '#FEE2E2', border: 'none', borderRadius: '50%',
+                          width: 32, height: 32, cursor: 'pointer',
+                          fontSize: 16, color: '#991B1B', fontWeight: 700,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                      >✕</button>
+                      <span style={{ fontWeight: 700, color: '#1B4F8A', fontSize: 15 }}>
+                        Body Part Diagram
+                      </span>
+                      <img
+                        src={toImageSrc(partImage)}
+                        alt="Body Part Diagram"
+                        style={{
+                          maxWidth: '80vw', maxHeight: '75vh',
+                          objectFit: 'contain', borderRadius: 10,
+                          border: '1px solid #b6cfe8',
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                )}
+              </>
+            ) : (
+              <div style={{
+                background: '#F8FBFF', borderRadius: 10, border: '1px dashed #b6cfe8',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'center', padding: '32px 20px', gap: 8,
+              }}>
+                <span style={{ fontSize: 32 }}>🦴</span>
+                <span style={{ color: '#9CA3AF', fontSize: 13, fontStyle: 'italic' }}>
+                  No body part diagram available
+                </span>
+              </div>
+            )}
+          </div>
 
+          {/* ── Records / Reports ── */}
           <div style={card}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              
               <SLabel text="Records/reports" />
               <IonIcon icon={documentTextOutline} style={{ fontSize: "18px" }} />
             </div>
-
             <FileUploader attachments={attachments} setAttachments={setAttachments} />
           </div>
         </div>
       </div>
 
       {/* ══ THERAPY QUESTIONNAIRE ══ */}
-      {therapyGroups.length > 0 && (
-        <div style={{ maxWidth: 1200, margin: '0 auto 24px', padding: '0 20px' }}>
-          <div style={{
-            background: '#FFFFFF', borderRadius: 18, padding: 20,
-            boxShadow: '0 8px 24px rgba(27,79,138,0.08)',
-            border: '1px solid #b6cfe8',
-          }}>
-            <SLabel text="Therapy Questionnaire" />
+      <div style={{ maxWidth: 1200, margin: '0 auto 24px', padding: '0 20px' }}>
+        <div style={{
+          background: '#FFFFFF', borderRadius: 18, padding: 20,
+          boxShadow: '0 8px 24px rgba(27,79,138,0.08)',
+          border: '1px solid #b6cfe8',
+        }}>
+          <SLabel text="Therapy Questionnaire" />
+
+          {therapyGroups.length > 0 ? (
             <CAccordion flush style={{ marginTop: 14, zIndex: 1 }}>
               {therapyGroups.map(({ category, questions }, index) => {
                 const validQuestions = questions.filter(q => isValid(q.question))
@@ -592,9 +640,21 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
                 )
               })}
             </CAccordion>
-          </div>
+          ) : (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', padding: '32px 20px', gap: 8,
+              background: '#F8FBFF', borderRadius: 12, border: '1px dashed #b6cfe8',
+              marginTop: 14,
+            }}>
+              <span style={{ fontSize: 28 }}>📋</span>
+              <span style={{ color: '#9CA3AF', fontSize: 13, fontStyle: 'italic' }}>
+                No therapy questionnaire data available
+              </span>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* ── Sticky Bottom Bar ── */}
       <div className="position-fixed bottom-0" style={{
@@ -611,7 +671,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           style={{
             borderRadius: '20px', fontWeight: 700,
             padding: '6px 24px',
-            color: '#FFFFFF',                              // ← white text forced inline
+            color: '#FFFFFF',
             boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
             border: '1.5px solid #1B4F8A',
           }}

@@ -72,17 +72,17 @@ const TabContent = ({
         // Build the same shape that PatientAppointmentDetails.Plan handler stores
         const planPatch = {
           therapySessions: {
-            sessions:        Array.isArray(payload.therapySessions) ? payload.therapySessions : [],
+            sessions: Array.isArray(payload.therapySessions) ? payload.therapySessions : [],
             // ── Preserve the full multi-therapist array ──────────────────
-            therapists:      Array.isArray(payload.therapists)     ? payload.therapists      : [],
-            therapistIds:    Array.isArray(payload.therapistIds)   ? payload.therapistIds    : [],
-            therapistNames:  Array.isArray(payload.therapistNames) ? payload.therapistNames  : [],
+            therapists: Array.isArray(payload.therapists) ? payload.therapists : [],
+            therapistIds: Array.isArray(payload.therapistIds) ? payload.therapistIds : [],
+            therapistNames: Array.isArray(payload.therapistNames) ? payload.therapistNames : [],
             // Single back-compat (first in list)
-            therapistId:     payload.therapistId   ?? (payload.therapists?.[0]?.therapistId ?? ''),
-            therapistName:   payload.therapistName ?? (payload.therapists?.[0]?.fullName    ?? ''),
-            manualTherapy:   payload.manualTherapy  ?? '',
-            precautions:     Array.isArray(payload.precautions)    ? payload.precautions     : [],
-            modalitiesUsed:  Array.isArray(payload.modalitiesUsed) ? payload.modalitiesUsed  : [],
+            therapistId: payload.therapistId ?? (payload.therapists?.[0]?.therapistId ?? ''),
+            therapistName: payload.therapistName ?? (payload.therapists?.[0]?.fullName ?? ''),
+            manualTherapy: payload.manualTherapy ?? '',
+            precautions: Array.isArray(payload.precautions) ? payload.precautions : [],
+            modalitiesUsed: Array.isArray(payload.modalitiesUsed) ? payload.modalitiesUsed : [],
             patientResponse: payload.patientResponse ?? '',
           },
         }
@@ -141,7 +141,16 @@ const TabContent = ({
       break
 
     case 'History':
-      content = <VisitHistory seed={formData.history || {}} onNext={handleNext} patientId={patientData?.patientId || formData.patientId} doctorId={patientData?.doctorId || formData.doctorId} patientData={patientData} formData={formData} />
+      content = (
+        <VisitHistory
+          seed={formData.history || {}}
+          onNext={handleNext}
+          patientId={patientData?.patientId || formData.patientId}
+          bookingId={patientData?.bookingId || formData.bookingId}
+          patientData={patientData}
+          formData={formData}
+        />
+      )
       break
 
     case 'Prescription':
