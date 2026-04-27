@@ -209,14 +209,19 @@ const STYLES = `
   /* ── Info Grid ── */
   .dp-info-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 14px;
   }
   .dp-info-item {
     background: rgba(27,79,138,0.04);
     border: 1px solid rgba(27,79,138,0.09);
-    border-radius: 12px; padding: 12px 14px;
+    border-radius: 12px;
+    padding: 12px 14px;
     transition: border-color .2s, background .2s;
+    min-width: 0;
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
   .dp-info-item:hover {
     background: rgba(27,79,138,0.08);
@@ -225,8 +230,19 @@ const STYLES = `
   .dp-info-label {
     font-size: 10.5px; font-weight: 700; color: #F5A623;
     letter-spacing: .09em; text-transform: uppercase; margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .dp-info-value { font-size: 13.5px; font-weight: 600; color: #1B4F8A; }
+  .dp-info-value {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1B4F8A;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    min-width: 0;
+  }
 
   /* ── Signature ── */
   .dp-sig-box {
@@ -256,6 +272,7 @@ const STYLES = `
     border: 1px solid rgba(27,79,138,0.12);
     border-radius: 14px; padding: 16px 20px;
     position: relative; overflow: hidden;
+    min-width: 0;
   }
   .dp-fee-card::before {
     content: '';
@@ -336,6 +353,7 @@ const STYLES = `
     background: rgba(245,166,35,0.15);
     border: 1px solid rgba(245,166,35,0.25);
     display: flex; align-items: center; justify-content: center; font-size: 20px;
+    flex-shrink: 0;
   }
   .dp-rating-val { font-size: 26px; font-weight: 800; color: #F5A623; line-height: 1; }
   .dp-rating-max { font-size: 13px; color: rgba(255,255,255,0.4); }
@@ -367,6 +385,7 @@ const STYLES = `
     border: 1px solid rgba(245,166,35,0.25);
     border-radius: 8px; padding: 3px 10px;
     font-size: 13px; font-weight: 700; color: #c67d00;
+    white-space: nowrap;
   }
   .dp-feedback-text { font-size: 13.5px; color: #374151; margin-top: 10px; line-height: 1.6; }
 
@@ -379,6 +398,8 @@ const STYLES = `
     font-size: 12.5px; font-weight: 600; color: #1B4F8A;
     margin: 4px;
     transition: background .2s, border-color .2s;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
   .dp-service-tag:hover {
     background: #1B4F8A; color: #fff; border-color: #1B4F8A;
@@ -519,7 +540,7 @@ const DoctorProfile = () => {
                   ? <img src={doctorImage} alt="Doctor" className="dp-avatar-ring" />
                   : <div className="dp-avatar-placeholder">No Image</div>
                 }
-                <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="dp-hero-badge">
                     <div className="dp-hero-badge-dot" />
                     <span className="dp-hero-badge-txt">Active Doctor</span>
@@ -530,7 +551,7 @@ const DoctorProfile = () => {
                   <div className="dp-hero-meta">
                     <div className="dp-hero-meta-item">
                       <span>🎓</span>
-                      <strong>{doctorDetails?.qualification || 'Qualification'}</strong>
+                      <strong style={{ wordBreak: 'break-word' }}>{doctorDetails?.qualification || 'Qualification'}</strong>
                     </div>
                     <div className="dp-hero-meta-item">
                       <span>🪪</span>
@@ -596,7 +617,7 @@ const DoctorProfile = () => {
               <div className="dp-card-body">
                 <div style={{ marginBottom: 20 }}>
                   <div className="dp-section-label">Description</div>
-                  <p style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.7, margin: 0 }}>
+                  <p style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.7, margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                     {doctorDetails?.profileDescription || 'No description available'}
                   </p>
                 </div>
@@ -741,9 +762,9 @@ const DoctorProfile = () => {
                     <div key={idx} className="dp-feedback" style={{ animationDelay: `${idx * 0.06}s` }}>
                       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                         <div className="dp-feedback-avatar">P{idx + 1}</div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
-                            <div>
+                            <div style={{ minWidth: 0 }}>
                               <div className="dp-feedback-name">{fb.patientName || 'Anonymous'}</div>
                               <div className="dp-feedback-time">
                                 {fb.dateAndTimeAtRating
