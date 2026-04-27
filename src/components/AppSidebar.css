@@ -383,7 +383,7 @@
   font-weight: 700;
 }
 
-/* ── Responsive: stack modal on small screens ────────────────────────────── */
+/* ── Responsive: stack modal on small screens────────────────────────────── */
 @media (max-width: 576px) {
   .info-grid-2 {
     grid-template-columns: 1fr;
