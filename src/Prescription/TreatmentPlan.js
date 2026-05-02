@@ -46,7 +46,7 @@ const useToast = () => {
   }, [])
   return {
     toasts,
-    toastError:   useCallback((msg) => show(msg, 'error'),   [show]),
+    toastError: useCallback((msg) => show(msg, 'error'), [show]),
     toastSuccess: useCallback((msg) => show(msg, 'success'), [show]),
     toastWarning: useCallback((msg) => show(msg, 'warning'), [show]),
   }
@@ -293,9 +293,9 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
 const getName = (p, mode) => {
   if (!p) return ''
   switch (mode) {
-    case 'package':  return p.packageName  || p.name || p.title || `Package ${p.packageId  ?? p.id ?? ''}`
-    case 'program':  return p.programName  || p.name || p.title || `Program ${p.programId  ?? p.id ?? ''}`
-    case 'therapy':  return p.therapyName  || p.name || `Therapy ${p.therapyId ?? p.id ?? ''}`
+    case 'package': return p.packageName || p.name || p.title || `Package ${p.packageId ?? p.id ?? ''}`
+    case 'program': return p.programName || p.name || p.title || `Program ${p.programId ?? p.id ?? ''}`
+    case 'therapy': return p.therapyName || p.name || `Therapy ${p.therapyId ?? p.id ?? ''}`
     case 'exercise': return p.exerciseName || p.name || `Exercise ${p.therapyExercisesId ?? p.id ?? ''}`
     default: return p.name || p.title || `Item ${p.id ?? ''}`
   }
@@ -304,9 +304,9 @@ const getId = (p, mode) => {
   if (!p) return ''
   switch (mode) {
     case 'exercise': return String(p.therapyExercisesId || p.id || '')
-    case 'therapy':  return String(p.therapyId  || p.id || '')
-    case 'program':  return String(p.programId  || p.id || '')
-    case 'package':  return String(p.packageId  || p.id || '')
+    case 'therapy': return String(p.therapyId || p.id || '')
+    case 'program': return String(p.programId || p.id || '')
+    case 'package': return String(p.packageId || p.id || '')
     default: return String(p.id || '')
   }
 }
@@ -361,63 +361,374 @@ const ExerciseCheckbox = ({ checked, onChange }) => (
 )
 
 /* ─── NotesCell — editable inline ────────────────────────────────────────── */
-const NotesCell = ({ value, onChange }) => {
-  const [editing, setEditing] = useState(false)
-  const inputRef = useRef(null)
-
-  useEffect(() => {
-    if (editing && inputRef.current) inputRef.current.focus()
-  }, [editing])
-
-  if (editing) {
-    return (
-      <input
-        ref={inputRef}
-        type="text"
-        value={value ?? ''}
-        onChange={e => onChange(e.target.value)}
-        onBlur={() => setEditing(false)}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditing(false) }}
-        placeholder="Add notes..."
-        style={{
-          width: '100%', minWidth: 120,
-          border: '1.5px solid #1B4F8A', borderRadius: 6,
-          padding: '4px 8px', fontSize: '0.82rem',
-          color: '#1a3a5c', background: '#fff', outline: 'none',
-          fontFamily: 'inherit',
-          boxShadow: '0 0 0 3px rgba(27,79,138,0.15)',
-        }}
-      />
-    )
-  }
-
+const AddFieldModal = ({ onSave, onClose }) => {
+  const [key, setKey] = useState('')
+  const [val, setVal] = useState('')
   return (
-    <div
-      onClick={() => setEditing(true)}
-      title="Click to edit notes"
-      style={{
-        cursor: 'pointer', minWidth: 100, padding: '4px 6px',
-        borderRadius: 6, border: '1.5px dashed #b6cfe8',
-        fontSize: '0.82rem', color: value ? '#1a3a5c' : '#94a3b8',
-        background: '#f8fafc', display: 'flex', alignItems: 'center', gap: 4,
-        transition: 'border-color 0.15s, background 0.15s',
-        whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = '#1B4F8A'; e.currentTarget.style.background = '#f0f6ff' }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = '#b6cfe8'; e.currentTarget.style.background = '#f8fafc' }}
-    >
-      <span style={{ fontSize: 11, flexShrink: 0, color: '#94a3b8' }}>✏️</span>
-      <span>{value || 'Add notes...'}</span>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 11000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(2px)' }}>
+      <div style={{ background: '#fff', width: '100%', maxWidth: 320, borderRadius: 12, overflow: 'hidden', boxShadow: '0 15px 40px rgba(0,0,0,0.25)', animation: 'toastSlide 0.25s ease' }}>
+        <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontWeight: 700, fontSize: '0.85rem', letterSpacing: '0.02em' }}>➕ ADD PARAMETER</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}>×</button>
+        </div>
+        <div style={{ padding: 18 }}>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#1B4F8A', display: 'block', marginBottom: 5, textTransform: 'uppercase' }}>Field Name</label>
+            <input
+              value={key} onChange={e => setKey(e.target.value)}
+              placeholder="e.g. Intensity, Machine"
+              style={{ ...inputStyle, height: 34, fontSize: '0.8rem', padding: '0 10px' }}
+            />
+          </div>
+          <div style={{ marginBottom: 4 }}>
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#1B4F8A', display: 'block', marginBottom: 5, textTransform: 'uppercase' }}>Value</label>
+            <input
+              value={val} onChange={e => setVal(e.target.value)}
+              placeholder="e.g. Moderate, Treadmill"
+              style={{ ...inputStyle, height: 34, fontSize: '0.8rem', padding: '0 10px' }}
+            />
+          </div>
+        </div>
+        <div style={{ padding: '12px 18px', background: '#f8fafc', borderTop: '1px solid #dceeff', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+          <button onClick={onClose} style={{ padding: '5px 14px', borderRadius: 8, border: '1.5px solid #cbd5e1', background: '#fff', color: '#64748b', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+          <button
+            onClick={() => { if (key.trim()) { onSave(key.trim(), val); onClose() } }}
+            disabled={!key.trim()}
+            style={{ padding: '5px 18px', borderRadius: 8, border: 'none', background: key.trim() ? '#1B4F8A' : '#b6cfe8', color: '#fff', fontSize: '0.8rem', fontWeight: 700, cursor: key.trim() ? 'pointer' : 'not-allowed' }}
+          >Add Field</button>
+        </div>
+      </div>
     </div>
   )
 }
 
+const NoteModal = ({ value, onSave, onClose }) => {
+  const [text, setText] = useState(value || '')
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(3px)' }}>
+      <div style={{ background: '#fff', width: '100%', maxWidth: 500, borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.25)', animation: 'toastSlide 0.3s ease' }}>
+        <div style={{ padding: '16px 22px', borderBottom: '1.5px solid #dceeff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)', color: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 20 }}>📝</span>
+            <h6 style={{ margin: 0, fontWeight: 700, letterSpacing: '0.02em' }}>Activity Notes</h6>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>×</button>
+        </div>
+        <div style={{ padding: 22 }}>
+          <label style={{ fontSize: '0.75rem', marginBottom: 8, display: 'block', color: '#475569' }}>Write your clinical notes below:</label>
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            autoFocus
+            style={{
+              width: '100%', minHeight: 180, border: '1.5px solid #b6cfe8', borderRadius: 10, padding: 14,
+              outline: 'none', fontSize: '0.9rem', color: '#1a3a5c', lineHeight: 1.5,
+              transition: 'border-color 0.2s', fontFamily: 'inherit'
+            }}
+            onFocus={e => e.target.style.borderColor = '#1B4F8A'}
+            onBlur={e => e.target.style.borderColor = '#b6cfe8'}
+            placeholder="E.g. Patient showed improvement in range of motion, advised to continue daily sets..."
+          />
+        </div>
+        <div style={{ padding: '14px 22px', background: '#f8fafc', borderTop: '1.5px solid #dceeff', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+          <button onClick={onClose} style={{ padding: '7px 20px', borderRadius: 10, border: '1.5px solid #cbd5e1', background: '#fff', color: '#64748b', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => onSave(text)} style={{ padding: '7px 24px', borderRadius: 10, border: 'none', background: '#1B4F8A', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27,79,138,0.2)' }}>Save Changes</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const ParamModal = ({ label, value, onSave, onClose }) => {
+  const [text, setText] = useState(value || '')
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(3px)' }}>
+      <div style={{ background: '#fff', width: '100%', maxWidth: 420, borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.25)', animation: 'toastSlide 0.3s ease' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1.5px solid #dceeff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)', color: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>⚙️</span>
+            <h6 style={{ margin: 0, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', fontSize: '0.85rem' }}>Edit {label}</h6>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+        </div>
+        <div style={{ padding: 20 }}>
+          <label style={{ fontSize: '0.72rem', marginBottom: 8, display: 'block', color: '#475569', fontWeight: 700 }}>{label.toUpperCase()} VALUE:</label>
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            autoFocus
+            style={{
+              width: '100%', minHeight: 100, border: '1.5px solid #b6cfe8', borderRadius: 10, padding: 12,
+              outline: 'none', fontSize: '0.88rem', color: '#1a3a5c', lineHeight: 1.4,
+              transition: 'border-color 0.2s', fontFamily: 'inherit'
+            }}
+            onFocus={e => e.target.style.borderColor = '#1B4F8A'}
+            onBlur={e => e.target.style.borderColor = '#b6cfe8'}
+          />
+        </div>
+        <div style={{ padding: '12px 20px', background: '#f8fafc', borderTop: '1.5px solid #dceeff', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+          <button onClick={onClose} style={{ padding: '6px 18px', borderRadius: 8, border: '1.5px solid #cbd5e1', background: '#fff', color: '#64748b', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => onSave(text)} style={{ padding: '6px 20px', borderRadius: 8, border: 'none', background: '#1B4F8A', color: '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Save Param</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+const NotesCell = ({ value, onChange }) => {
+  const [showModal, setShowModal] = useState(false)
+  const isLong = value && value.length > 50
+
+  return (
+    <>
+      <div style={{ minWidth: 140 }}>
+        <div
+          onClick={() => setShowModal(true)}
+          title="Click to edit notes"
+          style={{
+            fontSize: '0.8rem',
+            color: value ? '#475569' : '#94a3b8',
+            fontStyle: value ? 'normal' : 'italic',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            cursor: 'pointer',
+            lineHeight: 1.4,
+            padding: '4px 6px',
+            borderRadius: 6,
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = '#f0f6ff'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        >
+          {value || 'Add notes...'}
+        </div>
+        {isLong && (
+          <div
+            onClick={() => setShowModal(true)}
+            style={{ fontSize: '0.72rem', color: '#1B4F8A', fontWeight: 800, cursor: 'pointer', marginTop: 2, display: 'inline-block' }}
+          >
+            Read More
+          </div>
+        )}
+      </div>
+
+      {showModal && (
+        <NoteModal
+          value={value}
+          onSave={(v) => { onChange(v); setShowModal(false) }}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
+  )
+}
+
+/* ─── Exercise Details — Helper to show non-empty, non-payment fields ─── */
+const ExerciseExtraInfo = ({ ex, onUpdateField }) => {
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [editingParam, setEditingParam] = useState(null) // { key, label, val }
+
+  const skip = [
+    'id', 'therapyExercisesId', 'clinicId', 'branchId', 'name', 'exerciseName',
+    'session', 'sessions', 'frequency', 'frequencyCount', 'frequencyUnit',
+    'notes', 'pricePerSession', 'discountPercentage', 'discountAmount', 'gst', 'otherTax', 'totalPrice',
+    '_checked', 'video', 'videoUrl', 'theraphyId', 'therapyId', 'therapy_id', 'id', 'activityType', 'type',
+    'bodyPart', 'duration', 'activityDuration'
+  ]
+
+  const labels = {
+    sets: 'Sets',
+    reps: 'Reps',
+    repetitions: 'Reps',
+    bodyPart: 'Body Part',
+    activityDuration: 'Act. Duration',
+    assistanceLevel: 'Assistance',
+    duration: 'Duration',
+    technique: 'Technique',
+    machine: 'Machine/Equip',
+    intensity: 'Intensity',
+    area: 'Area',
+    metric: 'Metric',
+    value: 'Value',
+    unit: 'Unit'
+  }
+
+  const seenLabels = new Set()
+  const details = Object.entries(ex)
+    .filter(([key, val]) => {
+      if (skip.includes(key)) return false
+      if (val === null || val === undefined || String(val).trim() === '' || val === 0 || val === '0') return false
+
+      // Deduplicate by label (e.g. 'reps' and 'repetitions' both show as 'Reps')
+      const label = labels[key] || key.replace(/([A-Z])/g, ' $1').trim()
+      if (seenLabels.has(label)) return false
+      seenLabels.add(label)
+
+      return true
+    })
+    .map(([key, val]) => ({
+      key,
+      label: labels[key] || key.replace(/([A-Z])/g, ' $1').trim(),
+      val: String(val)
+    }))
+
+  return (
+    <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '4px 8px', alignItems: 'center' }}>
+      {(ex.video || ex.videoUrl) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <a
+            href={(ex.video || ex.videoUrl).startsWith('http') ? (ex.video || ex.videoUrl) : `https://${ex.video || ex.videoUrl}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: '0.68rem', color: '#1B4F8A', textDecoration: 'none', background: '#e0f2fe', padding: '1px 8px', borderRadius: 4, border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}
+          >
+            🎬 Video
+          </a>
+          <input
+            placeholder="Video URL"
+            value={ex.video || ex.videoUrl || ''}
+            onChange={e => onUpdateField(ex.video ? 'video' : 'videoUrl', e.target.value)}
+            style={{ fontSize: '0.65rem', padding: '1px 4px', borderRadius: 4, border: '1px solid #dceeff', width: 100 }}
+          />
+        </div>
+      )}
+      {details.map(d => (
+        <div
+          key={d.key}
+          onClick={() => setEditingParam(d)}
+          title={`Click to edit ${d.label}`}
+          style={{
+            fontSize: '0.68rem', color: '#475569', background: '#f8fafc', padding: '1px 8px', borderRadius: 4, border: '1px solid #e2e8f0',
+            display: 'flex', gap: 4, alignItems: 'center', cursor: 'pointer', transition: 'background 0.2s'
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = '#f0f6ff'}
+          onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}
+        >
+          <span style={{ fontWeight: 700, color: '#1B4F8A', textTransform: 'capitalize', flexShrink: 0 }}>{d.label}:</span>
+          <span style={{
+            fontSize: '0.68rem', color: '#334155',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180
+          }}>{d.val}</span>
+        </div>
+      ))}
+      {editingParam && (
+        <ParamModal
+          label={editingParam.label}
+          value={editingParam.val}
+          onSave={(newVal) => { onUpdateField(editingParam.key, newVal); setEditingParam(null) }}
+          onClose={() => setEditingParam(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+const ActivitySelect = ({ value, onChange }) => {
+  const types = ['Exercise', 'Manual', 'Modality', 'Electrotherapy', 'Functional Training', 'Supportive', 'Education', 'Assessment']
+  const colors = {
+    Exercise: '#1B4F8A',
+    Manual: '#0d9488',
+    Modality: '#0d9488',
+    Electrotherapy: '#7c3aed',
+    'Functional Training': '#2563eb',
+    Supportive: '#db2777',
+    Education: '#ea580c',
+    Assessment: '#4b5563'
+  }
+
+  return (
+    <select
+      value={value || ''}
+      onChange={e => onChange(e.target.value)}
+      style={{
+        fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
+        padding: '2px 8px', borderRadius: 4, border: 'none',
+        background: colors[value] || '#cbd5e1',
+        color: value ? '#fff' : '#475569', cursor: 'pointer',
+        letterSpacing: '0.04em', outline: 'none', appearance: 'none',
+        textAlign: 'center'
+      }}
+    >
+      <option value="" style={{ color: '#000' }}>Select</option>
+      {types.map(t => <option key={t} value={t} style={{ color: '#000', background: '#fff' }}>{t}</option>)}
+    </select>
+  )
+}
+
+/* ─── ExerciseTable Helpers (Defined outside to prevent focus loss) ─── */
+const TH = ({ children, center }) => (
+  <th style={{ padding: '9px 10px', textAlign: center ? 'center' : 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem' }}>{children}</th>
+)
+const TD = ({ children, style = {} }) => (
+  <td style={{ padding: '7px 10px', verticalAlign: 'middle', ...style }}>{children}</td>
+)
+
+const ExerciseRow = React.memo(({ ex, idx, setField, toggleExercise }) => {
+  return (
+    <tr style={{ backgroundColor: idx % 2 === 0 ? '#f0f6ff' : '#FFFFFF', borderBottom: '1px solid #dceeff' }}>
+      <TD style={{ textAlign: 'center', width: 32, verticalAlign: 'top', paddingTop: 12 }}>
+        <ExerciseCheckbox checked={ex._checked !== false} onChange={() => toggleExercise(idx)} />
+      </TD>
+      <TD style={{ fontWeight: 700, color: '#1B4F8A', verticalAlign: 'top', paddingTop: 12 }}>{idx + 1}</TD>
+      <TD style={{ verticalAlign: 'top', paddingBottom: 12, paddingTop: 12 }}>
+        <div
+          style={{
+            fontWeight: 700, color: '#1e293b', fontSize: '0.9rem', marginBottom: 2,
+            display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+          }}
+          title={ex.exerciseName || ex.name || ''}
+        >
+          {ex.exerciseName || ex.name || 'Unnamed Activity'}
+        </div>
+        <ExerciseExtraInfo ex={ex} onUpdateField={(field, val) => setField(idx, field, val)} />
+      </TD>
+      <TD style={{ verticalAlign: 'top', paddingTop: 12 }}>
+        <ActivitySelect
+          value={ex.activityType || ex.type}
+          onChange={val => setField(idx, ex.activityType ? 'activityType' : 'type', val)}
+        />
+      </TD>
+      <TD style={{ verticalAlign: 'top', paddingTop: 8 }}>
+        <input
+          value={ex.bodyPart || ''}
+          onChange={e => setField(idx, 'bodyPart', e.target.value)}
+          placeholder="e.g. Back"
+          style={{ fontSize: '0.78rem', border: '1px solid #dceeff', borderRadius: 4, width: '80px', padding: '2px 6px', outline: 'none' }}
+        />
+      </TD>
+      <TD style={{ textAlign: 'center' }}>
+        <NumCell value={ex.sessions} onChange={v => setField(idx, 'sessions', v)} />
+      </TD>
+      <TD style={{ textAlign: 'center' }}>
+        <input
+          value={ex.activityDuration || ex.duration || ''}
+          onChange={e => setField(idx, 'activityDuration', e.target.value)}
+          style={{ fontSize: '0.78rem', border: '1px solid #dceeff', borderRadius: 4, width: '45px', textAlign: 'center', padding: '2px 4px', outline: 'none' }}
+        />
+      </TD>
+      <TD>
+        <FreqCell
+          count={ex.frequencyCount} unit={ex.frequencyUnit}
+          onCountChange={v => setField(idx, 'frequencyCount', v)}
+          onUnitChange={v => setField(idx, 'frequencyUnit', v)}
+        />
+      </TD>
+      <TD style={{ minWidth: 140 }}>
+        <NotesCell value={ex.notes} onChange={v => setField(idx, 'notes', v)} />
+      </TD>
+    </tr>
+  )
+})
+
 /* ─── ExerciseTable ──────────────────────────────────────────────────────── */
 const ExerciseTable = ({ exercises, onUpdate }) => {
-  const setField = (idx, field, val) =>
-    onUpdate(exercises.map((ex, i) => i === idx ? { ...ex, [field]: val } : ex))
-  const toggleExercise = (idx) =>
-    onUpdate(exercises.map((ex, i) => i === idx ? { ...ex, _checked: ex._checked === false ? true : false } : ex))
+  const setField = useCallback((idx, field, val) =>
+    onUpdate(exercises.map((ex, i) => i === idx ? { ...ex, [field]: val } : ex)), [exercises, onUpdate])
+
+  const toggleExercise = useCallback((idx) =>
+    onUpdate(exercises.map((ex, i) => i === idx ? { ...ex, _checked: ex._checked === false ? true : false } : ex)), [exercises, onUpdate])
+
   const allChecked = exercises.length > 0 && exercises.every(ex => ex._checked !== false)
   const toggleAll = () => onUpdate(exercises.map(ex => ({ ...ex, _checked: !allChecked })))
 
@@ -430,12 +741,6 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
   }
 
   const checkedCount = exercises.filter(ex => ex._checked !== false).length
-  const TH = ({ children, center }) => (
-    <th style={{ padding: '9px 10px', textAlign: center ? 'center' : 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem' }}>{children}</th>
-  )
-  const TD = ({ children, style = {} }) => (
-    <td style={{ padding: '7px 10px', verticalAlign: 'middle', ...style }}>{children}</td>
-  )
 
   return (
     <div style={{ overflowX: 'auto', marginTop: 10 }}>
@@ -456,43 +761,24 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
               </div>
             </TH>
             <TH>#</TH>
-            <TH>Exercise Name</TH>
+            <TH>Activity / Exercise</TH>
+            <TH>Type</TH>
+            <TH>Body Part</TH>
             <TH center>Sessions</TH>
-            <TH center>Sets</TH>
-            <TH center>Reps</TH>
+            <TH center>Dur(min)</TH>
             <TH>Frequency</TH>
             <TH>Notes</TH>
           </tr>
         </thead>
         <tbody>
           {exercises.map((ex, idx) => (
-            <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#f0f6ff' : '#FFFFFF', borderBottom: '1px solid #dceeff' }}>
-              <TD style={{ textAlign: 'center', width: 32 }}>
-                <ExerciseCheckbox checked={ex._checked !== false} onChange={() => toggleExercise(idx)} />
-              </TD>
-              <TD style={{ fontWeight: 700, color: '#1B4F8A' }}>{idx + 1}</TD>
-              <TD style={{ fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</TD>
-              <TD style={{ textAlign: 'center' }}>
-                <NumCell value={ex.sessions} onChange={v => setField(idx, 'sessions', v)} />
-              </TD>
-              <TD style={{ textAlign: 'center' }}>
-                <NumCell value={ex.sets} onChange={v => setField(idx, 'sets', v)} />
-              </TD>
-              <TD style={{ textAlign: 'center' }}>
-                <NumCell value={ex.reps} onChange={v => setField(idx, 'reps', v)} />
-              </TD>
-              <TD>
-                <FreqCell
-                  count={ex.frequencyCount} unit={ex.frequencyUnit}
-                  onCountChange={v => setField(idx, 'frequencyCount', v)}
-                  onUnitChange={v => setField(idx, 'frequencyUnit', v)}
-                />
-              </TD>
-              {/* ── Notes: now fully editable ── */}
-              <TD style={{ minWidth: 130 }}>
-                <NotesCell value={ex.notes} onChange={v => setField(idx, 'notes', v)} />
-              </TD>
-            </tr>
+            <ExerciseRow
+              key={ex.therapyExercisesId || ex.therapyExerciseId || ex.id || idx}
+              ex={ex}
+              idx={idx}
+              setField={setField}
+              toggleExercise={toggleExercise}
+            />
           ))}
         </tbody>
       </table>
@@ -558,23 +844,23 @@ const restoreTherophyDataState = (sessions) => {
       const pkgId = sess.packageId || ''
       sess.programs.forEach((prog) => {
         const progName = prog.programName || ''
-        ;(prog.therapyData || []).forEach((therapy, tIdx) => {
-          const key = `${pkgId}__${progName}__${therapy.therapyName}__${tIdx}`
-          mapped[key] = {
-            checked: true,
-            packageId: pkgId, packageName: sess.packageName || '',
-            programId: prog.programId || '', programName: progName,
-            therapyId: therapy.therapyId || '', therapyName: therapy.therapyName || '',
-            exercises: (therapy.exercises || []).map(ex => ({
-              ...ex, exerciseName: ex.exerciseName || ex.name || '',
-              sessions: ex.noOfSessions ?? ex.sessions ?? '',
-              sets: ex.sets ?? '', reps: ex.repetitions ?? ex.reps ?? '',
-              frequencyCount: parseFrequency(ex.frequency).count,
-              frequencyUnit: parseFrequency(ex.frequency).unit,
-              notes: ex.notes ?? '', _checked: true,
-            }))
-          }
-        })
+          ; (prog.therapyData || []).forEach((therapy, tIdx) => {
+            const key = `${pkgId}__${progName}__${therapy.therapyName}__${tIdx}`
+            mapped[key] = {
+              checked: true,
+              packageId: pkgId, packageName: sess.packageName || '',
+              programId: prog.programId || '', programName: progName,
+              therapyId: therapy.therapyId || '', therapyName: therapy.therapyName || '',
+              exercises: (therapy.exercises || []).map(ex => ({
+                ...ex, exerciseName: ex.exerciseName || ex.name || '',
+                sessions: ex.noOfSessions ?? ex.sessions ?? '',
+                sets: ex.sets ?? '', reps: ex.repetitions ?? ex.reps ?? '',
+                frequencyCount: parseFrequency(ex.frequency).count,
+                frequencyUnit: parseFrequency(ex.frequency).unit,
+                notes: ex.notes ?? '', _checked: true,
+              }))
+            }
+          })
       })
     } else if (sess.serviceType === 'program' && Array.isArray(sess.therapyData)) {
       const progId = sess.programId || ''
@@ -598,7 +884,7 @@ const restoreTherophyDataState = (sessions) => {
       const exId = sess.exerciseId || 'exercise'
       const key = `${exId}__exercise__0`
       mapped[key] = {
-        checked: true, therapyName: 'Exercise',
+        checked: true, therapyName: sess.exerciseName || sess.name || 'Exercise',
         exercises: sess.exercises.map(ex => ({
           ...ex, exerciseName: ex.exerciseName || ex.name || '',
           sessions: ex.noOfSessions ?? ex.sessions ?? '',
@@ -788,7 +1074,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   console.log('💊 TherapySession seed:', seed)
 
   const savedSessions = Array.isArray(seed?.sessions) ? seed.sessions : []
-  const savedSession  = savedSessions[0] ?? {}
+  const savedSession = savedSessions[0] ?? {}
 
   const { toasts, toastError, toastSuccess } = useToast()
   const [errors, setErrors] = useState({})
@@ -800,7 +1086,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   const branchId = patientData?.branchId
   const idsReady = !!(clinicId && branchId)
 
-  const [therapists,        setTherapists]        = useState([])
+  const [therapists, setTherapists] = useState([])
   const [loadingTherapists, setLoadingTherapists] = useState(false)
 
   // ── Multi-therapist: array of { therapistId, fullName } ──
@@ -815,17 +1101,17 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     return []
   })
 
-  const [programs,        setPrograms]        = useState([])
+  const [programs, setPrograms] = useState([])
   const [loadingPrograms, setLoadingPrograms] = useState(false)
 
-  const [allExercises,        setAllExercises]        = useState([])
+  const [allExercises, setAllExercises] = useState([])
   const [loadingAllExercises, setLoadingAllExercises] = useState(false)
   const exercisesFetchedRef = useRef(false)
 
   const [selectedItems, setSelectedItems] = useState(() => restoreSelectedItems(savedSessions))
   const [showBrowsePanel, setShowBrowsePanel] = useState(false)
-  const [browseSearch,    setBrowseSearch]    = useState('')
-  const [bulkPending,     setBulkPending]     = useState(new Set())
+  const [browseSearch, setBrowseSearch] = useState('')
+  const [bulkPending, setBulkPending] = useState(new Set())
 
   const [therophyDataState, setTherophyDataState] = useState(() => {
     const restored = restoreTherophyDataState(savedSessions)
@@ -834,7 +1120,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   })
 
   const [therapyLibrary, setTherapyLibrary] = useState([])
-  const [therapyState,   setTherapyState]   = useState(() => {
+  const [therapyState, setTherapyState] = useState(() => {
     if (savedSession.serviceType === 'therapy') {
       const name = savedSession.therapyName || ''
       return name ? {
@@ -884,9 +1170,9 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
 
   const getServiceByMode = async (m, cId, bId) => {
     switch (m) {
-      case 'package':  return await getPackagesByBranch(cId, bId)
-      case 'program':  return await getProgramsByBranch(cId, bId)
-      case 'therapy':  return await getTherapiesByBranch(cId, bId)
+      case 'package': return await getPackagesByBranch(cId, bId)
+      case 'program': return await getProgramsByBranch(cId, bId)
+      case 'therapy': return await getTherapiesByBranch(cId, bId)
       case 'exercise': return await getExercisesByBranch(cId, bId)
       default: return []
     }
@@ -913,14 +1199,14 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   useEffect(() => {
     if (!idsReady || exercisesFetchedRef.current) return
     exercisesFetchedRef.current = true
-    ;(async () => {
-      setLoadingAllExercises(true)
-      try {
-        const data = await getTherapyExercises(clinicId, branchId)
-        setAllExercises(Array.isArray(data) ? data : (data?.data ?? []))
-      } catch (err) { setAllExercises([]) }
-      finally { setLoadingAllExercises(false) }
-    })()
+      ; (async () => {
+        setLoadingAllExercises(true)
+        try {
+          const data = await getTherapyExercises(clinicId, branchId)
+          setAllExercises(Array.isArray(data) ? data : (data?.data ?? []))
+        } catch (err) { setAllExercises([]) }
+        finally { setLoadingAllExercises(false) }
+      })()
   }, [idsReady, clinicId, branchId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -950,9 +1236,9 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     try {
       let data = null
       switch (mode) {
-        case 'package':  data = await getPackagesByBranchAndId(clinicId, branchId, id); break
-        case 'program':  data = await getProgramsByBranchAndId(clinicId, branchId, id); break
-        case 'therapy':  data = await getTherapiesByBranchAndId(clinicId, branchId, id); break
+        case 'package': data = await getPackagesByBranchAndId(clinicId, branchId, id); break
+        case 'program': data = await getProgramsByBranchAndId(clinicId, branchId, id); break
+        case 'therapy': data = await getTherapiesByBranchAndId(clinicId, branchId, id); break
         case 'exercise': data = await getExercisesByBranchAndIdAndId(clinicId, branchId, id); break
         default: data = obj
       }
@@ -1008,7 +1294,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
       } else if (mode === 'therapy') {
         const res = data?.data || data || {}
         const therapyName = res?.therapyName || res?.name || ''
-        const therapyId   = res?.therapyId || res?.therpyId || res?.id || id
+        const therapyId = res?.therapyId || res?.therpyId || res?.id || id
         setTherapyLibrary(prev => {
           const exists = prev.some(t => String(t.therapyId) === String(therapyId))
           return exists ? prev : [...prev, { therapyId, therapyName }]
@@ -1122,14 +1408,14 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   }, [])
 
   const hasTherophyData = Object.keys(therophyDataState).length > 0
-  const tdKeys          = Object.keys(therophyDataState)
-  const tdCheckedCnt    = tdKeys.filter(k => therophyDataState[k]?.checked).length
-  const tdAllChecked    = tdKeys.length > 0 && tdCheckedCnt === tdKeys.length
-  const tlCheckedCnt    = therapyLibrary.filter(t => therapyState[t.therapyName]?.checked).length
-  const tlAllChecked    = therapyLibrary.length > 0 && tlCheckedCnt === therapyLibrary.length
-  const checkedCount    = hasTherophyData ? tdCheckedCnt : tlCheckedCnt
-  const totalCount      = hasTherophyData ? tdKeys.length : therapyLibrary.length
-  const allChecked      = hasTherophyData ? tdAllChecked : tlAllChecked
+  const tdKeys = Object.keys(therophyDataState)
+  const tdCheckedCnt = tdKeys.filter(k => therophyDataState[k]?.checked).length
+  const tdAllChecked = tdKeys.length > 0 && tdCheckedCnt === tdKeys.length
+  const tlCheckedCnt = therapyLibrary.filter(t => therapyState[t.therapyName]?.checked).length
+  const tlAllChecked = therapyLibrary.length > 0 && tlCheckedCnt === therapyLibrary.length
+  const checkedCount = hasTherophyData ? tdCheckedCnt : tlCheckedCnt
+  const totalCount = hasTherophyData ? tdKeys.length : therapyLibrary.length
+  const allChecked = hasTherophyData ? tdAllChecked : tlAllChecked
 
   const toggleAll = () => {
     const next = !allChecked
@@ -1157,10 +1443,10 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   /* ── Validate ── only flag therapies error when user has ZERO checked ── */
   const validate = () => {
     const newErrors = {}
-    const curMode  = modeRef.current
-    const curTDS   = therophyDataStateRef.current
-    const curTS    = therapyStateRef.current
-    const curTL    = therapyLibraryRef.current
+    const curMode = modeRef.current
+    const curTDS = therophyDataStateRef.current
+    const curTS = therapyStateRef.current
+    const curTL = therapyLibraryRef.current
     const curTherapists = selectedTherapistsRef.current
     const curItems = selectedItemsRef.current
 
@@ -1198,32 +1484,53 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   const handleNext = () => {
     const { isValid, newErrors } = validate()
     if (!isValid) {
-      if (newErrors.service)   toastError(`Please select at least one ${modeRef.current} before proceeding`)
+      if (newErrors.service) toastError(`Please select at least one ${modeRef.current} before proceeding`)
       if (newErrors.therapies) toastError('Please select at least one therapy')
       if (newErrors.therapist) toastError('Therapist assignment is mandatory')
       return
     }
 
-    const latestTDS    = therophyDataStateRef.current
-    const latestTS     = therapyStateRef.current
-    const latestTL     = therapyLibraryRef.current
+    const latestTDS = therophyDataStateRef.current
+    const latestTS = therapyStateRef.current
+    const latestTL = therapyLibraryRef.current
     const latestTdKeys = Object.keys(latestTDS)
-    const latestMode   = modeRef.current
-    const latestItems  = selectedItemsRef.current
+    const latestMode = modeRef.current
+    const latestItems = selectedItemsRef.current
     const latestTherapists = selectedTherapistsRef.current
 
-    const formatExercise = (ex) => ({
-      exerciseId: ex.therapyExercisesId || ex.therapyExerciseId || ex.id || '',
-      exerciseName: ex.exerciseName || ex.name || '',
-      noOfSessions: Number(ex.sessions || ex.session || 0),
-      frequency: `${ex.frequencyCount || 0} times/${(ex.frequencyUnit || 'day').toLowerCase()}`,
-      notes: ex.notes || '',
-      sets: Number(ex.sets || 0),
-      repetitions: Number(ex.reps || ex.repetitions || 0),
-      youtubeUrl: ex.videoUrl || ex.video || '',
-      totalExercisePrice: Number(ex.totalPrice || 0),
-      pricePerSession: ex.pricePerSession,
-    })
+    const formatExercise = (ex) => {
+      // Strip fields that should NOT be sent to the backend
+      const {
+        // IDs / internal
+        id, therapyExercisesId, therapyExerciseId, therapyId, theraphyId, therapy_id,
+        _checked,
+        // Billing / pricing
+        discountAmount, discountPercentage, discountPercentageValue,
+        pricePerSession, totalPrice, gst, otherTax,
+        // Clinic / branch info
+        clinicId, branchId,
+        // Raw session / frequency fields (we re-map these below)
+        session, sessions, frequencyCount, frequencyUnit,
+        // Raw video / duration (empty strings)
+        video, duration,
+        // Raw name (we re-map as exerciseName)
+        name,
+        // eslint-disable-next-line no-unused-vars
+        ...cleanEx
+      } = ex
+
+      return {
+        ...cleanEx,
+        exerciseId: ex.therapyExercisesId || ex.therapyExerciseId || ex.id || '',
+        exerciseName: ex.exerciseName || ex.name || '',
+        noOfSessions: Number(ex.sessions || ex.session || 0),
+        frequency: `${ex.frequencyCount || 0} times/${(ex.frequencyUnit || 'day').toLowerCase()}`,
+        notes: ex.notes || '',
+        sets: Number(ex.sets || 0),
+        repetitions: Number(ex.reps || ex.repetitions || 0),
+        ...(ex.videoUrl ? { youtubeUrl: ex.videoUrl } : {}),
+      }
+    }
 
     let therapySessions = []
 
@@ -1244,28 +1551,26 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           entries.forEach(({ key, item }) => {
             const progKey = item.programId || item.programName || 'default'
             if (!groupedPrograms[progKey]) {
-              groupedPrograms[progKey] = { programId: item.programId || '', programName: item.programName || '', totalPrice: 0, therapyData: [] }
+              groupedPrograms[progKey] = { programId: item.programId || '', programName: item.programName || '', therapyData: [] }
             }
             const exercises = (item.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
-            const therapyTotal = exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0)
-            groupedPrograms[progKey].therapyData.push({ therapyId: item.therapyId || '', therapyName: item.therapyName || '', totalPrice: therapyTotal, exercises })
-            groupedPrograms[progKey].totalPrice += therapyTotal
+            groupedPrograms[progKey].therapyData.push({ therapyId: item.therapyId || '', therapyName: item.therapyName || '', exercises })
           })
           const pkgPrograms = Object.values(groupedPrograms)
-          therapySessions.push({ packageId: itemId, packageName: serviceObj.packageName || serviceObj.name || getName(serviceObj, 'package') || '', serviceType: 'package', totalPrice: pkgPrograms.reduce((s, p) => s + p.totalPrice, 0), programs: pkgPrograms })
+          therapySessions.push({ packageId: itemId, packageName: serviceObj.packageName || serviceObj.name || getName(serviceObj, 'package') || '', serviceType: 'package', programs: pkgPrograms })
         } else {
           const selectedTherapies = entries.map(({ key, item }) => {
             const exercises = (item.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
-            return { therapyId: item.therapyId || '', therapyName: item.therapyName || '', totalPrice: exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0), exercises }
+            return { therapyId: item.therapyId || '', therapyName: item.therapyName || '', exercises }
           })
-          therapySessions.push({ programId: itemId, programName: serviceObj.programName || serviceObj.name || getName(serviceObj, 'program') || '', serviceType: 'program', totalTherapyPrice: selectedTherapies.reduce((s, t) => s + t.totalPrice, 0), therapyData: selectedTherapies })
+          therapySessions.push({ programId: itemId, programName: serviceObj.programName || serviceObj.name || getName(serviceObj, 'program') || '', serviceType: 'program', therapyData: selectedTherapies })
         }
       })
 
     } else if (latestMode === 'therapy') {
       therapySessions = latestTL.filter(t => latestTS[t.therapyName]?.checked).map(t => {
         const exercises = (latestTS[t.therapyName]?.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
-        return { therapyId: t.therapyId || '', therapyName: t.therapyName || '', serviceType: 'therapy', totalPrice: exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0), exercises }
+        return { therapyId: t.therapyId || '', therapyName: t.therapyName || '', serviceType: 'therapy', exercises }
       })
 
     } else if (latestMode === 'exercise') {
@@ -1273,7 +1578,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         const item = latestTDS[key]
         if (!item?.checked) return
         const exercises = (item.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
-        therapySessions.push({ serviceType: 'exercise', totalPrice: exercises.reduce((s, ex) => s + Number(ex.totalExercisePrice || 0), 0), exercises })
+        therapySessions.push({ serviceType: 'exercise', exercises })
       })
     }
 
@@ -1283,12 +1588,12 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     onNext({
       therapySessions,
       // Pass array of therapist IDs and names
-      therapistIds:   latestTherapists.map(t => t.therapistId),
+      therapistIds: latestTherapists.map(t => t.therapistId),
       therapistNames: latestTherapists.map(t => t.fullName),
       // Keep single for backward compat (first selected)
-      therapistId:    latestTherapists[0]?.therapistId  || '',
-      therapistName:  latestTherapists[0]?.fullName || '',
-      therapists:     latestTherapists,
+      therapistId: latestTherapists[0]?.therapistId || '',
+      therapistName: latestTherapists[0]?.fullName || '',
+      therapists: latestTherapists,
       modalitiesUsed: [],
       patientResponse: '',
       manualTherapy: '',
@@ -1296,10 +1601,10 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     })
   }
 
-  const anyLoading       = Object.values(loadingByItemId).some(Boolean)
-  const loadingAnything  = loadingPrograms || loadingAllExercises || anyLoading
+  const anyLoading = Object.values(loadingByItemId).some(Boolean)
+  const loadingAnything = loadingPrograms || loadingAllExercises || anyLoading
   const hasSelectedItems = selectedItems.size > 0 || restoredFromSeedRef.current
-  const showTherapies    = !loadingAnything && hasSelectedItems && (
+  const showTherapies = !loadingAnything && hasSelectedItems && (
     Object.keys(therophyDataState).length > 0 || therapyLibrary.length > 0
   )
   const availablePrograms = programs.filter(p => !selectedItems.has(getId(p, mode)))
@@ -1327,7 +1632,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           <div style={{ marginBottom: 16, padding: '12px 18px', background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 10, fontSize: '0.85rem', color: '#991b1b' }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>⚠️ Please fix the following before proceeding:</div>
             <ul style={{ margin: 0, paddingLeft: 20 }}>
-              {errors.service   && <li>{errors.service}</li>}
+              {errors.service && <li>{errors.service}</li>}
               {errors.therapies && <li>{errors.therapies}</li>}
               {errors.therapist && <li>{errors.therapist}</li>}
             </ul>
@@ -1337,19 +1642,19 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         {/* ══ 1. SESSION TYPE ══ */}
         <CCard style={cardStyle}>
           <CCardBody style={{ padding: '22px 28px' }}>
-            <SectionHeader emoji="⚙️" title="Session Type"/>
+            <SectionHeader emoji="⚙️" title="Session Type" />
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <RadioBtn label="Package"  emoji="📦" value="package"  active={mode === 'package'}  onClick={handleModeChange} />
-              <RadioBtn label="Program"  emoji="🎯" value="program"  active={mode === 'program'}  onClick={handleModeChange} />
-              <RadioBtn label="Therapy"  emoji="💆" value="therapy"  active={mode === 'therapy'}  onClick={handleModeChange} />
-              <RadioBtn label="Exercise" emoji="🏋️" value="exercise" active={mode === 'exercise'} onClick={handleModeChange} />
+              <RadioBtn label="Package" emoji="📦" value="package" active={mode === 'package'} onClick={handleModeChange} />
+              <RadioBtn label="Program" emoji="🎯" value="program" active={mode === 'program'} onClick={handleModeChange} />
+              <RadioBtn label="Therapy" emoji="💆" value="therapy" active={mode === 'therapy'} onClick={handleModeChange} />
+              <RadioBtn label="Activity" emoji="🏋️" value="exercise" active={mode === 'exercise'} onClick={handleModeChange} />
             </div>
 
             {/* Multi-select area */}
             <div style={{ marginTop: 22, paddingTop: 18, borderTop: '2px solid #dceeff' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <label style={labelStyle}>
-                  Select {mode.charAt(0).toUpperCase() + mode.slice(1)}(s)
+                  Select {mode === 'exercise' ? 'Activity' : mode.charAt(0).toUpperCase() + mode.slice(1)}(s)
                   <span style={{ color: '#e53e3e', marginLeft: 3 }}>*</span>
                   <span style={{ marginLeft: 8, fontWeight: 400, fontSize: '0.78rem', color: '#4a7abf', textTransform: 'none', letterSpacing: 0 }}>
                     (multiple selection allowed)
@@ -1369,7 +1674,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                       boxShadow: showBrowsePanel ? '0 2px 8px rgba(27,79,138,0.25)' : 'none',
                     }}
                   >
-                    📚 {showBrowsePanel ? '✕ Close' : `Browse ${mode.charAt(0).toUpperCase() + mode.slice(1)}s`}
+                    📚 {showBrowsePanel ? '✕ Close' : `Browse ${mode === 'exercise' ? 'Activity' : mode.charAt(0).toUpperCase() + mode.slice(1)}s`}
                   </button>
                 )}
               </div>
@@ -1398,7 +1703,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                 <SelectedChips items={Array.from(selectedItems.values())} mode={mode} onRemove={handleRemoveItem} />
               ) : !showBrowsePanel && (
                 <div style={{ padding: '14px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '0.83rem', background: '#FFFFFF', borderRadius: 8, border: '1px dashed #b6cfe8' }}>
-                  Click <strong>Browse {mode.charAt(0).toUpperCase() + mode.slice(1)}s</strong> to select one or more {mode}s
+                  Click <strong>Browse {mode === 'exercise' ? 'Activity' : mode.charAt(0).toUpperCase() + mode.slice(1)}s</strong> to select one or more {mode === 'exercise' ? 'activity' : mode}s
                 </div>
               )}
 
@@ -1414,13 +1719,13 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           <CCardBody style={{ padding: '22px 28px' }}>
             <SectionHeader
               emoji={mode === 'program' ? '🎯' : '📦'}
-              title={mode === 'package' ? 'Package — Therapies & Exercises' : mode === 'program' ? 'Program — Therapies & Exercises' : mode === 'therapy' ? 'Therapy — Exercises' : 'Exercise Details'}
+              title={mode === 'package' ? 'Package — Therapies & Activities' : mode === 'program' ? 'Program — Therapies & Activities' : mode === 'therapy' ? 'Therapy — Activities' : 'Activity Details'}
               subtitle={
                 showTherapies
                   ? `${checkedCount} / ${totalCount} therapies selected`
                   : selectedItems.size > 0 && anyLoading
                     ? 'Loading details…'
-                    : `Select ${mode}(s) above to view therapies`
+                    : `Select ${mode === 'exercise' ? 'activity' : mode}(s) above to view therapies`
               }
             />
 
@@ -1433,7 +1738,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
             {selectedItems.size === 0 && !restoredFromSeedRef.current && !anyLoading && (
               <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem', background: '#FFFFFF', borderRadius: 10, border: '1px dashed #b6cfe8' }}>
                 <div style={{ fontSize: '2rem', marginBottom: 10 }}>{getModeEmoji(mode)}</div>
-                Please select one or more {mode}s above to load their therapies and exercises.
+                Please select one or more {mode === 'exercise' ? 'activity' : mode}s above to load their therapies and exercises.
               </div>
             )}
 

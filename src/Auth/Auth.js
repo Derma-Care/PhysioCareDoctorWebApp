@@ -425,6 +425,21 @@ export const addDisease = async ({ diseaseName, probableSymptoms, notes }) => {
   }
 }
 
+export const updateAppointmentBasedOnBookingId = async ({ data }) => {
+
+
+  try {
+    const response = await api.put(`${addDiseaseUrl}/updateAppointmentBasedOnBookingId`, data)
+    return response.data
+  } catch (err) {
+    console.error('addDisease error:', err)
+    throw err
+  }
+}
+
+
+
+
 // export const getVisitHistoryByPatientIdAndDoctorId = async (patientId, doctorId) => {
 //   console.log(patientId)
 //   console.log(doctorId)
@@ -936,32 +951,32 @@ export const getVisitHistoryByPatientIdAndBookingId = async (patientId, bookingI
     console.log('visithistory (by booking) response', response.data)
     return {
       success: response.data?.success ?? false,
-      status:  response.status,
+      status: response.status,
       message: response.data?.message ?? '',
-      data:    response.data?.data ?? {},
+      data: response.data?.data ?? {},
     }
   } catch (error) {
     // ✅ Always return object, never throw
     if (error.response?.status === 404) {
       return {
         success: false,
-        status:  404,
+        status: 404,
         message: 'No visit history found',
-        data:    null,
+        data: null,
       }
     } else if (error.request) {
       return {
         success: false,
-        status:  500,
+        status: 500,
         message: 'No response received from server',
-        data:    null,
+        data: null,
       }
     } else {
       return {
         success: false,
-        status:  500,
+        status: 500,
         message: error.message ?? 'Something went wrong',
-        data:    null,
+        data: null,
       }
     }
   }

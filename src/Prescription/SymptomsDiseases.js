@@ -4,7 +4,7 @@ import FileUploader from './FileUploader'
 import Button from '../components/CustomButton/CustomButton'
 import Snackbar from '../components/Snackbar'
 import { useToast } from '../utils/Toaster'
-import { getBookingDetails } from '../Auth/Auth'
+import { getBookingDetails, updateAppointmentBasedOnBookingId } from '../Auth/Auth'
 import { useDoctorContext } from '../Context/DoctorContext'
 import { COLORS } from '../Themes'
 import {
@@ -268,6 +268,17 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       reasonforVisit: patientPain, // keep for backward compat
     }
     onNext?.(payload)
+
+    // Update appointment status to In-Progress
+    const bookingId = patientData?.bookingId
+    if (bookingId) {
+      updateAppointmentBasedOnBookingId({
+        data: {
+          bookingId,
+          status: 'On-Going',
+        }
+      }).catch(err => console.error('Failed to update appointment status:', err))
+    }
   }
 
   const therapyGroups = useMemo(() => flattenTherapyAnswers(theraphyAnswers), [theraphyAnswers])

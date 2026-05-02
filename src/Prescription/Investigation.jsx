@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { CCard, CCardBody, CContainer, CAlert } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 import CreatableSelect from 'react-select/creatable'
-import { addLabTest, getLabTests } from '../../src/Auth/Auth'
+import { addLabTest, getLabTests, updateAppointmentBasedOnBookingId } from '../../src/Auth/Auth'
 import { COLORS } from '../Themes'
 import { useDoctorContext } from '../Context/DoctorContext'
 
@@ -135,11 +135,22 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
     setSelectedTestOption(null)
   }
 
-  // ── handleNext ─────────────────────────────────────────────────────────
+  // ── updateStatus helper ────────────────────────────────────────────────
+  const updateStatus = (status) => {
+    const bookingId = patientData?.bookingId
+    if (!bookingId) return Promise.resolve()
+    return updateAppointmentBasedOnBookingId({ data: { bookingId, status } })
+  }
+
   const handleNext = () => {
     const payload = { investigation: { selectedTests, notes } }
     setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
-    onNext?.(payload)
+    updateStatus('In-Progress')
+      .then(() => onNext?.(payload))
+      .catch(err => {
+        console.error('Failed to update appointment status:', err)
+        onNext?.(payload) // still navigate even if status update fails
+      })
   }
 
   // ── handleSend ─────────────────────────────────────────────────────────
@@ -174,6 +185,10 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
       await new Promise((resolve) => setTimeout(resolve, 900))
 
       showSnackbar('Investigation sent to Lab Technician successfully! ✉️', 'success')
+      const payload = { investigation: { selectedTests, notes } }
+      setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
+      await updateStatus('Due for Investigation')
+      onNext?.(payload)
     } catch (err) {
       console.error('Failed to send investigation:', err)
       showSnackbar('Failed to send. Please try again.', 'error')
@@ -265,6 +280,14 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
     win.document.write(html)
     win.document.close()
     win.onload = () => { win.focus(); win.print() }
+    const payload = { investigation: { selectedTests, notes } }
+    setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
+    updateStatus('Due for Investigation')
+      .then(() => onNext?.(payload))
+      .catch(err => {
+        console.error('Failed to update appointment status:', err)
+        onNext?.(payload) // still navigate even if status update fails
+      })
   }
 
   /* ── RENDER ──────────────────────────────────────────────────────────── */

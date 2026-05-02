@@ -191,7 +191,7 @@ const ParticleCanvas = () => {
 const Pill = ({ icon, label, value, delay }) => (
   <div style={{
     display:'flex', alignItems:'center', gap:12,
-    background:'rgba(255,255,255,0.07)',
+    backgroundColor:'rgba(255,255,255,0.07)',
     backdropFilter:'blur(16px)',
     WebkitBackdropFilter:'blur(16px)',
     border:'1px solid rgba(255,255,255,0.14)',
@@ -202,7 +202,7 @@ const Pill = ({ icon, label, value, delay }) => (
   }}>
     <div style={{
       width:36, height:36, borderRadius:10,
-      background:'rgba(245,166,35,0.15)',
+      backgroundColor:'rgba(245,166,35,0.15)',
       border:'1px solid rgba(245,166,35,0.25)',
       display:'flex', alignItems:'center', justifyContent:'center',
       fontSize:16,
@@ -294,7 +294,7 @@ const Login = () => {
         width:'100vw', height:'100vh', overflow:'hidden',
         display:'flex', position:'relative',
         fontFamily:"'DM Sans',sans-serif",
-        background:'linear-gradient(135deg, #060e1a 0%, #0d1e36 40%, #0a1628 70%, #111827 100%)',
+        backgroundImage:'linear-gradient(135deg, #060e1a 0%, #0d1e36 40%, #0a1628 70%, #111827 100%)',
       }}>
 
         {/* ── ANIMATED CANVAS PARTICLES ─────────────────────────────── */}
@@ -304,21 +304,21 @@ const Login = () => {
         <div style={{
           position:'absolute', top:'-20%', left:'-10%',
           width:'55vw', height:'55vw', borderRadius:'50%',
-          background:'radial-gradient(circle, rgba(27,79,138,0.28) 0%, transparent 70%)',
+          backgroundImage:'radial-gradient(circle, rgba(27,79,138,0.28) 0%, transparent 70%)',
           animation:'orbFloat1 18s ease-in-out infinite',
           pointerEvents:'none', filter:'blur(1px)',
         }}/>
         <div style={{
           position:'absolute', bottom:'-15%', right:'-5%',
           width:'45vw', height:'45vw', borderRadius:'50%',
-          background:'radial-gradient(circle, rgba(245,166,35,0.14) 0%, transparent 70%)',
+          backgroundImage:'radial-gradient(circle, rgba(245,166,35,0.14) 0%, transparent 70%)',
           animation:'orbFloat2 22s ease-in-out 3s infinite',
           pointerEvents:'none', filter:'blur(1px)',
         }}/>
         <div style={{
           position:'absolute', top:'40%', left:'42%',
           width:'22vw', height:'22vw', borderRadius:'50%',
-          background:'radial-gradient(circle, rgba(42,109,181,0.18) 0%, transparent 70%)',
+          backgroundImage:'radial-gradient(circle, rgba(42,109,181,0.18) 0%, transparent 70%)',
           animation:'orbFloat3 14s ease-in-out 1s infinite',
           pointerEvents:'none',
         }}/>
@@ -338,7 +338,7 @@ const Login = () => {
         {/* ── SCAN LINE EFFECT ──────────────────────────────────────── */}
         <div style={{
           position:'absolute', left:0, right:0, height:'2px',
-          background:'linear-gradient(90deg,transparent,rgba(245,166,35,0.08),transparent)',
+          backgroundImage:'linear-gradient(90deg,transparent,rgba(245,166,35,0.08),transparent)',
           animation:'scanLine 10s ease-in-out 2s infinite',
           pointerEvents:'none', zIndex:1,
         }}/>
@@ -378,7 +378,7 @@ const Login = () => {
           <div key={i} style={{
             position:'absolute', left:p.x, top:p.y,
             width:p.s, height:p.s, borderRadius:'50%',
-            background:p.c, opacity:0, pointerEvents:'none',
+            backgroundColor:p.c, opacity:0, pointerEvents:'none',
             animation:`particleRise 8s ease-in-out ${p.d} infinite`,
           }}/>
         ))}
@@ -393,14 +393,14 @@ const Login = () => {
           {/* Live badge */}
           <div style={{
             display:'inline-flex', alignItems:'center', gap:7,
-            background:'rgba(245,166,35,0.1)',
+            backgroundColor:'rgba(245,166,35,0.1)',
             border:'1px solid rgba(245,166,35,0.25)',
             borderRadius:20, padding:'5px 14px',
             marginBottom:24,
             ...A(0),
           }}>
             <div style={{
-              width:6, height:6, borderRadius:'50%', background:'#F5A623',
+              width:6, height:6, borderRadius:'50%', backgroundColor:'#F5A623',
               boxShadow:'0 0 6px rgba(245,166,35,0.8)',
             }}/>
             <span style={{ fontSize:11, fontWeight:600, color:'#F5A623', letterSpacing:'.1em', textTransform:'uppercase', fontFamily:"'Outfit',sans-serif" }}>
@@ -425,7 +425,7 @@ const Login = () => {
             }}>
               Chiselon{' '}
               <span style={{
-                background:'linear-gradient(90deg,#F5A623 0%,#ffd17a 40%,#F5A623 80%)',
+                backgroundImage:'linear-gradient(90deg,#F5A623 0%,#ffd17a 40%,#F5A623 80%)',
                 backgroundSize:'200% auto',
                 WebkitBackgroundClip:'text',
                 WebkitTextFillColor:'transparent',
@@ -438,7 +438,7 @@ const Login = () => {
 
             {/* Animated underline */}
             <div style={{
-              height:3, background:'linear-gradient(90deg,#F5A623,#ffd17a)',
+              height:3, backgroundImage:'linear-gradient(90deg,#F5A623,#ffd17a)',
               borderRadius:2, margin:'0 auto 16px',
               animation: mounted ? 'lineGrow .9s ease .5s both' : 'none',
               width: mounted ? undefined : 0,
@@ -467,7 +467,7 @@ const Login = () => {
         {/* ── DIVIDER ────────────────────────────────────────────────── */}
         <div style={{
           width:1,
-          background:'linear-gradient(to bottom, transparent, rgba(245,166,35,0.3) 30%, rgba(255,255,255,0.12) 70%, transparent)',
+          backgroundImage:'linear-gradient(to bottom, transparent, rgba(245,166,35,0.3) 30%, rgba(255,255,255,0.12) 70%, transparent)',
           alignSelf:'stretch', margin:'60px 0', flexShrink:0, zIndex:2,
         }}/>
 
@@ -479,7 +479,7 @@ const Login = () => {
         }}>
           <div style={{
             width:'100%', maxWidth:400,
-            background:'rgba(255,255,255,0.07)',
+            backgroundColor:'rgba(255,255,255,0.07)',
             backdropFilter:'blur(28px)',
             WebkitBackdropFilter:'blur(28px)',
             borderRadius:24,
@@ -491,7 +491,7 @@ const Login = () => {
             {/* Top shimmer strip */}
             <div style={{
               height:4,
-              background:'linear-gradient(90deg,#1B4F8A 0%,#F5A623 40%,#ffd17a 60%,#1B4F8A 100%)',
+              backgroundImage:'linear-gradient(90deg,#1B4F8A 0%,#F5A623 40%,#ffd17a 60%,#1B4F8A 100%)',
               backgroundSize:'200% auto',
               animation:'stripFlow 3s linear infinite',
             }}/>
@@ -499,7 +499,7 @@ const Login = () => {
             {/* Glass inner shimmer bar */}
             <div style={{
               height:1,
-              background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)',
+              backgroundImage:'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)',
               backgroundSize:'200% auto',
               animation:'glassShimmer 6s linear infinite',
             }}/>
@@ -513,7 +513,7 @@ const Login = () => {
               }}>
                 <div style={{
                   width:36, height:36,
-                  background:'rgba(245,166,35,0.15)',
+                  backgroundColor:'rgba(245,166,35,0.15)',
                   border:'1px solid rgba(245,166,35,0.3)',
                   borderRadius:10,
                   display:'flex', alignItems:'center', justifyContent:'center',
@@ -551,7 +551,7 @@ const Login = () => {
               {errors.login && (
                 <CAlert color="danger" style={{
                   fontSize:13, borderRadius:10, padding:'.5rem .85rem',
-                  marginBottom:14, background:'rgba(220,53,69,0.15)',
+                  marginBottom:14, backgroundColor:'rgba(220,53,69,0.15)',
                   border:'1px solid rgba(220,53,69,0.35)', color:'#ff8a8a',
                 }}>
                   {errors.login}
@@ -618,7 +618,7 @@ const Login = () => {
                     <button
                       type="button" tabIndex={-1}
                       onClick={() => setShowPassword(v => !v)}
-                      style={{ position:'absolute', top:'50%', right:'0.8rem', transform:'translateY(-50%)', background:'none', border:'none', padding:0, color:'#1B4F8A', cursor:'pointer' }}
+                      style={{ position:'absolute', top:'50%', right:'0.8rem', transform:'translateY(-50%)', backgroundColor:'transparent', border:'none', padding:0, color:'#1B4F8A', cursor:'pointer' }}
                     >
                       <CIcon icon={showPassword ? cilLowVision : cilEyedropper}/>
                     </button>
@@ -645,8 +645,9 @@ const Login = () => {
                   style={{
                     width:'100%',
                     padding:'0.78rem',
-                    background: loading
-                      ? 'rgba(255,255,255,0.1)'
+                    backgroundColor: loading ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    backgroundImage: loading
+                      ? 'none'
                       : 'linear-gradient(90deg,#1B4F8A 0%,#2468b8 50%,#1B4F8A 100%)',
                     backgroundSize:'200% auto',
                     animation: loading ? 'none' : 'stripFlow 3s linear infinite',
@@ -694,7 +695,7 @@ const Login = () => {
             {/* Bottom strip */}
             <div style={{
               height:3,
-              background:'linear-gradient(90deg,#F5A623 0%,#ffd17a 50%,#F5A623 100%)',
+              backgroundImage:'linear-gradient(90deg,#F5A623 0%,#ffd17a 50%,#F5A623 100%)',
               backgroundSize:'200% auto',
               animation:'stripFlow 3.5s linear infinite',
             }}/>
