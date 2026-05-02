@@ -1506,7 +1506,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         _checked,
         // Billing / pricing
         discountAmount, discountPercentage, discountPercentageValue,
-        pricePerSession, totalPrice, gst, otherTax,
+        gst, otherTax,
         // Clinic / branch info
         clinicId, branchId,
         // Raw session / frequency fields (we re-map these below)
@@ -1528,6 +1528,8 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         notes: ex.notes || '',
         sets: Number(ex.sets || 0),
         repetitions: Number(ex.reps || ex.repetitions || 0),
+        pricePerSession: Number(ex.pricePerSession || 0),
+        // totalPrice: Number(ex.totalPrice || 0),
         ...(ex.videoUrl ? { youtubeUrl: ex.videoUrl } : {}),
       }
     }
@@ -1563,14 +1565,15 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
             const exercises = (item.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
             return { therapyId: item.therapyId || '', therapyName: item.therapyName || '', exercises }
           })
-          therapySessions.push({ programId: itemId, programName: serviceObj.programName || serviceObj.name || getName(serviceObj, 'program') || '', serviceType: 'program', therapyData: selectedTherapies })
+          therapySessions.push({ programId: itemId, programName: serviceObj.programName || serviceObj.name || getName(serviceObj, 'program') || '', serviceType: 'program', therapyData: selectedTherapies, totalPrice: Number(serviceObj.totalPrice || 0) })
         }
       })
 
     } else if (latestMode === 'therapy') {
       therapySessions = latestTL.filter(t => latestTS[t.therapyName]?.checked).map(t => {
         const exercises = (latestTS[t.therapyName]?.exercises || []).filter(ex => ex._checked !== false).map(formatExercise)
-        return { therapyId: t.therapyId || '', therapyName: t.therapyName || '', serviceType: 'therapy', exercises }
+        const serviceObj = latestItems.get(t.therapyId) || {}
+        return { therapyId: t.therapyId || '', therapyName: t.therapyName || '', serviceType: 'therapy', exercises, totalPrice: Number(serviceObj.totalPrice || 0) }
       })
 
     } else if (latestMode === 'exercise') {
