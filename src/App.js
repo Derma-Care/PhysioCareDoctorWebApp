@@ -6,6 +6,7 @@ import './scss/style.scss'
 import './scss/examples.scss'
 import { COLORS } from './Themes'
 import { ToastContainer } from 'react-toastify'
+import { LogoLoader } from './utils/LogoLoder'
 
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 
@@ -69,16 +70,7 @@ const App = () => {
   return (
     <HashRouter>
       <ToastContainer position="top-right" autoClose={3500} />
-      <Suspense
-        fallback={
-          <div
-            className="pt-3 text-center"
-            style={{ backgroundColor: COLORS.theme, minHeight: '100vh' }}
-          >
-            <CSpinner color="primary" variant="grow" />
-          </div>
-        }
-      >
+      <Suspense fallback={<LogoLoader />}>
         <div style={{ minHeight: '100vh', backgroundColor: COLORS.theme, padding: 20 }}>
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />

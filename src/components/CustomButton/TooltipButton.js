@@ -10,6 +10,7 @@ import { flushSync } from 'react-dom'
 import { CSpinner } from '@coreui/react'
 import { getInProgressDetails } from '../../Auth/Auth'
 import { capitalizeFirst } from '../../utils/CaptalZeWord'
+import { normalizeSavedData } from '../../utils/normalizeData'
 
 const generateContent = (patient) => (
   <div className="tooltip-body">
@@ -111,7 +112,8 @@ const TooltipButton = ({ patient, onSelect, tab, disabled }) => {
 
       if (tab === 'In-Progress') {
         details = await getInProgressDetails(patient.patientId, patient.bookingId)
-        formData = details?.savedDetails?.[0] || {}
+        const raw = details?.savedDetails?.[0] || {}
+        formData = normalizeSavedData(raw)
       }
 
       setPatientData({ ...patient, details })

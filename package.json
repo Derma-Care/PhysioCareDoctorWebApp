@@ -37,7 +37,7 @@
     "core-js": "^3.40.0",
     "date-fns": "^4.1.0",
     "file-saver": "^2.0.5",
-    "framer-motion": "^12.23.12",
+    "framer-motion": "^12.38.0",
     "html2pdf.js": "^0.10.3",
     "ionicons": "^8.0.13",
     "jspdf": "^3.0.1",

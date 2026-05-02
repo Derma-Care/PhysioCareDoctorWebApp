@@ -8,6 +8,7 @@ import { useLocation, useParams } from 'react-router-dom'
 import { useDoctorContext } from '../Context/DoctorContext'
 import { SavePatientPrescription, getInProgressDetails } from '../Auth/Auth'
 import { useToast } from '../utils/Toaster'
+import { normalizeSavedData } from '../utils/normalizeData'
 
 /* ─── deepMerge ──────────────────────────────────────────────────────────── */
 const deepMerge = (target, source) => {
@@ -79,7 +80,8 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           const data = await getInProgressDetails(patient.patientId, patient.bookingId)
           setDetails(data)
           const saved = data?.savedDetails?.[0] || {}
-          setFormData({ ...saved, followUp: Array.isArray(saved.followUp) ? saved.followUp : [] })
+          const normalized = normalizeSavedData(saved)
+          setFormData(normalized)
         } catch (err) { console.error('❌ Failed to fetch in-progress details:', err) }
       })()
     }

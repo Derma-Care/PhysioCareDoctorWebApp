@@ -45,6 +45,7 @@ const TabContent = ({
   setFormData,
   fromDoctorTemplate,
   setImage,
+  complaintsSeed,
 }) => {
 
   /* ── handleNext ────────────────────────────────────────────────────────────
@@ -99,9 +100,9 @@ const TabContent = ({
   switch (activeTab) {
     case 'Complaints':
       content = fromDoctorTemplate ? (
-        <DoctorSymptoms seed={formData.symptoms || {}} onNext={handleNext} sidebarWidth={260} patientData={patientData} setFormData={setFormData} formData={formData} />
+        <DoctorSymptoms seed={complaintsSeed || formData.symptoms || {}} onNext={handleNext} sidebarWidth={260} patientData={patientData} setFormData={setFormData} formData={formData} />
       ) : (
-        <SymptomsDiseases seed={formData.symptoms || {}} onNext={handleNext} sidebarWidth={260} patientData={patientData} setFormData={setFormData} formData={formData} />
+        <SymptomsDiseases seed={complaintsSeed || formData.symptoms || {}} onNext={handleNext} sidebarWidth={260} patientData={patientData} setFormData={setFormData} formData={formData} />
       )
       break
 
@@ -133,7 +134,7 @@ const TabContent = ({
       break
 
     case 'HomePlan':
-      content = <HomePlan seed={formData.exercisePlan || {}} onNext={handleNext} sidebarWidth={260} />
+      content = <HomePlan seed={formData.exercisePlan || {}} onNext={handleNext} sidebarWidth={260} patientData={patientData} />
       break
 
     case 'FollowUp':

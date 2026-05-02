@@ -313,7 +313,7 @@ const DeleteModal = ({ exerciseName, onConfirm, onCancel }) => (
 /* ══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
-const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
+const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
 
   /* Normalise seed exercises — legacy `frequency` string → split into value+unit */
   const normaliseSeedExercises = (arr) => {
@@ -352,12 +352,22 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       const clinicId = localStorage.getItem('clinicId') || localStorage.getItem('hospitalId') || ''
       if (!clinicId) return
       try {
-        const res = await getTodayAppointments()
-        const branchId = res?.data?.[0]?.branchId || ''
+        let branchId = patientData?.branchId || ''
+        
+        // Fallback: only fetch today's appointments if branchId is missing from patientData
+        if (!branchId) {
+          const res = await getTodayAppointments()
+          branchId = res?.data?.[0]?.branchId || ''
+        }
+
         if (!branchId) return
+        
         setLoadingLibrary(true)
         const data = await getTherapyExercises(clinicId, branchId)
-        setExerciseLibrary(Array.isArray(data) ? data : [])
+        const exercisesOnly = (Array.isArray(data) ? data : []).filter(
+          ex => String(ex.activityType || ex.activitytype || '').toLowerCase() === 'exercise'
+        )
+        setExerciseLibrary(exercisesOnly)
       } catch (err) {
         console.error('❌ Error fetching exercises:', err)
       } finally {
@@ -365,7 +375,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       }
     }
     load()
-  }, [])
+  }, [patientData?.branchId])
 
   useEffect(() => {
     setExercises(normaliseSeedExercises(seed.exercises))

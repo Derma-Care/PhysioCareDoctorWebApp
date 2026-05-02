@@ -87,12 +87,12 @@ function escapeHtml(str) {
    COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
 const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
-  const [selectedTests, setSelectedTests]           = useState(seed.selectedTests ?? [])
+  const [selectedTests, setSelectedTests] = useState(seed.selectedTests ?? [])
   const [selectedTestOption, setSelectedTestOption] = useState(null)
-  const [notes, setNotes]                           = useState(seed.notes ?? '')
-  const [snackbar, setSnackbar]                     = useState({ show: false, message: '', type: '' })
-  const [availableTests, setAvailableTests]         = useState([])
-  const [sending, setSending]                       = useState(false)
+  const [notes, setNotes] = useState(seed.notes ?? '')
+  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
+  const [availableTests, setAvailableTests] = useState([])
+  const [sending, setSending] = useState(false)
 
   const seedRef = useRef(null)
 
@@ -145,7 +145,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
   const handleNext = () => {
     const payload = { investigation: { selectedTests, notes } }
     setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
-    updateStatus('In-Progress')
+    updateStatus('in-progress')
       .then(() => onNext?.(payload))
       .catch(err => {
         console.error('Failed to update appointment status:', err)
@@ -451,7 +451,7 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
                 rows={4}
                 style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
                 onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-                onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+                onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
               />
             </Field>
           </div>

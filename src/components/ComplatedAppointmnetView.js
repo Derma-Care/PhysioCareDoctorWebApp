@@ -6,8 +6,9 @@ import { COLORS } from '../Themes'
 import { CCard, CCardBody, CNav, CNavItem, CNavLink, CContainer } from '@coreui/react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useDoctorContext } from '../Context/DoctorContext'
-import { SavePatientPrescription } from '../Auth/Auth'
+import { SavePatientPrescription, getInProgressDetails } from '../Auth/Auth'
 import { useToast } from '../utils/Toaster'
+import { normalizeSavedData } from '../utils/normalizeData'
 import Investigation from '../Prescription/Investigation'
 
 const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = false }) => {
@@ -19,7 +20,18 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
   const { success, info } = useToast()
 
   // Use tabs passed from props, or fallback to default
-  const TABS = tabs || ['History', 'Reports', 'Images']
+  const TABS = tabs || [
+    'Complaints',
+    'Assessment',
+    'Diagnosis',
+    'Investigation',
+    'Plan',
+    'HomePlan',
+    'FollowUp',
+    'Prescription',
+    'History',
+    'Reports',
+  ]
 
   const [activeTab, setActiveTab] = useState(defaultTab || TABS[0])
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
@@ -42,15 +54,39 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
   const [formData, setFormData] = useState({
     symptoms: {},
-    tests: {},
+    assessment: {},
+    diagnosis: {},
     investigation: {},
+    therapySessions: {},
+    exercisePlan: { exercises: [], homeAdvice: '' },
+    followUp: [],
     prescription: {},
-    treatments: {},
-    followUp: {},
-    summary: {},
     history: {},
     ClinicImages: {},
+    summary: {},
+    patientPain: '',
   })
+
+  // ── Fetch & pre-populate all tabs from visit history ──────────────────────
+  useEffect(() => {
+    if (!patient) return
+    const patientId = patient.patientId || patient.id
+    const bookingId = patient.bookingId
+    if (!patientId || !bookingId) return
+
+    ; (async () => {
+      try {
+        const data = await getInProgressDetails(patientId, bookingId)
+        const saved = data?.savedDetails?.[0]
+        if (saved) {
+          const normalized = normalizeSavedData(saved)
+          setFormData(normalized)
+        }
+      } catch (err) {
+        console.error('❌ Failed to fetch appointment details for pre-population:', err)
+      }
+    })()
+  }, [patient])
 
   const goToNext = useCallback(
     (current) => {
@@ -66,39 +102,40 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Complaints')
     },
     Assessment: (data) => {
-      setFormData((prev) => ({ ...prev, tests: { ...prev.tests, ...data } }))
+      setFormData((prev) => ({ ...prev, assessment: { ...prev.assessment, ...data } }))
       goToNext('Assessment')
     },
     Diagnosis: (data) => {
-      setFormData((prev) => ({ ...prev, prescription: { ...prev.prescription, ...data } }))
+      setFormData((prev) => ({ ...prev, diagnosis: { ...prev.diagnosis, ...data } }))
       goToNext('Diagnosis')
     },
     Investigation: (data) => {
       setFormData((prev) => ({ ...prev, investigation: { ...prev.investigation, ...data } }))
       goToNext('Investigation')
     },
-
     Plan: (data) => {
-      setFormData((prev) => ({ ...prev, followUp: { ...prev.followUp, ...data } }))
+      setFormData((prev) => ({ ...prev, therapySessions: { ...prev.therapySessions, ...data } }))
       goToNext('Plan')
     },
     HomePlan: (data) => {
-      setFormData((prev) => ({ ...prev, followUp: { ...prev.followUp, ...data } }))
+      setFormData((prev) => ({ ...prev, exercisePlan: { ...prev.exercisePlan, ...data } }))
       goToNext('HomePlan')
     },
-    Summary: async (data) => {
-      const payload = { ...formData, summary: { ...formData.summary, ...data } }
-      goToNext('Summary')
-      console.log('FINAL SUBMIT (Summary):', payload)
+    FollowUp: (data) => {
+      setFormData((prev) => ({ ...prev, followUp: Array.isArray(data) ? data : prev.followUp }))
+      goToNext('FollowUp')
     },
-    Images: (data) => {
-      setFormData((prev) => ({ ...prev, ClinicImages: { ...prev.ClinicImages, ...data } }))
-      goToNext('Images')
+    Prescription: (data) => {
+      setFormData((prev) => ({ ...prev, prescription: { ...prev.prescription, ...data } }))
+      goToNext('Prescription')
     },
     History: (data) => {
-      const payload = { ...formData, history: { ...formData.history, ...data } }
-      setFormData((prev) => ({ ...prev, history: payload.history }))
-      console.log('FINAL SUBMIT (History):', payload)
+      setFormData((prev) => ({ ...prev, history: { ...prev.history, ...data } }))
+      goToNext('History')
+    },
+    Reports: (data) => {
+      setFormData((prev) => ({ ...prev, ClinicImages: { ...prev.ClinicImages, ...data } }))
+      goToNext('Reports')
     },
   }
 
@@ -126,11 +163,11 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
         clinicId,
         title: complaints,
         symptoms: complaints,
-        tests: formData.tests || [],
-        investigation: formData.investigation || {}, // ✅ FIXED
-        prescription: formData.prescription || [],
-        treatments: formData.treatments || [],
-        followUp: formData.followUp || {},
+        assessment: formData.assessment || {},
+        investigation: formData.investigation || {},
+        diagnosis: formData.diagnosis || {},
+        therapySessions: formData.therapySessions || {},
+        followUp: formData.followUp || [],
         exercisePlan: formData.exercisePlan || {},
       }
 
@@ -150,6 +187,21 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
     }
   }
 
+
+  const complaintsSeed = useMemo(() => ({
+    ...formData.symptoms,
+    patientPain: formData.symptoms?.patientPain ?? formData.patientPain ?? '',
+    previousInjuries: formData.symptoms?.previousInjuries ?? formData.previousInjuries ?? '',
+    currentMedications: formData.symptoms?.currentMedications ?? formData.currentMedications ?? '',
+    allergies: formData.symptoms?.allergies ?? formData.allergies ?? '',
+    occupation: formData.symptoms?.occupation ?? formData.occupation ?? '',
+    insuranceProvider: formData.symptoms?.insuranceProvider ?? formData.insuranceProvider ?? '',
+    activityLevels: (formData.symptoms?.activityLevels?.length
+      ? formData.symptoms.activityLevels
+      : formData.activityLevels) ?? [],
+  }), [formData.symptoms, formData.patientPain, formData.previousInjuries,
+  formData.currentMedications, formData.allergies, formData.occupation,
+  formData.insuranceProvider, formData.activityLevels])
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -190,20 +242,6 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
                         >
                           {t}
                         </span>
-                        {/* {count > 0 && (
-                          <span
-                            style={{
-                              background: COLORS.primary,
-                              color: '#fff',
-                              borderRadius: '50%',
-                              padding: '0 6px',
-                              fontSize: '12px',
-                              marginLeft: 6,
-                            }}
-                          >
-                            {count}
-                          </span>
-                        )} */}
                         {active && (
                           <span
                             style={{
@@ -232,6 +270,7 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
         <TabContent
           activeTab={activeTab}
           formData={formData}
+          complaintsSeed={complaintsSeed}
           onNext={onNextMap[activeTab]}
           setActiveTab={setActiveTab}
           onSaveTemplate={savePrescriptionTemplate}

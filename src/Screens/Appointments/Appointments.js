@@ -24,7 +24,7 @@ import { useDoctorContext } from '../../Context/DoctorContext'
 
 const tabLabels = {
   upcoming: 'Upcoming',
-  inprogress: 'Active',
+  inprogress: 'In-Progress',
   completed: 'Completed',
 }
 
@@ -103,21 +103,21 @@ const Appointments = ({ searchTerm = '' }) => {
 
   const filteredPatients = Array.isArray(appointments)
     ? appointments
-        .filter((p) => {
-          const matchesSearch = p.name?.toLowerCase().includes(safeSearch)
-          const matchesFilter =
-            filter === 'All' ||
-            filter === 'First-Time & Follow-up' ||
-            p.consultationType?.toLowerCase() === filter.toLowerCase()
-          const matchesBranch =
-            !selectedBranch ||
-            p.branchId === selectedBranch.branchId ||
-            p.branchName === selectedBranch.branchName
-          const serviceISO = toISODate(p.serviceDate)
-          const matchesDate = !selectedDate || serviceISO === selectedDate
-          return matchesSearch && matchesFilter && matchesDate && matchesBranch
-        })
-        .sort((a, b) => new Date(toISODate(b.serviceDate)) - new Date(toISODate(a.serviceDate)))
+      .filter((p) => {
+        const matchesSearch = p.name?.toLowerCase().includes(safeSearch)
+        const matchesFilter =
+          filter === 'All' ||
+          filter === 'First-Time & Follow-up' ||
+          p.consultationType?.toLowerCase() === filter.toLowerCase()
+        const matchesBranch =
+          !selectedBranch ||
+          p.branchId === selectedBranch.branchId ||
+          p.branchName === selectedBranch.branchName
+        const serviceISO = toISODate(p.serviceDate)
+        const matchesDate = !selectedDate || serviceISO === selectedDate
+        return matchesSearch && matchesFilter && matchesDate && matchesBranch
+      })
+      .sort((a, b) => new Date(toISODate(b.serviceDate)) - new Date(toISODate(a.serviceDate)))
     : []
 
   const indexOfLastItem = currentPage * itemsPerPage
@@ -234,7 +234,7 @@ const Appointments = ({ searchTerm = '' }) => {
                     </CDropdown>
 
                     {/* First-Time & Follow-up */}
-                    <button
+                    {/* <button
                       onClick={() =>
                         setFilter(isFilterActive('First-Time & Follow-up') ? 'All' : 'First-Time & Follow-up')
                       }
@@ -251,10 +251,10 @@ const Appointments = ({ searchTerm = '' }) => {
                       }}
                     >
                       First-Time & Follow-up
-                    </button>
+                    </button> */}
 
                     {/* In-Clinic Consultation */}
-                    <button
+                    {/* <button
                       onClick={() =>
                         setFilter(isFilterActive('In-Clinic Consultation') ? 'All' : 'In-Clinic Consultation')
                       }
@@ -271,10 +271,10 @@ const Appointments = ({ searchTerm = '' }) => {
                       }}
                     >
                       In-Clinic Consultation
-                    </button>
+                    </button> */}
 
                     {/* Online Consultation */}
-                    <button
+                    {/* <button
                       onClick={() =>
                         setFilter(isFilterActive('Online Consultation') ? 'All' : 'Online Consultation')
                       }
@@ -291,7 +291,7 @@ const Appointments = ({ searchTerm = '' }) => {
                       }}
                     >
                       Online Consultation
-                    </button>
+                    </button> */}
                   </div>
 
                   {/* RIGHT: Branch Dropdown */}
@@ -448,19 +448,19 @@ const Appointments = ({ searchTerm = '' }) => {
                             style={{
                               backgroundColor:
                                 p.status === 'Confirmed' ? '#EAF7F0'
-                                : p.status === 'In-Progress' ? '#FFF4E0'
-                                : '#F0F6FF',
+                                  : p.status === 'In-Progress' ? '#FFF4E0'
+                                    : '#F0F6FF',
                               color:
                                 p.status === 'Confirmed' ? '#1B8A56'
-                                : p.status === 'In-Progress' ? COLORS.orange
-                                : COLORS.black,
+                                  : p.status === 'In-Progress' ? COLORS.orange
+                                    : COLORS.black,
                               borderRadius: '20px',
                               padding: '3px 10px',
                               fontSize: '12px',
                               fontWeight: '600',
                             }}
                           >
-                            {p.status === 'In-Progress' ? 'Active' : p.status}
+                            {p.status}
                           </span>
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px' }}>
