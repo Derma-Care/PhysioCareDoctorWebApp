@@ -1505,8 +1505,8 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         id, therapyExercisesId, therapyExerciseId, therapyId, theraphyId, therapy_id,
         _checked,
         // Billing / pricing
-        discountAmount, discountPercentage, discountPercentageValue,
-        gst, otherTax,
+        discountPercentageValue,
+
         // Clinic / branch info
         clinicId, branchId,
         // Raw session / frequency fields (we re-map these below)
