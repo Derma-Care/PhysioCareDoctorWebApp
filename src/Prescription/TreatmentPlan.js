@@ -1512,7 +1512,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         // Raw session / frequency fields (we re-map these below)
         session, sessions, frequencyCount, frequencyUnit,
         // Raw video / duration (empty strings)
-        video, duration,
+        duration,
         // Raw name (we re-map as exerciseName)
         name,
         // eslint-disable-next-line no-unused-vars
