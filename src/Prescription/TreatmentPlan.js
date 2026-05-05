@@ -1530,7 +1530,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         repetitions: Number(ex.reps || ex.repetitions || 0),
         pricePerSession: Number(ex.pricePerSession || 0),
         // totalPrice: Number(ex.totalPrice || 0),
-        ...(ex.videoUrl ? { youtubeUrl: ex.videoUrl } : {}),
+        ...(ex.video ? { youtubeUrl: ex.video } : {}),
       }
     }
 
