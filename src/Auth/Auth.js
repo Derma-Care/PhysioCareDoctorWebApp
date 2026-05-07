@@ -36,14 +36,15 @@ import {
   programUrlId,
   therapyUrlId,
   exerciseUrlId,
-  packageUrlId,
   getInProgressDetailsEndpoint,
   visitHistoryByPatientIdAndBookingIdEndpoint,
+  getExerciseSessionsWithRecordsEndpoint,
+  ipUrl,
 } from './BaseUrl'
 
-export const postLogin = async (payload, endpoint) => {
+export const postLogin = async (payload) => {
   try {
-    const response = await api.post(`${endpoint}`, payload, {
+    const response = await api.post(`${baseUrl}/login`, payload, {
       validateStatus: () => true,
     })
     console.log('Login Response:', response.data)
@@ -400,10 +401,20 @@ export const averageRatings = async (doctorId) => {
 
 export const updateLogin = async (payload, userName) => {
   try {
-    const response = await api.put(`/api/doctors/update-password/${userName}`, payload)
+    const response = await api.put(`/api/physiotherapy-doctor/update-PhysioDoctorpassword/${userName}`, payload)
     return response.data
   } catch (err) {
     console.error('Update login error:', err)
+    throw err
+  }
+}
+
+export const updateAvailability = async (doctorId, payload) => {
+  try {
+    const response = await api.put(`/api/physiotherapy-doctor/update-PhysioDoctorAvailability/${doctorId}`, payload)
+    return response.data
+  } catch (err) {
+    console.error('Update availability error:', err)
     throw err
   }
 }
@@ -627,6 +638,19 @@ export const getInProgressDetails = async (patientId, bookingId) => {
   }
 };
 
+export const getExerciseSessionsWithRecords = async (clinicId, branchId, bookingId, patientId, therapistRecordId) => {
+  try {
+    const response = await api.get(
+      `${getExerciseSessionsWithRecordsEndpoint}/${clinicId}/${branchId}/${bookingId}/${patientId}/${therapistRecordId}`
+    );
+    console.log("✅ Exercise Sessions with Records:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching exercise sessions with records:", error);
+    throw error;
+  }
+};
+
 export const getMedicineTypes = async () => {
   const clinicId = localStorage.getItem("hospitalId")
   try {
@@ -799,6 +823,18 @@ export const getTherapyExercises = async (clinicId, branchId) => {
     return []
   }
 }
+
+export const getFollowUpRecord = async (clinicId, branchId, patientId, bookingId) => {
+  try {
+    const response = await axios.get(`${ipUrl}/api/physiotherapy-doctor/get-record/${clinicId}/${branchId}/${patientId}/${bookingId}`);
+    console.log("✅ FollowUp Record API:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ FollowUp Record API Error:", error);
+    throw error;
+  }
+}
+
 
 export const createDoctorSaveDetails = async (prescriptionData) => {
   try {

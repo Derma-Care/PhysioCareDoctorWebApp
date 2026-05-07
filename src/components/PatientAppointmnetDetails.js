@@ -6,7 +6,7 @@ import { COLORS } from '../Themes'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
 import { useLocation, useParams } from 'react-router-dom'
 import { useDoctorContext } from '../Context/DoctorContext'
-import { SavePatientPrescription, getInProgressDetails } from '../Auth/Auth'
+import { SavePatientPrescription, getInProgressDetails, getFollowUpRecord } from '../Auth/Auth'
 import { useToast } from '../utils/Toaster'
 import { normalizeSavedData } from '../utils/normalizeData'
 
@@ -74,7 +74,8 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
   /* ── Fetch in-progress ── */
   useEffect(() => {
-    if (state?.fromTab === 'In-Progress' && patient && !details) {
+    const isFollowUp = patient?.visitType?.toLowerCase() === 'followup' || patient?.visitType?.toLowerCase() === 'follow_up'
+    if (state?.fromTab === 'In-Progress' && patient && !details && !isFollowUp) {
       ; (async () => {
         try {
           const data = await getInProgressDetails(patient.patientId, patient.bookingId)
@@ -86,6 +87,8 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       })()
     }
   }, [state?.fromTab, patient, details])
+
+
 
   /* ── Go to next tab ── */
   const goToNext = useCallback((current) => {
@@ -111,39 +114,39 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     // FIX: Complaints handler now also stores patientPain INSIDE symptoms{}
     // so that when seed = formData.symptoms is passed back to SymptomsDiseases,
     // seed.patientPain is defined and re-hydration works correctly.
-Complaints: (data = {}) => {
-  if (!data || typeof data !== 'object') {
-    goToNext('Complaints')
-    return
-  }
+    Complaints: (data = {}) => {
+      if (!data || typeof data !== 'object') {
+        goToNext('Complaints')
+        return
+      }
 
-  const patch = {
-    symptoms: {
-      ...(data.symptomDetails !== undefined && { symptomDetails: data.symptomDetails }),
-      ...(data.duration !== undefined && { duration: data.duration }),
-      ...(data.attachments !== undefined && { attachments: data.attachments }),
-      ...(data.partImage !== undefined && { partImage: data.partImage }),
-      ...(data.parts !== undefined && { parts: data.parts }),
-      ...(data.selectedTherapy !== undefined && { selectedTherapy: data.selectedTherapy }),
-      ...(data.selectedTherapyID !== undefined && { selectedTherapyID: data.selectedTherapyID }),
-      ...(data.theraphyAnswers !== undefined && { theraphyAnswers: data.theraphyAnswers }),
-      ...(data.attachmentImages !== undefined && { attachmentImages: data.attachmentImages }),
-      ...(data.previousInjuries !== undefined && { previousInjuries: data.previousInjuries }),
-      ...(data.currentMedications !== undefined && { currentMedications: data.currentMedications }),
-      ...(data.allergies !== undefined && { allergies: data.allergies }),
-      ...(data.occupation !== undefined && { occupation: data.occupation }),
-      ...(data.insuranceProvider !== undefined && { insuranceProvider: data.insuranceProvider }),
-      ...(data.activityLevels !== undefined && { activityLevels: data.activityLevels }),
-      ...(data.patientPain !== undefined && { patientPain: data.patientPain }),
-      ...(data.reasonforVisit !== undefined && { reasonforVisit: data.reasonforVisit }),
+      const patch = {
+        symptoms: {
+          ...(data.symptomDetails !== undefined && { symptomDetails: data.symptomDetails }),
+          ...(data.duration !== undefined && { duration: data.duration }),
+          ...(data.attachments !== undefined && { attachments: data.attachments }),
+          ...(data.partImage !== undefined && { partImage: data.partImage }),
+          ...(data.parts !== undefined && { parts: data.parts }),
+          ...(data.selectedTherapy !== undefined && { selectedTherapy: data.selectedTherapy }),
+          ...(data.selectedTherapyID !== undefined && { selectedTherapyID: data.selectedTherapyID }),
+          ...(data.theraphyAnswers !== undefined && { theraphyAnswers: data.theraphyAnswers }),
+          ...(data.attachmentImages !== undefined && { attachmentImages: data.attachmentImages }),
+          ...(data.previousInjuries !== undefined && { previousInjuries: data.previousInjuries }),
+          ...(data.currentMedications !== undefined && { currentMedications: data.currentMedications }),
+          ...(data.allergies !== undefined && { allergies: data.allergies }),
+          ...(data.occupation !== undefined && { occupation: data.occupation }),
+          ...(data.insuranceProvider !== undefined && { insuranceProvider: data.insuranceProvider }),
+          ...(data.activityLevels !== undefined && { activityLevels: data.activityLevels }),
+          ...(data.patientPain !== undefined && { patientPain: data.patientPain }),
+          ...(data.reasonforVisit !== undefined && { reasonforVisit: data.reasonforVisit }),
+        },
+
+        ...(data.patientPain !== undefined && { patientPain: data.patientPain }),
+      }
+
+      mergeAndLog('Complaints', patch)
+      goToNext('Complaints')
     },
-
-    ...(data.patientPain !== undefined && { patientPain: data.patientPain }),
-  }
-
-  mergeAndLog('Complaints', patch)
-  goToNext('Complaints')
-},
     Assessment: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Assessment'); return }
       const patch = {

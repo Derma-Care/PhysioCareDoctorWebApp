@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import FileUploader from './FileUploader'
 import { CSpinner } from '@coreui/react'
-import { getVisitHistoryByPatientIdAndBookingId } from '../Auth/Auth'
+import { getVisitHistoryByPatientIdAndBookingId, getExerciseSessionsWithRecords } from '../Auth/Auth'
 import ReportDetails from '../components/Reports/Reports'
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────────
@@ -281,7 +281,7 @@ const SessionMetaBar = ({ sess, therapistId, therapistName }) => {
 }
 
 // ─── Therapy Sessions Display ──────────────────────────────────────────────────
-const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) => {
+const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName, onViewSessions }) => {
   if (!sessionsList || sessionsList.length === 0) return (
     <div style={{ padding: '12px', textAlign: 'center', color: T.textLight, fontSize: '0.8rem' }}>No therapy session data found.</div>
   )
@@ -291,11 +291,28 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
         const serviceType = (sess.serviceType || '').toLowerCase()
         const isLast = si === sessionsList.length - 1
 
+        const SessionsBtn = () => (
+          <button
+            onClick={() => onViewSessions && onViewSessions(sess)}
+            style={{
+              background: T.orange, color: T.bgcolor, border: 'none',
+              borderRadius: 6, padding: '4px 12px', fontSize: '0.72rem',
+              fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            📊 Sessions
+          </button>
+        )
+
         if (serviceType === 'package') {
           return (
             <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
               <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>📦 {sess.packageName || 'Package'}</span>
+                <SessionsBtn />
               </div>
               <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
@@ -322,6 +339,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
             <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
               <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>🎯 {sess.programName || 'Program'}</span>
+                <SessionsBtn />
               </div>
               <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
@@ -338,6 +356,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
             <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
               <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>💊 {sess.therapyName || 'Therapy Session'}</span>
+                <SessionsBtn />
               </div>
               <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
@@ -354,6 +373,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
             <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
               <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
                 <span>🏋️ Exercise Session</span>
+                <SessionsBtn />
               </div>
               <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
                 <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
@@ -365,7 +385,10 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
 
         return (
           <div key={si} style={{ marginBottom: isLast ? 0 : 18 }}>
-            <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <div style={{ flex: 1 }}><SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} /></div>
+              <SessionsBtn />
+            </div>
             {Array.isArray(sess.therapyData) && sess.therapyData.map((t, tIdx) => (
               <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} />
             ))}
@@ -818,6 +841,11 @@ const transformVisit = (visit) => {
     followUpEntry,
     treatmentTemplates,
     attachments,
+    patientId: patientInfo.patientId ?? record.patientId ?? visit.patientId ?? '',
+    branchId: record.branchId ?? visit.branchId ?? '',
+    clinicId: record.clinicId ?? visit.clinicId ?? '',
+    therapistRecordId: record.therapistRecordId ?? visit.therapistRecordId ?? '',
+    visitDate: visit.visitDate,
   }
 }
 
@@ -828,6 +856,42 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
   const [visits, setVisits] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
+  // Sessions Modal State
+  const [sessionRecords, setSessionRecords] = useState(null)
+  const [sessionLoading, setSessionLoading] = useState(false)
+  const [showSessionModal, setShowSessionModal] = useState(false)
+
+  const handleViewSessions = async (sess, v) => {
+    const cId = v.clinicId || localStorage.getItem('hospitalId')
+    const bId = v.branchId
+    const bookId = v.bookingId
+    const pId = v.patientId
+    const trId = v.therapistRecordId
+
+    if (!cId || !bId || !bookId || !pId || !trId) {
+      console.warn('Missing IDs for session fetch:', { cId, bId, bookId, pId, trId })
+      // Even if missing, we try or show empty
+    }
+
+    setSessionLoading(true)
+    setShowSessionModal(true)
+    setSessionRecords(null)
+
+    try {
+      const res = await getExerciseSessionsWithRecords(cId, bId, bookId, pId, trId)
+      if (res?.success && res.data) {
+        setSessionRecords(res.data)
+      } else {
+        setSessionRecords([])
+      }
+    } catch (err) {
+      console.error('Error fetching sessions:', err)
+      setSessionRecords([])
+    } finally {
+      setSessionLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!patientId || !bookingId) return
@@ -1303,6 +1367,7 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
       sessionsList={v.sessionsList}
       therapistId={v.topTherapistId}
       therapistName={v.topTherapistName}
+      onViewSessions={(sess) => handleViewSessions(sess, v)}
     />
   </div>
 
@@ -1407,6 +1472,157 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
           </div>
         ))}
       </div>
+
+      {/* Sessions Modal */}
+      {showSessionModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(27,79,138,0.4)', backdropFilter: 'blur(4px)',
+          zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 20
+        }}>
+          <div style={{
+            background: T.white, borderRadius: 16, width: '100%', maxWidth: 800,
+            maxHeight: '90vh', display: 'flex', flexDirection: 'column',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.3)', overflow: 'hidden',
+            animation: 'modalSlideUp 0.3s ease-out'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              background: T.bgcolor, padding: '16px 24px', display: 'flex',
+              alignItems: 'center', justifyContent: 'space-between',
+              borderBottom: `3px solid ${T.orange}`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 20 }}>📊</span>
+                <h4 style={{ margin: 0, color: T.white, fontSize: '1.1rem', fontWeight: 700 }}>Exercise Sessions Records</h4>
+              </div>
+              <button
+                onClick={() => setShowSessionModal(false)}
+                style={{
+                  background: 'rgba(255,255,255,0.15)', border: 'none', color: T.white,
+                  width: 30, height: 30, borderRadius: '50%', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18, fontWeight: 700, transition: 'background 0.2s'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+                onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+              >✕</button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+              {sessionLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0', gap: 15 }}>
+                  <CSpinner style={{ color: T.bgcolor }} />
+                  <span style={{ color: T.textMid, fontWeight: 600, fontSize: '0.9rem' }}>Fetching session records...</span>
+                </div>
+              ) : sessionRecords && sessionRecords.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  {sessionRecords.map((ex, ei) => (
+                    <div key={ei} style={{ border: `1.5px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
+                      {/* Exercise Header */}
+                      <div style={{
+                        padding: '10px 16px', background: T.bgLight, borderBottom: `1.5px solid ${T.border}`,
+                        display: 'flex', alignItems: 'center', gap: 10
+                      }}>
+                        <span style={{ fontSize: 16 }}>🏋️</span>
+                        <span style={{ fontWeight: 700, color: T.bgcolor, fontSize: '0.9rem' }}>{ex.exerciseName}</span>
+                        <span style={{
+                          marginLeft: 'auto', background: T.bgcolor, color: T.white,
+                          padding: '2px 8px', borderRadius: 20, fontSize: '0.7rem', fontWeight: 700
+                        }}>
+                          {ex.sessions?.length || 0} Sessions
+                        </span>
+                      </div>
+
+                      {/* Sessions Table */}
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <thead>
+                            <tr>
+                              {['Sess #', 'Session ID', 'Date', 'Payment', 'Status', 'Record'].map(h => (
+                                <th key={h} style={{
+                                  padding: '10px 16px', textAlign: 'left', background: T.white,
+                                  color: T.textLight, fontSize: '0.7rem', fontWeight: 700,
+                                  textTransform: 'uppercase', letterSpacing: '0.05em',
+                                  borderBottom: `1px solid ${T.borderLight}`
+                                }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ex.sessions && ex.sessions.length > 0 ? (
+                              ex.sessions.map((sess, si) => (
+                                <tr key={si} style={{ borderBottom: si < ex.sessions.length - 1 ? `1px solid ${T.borderLight}` : 'none' }}>
+                                  <td style={{ padding: '10px 16px', fontSize: '0.8rem', fontWeight: 700, color: T.bgcolor }}>#{sess.sessionNo}</td>
+                                  <td style={{ padding: '10px 16px', fontSize: '0.75rem', color: T.textMid, fontFamily: 'monospace' }}>{sess.sessionId || '—'}</td>
+                                  <td style={{ padding: '10px 16px', fontSize: '0.8rem', color: T.text, whiteSpace: 'nowrap' }}>{sess.date || '—'}</td>
+                                  <td style={{ padding: '10px 16px' }}>
+                                    <span style={{
+                                      padding: '2px 8px', borderRadius: 20, fontSize: '0.65rem', fontWeight: 700,
+                                      background: sess.paymentStatus === 'Paid' ? T.greenLight : T.roseLight,
+                                      color: sess.paymentStatus === 'Paid' ? T.green : T.rose,
+                                      border: `1px solid ${sess.paymentStatus === 'Paid' ? T.green : T.rose}33`
+                                    }}>
+                                      {sess.paymentStatus}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '10px 16px', fontSize: '0.8rem', color: T.textMid, fontWeight: 600 }}>{sess.status}</td>
+                                  <td style={{ padding: '10px 16px', fontSize: '0.8rem', color: T.textLight }}>
+                                    {sess.therapistRecord ? (
+                                      <span style={{ color: T.teal, fontWeight: 600 }}>Available</span>
+                                    ) : (
+                                      <span style={{ fontStyle: 'italic' }}>No record</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: T.textLight, fontSize: '0.8rem', fontStyle: 'italic' }}>
+                                  No sessions scheduled for this exercise.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: T.textLight }}>
+                  <div style={{ fontSize: 40, marginBottom: 10 }}>📂</div>
+                  <div style={{ fontWeight: 600, fontSize: '1rem' }}>No session records found</div>
+                  <div style={{ fontSize: '0.8rem', marginTop: 5 }}>There are no exercise records for this session yet.</div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ padding: '16px 24px', borderTop: `1px solid ${T.borderLight}`, display: 'flex', justifyContent: 'flex-end', background: T.bgLight }}>
+              <button
+                onClick={() => setShowSessionModal(false)}
+                style={{
+                  background: T.bgcolor, color: T.white, border: 'none',
+                  borderRadius: 8, padding: '8px 20px', fontSize: '0.85rem',
+                  fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                }}
+              >Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>
+        {`
+          @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
     </div>
   )
 }

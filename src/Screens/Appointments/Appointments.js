@@ -352,7 +352,7 @@ const Appointments = ({ searchTerm = '' }) => {
                     className="text-nowrap"
                     style={{ fontSize: '0.875rem' }}
                   >
-                    {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Consultation', 'Branch', 'Status', 'Action'].map(
+                    {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Consultation', 'Branch', 'Visit Type', 'Status', 'Action'].map(
                       (header) => (
                         <CTableHeaderCell
                           key={header}
@@ -376,7 +376,7 @@ const Appointments = ({ searchTerm = '' }) => {
                   {loading ? (
                     <CTableRow>
                       <CTableDataCell
-                        colSpan={9}
+                        colSpan={10}
                         className="text-center py-4"
                         style={{ color: COLORS.black, fontSize: '14px' }}
                       >
@@ -386,7 +386,7 @@ const Appointments = ({ searchTerm = '' }) => {
                   ) : currentPatients.length === 0 ? (
                     <CTableRow>
                       <CTableDataCell
-                        colSpan={9}
+                        colSpan={10}
                         className="text-center py-4"
                         style={{ color: COLORS.gray, fontSize: '14px' }}
                       >
@@ -410,7 +410,7 @@ const Appointments = ({ searchTerm = '' }) => {
                           {p.name ? p.name.charAt(0).toUpperCase() + p.name.slice(1) : 'NA'}
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black }}>
-                          {p.mobileNumber}
+                          {p.patientMobileNumber}
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black }}>
                           {p.serviceDate}
@@ -442,6 +442,9 @@ const Appointments = ({ searchTerm = '' }) => {
                           }}
                         >
                           {branches.find((b) => b.branchId === p.branchId)?.branchName || 'N/A'}
+                        </CTableDataCell>
+                        <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black, textTransform: 'capitalize' }}>
+                          {p.visitType ? p.visitType.replace(/_/g, ' ').toLowerCase() : 'N/A'}
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px' }}>
                           <span

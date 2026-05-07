@@ -73,3 +73,4 @@ export const programAllUrl = `${ipUrl}/clinic-admin/program/getAll`
 export const getInProgressDetailsEndpoint = `${ipUrl}/api/physiotherapy-doctor/getIn-progressByUsingPatientIdAndBookingId`
 
 export const visitHistoryByPatientIdAndBookingIdEndpoint = `${ipUrl}/api/physiotherapy-doctor/visitHistoryByUsingPatientIdAndBooking`
+export const getExerciseSessionsWithRecordsEndpoint = `${ipUrl}/api/physiotherapy-doctor/payment/getExerciseSessionsWithRecords`

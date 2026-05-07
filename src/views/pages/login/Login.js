@@ -261,7 +261,7 @@ const Login = () => {
     try {
       ;['doctorId','hospitalId','doctorDetails','clinicDetails','sessionKey']
         .forEach(k => localStorage.removeItem(k))
-      const res = await postLogin({ username: userName, password, fcmToken:'fcmToken' }, '/login')
+      const res = await postLogin({ username: userName, password, fcmToken: 'fcmToken' })
       if (res.success) {
         const { staffId, hospitalId } = res.data
         localStorage.setItem('sessionKey', Date.now())

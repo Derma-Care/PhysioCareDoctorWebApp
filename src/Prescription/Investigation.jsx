@@ -145,7 +145,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
   const handleNext = () => {
     const payload = { investigation: { selectedTests, notes } }
     setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
-    updateStatus('in-progress')
+    updateStatus('On-Going')
       .then(() => onNext?.(payload))
       .catch(err => {
         console.error('Failed to update appointment status:', err)

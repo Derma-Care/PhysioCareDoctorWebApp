@@ -9,7 +9,9 @@ export const normalizeSavedData = (saved) => {
   const complaints = saved.complaints || {}
   
   // Group flat therapyAnswers array into category-keyed object if needed
-  let theraphyAnswers = complaints.therapyAnswers || {}
+  // Handle both 'theraphy' and 'therapy' spellings
+  let therapyAnswersRaw = complaints.therapyAnswers || complaints.theraphyAnswers || saved.theraphyAnswers || saved.therapyAnswers || {}
+  let theraphyAnswers = therapyAnswersRaw
   if (Array.isArray(theraphyAnswers)) {
     const grouped = {}
     theraphyAnswers.forEach(q => {
@@ -21,7 +23,7 @@ export const normalizeSavedData = (saved) => {
   }
 
   const symptoms = {
-    symptomDetails: complaints.complaintDetails || '',
+    symptomDetails: complaints.complaintDetails || complaints.symptomDetails || '',
     duration: complaints.duration || '',
     selectedTherapy: complaints.selectedTherapy || '',
     selectedTherapyID: complaints.selectedTherapyId || complaints.selectedTherapyID || '',
@@ -45,12 +47,12 @@ export const normalizeSavedData = (saved) => {
   
   const assessment = {
     // Subjective / DoctorSymptoms fields
-    complaints: sub.chiefComplaint || assessmentRaw.chiefComplaint || assessmentRaw.complaints || '',
+    complaints: sub.chiefComplaint || assessmentRaw.chiefComplaint || assessmentRaw.complaints || symptoms.symptomDetails || '',
     doctorObs: sub.observations || assessmentRaw.observations || assessmentRaw.doctorObs || '',
-    chiefComplaint: sub.chiefComplaint || assessmentRaw.chiefComplaint || '',
+    chiefComplaint: sub.chiefComplaint || assessmentRaw.chiefComplaint || symptoms.symptomDetails || '',
     painScale: sub.painScale || assessmentRaw.painScale || 0,
     painType: sub.painType || assessmentRaw.painType || '',
-    duration: sub.duration || assessmentRaw.duration || '',
+    duration: sub.duration || assessmentRaw.duration || symptoms.duration || '',
     onset: sub.onset || assessmentRaw.onset || '',
     aggravatingFactors: sub.aggravatingFactors || assessmentRaw.aggravatingFactors || '',
     relievingFactors: sub.relievingFactors || assessmentRaw.relievingFactors || '',
@@ -58,21 +60,22 @@ export const normalizeSavedData = (saved) => {
     attachments: assessmentRaw.attachments || [],
     
     // Functional
-    difficultiesIn: fun.difficultiesIn || assessmentRaw.difficultiesIn || [],
+    difficultiesIn: Array.isArray(fun.difficultiesIn) ? fun.difficultiesIn : (fun.difficultiesIn ? [fun.difficultiesIn] : []),
     otherDifficulty: fun.otherDifficulty || assessmentRaw.otherDifficulty || '',
     dailyLivingAffected: fun.dailyLivingAffected || assessmentRaw.dailyLivingAffected || '',
     
     // Physical
-    postureAssessment: phy.postureAssessment || assessmentRaw.postureAssessment || [],
+    postureAssessment: Array.isArray(phy.postureAssessment) ? phy.postureAssessment : (phy.postureAssessment ? [phy.postureAssessment] : []),
     postureDeviations: phy.postureDeviations || assessmentRaw.postureDeviations || '',
-    romStatus: phy.rangeOfMotion || phy.romStatus || assessmentRaw.romStatus || [],
+    romStatus: Array.isArray(phy.rangeOfMotion || phy.romStatus) ? (phy.rangeOfMotion || phy.romStatus) : ((phy.rangeOfMotion || phy.romStatus) ? [phy.rangeOfMotion || phy.romStatus] : []),
     romRestricted: phy.romRestricted || assessmentRaw.romRestricted || '',
     romJoints: phy.romJoints || assessmentRaw.romJoints || '',
-    muscleStrength: phy.muscleStrength || assessmentRaw.muscleStrength || [],
+    muscleStrength: Array.isArray(phy.muscleStrength) ? phy.muscleStrength : (phy.muscleStrength ? [phy.muscleStrength] : []),
     muscleWeakness: phy.muscleWeakness || assessmentRaw.muscleWeakness || '',
-    neurologicalSigns: phy.neurologicalSigns || assessmentRaw.neurologicalSigns || [],
+    neurologicalSigns: Array.isArray(phy.neurologicalSigns) ? phy.neurologicalSigns : (phy.neurologicalSigns ? [phy.neurologicalSigns] : []),
     
     // Condition-specific (nested in API, flat in UI)
+    patientPain: symptoms.patientPain || saved.patientPain || '',
     painTriggers: saved.assessment?.chronicPainPatients?.painTriggers || assessmentRaw.painTriggers || '',
     chronicRelieving: saved.assessment?.chronicPainPatients?.relievingFactors || assessmentRaw.chronicRelieving || '',
     typeOfSport: saved.assessment?.sportsRehabPatients?.typeOfSport || assessmentRaw.typeOfSport || '',
@@ -106,14 +109,20 @@ export const normalizeSavedData = (saved) => {
 
   // 4. Map therapySessions and treatmentPlan metadata
   const tp = saved.treatmentPlan || {}
+  // Handle case where therapySessions is an object containing a 'sessions' array
+  const sessions = saved.therapySessions?.sessions || (Array.isArray(saved.therapySessions) ? saved.therapySessions : [])
+  
+  const rawModalities = tp.modalitiesUsed || saved.therapySessions?.modalitiesUsed
+  const rawPrecautions = tp.precautions || saved.therapySessions?.precautions
+  
   const therapySessions = {
-    sessions: saved.therapySessions || [],
-    therapistId: tp.therapistId || '',
-    therapistName: tp.therapistName || '',
-    manualTherapy: tp.manualTherapy || '',
-    modalitiesUsed: tp.modalitiesUsed || [],
-    patientResponse: tp.patientResponse || '',
-    precautions: tp.precautions || [],
+    sessions: sessions,
+    therapistId: tp.therapistId || saved.therapySessions?.therapistId || '',
+    therapistName: tp.therapistName || saved.therapySessions?.therapistName || '',
+    manualTherapy: tp.manualTherapy || saved.therapySessions?.manualTherapy || '',
+    modalitiesUsed: Array.isArray(rawModalities) ? rawModalities : (rawModalities ? [rawModalities] : []),
+    patientResponse: tp.patientResponse || saved.therapySessions?.patientResponse || '',
+    precautions: Array.isArray(rawPrecautions) ? rawPrecautions : (rawPrecautions ? [rawPrecautions] : []),
   }
 
   // 5. Exercise Plan
@@ -125,9 +134,10 @@ export const normalizeSavedData = (saved) => {
 
   // 6. Investigation
   const invRaw = saved.investigation || {}
+  const rawTests = invRaw.selectedTests || invRaw.tests
   const investigation = {
     ...invRaw,
-    selectedTests: invRaw.selectedTests || invRaw.tests || [],
+    selectedTests: Array.isArray(rawTests) ? rawTests : (rawTests ? [rawTests] : []),
     notes: invRaw.notes || invRaw.reason || '',
   }
 

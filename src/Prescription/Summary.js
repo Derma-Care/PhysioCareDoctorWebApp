@@ -23,27 +23,27 @@ import { pdf } from '@react-pdf/renderer'
 import { capitalizeEachWord } from '../utils/CaptalZeWord'
 
 const T = {
-  bgcolor:      '#1B4F8A',
-  orange:       '#f9c571',
-  orangeLight:  '#fff8ec',
-  orangeMid:    '#fde2a3',
-  white:        '#FFFFFF',
-  bgLight:      '#F0F6FF',
-  border:       '#c2d8f0',
-  borderLight:  '#deeaf7',
-  text:         '#1B4F8A',
-  textMid:      '#4a6fa5',
-  textLight:    '#7a9ec2',
-  teal:         '#0d9488',
-  tealLight:    '#ccfbf1',
-  purple:       '#7c3aed',
-  purpleLight:  '#ede9fe',
-  rose:         '#e11d48',
-  roseLight:    '#ffe4e6',
-  amber:        '#d97706',
-  amberLight:   '#fef3c7',
-  green:        '#16a34a',
-  greenLight:   '#dcfce7',
+  bgcolor: '#1B4F8A',
+  orange: '#f9c571',
+  orangeLight: '#fff8ec',
+  orangeMid: '#fde2a3',
+  white: '#FFFFFF',
+  bgLight: '#F0F6FF',
+  border: '#c2d8f0',
+  borderLight: '#deeaf7',
+  text: '#1B4F8A',
+  textMid: '#4a6fa5',
+  textLight: '#7a9ec2',
+  teal: '#0d9488',
+  tealLight: '#ccfbf1',
+  purple: '#7c3aed',
+  purpleLight: '#ede9fe',
+  rose: '#e11d48',
+  roseLight: '#ffe4e6',
+  amber: '#d97706',
+  amberLight: '#fef3c7',
+  green: '#16a34a',
+  greenLight: '#dcfce7',
 }
 
 const isValid = (v) =>
@@ -64,12 +64,12 @@ const toImageSrc = (raw) => {
 }
 
 const PAIN_LABEL_MAP = {
-  chronicPain:      'Chronic Pain',
-  sportsRehab:      'Sports Rehab',
-  neuroRehab:       'Neuro Rehab',
-  acutePain:        'Acute Pain',
-  neuropathicPain:  'Neuropathic Pain',
-  referredPain:     'Referred Pain',
+  chronicPain: 'Chronic Pain',
+  sportsRehab: 'Sports Rehab',
+  neuroRehab: 'Neuro Rehab',
+  acutePain: 'Acute Pain',
+  neuropathicPain: 'Neuropathic Pain',
+  referredPain: 'Referred Pain',
   inflammatoryPain: 'Inflammatory Pain',
 }
 
@@ -78,10 +78,10 @@ const getVisitUrgency = (dateStr) => {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const visit = new Date(dateStr); visit.setHours(0, 0, 0, 0)
   const diffDays = Math.round((visit - today) / (1000 * 60 * 60 * 24))
-  if (diffDays < 0)   return { label: 'Overdue',   bg: '#fff5f5', color: '#c53030', border: '#fc8181', icon: '⚠️' }
-  if (diffDays === 0) return { label: 'Today',     bg: '#f0fff4', color: '#276749', border: '#68d391', icon: '📍' }
-  if (diffDays <= 3)  return { label: 'Very Soon', bg: '#fffbeb', color: '#7b341e', border: '#f6ad55', icon: '🔔' }
-  if (diffDays <= 7)  return { label: 'This Week', bg: '#ebf8ff', color: '#2a4365', border: '#63b3ed', icon: '📅' }
+  if (diffDays < 0) return { label: 'Overdue', bg: '#fff5f5', color: '#c53030', border: '#fc8181', icon: '⚠️' }
+  if (diffDays === 0) return { label: 'Today', bg: '#f0fff4', color: '#276749', border: '#68d391', icon: '📍' }
+  if (diffDays <= 3) return { label: 'Very Soon', bg: '#fffbeb', color: '#7b341e', border: '#f6ad55', icon: '🔔' }
+  if (diffDays <= 7) return { label: 'This Week', bg: '#ebf8ff', color: '#2a4365', border: '#63b3ed', icon: '📅' }
   return { label: 'Upcoming', bg: '#f5f0ff', color: '#44337a', border: '#b794f4', icon: '🗓️' }
 }
 
@@ -125,10 +125,10 @@ const CheckChip = ({ label, checked }) => (
 
 const StatusDot = ({ status }) => {
   const map = {
-    Confirmed:     ['#d1fae5', '#065f46', '#6ee7b7'],
-    Completed:     ['#d1fae5', '#065f46', '#6ee7b7'],
-    Pending:       ['#fef3c7', '#92400e', '#fcd34d'],
-    Cancelled:     ['#fee2e2', '#991b1b', '#fecaca'],
+    Confirmed: ['#d1fae5', '#065f46', '#6ee7b7'],
+    Completed: ['#d1fae5', '#065f46', '#6ee7b7'],
+    Pending: ['#fef3c7', '#92400e', '#fcd34d'],
+    Cancelled: ['#fee2e2', '#991b1b', '#fecaca'],
     'In Progress': [T.bgLight, T.bgcolor, T.border],
     'in-progress': [T.bgLight, T.bgcolor, T.border],
   }
@@ -148,8 +148,8 @@ const AnswerBadge = ({ answer }) => {
 
 // ─── Therapy Tables ───────────────────────────────────────────────────────────
 const tableStyle = { width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', color: T.text }
-const thStyle    = { padding: '6px 10px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.72rem', background: T.bgcolor, color: T.white }
-const tdStyle    = (i) => ({ padding: '5px 10px', borderBottom: `1px solid ${T.border}`, background: i % 2 === 0 ? T.bgLight : T.white })
+const thStyle = { padding: '6px 10px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.72rem', background: T.bgcolor, color: T.white }
+const tdStyle = (i) => ({ padding: '5px 10px', borderBottom: `1px solid ${T.border}`, background: i % 2 === 0 ? T.bgLight : T.white })
 
 const ExerciseTableDisplay = ({ exercises }) => {
   if (!exercises || exercises.length === 0) return <div style={{ padding: '8px 12px', color: T.textLight, fontStyle: 'italic', fontSize: '0.78rem' }}>No exercises</div>
@@ -186,13 +186,13 @@ const TherapyBlock = ({ therapyName, exercises }) => (
 
 const SessionMetaBar = ({ sess, therapistId, therapistName }) => {
   const tName = sess.therapistName || therapistName || ''
-  const tId   = sess.therapistId   || therapistId   || ''
+  const tId = sess.therapistId || therapistId || ''
   if (!sess.serviceType && !tName && !tId) return null
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10, padding: '8px 12px', background: T.bgLight, borderRadius: 8, border: `1px solid ${T.border}`, alignItems: 'center' }}>
       {sess.serviceType && <Chip label={`📋 ${sess.serviceType}`} color={T.bgcolor} bg={T.bgLight} />}
       {tName && <Chip label={`👤 ${tName}`} color={T.bgcolor} bg={T.orangeLight} />}
-      {tId   && <Chip label={`ID: ${tId}`}  color={T.textMid}  bg="#f3f4f6" />}
+      {tId && <Chip label={`ID: ${tId}`} color={T.textMid} bg="#f3f4f6" />}
     </div>
   )
 }
@@ -295,8 +295,8 @@ const QuestionnaireSection = ({ therapyGroups }) => {
     <Section icon="📝" title="Therapy Questionnaire" badge={`${validGroups.length} categories`}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
         {validGroups.map(({ category, questions: qs }, idx) => {
-          const vqs   = qs.filter(q => isValid(q.question))
-          const ans   = vqs.filter(q => isValid(q.answer) && q.answer.toLowerCase() !== 'undefined').length
+          const vqs = qs.filter(q => isValid(q.question))
+          const ans = vqs.filter(q => isValid(q.answer) && q.answer.toLowerCase() !== 'undefined').length
           const isAct = activeTab === idx
           return (
             <button key={category} onClick={() => setActiveTab(idx)} style={{ border: `2px solid ${isAct ? T.orange : T.border}`, borderRadius: 10, padding: '5px 12px', cursor: 'pointer', background: isAct ? T.bgcolor : T.white, color: isAct ? T.white : T.textMid, fontWeight: 700, fontSize: 11, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6, textTransform: 'capitalize' }}>
@@ -329,10 +329,10 @@ const QuestionnaireSection = ({ therapyGroups }) => {
 // ══════════════════════════════════════════════════════════════════════════════
 const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formData = {}, fromPage }) => {
   const { doctorDetails, setDoctorDetails, setClinicDetails, clinicDetails, updateTemplate } = useDoctorContext()
-  const [snackbar,            setSnackbar]            = useState({ show: false, message: '', type: '' })
-  const [saving,              setSaving]              = useState(false)
-  const [showTemplateModal,   setShowTemplateModal]   = useState(false)
-  const [pendingAction,       setPendingAction]       = useState(null)
+  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
+  const [saving, setSaving] = useState(false)
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [pendingAction, setPendingAction] = useState(null)
   const [clickedSaveTemplate, setClickedSaveTemplate] = useState(false)
   const navigate = useNavigate()
   const { success, error, info, warning } = useToast()
@@ -345,21 +345,21 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const record = formData?.physiotherapyRecord ?? formData ?? {}
 
   // Top-level IDs — same in both shapes
-  const bookingId  = record.bookingId  ?? patientData?.bookingId  ?? ''
-  const clinicId   = record.clinicId   ?? patientData?.clinicId   ?? clinicDetails?.hospitalId ?? ''
-  const branchId   = record.branchId   ?? patientData?.branchId   ?? ''
+  const bookingId = record.bookingId ?? patientData?.bookingId ?? ''
+  const clinicId = record.clinicId ?? patientData?.clinicId ?? clinicDetails?.hospitalId ?? ''
+  const branchId = record.branchId ?? patientData?.branchId ?? ''
   const clinicName = clinicDetails?.name ?? patientData?.clinicName ?? ''
-  const doctorId   = doctorDetails?.doctorId ?? patientData?.doctorId ?? ''
+  const doctorId = doctorDetails?.doctorId ?? patientData?.doctorId ?? ''
   const doctorName = doctorDetails?.name ?? doctorDetails?.fullName ?? patientData?.doctorName ?? ''
 
   // ─── patientInfo ──────────────────────────────────────────────────────────
   // API shape: record.patientInfo   Internal shape: also record.patientInfo
-  const patientInfo   = record.patientInfo ?? {}
-  const patientId     = patientInfo.patientId    ?? patientData?.patientId    ?? ''
-  const patientName   = patientInfo.patientName  ?? patientData?.patientName  ?? patientData?.name ?? patientData?.fullName ?? ''
-  const patientMobile = patientInfo.mobileNumber ?? patientData?.mobileNumber ?? patientData?.patientMobileNumber ?? ''
-  const patientAge    = patientInfo.age           ?? patientData?.age          ?? ''
-  const patientSex    = patientInfo.sex           ?? patientData?.sex          ?? patientData?.gender ?? ''
+  const patientInfo = record.patientInfo ?? {}
+  const patientId = patientInfo.patientId ?? patientData?.patientId ?? ''
+  const patientName = patientInfo.patientName ?? patientData?.patientName ?? patientData?.name ?? patientData?.fullName ?? ''
+  const patientMobile = patientInfo.mobileNumber ?? patientData?.patientMobileNumber ?? patientData?.patientMobileNumber ?? ''
+  const patientAge = patientInfo.age ?? patientData?.age ?? ''
+  const patientSex = patientInfo.sex ?? patientData?.sex ?? patientData?.gender ?? ''
 
   // ─── FIX: Complaints / Symptoms resolution ────────────────────────────────
   // API shape  : record.complaints  → { complaintDetails, duration, selectedTherapy, selectedTherapyId, painAssessmentImage, reportImages, therapyAnswers[] }
@@ -369,56 +369,56 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
   // Merge: API fields take priority when present; fall back to internal keys
   const complaintDetails =
-    complaintsAPI.complaintDetails     ||
-    symptomsInternal.symptomDetails    ||
-    patientData?.problem               || ''
+    complaintsAPI.complaintDetails ||
+    symptomsInternal.symptomDetails ||
+    patientData?.problem || ''
 
   const complaintDuration =
-    complaintsAPI.duration             ||
-    symptomsInternal.duration          ||
-    patientData?.symptomsDuration      || ''
+    complaintsAPI.duration ||
+    symptomsInternal.duration ||
+    patientData?.symptomsDuration || ''
 
   const selectedTherapy =
-    complaintsAPI.selectedTherapy      ||
-    symptomsInternal.selectedTherapy   ||
-    patientData?.subServiceName        || ''
+    complaintsAPI.selectedTherapy ||
+    symptomsInternal.selectedTherapy ||
+    patientData?.subServiceName || ''
 
   const selectedTherapyID =
-    complaintsAPI.selectedTherapyId    ||   // API key (no capital D)
-    complaintsAPI.selectedTherapyID    ||   // just in case
+    complaintsAPI.selectedTherapyId ||   // API key (no capital D)
+    complaintsAPI.selectedTherapyID ||   // just in case
     symptomsInternal.selectedTherapyID ||
-    patientData?.subServiceId          || ''
+    patientData?.subServiceId || ''
 
   const partImage =
-    complaintsAPI.painAssessmentImage  ||
-    symptomsInternal.partImage         || ''
+    complaintsAPI.painAssessmentImage ||
+    symptomsInternal.partImage || ''
 
   const reportImages = (() => {
     const apiImgs = complaintsAPI.reportImages
     const intImgs = symptomsInternal.attachmentImages
     if (Array.isArray(apiImgs) && apiImgs.length) return apiImgs
-    if (Array.isArray(intImgs) && intImgs.length)  return intImgs
+    if (Array.isArray(intImgs) && intImgs.length) return intImgs
     return []
   })()
 
   // ─── FIX: therapyAnswers — handle both shapes ─────────────────────────────
   // API shape    : therapyAnswers is a flat ARRAY → [{ questionId, question, answer, questionKey }]
   // Internal     : theraphyAnswers is an OBJECT  → { category: [{ questionId, question, answer }] }
-  const rawApiAnswers      = complaintsAPI.therapyAnswers    // flat array or undefined
+  const rawApiAnswers = complaintsAPI.therapyAnswers    // flat array or undefined
   const rawInternalAnswers = symptomsInternal.theraphyAnswers ?? symptomsInternal.therapyAnswers  // object or undefined
 
   // Build therapyGroups for display in QuestionnaireSection
   // and flatTherapyAnswers for the payload
-  let therapyGroups        = []
-  let flatTherapyAnswers   = []
+  let therapyGroups = []
+  let flatTherapyAnswers = []
 
   if (Array.isArray(rawApiAnswers) && rawApiAnswers.length) {
     // API shape: flat array — group by questionKey for display (or show as single group)
     flatTherapyAnswers = rawApiAnswers.map(q => ({
       questionKey: q.questionKey ?? '',
-      questionId:  String(q.questionId  ?? ''),
-      question:    q.question    ?? '',
-      answer:      q.answer      ?? '',
+      questionId: String(q.questionId ?? ''),
+      question: q.question ?? '',
+      answer: q.answer ?? '',
     }))
     // Group by questionKey for display; if no key, put all in one group
     const grouped = {}
@@ -431,7 +431,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   } else if (rawInternalAnswers && typeof rawInternalAnswers === 'object' && !Array.isArray(rawInternalAnswers)) {
     // Internal shape: object keyed by category
     therapyGroups = Object.entries(rawInternalAnswers).map(([cat, qs]) => ({
-      category:  cat,
+      category: cat,
       questions: Array.isArray(qs) ? qs : [],
     }))
     // Flatten for payload
@@ -439,9 +439,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       .flat()
       .map(q => ({
         questionKey: q.questionKey ?? '',
-        questionId:  String(q.questionId  ?? ''),
-        question:    q.question    ?? '',
-        answer:      q.answer      ?? '',
+        questionId: String(q.questionId ?? ''),
+        question: q.question ?? '',
+        answer: q.answer ?? '',
       }))
   }
 
@@ -452,39 +452,39 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
   // ─── Background patient fields ────────────────────────────────────────────
   const previousInjuries =
-    isValid(complaintsAPI.previousInjuries)    ? complaintsAPI.previousInjuries    :
-    isValid(symptomsInternal.previousInjuries) ? symptomsInternal.previousInjuries :
-    isValid(record.previousInjuries)           ? record.previousInjuries           :
-    isValid(formData?.previousInjuries)        ? formData.previousInjuries         :
-    isValid(patientData?.previousInjuries)     ? patientData.previousInjuries      : ''
+    isValid(complaintsAPI.previousInjuries) ? complaintsAPI.previousInjuries :
+      isValid(symptomsInternal.previousInjuries) ? symptomsInternal.previousInjuries :
+        isValid(record.previousInjuries) ? record.previousInjuries :
+          isValid(formData?.previousInjuries) ? formData.previousInjuries :
+            isValid(patientData?.previousInjuries) ? patientData.previousInjuries : ''
 
   const currentMedications =
-    complaintsAPI.currentMedications    ??
+    complaintsAPI.currentMedications ??
     symptomsInternal.currentMedications ??
-    record.currentMedications           ??
-    formData?.currentMedications        ??
-    patientData?.currentMedications     ?? ''
+    record.currentMedications ??
+    formData?.currentMedications ??
+    patientData?.currentMedications ?? ''
 
   const allergies =
-    complaintsAPI.allergies    ??
+    complaintsAPI.allergies ??
     symptomsInternal.allergies ??
-    record.allergies           ??
-    formData?.allergies        ??
-    patientData?.allergies     ?? ''
+    record.allergies ??
+    formData?.allergies ??
+    patientData?.allergies ?? ''
 
   const occupation =
-    complaintsAPI.occupation    ??
+    complaintsAPI.occupation ??
     symptomsInternal.occupation ??
-    record.occupation           ??
-    formData?.occupation        ??
-    patientData?.occupation     ?? ''
+    record.occupation ??
+    formData?.occupation ??
+    patientData?.occupation ?? ''
 
   const insuranceProvider =
-    complaintsAPI.insuranceProvider    ??
+    complaintsAPI.insuranceProvider ??
     symptomsInternal.insuranceProvider ??
-    record.insuranceProvider           ??
-    formData?.insuranceProvider        ??
-    patientData?.insuranceProvider     ?? ''
+    record.insuranceProvider ??
+    formData?.insuranceProvider ??
+    patientData?.insuranceProvider ?? ''
 
   const activityLevels = (() => {
     const candidates = [
@@ -501,27 +501,27 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
   // ─── FIX: effectivePain — check all possible locations ───────────────────
   const effectivePain =
-    symptomsInternal.patientPain     ||
-    symptomsInternal.reasonforVisit  ||
-    complaintsAPI.patientPain        ||
-    record.patientPain               ||
-    formData?.patientPain            ||
-    patientData?.patientPain         || ''
+    symptomsInternal.patientPain ||
+    symptomsInternal.reasonforVisit ||
+    complaintsAPI.patientPain ||
+    record.patientPain ||
+    formData?.patientPain ||
+    patientData?.patientPain || ''
 
   // ─── FIX: Investigation ───────────────────────────────────────────────────
   // API shape  : record.investigation → { tests[], reason }
   // Internal   : formData.investigation → { selectedTests[], tests[], notes, reason }
   const investigationObj =
-    record.investigation     ??
-    formData?.investigation  ?? {}
+    record.investigation ??
+    formData?.investigation ?? {}
 
   const investigationTests =
     investigationObj.selectedTests ??  // internal key
-    investigationObj.tests         ?? []  // API key
+    investigationObj.tests ?? []  // API key
 
   const investigationReason =
-    investigationObj.notes   ??
-    investigationObj.reason  ?? ''
+    investigationObj.notes ??
+    investigationObj.reason ?? ''
 
   const investigationTestsArray = Array.isArray(investigationTests)
     ? investigationTests
@@ -533,40 +533,40 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const assessmentRaw = record.assessment ?? formData?.assessment ?? {}
 
   // Support both nested (API) and flat (internal) shapes
-  const subjectiveAssessment  = assessmentRaw.subjectiveAssessment  ?? assessmentRaw
-  const functionalAssessment  = assessmentRaw.functionalAssessment  ?? assessmentRaw
-  const physicalExamination   = assessmentRaw.physicalExamination   ?? assessmentRaw
+  const subjectiveAssessment = assessmentRaw.subjectiveAssessment ?? assessmentRaw
+  const functionalAssessment = assessmentRaw.functionalAssessment ?? assessmentRaw
+  const physicalExamination = assessmentRaw.physicalExamination ?? assessmentRaw
 
   const assessment = {
-    chiefComplaint:     subjectiveAssessment.chiefComplaint     ?? assessmentRaw.chiefComplaint     ?? '',
-    painScale:          subjectiveAssessment.painScale          ?? assessmentRaw.painScale          ?? 0,
-    painType:           subjectiveAssessment.painType           ?? assessmentRaw.painType           ?? '',
-    duration:           subjectiveAssessment.duration           ?? assessmentRaw.duration           ?? '',
-    onset:              subjectiveAssessment.onset              ?? assessmentRaw.onset              ?? '',
+    chiefComplaint: subjectiveAssessment.chiefComplaint ?? assessmentRaw.chiefComplaint ?? '',
+    painScale: subjectiveAssessment.painScale ?? assessmentRaw.painScale ?? 0,
+    painType: subjectiveAssessment.painType ?? assessmentRaw.painType ?? '',
+    duration: subjectiveAssessment.duration ?? assessmentRaw.duration ?? '',
+    onset: subjectiveAssessment.onset ?? assessmentRaw.onset ?? '',
     aggravatingFactors: subjectiveAssessment.aggravatingFactors ?? assessmentRaw.aggravatingFactors ?? '',
-    relievingFactors:   subjectiveAssessment.relievingFactors   ?? assessmentRaw.relievingFactors   ?? '',
-    observations:       subjectiveAssessment.observations       ?? assessmentRaw.observations       ?? '',
-    difficultiesIn:     Array.isArray(functionalAssessment.difficultiesIn)    ? functionalAssessment.difficultiesIn    : Array.isArray(assessmentRaw.difficultiesIn)    ? assessmentRaw.difficultiesIn    : [],
-    otherDifficulty:    functionalAssessment.otherDifficulty    ?? assessmentRaw.otherDifficulty    ?? '',
+    relievingFactors: subjectiveAssessment.relievingFactors ?? assessmentRaw.relievingFactors ?? '',
+    observations: subjectiveAssessment.observations ?? assessmentRaw.observations ?? '',
+    difficultiesIn: Array.isArray(functionalAssessment.difficultiesIn) ? functionalAssessment.difficultiesIn : Array.isArray(assessmentRaw.difficultiesIn) ? assessmentRaw.difficultiesIn : [],
+    otherDifficulty: functionalAssessment.otherDifficulty ?? assessmentRaw.otherDifficulty ?? '',
     dailyLivingAffected: functionalAssessment.dailyLivingAffected ?? assessmentRaw.dailyLivingAffected ?? '',
-    postureAssessment:  Array.isArray(physicalExamination.postureAssessment)  ? physicalExamination.postureAssessment  : Array.isArray(assessmentRaw.postureAssessment)  ? assessmentRaw.postureAssessment  : [],
-    postureDeviations:  physicalExamination.postureDeviations  ?? assessmentRaw.postureDeviations  ?? '',
-    romStatus:          Array.isArray(physicalExamination.rangeOfMotion)      ? physicalExamination.rangeOfMotion      : Array.isArray(physicalExamination.romStatus)     ? physicalExamination.romStatus     : Array.isArray(assessmentRaw.romStatus)         ? assessmentRaw.romStatus         : [],
-    romRestricted:      physicalExamination.romRestricted       ?? assessmentRaw.romRestricted      ?? '',
-    romJoints:          physicalExamination.romJoints           ?? assessmentRaw.romJoints          ?? '',
-    muscleStrength:     Array.isArray(physicalExamination.muscleStrength)     ? physicalExamination.muscleStrength     : Array.isArray(assessmentRaw.muscleStrength)     ? assessmentRaw.muscleStrength     : [],
-    muscleWeakness:     physicalExamination.muscleWeakness      ?? assessmentRaw.muscleWeakness     ?? '',
-    neurologicalSigns:  Array.isArray(physicalExamination.neurologicalSigns)  ? physicalExamination.neurologicalSigns  : Array.isArray(assessmentRaw.neurologicalSigns)  ? assessmentRaw.neurologicalSigns  : [],
-    patientPain:        assessmentRaw.patientPain ?? '',
-    painTriggers:       assessmentRaw.painTriggers       ?? assessmentRaw.chronicPainPatients?.painTriggers    ?? '',
-    chronicRelieving:   assessmentRaw.chronicRelieving   ?? assessmentRaw.chronicPainPatients?.relievingFactors ?? '',
-    typeOfSport:        assessmentRaw.typeOfSport         ?? assessmentRaw.sportsRehabPatients?.typeOfSport     ?? '',
-    recurringInjuries:  assessmentRaw.recurringInjuries   ?? assessmentRaw.sportsRehabPatients?.recurringInjuries ?? '',
-    returnToSportGoals: assessmentRaw.returnToSportGoals  ?? assessmentRaw.sportsRehabPatients?.returnToSportGoals ?? '',
-    neuroDiagnosis:     assessmentRaw.neuroDiagnosis      ?? assessmentRaw.neuroRehabPatients?.neuroDiagnosis   ?? '',
-    neuroOnset:         assessmentRaw.neuroOnset          ?? assessmentRaw.neuroRehabPatients?.neuroOnset        ?? '',
-    mobilityStatus:     assessmentRaw.mobilityStatus      ?? assessmentRaw.neuroRehabPatients?.mobilityStatus   ?? '',
-    cognitiveStatus:    assessmentRaw.cognitiveStatus     ?? assessmentRaw.neuroRehabPatients?.cognitiveStatus  ?? '',
+    postureAssessment: Array.isArray(physicalExamination.postureAssessment) ? physicalExamination.postureAssessment : Array.isArray(assessmentRaw.postureAssessment) ? assessmentRaw.postureAssessment : [],
+    postureDeviations: physicalExamination.postureDeviations ?? assessmentRaw.postureDeviations ?? '',
+    romStatus: Array.isArray(physicalExamination.rangeOfMotion) ? physicalExamination.rangeOfMotion : Array.isArray(physicalExamination.romStatus) ? physicalExamination.romStatus : Array.isArray(assessmentRaw.romStatus) ? assessmentRaw.romStatus : [],
+    romRestricted: physicalExamination.romRestricted ?? assessmentRaw.romRestricted ?? '',
+    romJoints: physicalExamination.romJoints ?? assessmentRaw.romJoints ?? '',
+    muscleStrength: Array.isArray(physicalExamination.muscleStrength) ? physicalExamination.muscleStrength : Array.isArray(assessmentRaw.muscleStrength) ? assessmentRaw.muscleStrength : [],
+    muscleWeakness: physicalExamination.muscleWeakness ?? assessmentRaw.muscleWeakness ?? '',
+    neurologicalSigns: Array.isArray(physicalExamination.neurologicalSigns) ? physicalExamination.neurologicalSigns : Array.isArray(assessmentRaw.neurologicalSigns) ? assessmentRaw.neurologicalSigns : [],
+    patientPain: assessmentRaw.patientPain ?? '',
+    painTriggers: assessmentRaw.painTriggers ?? assessmentRaw.chronicPainPatients?.painTriggers ?? '',
+    chronicRelieving: assessmentRaw.chronicRelieving ?? assessmentRaw.chronicPainPatients?.relievingFactors ?? '',
+    typeOfSport: assessmentRaw.typeOfSport ?? assessmentRaw.sportsRehabPatients?.typeOfSport ?? '',
+    recurringInjuries: assessmentRaw.recurringInjuries ?? assessmentRaw.sportsRehabPatients?.recurringInjuries ?? '',
+    returnToSportGoals: assessmentRaw.returnToSportGoals ?? assessmentRaw.sportsRehabPatients?.returnToSportGoals ?? '',
+    neuroDiagnosis: assessmentRaw.neuroDiagnosis ?? assessmentRaw.neuroRehabPatients?.neuroDiagnosis ?? '',
+    neuroOnset: assessmentRaw.neuroOnset ?? assessmentRaw.neuroRehabPatients?.neuroOnset ?? '',
+    mobilityStatus: assessmentRaw.mobilityStatus ?? assessmentRaw.neuroRehabPatients?.mobilityStatus ?? '',
+    cognitiveStatus: assessmentRaw.cognitiveStatus ?? assessmentRaw.neuroRehabPatients?.cognitiveStatus ?? '',
   }
 
   const {
@@ -593,10 +593,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     if (isValid(diagnosisObj.physioDiagnosis)) {
       return [{
         physioDiagnosis: diagnosisObj.physioDiagnosis ?? '',
-        affectedArea:    diagnosisObj.affectedArea    ?? '',
-        severity:        diagnosisObj.severity        ?? '',
-        stage:           diagnosisObj.stage           ?? '',
-        notes:           diagnosisObj.notes           ?? '',
+        affectedArea: diagnosisObj.affectedArea ?? '',
+        severity: diagnosisObj.severity ?? '',
+        stage: diagnosisObj.stage ?? '',
+        notes: diagnosisObj.notes ?? '',
       }]
     }
     return []
@@ -606,16 +606,16 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   // API shape  : record.treatmentPlan → { doctorId, doctorName, therapistId, therapistName, manualTherapy, modalitiesUsed[], patientResponse, precautions[] }
   const treatmentPlanObj = record.treatmentPlan ?? {}
 
-  const topTherapistId   = treatmentPlanObj.therapistId   ?? formData?.therapySessions?.therapistId   ?? ''
+  const topTherapistId = treatmentPlanObj.therapistId ?? formData?.therapySessions?.therapistId ?? ''
   const topTherapistName = treatmentPlanObj.therapistName ?? formData?.therapySessions?.therapistName ?? ''
-  const manualTherapy    = treatmentPlanObj.manualTherapy ?? formData?.therapySessions?.manualTherapy ?? ''
-  const precautionsArr   = Array.isArray(treatmentPlanObj.precautions)    ? treatmentPlanObj.precautions    : Array.isArray(formData?.therapySessions?.precautions) ? formData.therapySessions.precautions : []
-  const modalitiesArr    = Array.isArray(treatmentPlanObj.modalitiesUsed) ? treatmentPlanObj.modalitiesUsed : Array.isArray(formData?.therapySessions?.modalitiesUsed) ? formData.therapySessions.modalitiesUsed : []
-  const patientResponse  = treatmentPlanObj.patientResponse ?? formData?.therapySessions?.patientResponse ?? ''
+  const manualTherapy = treatmentPlanObj.manualTherapy ?? formData?.therapySessions?.manualTherapy ?? ''
+  const precautionsArr = Array.isArray(treatmentPlanObj.precautions) ? treatmentPlanObj.precautions : Array.isArray(formData?.therapySessions?.precautions) ? formData.therapySessions.precautions : []
+  const modalitiesArr = Array.isArray(treatmentPlanObj.modalitiesUsed) ? treatmentPlanObj.modalitiesUsed : Array.isArray(formData?.therapySessions?.modalitiesUsed) ? formData.therapySessions.modalitiesUsed : []
+  const patientResponse = treatmentPlanObj.patientResponse ?? formData?.therapySessions?.patientResponse ?? ''
 
   const treatmentPlanDisplay = {
-    doctorId,    doctorName,
-    therapistId:   topTherapistId,
+    doctorId, doctorName,
+    therapistId: topTherapistId,
     therapistName: topTherapistName,
     manualTherapy,
   }
@@ -627,8 +627,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const overallStatus = record.overallStatus ?? ((!Array.isArray(therapySessionsRaw) && therapySessionsRaw?.overallStatus) ? therapySessionsRaw.overallStatus : '') ?? ''
 
   let sessionsList = []
-  if (Array.isArray(therapySessionsRaw))                     sessionsList = therapySessionsRaw
-  else if (Array.isArray(therapySessionsRaw?.sessions))      sessionsList = therapySessionsRaw.sessions
+  if (Array.isArray(therapySessionsRaw)) sessionsList = therapySessionsRaw
+  else if (Array.isArray(therapySessionsRaw?.sessions)) sessionsList = therapySessionsRaw.sessions
   if (sessionsList.length === 1 && Array.isArray(sessionsList[0])) sessionsList = sessionsList[0]
 
   // ─── Exercise Plan ────────────────────────────────────────────────────────
@@ -637,7 +637,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const exercisePlanObj = record.exercisePlan ?? formData?.exercisePlan ?? {}
   const homeExercises = (() => {
     if (Array.isArray(exercisePlanObj.homeExercises) && exercisePlanObj.homeExercises.length) return exercisePlanObj.homeExercises
-    if (Array.isArray(exercisePlanObj.exercises)     && exercisePlanObj.exercises.length)     return exercisePlanObj.exercises
+    if (Array.isArray(exercisePlanObj.exercises) && exercisePlanObj.exercises.length) return exercisePlanObj.exercises
     return []
   })()
   const homeAdvice = exercisePlanObj.homeAdvice ?? ''
@@ -650,9 +650,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     ? (followUpRaw[0] ?? {})
     : (typeof followUpRaw === 'object' ? followUpRaw : {})
 
-  const parts              = formData?.parts ?? symptomsInternal?.parts ?? patientData?.parts ?? []
+  const parts = formData?.parts ?? symptomsInternal?.parts ?? patientData?.parts ?? []
   const treatmentTemplates = Array.isArray(record.treatmentTemplates) ? record.treatmentTemplates : []
-  const todayStr           = () => new Date().toISOString().split('T')[0]
+  const todayStr = () => new Date().toISOString().split('T')[0]
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -667,10 +667,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   }, [])
 
   const renderPdfBlob = async () => await pdf(<PrescriptionPDF doctorData={doctorDetails} clicniData={clinicDetails} formData={formData} patientData={patientData} />).toBlob()
-  const blobToBase64  = (blob) => new Promise((resolve, reject) => {
+  const blobToBase64 = (blob) => new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onloadend = () => { const r = reader.result || ''; resolve(String(r).split(',')[1] || '') }
-    reader.onerror   = reject
+    reader.onerror = reject
     reader.readAsDataURL(blob)
   })
   const downloadBlob = (blob, filename) => {
@@ -681,7 +681,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
   // ─── FIX: buildPayload — always sends the correct API-expected shape ──────
   const buildPayload = (prescriptionPdf = '') => {
-    const firstDiag       = diagnosisRows[0] ?? {}
+    const firstDiag = diagnosisRows[0] ?? {}
     const followUpPayload = Array.isArray(followUpRaw) ? (followUpRaw[0] ?? {}) : (followUpRaw ?? {})
 
     return {
@@ -696,62 +696,62 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         patientId,
         patientName,
         mobileNumber: patientMobile,
-        age:          Number(patientAge) || 0,
-        sex:          patientSex,
+        age: Number(patientAge) || 0,
+        sex: patientSex,
       },
 
       // ── Complaints ─────────────────────────────────────────────────────
       // Always match the API expected shape exactly
       complaints: {
-        complaintDetails:    complaintDetails    || '',
-        painAssessmentImage: partImage           || '',
-        reportImages:        reportImages        || [],
-        selectedTherapy:     selectedTherapy     || '',
-        selectedTherapyId:   selectedTherapyID   || '',   // API uses Id (no capital D)
-        duration:            complaintDuration   || '',
-        previousInjuries:    previousInjuries    || null,
-        currentMedications:  currentMedications  || null,
-        allergies:           allergies           || null,
-        occupation:          occupation          || null,
-        activityLevels:      activityLevels.length ? activityLevels : null,
-        patientPain:         effectivePain       || null,
-        therapyAnswers:      flatTherapyAnswers,          // flat array for API
+        complaintDetails: complaintDetails || '',
+        painAssessmentImage: partImage || '',
+        reportImages: reportImages || [],
+        selectedTherapy: selectedTherapy || '',
+        selectedTherapyId: selectedTherapyID || '',   // API uses Id (no capital D)
+        duration: complaintDuration || '',
+        previousInjuries: previousInjuries || null,
+        currentMedications: currentMedications || null,
+        allergies: allergies || null,
+        occupation: occupation || null,
+        activityLevels: activityLevels.length ? activityLevels : null,
+        patientPain: effectivePain || null,
+        therapyAnswers: flatTherapyAnswers,          // flat array for API
       },
 
       // ── Investigation ──────────────────────────────────────────────────
       investigation: {
-        tests:         investigationTestsArray,
+        tests: investigationTestsArray,
         selectedTests: investigationTestsArray,
-        reason:        investigationReason || '',
-        notes:         investigationReason || '',
+        reason: investigationReason || '',
+        notes: investigationReason || '',
       },
 
       // ── Assessment ─────────────────────────────────────────────────────
       // Matches API response shape: nested subjectiveAssessment, functionalAssessment, physicalExamination
       assessment: {
         subjectiveAssessment: {
-          chiefComplaint:     assessment.chiefComplaint     ?? '',
-          painScale:          Number(assessment.painScale)  || 0,
-          painType:           assessment.painType           ?? '',
-          duration:           assessment.duration           ?? '',
-          onset:              assessment.onset              ?? '',
+          chiefComplaint: assessment.chiefComplaint ?? '',
+          painScale: Number(assessment.painScale) || 0,
+          painType: assessment.painType ?? '',
+          duration: assessment.duration ?? '',
+          onset: assessment.onset ?? '',
           aggravatingFactors: assessment.aggravatingFactors ?? '',
-          relievingFactors:   assessment.relievingFactors   ?? '',
-          observations:       assessment.observations       ?? '',
+          relievingFactors: assessment.relievingFactors ?? '',
+          observations: assessment.observations ?? '',
         },
         functionalAssessment: {
-          difficultiesIn:      difficultiesIn,
-          otherDifficulty:     otherDifficulty     || '',
+          difficultiesIn: difficultiesIn,
+          otherDifficulty: otherDifficulty || '',
           dailyLivingAffected: dailyLivingAffected || '',
         },
         physicalExamination: {
           postureAssessment: postureAssessment,
-          postureDeviations: postureDeviations  || '',
-          rangeOfMotion:     romStatus,
-          romRestricted:     romRestricted      || '',
-          romJoints:         romJoints          || '',
-          muscleStrength:    muscleStrength,
-          muscleWeakness:    muscleWeakness     || '',
+          postureDeviations: postureDeviations || '',
+          rangeOfMotion: romStatus,
+          romRestricted: romRestricted || '',
+          romJoints: romJoints || '',
+          muscleStrength: muscleStrength,
+          muscleWeakness: muscleWeakness || '',
           neurologicalSigns: neurologicalSigns,
         },
         // Pain-type specific sections
@@ -773,10 +773,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       // API expects flat shape; send diagnosisRows only if multiple rows
       diagnosis: {
         physioDiagnosis: firstDiag.physioDiagnosis ?? '',
-        affectedArea:    firstDiag.affectedArea    ?? '',
-        severity:        firstDiag.severity        ?? '',
-        stage:           firstDiag.stage           ?? '',
-        notes:           firstDiag.notes           ?? '',
+        affectedArea: firstDiag.affectedArea ?? '',
+        severity: firstDiag.severity ?? '',
+        stage: firstDiag.stage ?? '',
+        notes: firstDiag.notes ?? '',
         ...(diagnosisRows.length > 1 ? { diagnosisRows } : {}),
       },
 
@@ -784,12 +784,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       treatmentPlan: {
         doctorId,
         doctorName,
-        therapistId:     topTherapistId,
-        therapistName:   topTherapistName,
-        manualTherapy:   manualTherapy || '',
-        modalitiesUsed:  modalitiesArr,
+        therapistId: topTherapistId,
+        therapistName: topTherapistName,
+        manualTherapy: manualTherapy || '',
+        modalitiesUsed: modalitiesArr,
         patientResponse: patientResponse || '',
-        precautions:     precautionsArr,
+        precautions: precautionsArr,
       },
 
       // ── Therapy Sessions ───────────────────────────────────────────────
@@ -800,27 +800,27 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       exercisePlan: {
         homeAdvice,
         homeExercises: homeExercises.map(ex => ({
-          id:           ex.id           ?? '',
-          name:         ex.name         ?? ex.exerciseName ?? '',
-          sets:         String(ex.sets  ?? ''),
-          reps:         String(ex.reps  ?? ex.repetitions ?? ''),
-          duration:     ex.duration     || '10 mins',
-          frequency:    ex.frequency    ?? null,
+          id: ex.id ?? '',
+          name: ex.name ?? ex.exerciseName ?? '',
+          sets: String(ex.sets ?? ''),
+          reps: String(ex.reps ?? ex.repetitions ?? ''),
+          duration: ex.duration || '10 mins',
+          frequency: ex.frequency ?? null,
           instructions: ex.instructions ?? ex.notes ?? '',
-          videoUrl:     ex.videoUrl     ?? ex.youtubeUrl ?? '',
-          thumbnail:    ex.thumbnail    ?? '',
+          videoUrl: ex.videoUrl ?? ex.youtubeUrl ?? '',
+          thumbnail: ex.thumbnail ?? '',
         })),
       },
 
       // ── Follow Up ──────────────────────────────────────────────────────
       followUp: {
         nextVisitDate: followUpPayload.nextVisitDate ?? '',
-        reviewNotes:   followUpPayload.reviewNotes   ?? '',
+        reviewNotes: followUpPayload.reviewNotes ?? '',
         modifications: followUpPayload.modifications ?? null,
       },
 
       treatmentTemplates,
-      createdAt:       todayStr(),
+      createdAt: todayStr(),
       prescriptionPdf,
     }
   }
@@ -829,10 +829,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     if (!complaintDetails?.trim()) { warning('"Complaint Details" is required to save.', { title: 'Warning' }); return false }
     setSaving(true)
     try {
-      const safeName  = (patientName || 'Record').replace(/[^\w\-]+/g, '_')
-      const blob      = await renderPdfBlob()
+      const safeName = (patientName || 'Record').replace(/[^\w\-]+/g, '_')
+      const blob = await renderPdfBlob()
       const pdfBase64 = await blobToBase64(blob)
-      const payload   = buildPayload(pdfBase64)
+      const payload = buildPayload(pdfBase64)
 
       console.group('📤 FINAL SAVE PAYLOAD')
       console.log(JSON.stringify(payload, null, 2))
@@ -851,7 +851,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   }
 
   const confirmSaveAsTemplate = async () => { setShowTemplateModal(false); await doSave({ downloadAfter: pendingAction === ACTIONS.SAVE_PRINT }); setPendingAction(null) }
-  const skipTemplate          = async () => { setShowTemplateModal(false); await doSave({ downloadAfter: pendingAction === ACTIONS.SAVE_PRINT }); setPendingAction(null) }
+  const skipTemplate = async () => { setShowTemplateModal(false); await doSave({ downloadAfter: pendingAction === ACTIONS.SAVE_PRINT }); setPendingAction(null) }
 
   const hasAssessmentData = (
     assessment.chiefComplaint || assessment.painScale || assessment.painType ||
@@ -864,9 +864,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     isValid(effectivePain) || activityLevels.length > 0
 
   const displayName = patientName ? capitalizeEachWord(patientName) : ''
-  const displayAge  = patientAge  ? `${patientAge}yr` : ''
-  const displaySex  = patientSex  ? patientSex.charAt(0).toUpperCase() : ''
-  const patientTag  = [displayName, [displayAge, displaySex].filter(Boolean).join(' ')].filter(Boolean).join(' · ')
+  const displayAge = patientAge ? `${patientAge}yr` : ''
+  const displaySex = patientSex ? patientSex.charAt(0).toUpperCase() : ''
+  const patientTag = [displayName, [displayAge, displaySex].filter(Boolean).join(' ')].filter(Boolean).join(' · ')
 
   return (
     <div style={{ background: T.bgLight, minHeight: '100vh', paddingBottom: 100, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
@@ -896,17 +896,17 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         {/* 1. Patient Info */}
         <Section icon="👤" title="Patient & Booking Information">
           <Grid cols={3}>
-            {isValid(patientId)     && <Row label="Patient ID"     value={patientId} />}
-            {isValid(bookingId)     && <Row label="Booking ID"     value={bookingId} />}
-            {isValid(patientName)   && <Row label="Name"           value={capitalizeEachWord(patientName)} />}
-            {isValid(patientAge)    && <Row label="Age / Gender"   value={`${patientAge} yrs / ${patientSex}`} />}
-            {isValid(patientMobile) && <Row label="Mobile"         value={patientMobile} />}
-            {isValid(clinicId)      && <Row label="Clinic ID"      value={clinicId} />}
-            {isValid(clinicName)    && <Row label="Clinic"         value={clinicName} />}
-            {isValid(branchId)      && <Row label="Branch ID"      value={branchId} />}
-            {isValid(doctorName)    && <Row label="Doctor"         value={doctorName} />}
-            {isValid(doctorId)      && <Row label="Doctor ID"      value={doctorId} />}
-            {isValid(patientData?.subServiceName) && <Row label="Therapy Type"    value={patientData?.subServiceName} />}
+            {isValid(patientId) && <Row label="Patient ID" value={patientId} />}
+            {isValid(bookingId) && <Row label="Booking ID" value={bookingId} />}
+            {isValid(patientName) && <Row label="Name" value={capitalizeEachWord(patientName)} />}
+            {isValid(patientAge) && <Row label="Age / Gender" value={`${patientAge} yrs / ${patientSex}`} />}
+            {isValid(patientMobile) && <Row label="Mobile" value={patientMobile} />}
+            {isValid(clinicId) && <Row label="Clinic ID" value={clinicId} />}
+            {isValid(clinicName) && <Row label="Clinic" value={clinicName} />}
+            {isValid(branchId) && <Row label="Branch ID" value={branchId} />}
+            {isValid(doctorName) && <Row label="Doctor" value={doctorName} />}
+            {isValid(doctorId) && <Row label="Doctor ID" value={doctorId} />}
+            {isValid(patientData?.subServiceName) && <Row label="Therapy Type" value={patientData?.subServiceName} />}
             {isValid(overallStatus) && <Row label="Overall Status" value={overallStatus} />}
           </Grid>
         </Section>
@@ -915,10 +915,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         {isValid(complaintDetails) && (
           <Section icon="🩺" title="Complaints & Symptoms">
             <Grid cols={2}>
-              <Row label="Complaint Details"  value={complaintDetails}  highlight />
-              {isValid(complaintDuration) && <Row label="Duration"         value={complaintDuration} highlight />}
-              {isValid(selectedTherapy)   && <Row label="Selected Therapy" value={selectedTherapy} />}
-              {reportImages.length > 0    && <Row label="Report Images"    value={`${reportImages.length} image(s)`} />}
+              <Row label="Complaint Details" value={complaintDetails} highlight />
+              {isValid(complaintDuration) && <Row label="Duration" value={complaintDuration} highlight />}
+              {isValid(selectedTherapy) && <Row label="Selected Therapy" value={selectedTherapy} />}
+              {reportImages.length > 0 && <Row label="Report Images" value={`${reportImages.length} image(s)`} />}
             </Grid>
             {parts.length > 0 && (
               <div style={{ marginTop: 8 }}>
@@ -947,12 +947,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         {hasBackgroundData && (
           <Section icon="📋" title="Patient Background">
             <Grid cols={3}>
-              {isValid(previousInjuries)   && <Row label="Previous Injuries"   value={previousInjuries}   highlight />}
+              {isValid(previousInjuries) && <Row label="Previous Injuries" value={previousInjuries} highlight />}
               {isValid(currentMedications) && <Row label="Current Medications" value={currentMedications} highlight />}
-              {isValid(allergies)          && <Row label="Allergies"           value={allergies} />}
-              {isValid(occupation)         && <Row label="Occupation"          value={occupation} />}
-              {isValid(insuranceProvider)  && <Row label="Insurance Provider"  value={insuranceProvider} />}
-              {isValid(effectivePain)      && <Row label="Pain Type"           value={PAIN_LABEL_MAP[effectivePain] || effectivePain} highlight />}
+              {isValid(allergies) && <Row label="Allergies" value={allergies} />}
+              {isValid(occupation) && <Row label="Occupation" value={occupation} />}
+              {isValid(insuranceProvider) && <Row label="Insurance Provider" value={insuranceProvider} />}
+              {isValid(effectivePain) && <Row label="Pain Type" value={PAIN_LABEL_MAP[effectivePain] || effectivePain} highlight />}
             </Grid>
             {activityLevels.length > 0 && (
               <div style={{ marginTop: 6 }}>
@@ -989,13 +989,13 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${T.border}` }}>
               <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.bgcolor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>📋 Subjective Assessment</div>
               <Grid cols={2}>
-                {isValid(assessment.chiefComplaint)     && <Row label="Chief Complaint"     value={assessment.chiefComplaint}     highlight />}
-                {isValid(assessment.painScale)          && <Row label="Pain Scale"          value={assessment.painScale}          highlight />}
-                {isValid(assessment.painType)           && <Row label="Pain Type"           value={assessment.painType} />}
-                {isValid(assessment.duration)           && <Row label="Duration"            value={assessment.duration} />}
-                {isValid(assessment.onset)              && <Row label="Onset"               value={assessment.onset} />}
+                {isValid(assessment.chiefComplaint) && <Row label="Chief Complaint" value={assessment.chiefComplaint} highlight />}
+                {isValid(assessment.painScale) && <Row label="Pain Scale" value={assessment.painScale} highlight />}
+                {isValid(assessment.painType) && <Row label="Pain Type" value={assessment.painType} />}
+                {isValid(assessment.duration) && <Row label="Duration" value={assessment.duration} />}
+                {isValid(assessment.onset) && <Row label="Onset" value={assessment.onset} />}
                 {isValid(assessment.aggravatingFactors) && <Row label="Aggravating Factors" value={assessment.aggravatingFactors} />}
-                {isValid(assessment.relievingFactors)   && <Row label="Relieving Factors"   value={assessment.relievingFactors} />}
+                {isValid(assessment.relievingFactors) && <Row label="Relieving Factors" value={assessment.relievingFactors} />}
               </Grid>
               {isValid(assessment.observations) && <Row label="Observations" value={assessment.observations} full />}
             </div>
@@ -1019,10 +1019,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                 <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.purple, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🔬 Physical Examination</div>
                 <div style={{ background: T.bgLight, border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden' }}>
                   {[
-                    { label: 'Posture Assessment', opts: ['Normal', 'Deviations'],                                          sel: postureAssessment, note: postureDeviations },
-                    { label: 'Range of Motion',    opts: ['Normal', 'Restricted'],                                          sel: romStatus,         note: romRestricted     },
-                    { label: 'Muscle Strength',    opts: ['Normal', 'Weakness in'],                                         sel: muscleStrength,    note: muscleWeakness    },
-                    { label: 'Neurological Signs', opts: ['Normal', 'Balance', 'Coordination', 'Sensation issues'],         sel: neurologicalSigns, note: ''                },
+                    { label: 'Posture Assessment', opts: ['Normal', 'Deviations'], sel: postureAssessment, note: postureDeviations },
+                    { label: 'Range of Motion', opts: ['Normal', 'Restricted'], sel: romStatus, note: romRestricted },
+                    { label: 'Muscle Strength', opts: ['Normal', 'Weakness in'], sel: muscleStrength, note: muscleWeakness },
+                    { label: 'Neurological Signs', opts: ['Normal', 'Balance', 'Coordination', 'Sensation issues'], sel: neurologicalSigns, note: '' },
                   ].map((row, ri, arr) => (
                     <div key={ri} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderBottom: ri < arr.length - 1 ? `1px solid ${T.border}` : 'none', flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 700, fontSize: '0.75rem', color: T.text, minWidth: 140 }}>{row.label}:</span>
@@ -1038,7 +1038,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <div style={{ marginBottom: 12, background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 8, padding: '10px 14px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.rose, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🔴 Chronic Pain Assessment</div>
                 <Grid cols={2}>
-                  {isValid(painTriggers)     && <Row label="Pain Triggers"     value={painTriggers}     highlight />}
+                  {isValid(painTriggers) && <Row label="Pain Triggers" value={painTriggers} highlight />}
                   {isValid(chronicRelieving) && <Row label="Relieving Factors" value={chronicRelieving} highlight />}
                 </Grid>
               </div>
@@ -1047,8 +1047,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <div style={{ marginBottom: 12, background: '#f0fff4', border: '1.5px solid #6ee7b7', borderRadius: 8, padding: '10px 14px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.green, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🟢 Sports Rehab Assessment</div>
                 <Grid cols={2}>
-                  {isValid(typeOfSport)        && <Row label="Type of Sport"         value={typeOfSport}        highlight />}
-                  {isValid(recurringInjuries)  && <Row label="Recurring Injuries"    value={recurringInjuries}  highlight />}
+                  {isValid(typeOfSport) && <Row label="Type of Sport" value={typeOfSport} highlight />}
+                  {isValid(recurringInjuries) && <Row label="Recurring Injuries" value={recurringInjuries} highlight />}
                   {isValid(returnToSportGoals) && <Row label="Return-to-Sport Goals" value={returnToSportGoals} full />}
                 </Grid>
               </div>
@@ -1057,9 +1057,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               <div style={{ marginBottom: 12, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 8, padding: '10px 14px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.purple, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🟣 Neuro Rehab Assessment</div>
                 <Grid cols={2}>
-                  {isValid(neuroDiagnosis)  && <Row label="Diagnosis"                 value={neuroDiagnosis}  highlight />}
-                  {isValid(neuroOnset)      && <Row label="Onset"                     value={neuroOnset}      highlight />}
-                  {isValid(mobilityStatus)  && <Row label="Mobility Status"           value={mobilityStatus} />}
+                  {isValid(neuroDiagnosis) && <Row label="Diagnosis" value={neuroDiagnosis} highlight />}
+                  {isValid(neuroOnset) && <Row label="Onset" value={neuroOnset} highlight />}
+                  {isValid(mobilityStatus) && <Row label="Mobility Status" value={mobilityStatus} />}
                   {isValid(cognitiveStatus) && <Row label="Cognitive / Communication" value={cognitiveStatus} />}
                 </Grid>
               </div>
@@ -1077,17 +1077,17 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                 </thead>
                 <tbody>
                   {diagnosisRows.map((d, i) => {
-                    const sevColor  = { Mild: ['#e6f4ea', '#2e7d32'], Moderate: ['#fff3e0', '#e65100'], Severe: ['#fdecea', '#c62828'] }
+                    const sevColor = { Mild: ['#e6f4ea', '#2e7d32'], Moderate: ['#fff3e0', '#e65100'], Severe: ['#fdecea', '#c62828'] }
                     const stagColor = { Acute: ['#fdecea', '#c62828'], 'Sub-acute': ['#fff8e1', '#f57f17'], Chronic: ['#e8eaf6', '#283593'] }
-                    const [sBg, sFg] = sevColor[d.severity]  || ['#f3f4f6', '#374151']
-                    const [tBg, tFg] = stagColor[d.stage]    || ['#f3f4f6', '#374151']
+                    const [sBg, sFg] = sevColor[d.severity] || ['#f3f4f6', '#374151']
+                    const [tBg, tFg] = stagColor[d.stage] || ['#f3f4f6', '#374151']
                     return (
                       <tr key={i}>
                         <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
                         <td style={{ ...tdStyle(i), fontWeight: 600 }}>{d.physioDiagnosis || '—'}</td>
                         <td style={tdStyle(i)}>{d.affectedArea || '—'}</td>
                         <td style={tdStyle(i)}>{d.severity ? <span style={{ background: sBg, color: sFg, borderRadius: 20, padding: '2px 8px', fontWeight: 700, fontSize: '0.7rem' }}>{d.severity}</span> : '—'}</td>
-                        <td style={tdStyle(i)}>{d.stage    ? <span style={{ background: tBg, color: tFg, borderRadius: 20, padding: '2px 8px', fontWeight: 700, fontSize: '0.7rem' }}>{d.stage}</span>    : '—'}</td>
+                        <td style={tdStyle(i)}>{d.stage ? <span style={{ background: tBg, color: tFg, borderRadius: 20, padding: '2px 8px', fontWeight: 700, fontSize: '0.7rem' }}>{d.stage}</span> : '—'}</td>
                         <td style={{ ...tdStyle(i), maxWidth: 180, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{d.notes || '—'}</td>
                       </tr>
                     )
@@ -1102,12 +1102,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         {(isValid(treatmentPlanDisplay.therapistId) || isValid(treatmentPlanDisplay.therapistName)) && (
           <Section icon="🧑‍⚕️" title="Treatment Plan">
             <Grid cols={2}>
-              {isValid(treatmentPlanDisplay.doctorId)      && <Row label="Doctor ID"      value={treatmentPlanDisplay.doctorId} />}
-              {isValid(treatmentPlanDisplay.doctorName)    && <Row label="Doctor Name"    value={treatmentPlanDisplay.doctorName} />}
-              {isValid(treatmentPlanDisplay.therapistId)   && <Row label="Therapist ID"   value={treatmentPlanDisplay.therapistId} />}
+              {isValid(treatmentPlanDisplay.doctorId) && <Row label="Doctor ID" value={treatmentPlanDisplay.doctorId} />}
+              {isValid(treatmentPlanDisplay.doctorName) && <Row label="Doctor Name" value={treatmentPlanDisplay.doctorName} />}
+              {isValid(treatmentPlanDisplay.therapistId) && <Row label="Therapist ID" value={treatmentPlanDisplay.therapistId} />}
               {isValid(treatmentPlanDisplay.therapistName) && <Row label="Therapist Name" value={treatmentPlanDisplay.therapistName} highlight />}
-              {isValid(manualTherapy)                      && <Row label="Manual Therapy" value={manualTherapy} />}
-              {isValid(patientResponse)                    && <Row label="Patient Response" value={patientResponse} />}
+              {isValid(manualTherapy) && <Row label="Manual Therapy" value={manualTherapy} />}
+              {isValid(patientResponse) && <Row label="Patient Response" value={patientResponse} />}
             </Grid>
             {precautionsArr.length > 0 && (
               <div style={{ marginTop: 8 }}>
@@ -1147,7 +1147,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                       <tr key={i}>
                         <td style={{ ...tdStyle(i), fontWeight: 700 }}>{i + 1}</td>
                         <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.name || ex.exerciseName || '—'}</td>
-                        <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.sets ? <Chip label={`🔁 ${ex.sets}`}  color={T.bgcolor} bg={T.bgLight}  /> : '—'}</td>
+                        <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
                         <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.reps || ex.repetitions) ? <Chip label={`🔄 ${ex.reps || ex.repetitions}`} color={T.teal} bg={T.tealLight} /> : '—'}</td>
                         <td style={tdStyle(i)}>{ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600 }}>📆 {ex.frequency}</span> : '—'}</td>
                         <td style={{ ...tdStyle(i), maxWidth: 220 }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions || ex.notes}>{ex.instructions || ex.notes || '—'}</div></td>
@@ -1166,7 +1166,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           <Section icon="📅" title="Follow Up">
             <Grid cols={2}>
               {isValid(followUpEntry.nextVisitDate) && <Row label="Next Visit Date" value={followUpEntry.nextVisitDate} highlight />}
-              {isValid(followUpEntry.reviewNotes)   && <Row label="Review Notes"    value={followUpEntry.reviewNotes}   highlight />}
+              {isValid(followUpEntry.reviewNotes) && <Row label="Review Notes" value={followUpEntry.reviewNotes} highlight />}
             </Grid>
             {isValid(followUpEntry.nextVisitDate) && (() => {
               const urgency = getVisitUrgency(followUpEntry.nextVisitDate)
@@ -1193,7 +1193,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                       <td style={tdStyle(i)}>{Array.isArray(t.modalities) && t.modalities.length ? t.modalities.map(m => <Chip key={m} label={m} color={T.bgcolor} bg={T.bgLight} />) : '—'}</td>
                       <td style={tdStyle(i)}>{t.manualTherapy || '—'}</td>
                       <td style={tdStyle(i)}>{Array.isArray(t.exercises) && t.exercises.length ? t.exercises.map(e => <Chip key={e} label={e} color={T.green} bg={T.greenLight} />) : '—'}</td>
-                      <td style={{ ...tdStyle(i), whiteSpace: 'nowrap' }}>{t.duration  || '—'}</td>
+                      <td style={{ ...tdStyle(i), whiteSpace: 'nowrap' }}>{t.duration || '—'}</td>
                       <td style={{ ...tdStyle(i), whiteSpace: 'nowrap' }}>{t.frequency || '—'}</td>
                     </tr>
                   ))}

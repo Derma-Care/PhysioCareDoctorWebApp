@@ -4,7 +4,7 @@ import { format, addDays, parse } from 'date-fns'
 import {
   CCard, CCardBody, CRow, CCol, CButton,
 } from '@coreui/react'
-import { averageRatings, getAvailableSlots } from '../../Auth/Auth'
+import { averageRatings, getAvailableSlots, updateAvailability } from '../../Auth/Auth'
 import { COLORS } from '../../Themes'
 import { capitalizeEachWord } from '../../utils/CaptalZeWord'
 
@@ -541,9 +541,34 @@ const DoctorProfile = () => {
                   : <div className="dp-avatar-placeholder">No Image</div>
                 }
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="dp-hero-badge">
-                    <div className="dp-hero-badge-dot" />
-                    <span className="dp-hero-badge-txt">Active Doctor</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                    <div className="dp-hero-badge">
+                      <div className="dp-hero-badge-dot" style={{ background: doctorDetails?.isAvailable ? COLORS.green : COLORS.rose }} />
+                      <span className="dp-hero-badge-txt">{doctorDetails?.isAvailable ? 'Active Doctor' : 'Inactive'}</span>
+                    </div>
+                    
+                    {/* Availability Toggle */}
+                    <button 
+                      onClick={async () => {
+                        const newStatus = !doctorDetails?.isAvailable;
+                        try {
+                          const doctorId = localStorage.getItem('doctorId');
+                          await updateAvailability(doctorId, { isAvailable: newStatus });
+                          const updated = { ...doctorDetails, isAvailable: newStatus };
+                          setDoctorDetails(updated);
+                          localStorage.setItem('doctorDetails', JSON.stringify(updated));
+                        } catch (err) {
+                          console.error("Failed to update availability:", err);
+                        }
+                      }}
+                      style={{
+                        background: doctorDetails?.isAvailable ? COLORS.rose : COLORS.green,
+                        color: '#fff', border: 'none', borderRadius: 8, padding: '4px 12px',
+                        fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                    >
+                      {doctorDetails?.isAvailable ? '⭕ Set Inactive' : '🟢 Set Active'}
+                    </button>
                   </div>
                   <div className="dp-hero-name">
                     {capitalizeEachWord(doctorDetails?.doctorName) || 'Doctor Name'}
