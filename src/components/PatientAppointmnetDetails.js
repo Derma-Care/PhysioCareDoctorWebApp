@@ -32,7 +32,14 @@ const deepMerge = (target, source) => {
 const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = false }) => {
   const { id } = useParams()
   const { state } = useLocation()
-  const { patientData } = useDoctorContext()
+  const { patientData, isPatientLoading, setPatientData } = useDoctorContext()
+
+  // Clear patient context on unmount so sidebar reverts to doctor profile
+  useEffect(() => {
+    return () => {
+      setPatientData(null)
+    }
+  }, [setPatientData])
 
   const [patient, setPatient] = useState(patientData || state?.patient || null)
   const [details, setDetails] = useState(state?.details || null)
@@ -65,7 +72,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   const { success, info } = useToast()
 
   const ALL_TABS = tabs || [
-    'Complaints', 'Red Flags', 'Neuro Info', 'Assessment', 'Diagnosis', 'Investigation',
+    'Complaints', 'Assessment', 'Diagnosis', 'Investigation',
     'Plan', 'HomePlan', 'FollowUp', 'Prescription', 'History', 'Reports',
   ]
 

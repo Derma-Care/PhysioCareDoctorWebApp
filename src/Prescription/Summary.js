@@ -1091,6 +1091,63 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                 </Grid>
               </div>
             )}
+
+            {/* Red Flags & Screening */}
+            {(Object.values(record.redFlags || {}).some(v => v === true) || 
+              Object.values(record.radiationNeuro || {}).some(v => v === true) || 
+              Object.values(record.specialSymptoms || {}).some(v => v === true)) && (
+              <div style={{ marginBottom: 12, background: '#fff1f2', border: '1.5px solid #fda4af', borderRadius: 8, padding: '10px 14px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.rose, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🚩 Clinical Screening & Red Flags</div>
+                
+                {Object.values(record.redFlags || {}).some(v => v === true) && (
+                  <div style={{ marginBottom: 10 }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Red Flags:</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      {record.redFlags?.trauma && <Chip label="Trauma" color={T.rose} bg={T.roseLight} />}
+                      {record.redFlags?.weightLoss && <Chip label="Unexplained Weight Loss" color={T.rose} bg={T.roseLight} />}
+                      {record.redFlags?.fever && <Chip label="Fever / Night Sweats" color={T.rose} bg={T.roseLight} />}
+                      {record.redFlags?.cancer && <Chip label="History of Cancer" color={T.rose} bg={T.roseLight} />}
+                      {record.redFlags?.nightPain && <Chip label="Severe Night Pain" color={T.rose} bg={T.roseLight} />}
+                      {record.redFlags?.swallowing && <Chip label="Difficulty Swallowing" color={T.rose} bg={T.roseLight} />}
+                    </div>
+                  </div>
+                )}
+
+                {Object.values(record.radiationNeuro || {}).some(v => v === true) && (
+                  <div style={{ marginBottom: 10 }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Neurological Screening:</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      {record.radiationNeuro?.radiating && <Chip label="Radiating Pain" color={T.amber} bg={T.amberLight} />}
+                      {record.radiationNeuro?.numbness && <Chip label="Numbness / Tingling" color={T.amber} bg={T.amberLight} />}
+                      {record.radiationNeuro?.weakness && <Chip label="Muscle Weakness" color={T.amber} bg={T.amberLight} />}
+                      {record.radiationNeuro?.gripDifficulty && <Chip label="Grip / Fine Motor Difficulty" color={T.amber} bg={T.amberLight} />}
+                    </div>
+                  </div>
+                )}
+
+                {Object.values(record.specialSymptoms || {}).some(v => v === true) && (
+                  <div>
+                    <span style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Special Symptoms:</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      {record.specialSymptoms?.headache && <Chip label="Frequent Headaches" color={T.bgcolor} bg={T.bgLight} />}
+                      {record.specialSymptoms?.dizziness && <Chip label="Dizziness / Vertigo" color={T.bgcolor} bg={T.bgLight} />}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Psychosocial */}
+            {(isValid(record.psychosocial?.stressLevel) || record.psychosocial?.workSatisfaction || record.psychosocial?.fearOfMovement) && (
+              <div style={{ marginBottom: 12, background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 8, padding: '10px 14px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.text, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🧠 Psychosocial Assessment</div>
+                <Grid cols={3}>
+                  {isValid(record.psychosocial?.stressLevel) && <Row label="Stress Level" value={record.psychosocial.stressLevel} highlight />}
+                  {record.psychosocial?.workSatisfaction && <Row label="Work Dissatisfaction" value="Yes" />}
+                  {record.psychosocial?.fearOfMovement && <Row label="Fear of Movement" value="Yes" />}
+                </Grid>
+              </div>
+            )}
           </Section>
         )}
 

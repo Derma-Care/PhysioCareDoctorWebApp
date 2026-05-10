@@ -6,6 +6,8 @@ import {
   CAlert, CCard, CCardBody, CCol, CForm, CRow, CContainer,
 } from '@coreui/react'
 import { useDoctorContext } from '../Context/DoctorContext'
+import RedFlagScreening from './RedFlagScreening'
+import NeuroFunctionalInfo from './NeuroFunctionalInfo'
 
 /* ─── Static options ─────────────────────────────────────────────────────── */
 const PAIN_SCALE_OPTIONS = [
@@ -39,6 +41,8 @@ const TABS = [
   { id: 'physical',           label: 'Physical Exam',        icon: '🔬' },
   { id: 'objective',          label: 'Objective',            icon: '📐' },
   { id: 'painClassification', label: 'Pain Classification',  icon: '💊' },
+  { id: 'redFlags',           label: 'Red Flags',            icon: '🚩' },
+  { id: 'neuroInfo',          label: 'Neuro Info',           icon: '🧠' },
 ]
 
 /* ─── Styles ─────────────────────────────────────────────────────────────── */
@@ -142,7 +146,7 @@ const UnderlineInput = ({ value, onChange, placeholder = '' }) => (
 /* ═══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ═══════════════════════════════════════════════════════════════════════════ */
-const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
+const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
 
   /* ── tab state ── */
   const [activeTab, setActiveTab] = useState(0)
@@ -179,6 +183,13 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
   const [neuroOnset,          setNeuroOnset]          = useState(seed.neuroOnset         ?? '')
   const [mobilityStatus,      setMobilityStatus]      = useState(seed.mobilityStatus     ?? '')
   const [cognitiveStatus,     setCognitiveStatus]     = useState(seed.cognitiveStatus    ?? '')
+  
+  // Embedded states
+  const [redFlagsData, setRedFlagsData] = useState(formData.redFlags || {})
+  const [radiationNeuro, setRadiationNeuro] = useState(formData.radiationNeuro || {})
+  const [psychosocial, setPsychosocial] = useState(formData.psychosocial || {})
+  const [specialSymptoms, setSpecialSymptoms] = useState(formData.specialSymptoms || {})
+
   const [snackbar,            setSnackbar]            = useState({ show: false, message: '', type: '' })
 
   const { patientData } = useDoctorContext()
@@ -252,6 +263,11 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
       ...(effectivePain === 'chronicPain' && { painTriggers, chronicRelieving }),
       ...(effectivePain === 'sportsRehab' && { typeOfSport, recurringInjuries, returnToSportGoals }),
       ...(effectivePain === 'neuroRehab'  && { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }),
+      // Merged embedded data
+      redFlags: redFlagsData,
+      radiationNeuro,
+      psychosocial,
+      specialSymptoms
     }
     onNext?.(payload)
   }
@@ -554,6 +570,28 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0 }) => {
               </div>
             )}
           </>
+        )
+
+      case 'redFlags':
+        return (
+          <RedFlagScreening 
+            seed={{ redFlags: redFlagsData }} 
+            onNext={(p) => setRedFlagsData(p.redFlags)} 
+            hideFooter={true} 
+          />
+        )
+
+      case 'neuroInfo':
+        return (
+          <NeuroFunctionalInfo 
+            seed={{ radiationNeuro, psychosocial, specialSymptoms }} 
+            onNext={(p) => {
+              setRadiationNeuro(p.radiationNeuro)
+              setPsychosocial(p.psychosocial)
+              setSpecialSymptoms(p.specialSymptoms)
+            }} 
+            hideFooter={true} 
+          />
         )
 
       default:

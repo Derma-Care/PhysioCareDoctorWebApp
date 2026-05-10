@@ -352,7 +352,7 @@ const Appointments = ({ searchTerm = '' }) => {
                     className="text-nowrap"
                     style={{ fontSize: '0.875rem' }}
                   >
-                    {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Consultation', 'Branch', 'Visit Type', 'Status', 'Action'].map(
+                    {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Consultation', 'Branch', 'Visit Type', 'Follow-up Status', 'Status', 'Action'].map(
                       (header) => (
                         <CTableHeaderCell
                           key={header}
@@ -445,6 +445,9 @@ const Appointments = ({ searchTerm = '' }) => {
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black, textTransform: 'capitalize' }}>
                           {p.visitType ? p.visitType.replace(/_/g, ' ').toLowerCase() : 'N/A'}
+                        </CTableDataCell>
+                        <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black, textTransform: 'capitalize' }}>
+                          {p.followupStatus || 'N/A'}
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px' }}>
                           <span

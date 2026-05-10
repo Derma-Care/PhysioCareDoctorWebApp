@@ -5,7 +5,7 @@ export const ipUrl = 'http://3.7.165.97:9090'
 export const baseUrl = `${ipUrl}/api/physiotherapy-doctor`
 
 // Login
-export const loginEndpoint = 'PhysioDoctorlogin'
+export const loginUrl = `${ipUrl}/api/doctors/login`
 export const updatePasswordEndpoint = 'update-PhysioDoctorpassword'
 export const updateAvailabilityEndpoint = 'update-PhysioDoctorAvailability'
 export const getDoctorByIdEndpoint = 'getDoctorById'

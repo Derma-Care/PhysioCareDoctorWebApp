@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { card, SLabel, inputBase, checkboxStyle } from './SymptomsDiseases'
 import Button from '../components/CustomButton/CustomButton'
 
-const NeuroFunctionalInfo = ({ seed = {}, onNext }) => {
+const NeuroFunctionalInfo = ({ seed = {}, onNext, hideFooter = false }) => {
   // 3. RADIATION & NEURO SYMPTOMS
   const [radiating, setRadiating] = useState(seed.radiationNeuro?.radiating ?? false)
   const [numbness, setNumbness] = useState(seed.radiationNeuro?.numbness ?? false)
@@ -27,8 +27,8 @@ const NeuroFunctionalInfo = ({ seed = {}, onNext }) => {
   }
 
   return (
-    <div style={{ paddingBottom: '90px', backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 800, margin: '20px auto 0', padding: '0 20px' }}>
+    <div style={{ paddingBottom: hideFooter ? '0' : '90px', backgroundColor: '#FFFFFF', minHeight: hideFooter ? 'auto' : '100vh' }}>
+      <div style={{ maxWidth: 800, margin: hideFooter ? '0' : '20px auto 0', padding: hideFooter ? '0' : '0 20px' }}>
         
         {/* Section 3 */}
         <div style={card}>
@@ -69,28 +69,30 @@ const NeuroFunctionalInfo = ({ seed = {}, onNext }) => {
 
       </div>
 
-      <div className="position-fixed bottom-0" style={{
-        left: 0, right: 0,
-        background: '#FFFFFF',
-        borderTop: '2px solid #1B4F8A',
-        display: 'flex', justifyContent: 'flex-end', gap: 16,
-        padding: '10px 24px',
-        boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
-      }}>
-        <Button
-          customColor="#1B4F8A"
-          onClick={handleNext}
-          style={{
-            borderRadius: '20px', fontWeight: 700,
-            padding: '6px 24px',
-            color: '#FFFFFF',
-            boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
-            border: '1.5px solid #1B4F8A',
-          }}
-        >
-          Next
-        </Button>
-      </div>
+      {!hideFooter && (
+        <div className="position-fixed bottom-0" style={{
+          left: 0, right: 0,
+          background: '#FFFFFF',
+          borderTop: '2px solid #1B4F8A',
+          display: 'flex', justifyContent: 'flex-end', gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
+        }}>
+          <Button
+            customColor="#1B4F8A"
+            onClick={handleNext}
+            style={{
+              borderRadius: '20px', fontWeight: 700,
+              padding: '6px 24px',
+              color: '#FFFFFF',
+              boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
+              border: '1.5px solid #1B4F8A',
+            }}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { card, SLabel, checkboxStyle } from './SymptomsDiseases'
 import Button from '../components/CustomButton/CustomButton'
 
-const RedFlagScreening = ({ seed = {}, onNext }) => {
+const RedFlagScreening = ({ seed = {}, onNext, hideFooter = false }) => {
   const [trauma, setTrauma] = useState(seed.redFlags?.trauma ?? false)
   const [weightLoss, setWeightLoss] = useState(seed.redFlags?.weightLoss ?? false)
   const [fever, setFever] = useState(seed.redFlags?.fever ?? false)
@@ -16,9 +16,14 @@ const RedFlagScreening = ({ seed = {}, onNext }) => {
     })
   }
 
+  // If we are hiding footer, we might want to expose the state changes up
+  // but since we will likely use refs or just call handleNext on tab change,
+  // we can just pass the state via onNext when parent asks for it.
+  // For now, let's just use useEffect to update parent if needed or wait for handleNext.
+
   return (
-    <div style={{ paddingBottom: '90px', backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 800, margin: '20px auto 0', padding: '0 20px' }}>
+    <div style={{ paddingBottom: hideFooter ? '0' : '90px', backgroundColor: '#FFFFFF', minHeight: hideFooter ? 'auto' : '100vh' }}>
+      <div style={{ maxWidth: 800, margin: hideFooter ? '0' : '20px auto 0', padding: hideFooter ? '0' : '0 20px' }}>
         
         <div style={card}>
           <SLabel text="Red Flag Screening" />
@@ -58,28 +63,30 @@ const RedFlagScreening = ({ seed = {}, onNext }) => {
 
       </div>
 
-      <div className="position-fixed bottom-0" style={{
-        left: 0, right: 0,
-        background: '#FFFFFF',
-        borderTop: '2px solid #1B4F8A',
-        display: 'flex', justifyContent: 'flex-end', gap: 16,
-        padding: '10px 24px',
-        boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
-      }}>
-        <Button
-          customColor="#1B4F8A"
-          onClick={handleNext}
-          style={{
-            borderRadius: '20px', fontWeight: 700,
-            padding: '6px 24px',
-            color: '#FFFFFF',
-            boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
-            border: '1.5px solid #1B4F8A',
-          }}
-        >
-          Next
-        </Button>
-      </div>
+      {!hideFooter && (
+        <div className="position-fixed bottom-0" style={{
+          left: 0, right: 0,
+          background: '#FFFFFF',
+          borderTop: '2px solid #1B4F8A',
+          display: 'flex', justifyContent: 'flex-end', gap: 16,
+          padding: '10px 24px',
+          boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
+        }}>
+          <Button
+            customColor="#1B4F8A"
+            onClick={handleNext}
+            style={{
+              borderRadius: '20px', fontWeight: 700,
+              padding: '6px 24px',
+              color: '#FFFFFF',
+              boxShadow: '0 2px 8px rgba(27,79,138,0.30)',
+              border: '1.5px solid #1B4F8A',
+            }}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

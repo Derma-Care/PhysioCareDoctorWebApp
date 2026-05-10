@@ -14,7 +14,15 @@ import Investigation from '../Prescription/Investigation'
 const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = false }) => {
   const { id } = useParams()
   const { state } = useLocation()
-  const { patientData } = useDoctorContext()
+  const { patientData, setPatientData } = useDoctorContext()
+
+  // Clear patient context on unmount so sidebar reverts to doctor profile
+  useEffect(() => {
+    return () => {
+      setPatientData(null)
+    }
+  }, [setPatientData])
+
   const [patient, setPatient] = useState(patientData || state?.patient || null)
   const navigate = useNavigate()
   const { success, info } = useToast()

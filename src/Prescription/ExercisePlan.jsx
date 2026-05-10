@@ -5,7 +5,7 @@ import { getTherapyExercises, getTodayAppointments } from '../Auth/Auth'
 
 /* ─── Empty exercise entry ───────────────────────────────────────────────── */
 const EMPTY_EXERCISE = {
-  name: '', sets: '', reps: '', frequencyValue: '', frequencyUnit: 'day',
+  name: '', sets: '', reps: '', sessions: '', frequencyValue: '', frequencyUnit: 'day',
   instructions: '', videoUrl: '', thumbnail: '',
 }
 
@@ -54,6 +54,13 @@ const validateForm = (form) => {
     }
   }
 
+  if (form.sessions !== '' && form.sessions !== null) {
+    const n = Number(form.sessions)
+    if (isNaN(n) || n < 1 || n > 500 || !Number.isInteger(n)) {
+      errors.sessions = 'Sessions must be a whole number between 1–500'
+    }
+  }
+
   if (form.frequencyValue !== '' && form.frequencyValue !== null) {
     const n = Number(form.frequencyValue)
     if (isNaN(n) || n < 1 || !Number.isInteger(n)) {
@@ -90,9 +97,9 @@ const labelStyle = {
   textTransform: 'uppercase',
 }
 
-const gridFour = {
+const gridFive = {
   display: 'grid',
-  gridTemplateColumns: '1fr 1fr 1fr 1fr',
+  gridTemplateColumns: '1fr 1fr 1fr 2fr',
   gap: '16px 20px',
   marginBottom: 16,
 }
@@ -435,6 +442,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
           name: ex.name || '',
           sets: ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : '',
           reps: ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : '',
+          sessions: ex.session !== null && ex.session !== undefined ? String(ex.session) : '',
           frequencyValue: fv,
           frequencyUnit: fu,
           frequency: freqStr,
@@ -740,8 +748,9 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                                   ...f,
                                   therapyExercisesId: exId,
                                   name: exName,
-                                  sets: exSets || exSession || f.sets,
+                                  sets: exSets || f.sets,
                                   reps: exReps || f.reps,
+                                  sessions: exSession || f.sessions,
                                   frequencyValue: fv || f.frequencyValue,
                                   frequencyUnit: fu || f.frequencyUnit,
                                   instructions: exNotes || f.instructions,
@@ -782,7 +791,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                 </div>
 
                 {/* Sets | Reps | Frequency value | Frequency unit */}
-                <div style={gridFour}>
+                <div style={gridFive}>
                   <div>
                     <label style={{ ...labelStyle, color: fieldErrors.sets ? '#e53e3e' : '#1B4F8A' }}>Sets</label>
                     {fieldErrors.sets && (
@@ -813,7 +822,22 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                       hasError={!!fieldErrors.reps}
                     />
                   </div>
-                  <div style={{ gridColumn: 'span 2' }}>
+                  <div>
+                    <label style={{ ...labelStyle, color: fieldErrors.sessions ? '#e53e3e' : '#1B4F8A' }}>Sessions</label>
+                    {fieldErrors.sessions && (
+                      <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
+                        ⚠ {fieldErrors.sessions}
+                      </span>
+                    )}
+                    <StepperInput
+                      value={form.sessions}
+                      onChange={val => { set('sessions')(val); setFieldErrors(prev => ({ ...prev, sessions: '' })) }}
+                      min={1} max={500}
+                      placeholder="e.g. 10"
+                      hasError={!!fieldErrors.sessions}
+                    />
+                  </div>
+                  <div style={{ gridColumn: 'span 1' }}>
                     <label style={{ ...labelStyle, color: fieldErrors.frequencyValue ? '#e53e3e' : '#1B4F8A' }}>Frequency</label>
                     {fieldErrors.frequencyValue && (
                       <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
@@ -900,7 +924,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)', color: '#fff' }}>
-                      {['#', 'Name', 'Sets', 'Reps', 'Frequency', 'Instructions', 'Video', 'Actions'].map(h => (
+                      {['#', 'Name', 'Sets', 'Reps', 'Sessions', 'Frequency', 'Instructions', 'Video', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
@@ -920,6 +944,11 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                           <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                             {ex.reps !== '' && ex.reps !== null && ex.reps !== undefined
                               ? <span style={{ background: '#dceeff', color: '#1B4F8A', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🔄 {ex.reps}</span>
+                              : '—'}
+                          </td>
+                          <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                            {ex.sessions
+                              ? <span style={{ background: '#dceeff', color: '#1B4F8A', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🗓 {ex.sessions}</span>
                               : '—'}
                           </td>
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>

@@ -10,7 +10,7 @@ import { postLogin, getDoctorDetails, getClinicDetails } from '../../../Auth/Aut
 import { COLORS } from '../../../Themes'
 import { useToast } from '../../../utils/Toaster'
 import { useDoctorContext } from '../../../Context/DoctorContext'
-import { baseUrl, loginEndpoint } from '../../../Auth/BaseUrl'
+import { baseUrl, loginUrl } from '../../../Auth/BaseUrl'
 
 /* ─── Keyframes & global styles ─────────────────────────────────────────── */
 const KEYFRAMES = `
@@ -262,25 +262,45 @@ const Login = () => {
     try {
       ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey']
         .forEach(k => localStorage.removeItem(k))
-      const res = await postLogin({ username: userName, password, fcmToken: 'fcmToken' }, `${baseUrl}/${loginEndpoint}`)
+      const res = await postLogin({ username: userName, password, fcmToken: 'fcmToken' }, loginUrl)
       if (res.success) {
-        const { staffId, hospitalId } = res.data
+        const doctorId = res.data.staffId || res.data.id || res.data.doctorId
+        const hospitalId = res.data.hospitalId || res.data.clinicId
+
         localStorage.setItem('sessionKey', Date.now())
-        localStorage.setItem('doctorId', staffId)
+        localStorage.setItem('doctorId', doctorId)
         localStorage.setItem('hospitalId', hospitalId)
         localStorage.setItem('doctorMobileNumber', userName)
-        
-        // Removed dd fetch to avoid 404
-        const cd = await getClinicDetails()
-        
-        if (cd) {
-          localStorage.setItem('clinicDetails', JSON.stringify(cd))
-          setDoctorId(staffId); setHospitalId(hospitalId)
-          setClinicDetails(cd)
-          
-          success(res.message || 'Login successful!')
-          navigate('/dashboard')
+
+        // Fetch full details
+        const [dd, cd] = await Promise.all([
+          getDoctorDetails(),
+          getClinicDetails()
+        ])
+
+        if (dd) {
+          setDoctorDetails(dd)
+          localStorage.setItem('doctorDetails', JSON.stringify(dd))
         }
+        if (cd) {
+          // If login response has branches but cd doesn't, merge them
+          const mergedCd = {
+            ...cd,
+            branches: cd.branches || res.data.branches || []
+          }
+          setClinicDetails(mergedCd)
+          localStorage.setItem('clinicDetails', JSON.stringify(mergedCd))
+        } else if (res.data.branches) {
+          // If cd fetch failed but we have branches in login response
+          const mockCd = { branches: res.data.branches }
+          setClinicDetails(mockCd)
+          localStorage.setItem('clinicDetails', JSON.stringify(mockCd))
+        }
+
+        setDoctorId(doctorId); setHospitalId(hospitalId)
+
+        success(res.message || 'Login successful!')
+        navigate('/dashboard')
       } else { setErrors({ login: res.message || 'Login failed' }) }
     } catch (err) {
       setErrors({ login: err.response?.data?.message || 'Login error occurred' })
