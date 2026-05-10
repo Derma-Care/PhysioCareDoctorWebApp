@@ -3,8 +3,10 @@ import { formatDistanceToNow } from 'date-fns'
 import { format, addDays, parse } from 'date-fns'
 import {
   CCard, CCardBody, CRow, CCol, CButton,
+  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
+  CForm, CFormInput, CFormLabel, CInputGroup, CInputGroupText
 } from '@coreui/react'
-import { averageRatings, getAvailableSlots, updateAvailability } from '../../Auth/Auth'
+import { averageRatings, getAvailableSlots, updateAvailability, updateLogin } from '../../Auth/Auth'
 import { COLORS } from '../../Themes'
 import { capitalizeEachWord } from '../../utils/CaptalZeWord'
 
@@ -451,6 +453,13 @@ const DoctorProfile = () => {
   const [days, setDays]                   = useState([])
   const [selectedDate, setSelectedDate]   = useState(format(new Date(), 'yyyy-MM-dd'))
 
+  // Password Modal State
+  const [showPassModal, setShowPassModal] = useState(false)
+  const [newPassword, setNewPassword]     = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passLoading, setPassLoading]     = useState(false)
+  const [passMsg, setPassMsg]             = useState({ type: '', text: '' })
+
   useEffect(() => {
     const today = new Date()
     setDays(Array.from({ length: 7 }, (_, i) => {
@@ -501,6 +510,39 @@ const DoctorProfile = () => {
   const slotsForSelectedDate = slotsData.find(
     (day) => normalizeDate(day.date) === selectedDate
   )?.availableSlots || []
+
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault()
+    if (!newPassword || !confirmPassword) {
+      setPassMsg({ type: 'danger', text: 'Please fill all fields' })
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPassMsg({ type: 'danger', text: 'Passwords do not match' })
+      return
+    }
+
+    setPassLoading(true)
+    setPassMsg({ type: '', text: '' })
+    try {
+      const doctorMobile = localStorage.getItem('doctorMobileNumber')
+      if (!doctorMobile) throw new Error("Doctor mobile not found")
+
+      await updateLogin({ password: newPassword }, doctorMobile)
+      setPassMsg({ type: 'success', text: 'Password updated successfully!' })
+      setTimeout(() => {
+        setShowPassModal(false)
+        setNewPassword('')
+        setConfirmPassword('')
+        setPassMsg({ type: '', text: '' })
+      }, 1500)
+    } catch (err) {
+      console.error(err)
+      setPassMsg({ type: 'danger', text: err.response?.data?.message || 'Failed to update password' })
+    } finally {
+      setPassLoading(false)
+    }
+  }
 
   const TABS = [
     { key: 1, label: '👤 Doctor Info' },
@@ -568,6 +610,18 @@ const DoctorProfile = () => {
                       }}
                     >
                       {doctorDetails?.isAvailable ? '⭕ Set Inactive' : '🟢 Set Active'}
+                    </button>
+
+                    <button 
+                      onClick={() => setShowPassModal(true)}
+                      style={{
+                        background: 'rgba(255,255,255,0.1)',
+                        color: '#fff', border: '1px solid rgba(255,255,255,0.3)', 
+                        borderRadius: 8, padding: '4px 12px',
+                        fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                    >
+                      🔐 Change Password
                     </button>
                   </div>
                   <div className="dp-hero-name">
@@ -871,6 +925,88 @@ const DoctorProfile = () => {
             </div>
           </div>
         )}
+
+        {/* ── PASSWORD MODAL ─────────────────────────────────────── */}
+        <CModal 
+          visible={showPassModal} 
+          onClose={() => {
+            if (!passLoading) {
+              setShowPassModal(false)
+              setPassMsg({ type: '', text: '' })
+              setNewPassword('')
+              setConfirmPassword('')
+            }
+          }}
+          alignment="center"
+          size="sm"
+        >
+          <CModalHeader closeButton={!passLoading}>
+            <CModalTitle style={{ fontSize: '1rem', fontWeight: 700, color: '#1B4F8A' }}>
+              Update Password
+            </CModalTitle>
+          </CModalHeader>
+          <CModalBody>
+            <CForm onSubmit={handlePasswordUpdate}>
+              <div className="mb-3">
+                <CFormLabel style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4b5563' }}>New Password</CFormLabel>
+                <CInputGroup>
+                  <CInputGroupText>🔒</CInputGroupText>
+                  <CFormInput
+                    type="password"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    style={{ fontSize: '0.9rem' }}
+                  />
+                </CInputGroup>
+              </div>
+              <div className="mb-3">
+                <CFormLabel style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4b5563' }}>Confirm Password</CFormLabel>
+                <CInputGroup>
+                  <CInputGroupText>✅</CInputGroupText>
+                  <CFormInput
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    style={{ fontSize: '0.9rem' }}
+                  />
+                </CInputGroup>
+              </div>
+              {passMsg.text && (
+                <div className={`alert alert-${passMsg.type}`} style={{ fontSize: '0.8rem', padding: '8px 12px', marginBottom: 0 }}>
+                  {passMsg.text}
+                </div>
+              )}
+            </CForm>
+          </CModalBody>
+          <CModalFooter>
+            <CButton 
+              color="secondary" 
+              variant="ghost" 
+              onClick={() => setShowPassModal(false)}
+              disabled={passLoading}
+              style={{ fontSize: '0.85rem' }}
+            >
+              Cancel
+            </CButton>
+            <CButton 
+              color="primary" 
+              onClick={handlePasswordUpdate}
+              disabled={passLoading}
+              style={{ 
+                fontSize: '0.85rem', 
+                background: '#1B4F8A', 
+                borderColor: '#1B4F8A',
+                boxShadow: '0 4px 12px rgba(27,79,138,0.25)' 
+              }}
+            >
+              {passLoading ? 'Updating...' : 'Update Password'}
+            </CButton>
+          </CModalFooter>
+        </CModal>
 
       </div>
     </>

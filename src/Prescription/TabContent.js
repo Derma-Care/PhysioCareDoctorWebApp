@@ -15,6 +15,8 @@ import FollowUpnew from './FollowUpnew'
 import TherapySession from './TreatmentPlan'
 import HomePlan from './ExercisePlan'
 import Investigation from './Investigation'
+import RedFlagScreening from './RedFlagScreening'
+import NeuroFunctionalInfo from './NeuroFunctionalInfo'
 
 /* ─── deepMerge ──────────────────────────────────────────────────────────── */
 const deepMerge = (target, source) => {
@@ -108,6 +110,14 @@ const TabContent = ({
 
     case 'Assessment':
       content = <Assessment seed={formData.assessment || {}} onNext={handleNext} sidebarWidth={260} formData={formData} />
+      break
+
+    case 'Red Flags':
+      content = <RedFlagScreening seed={{ redFlags: formData.redFlags || {} }} onNext={handleNext} />
+      break
+
+    case 'Neuro Info':
+      content = <NeuroFunctionalInfo seed={{ radiationNeuro: formData.radiationNeuro || {}, psychosocial: formData.psychosocial || {}, specialSymptoms: formData.specialSymptoms || {} }} onNext={handleNext} />
       break
 
     case 'Diagnosis':

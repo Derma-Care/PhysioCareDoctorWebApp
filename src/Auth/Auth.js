@@ -5,7 +5,9 @@ import {
   appointmentsCountbaseUrl,
   clinicbaseUrl,
   doctorbaseUrl,
-  updateLoginEndpoint,
+  updatePasswordEndpoint,
+  updateAvailabilityEndpoint,
+  getDoctorByIdEndpoint,
   testsbaseUrl,
   diseasesbaseUrl,
   treatmentsbaseUrl,
@@ -38,13 +40,12 @@ import {
   exerciseUrlId,
   getInProgressDetailsEndpoint,
   visitHistoryByPatientIdAndBookingIdEndpoint,
-  getExerciseSessionsWithRecordsEndpoint,
   ipUrl,
 } from './BaseUrl'
 
-export const postLogin = async (payload) => {
+export const postLogin = async (payload, endpoint) => {
   try {
-    const response = await api.post(`${baseUrl}/login`, payload, {
+    const response = await api.post(`${endpoint}`, payload, {
       validateStatus: () => true,
     })
     console.log('Login Response:', response.data)
@@ -60,14 +61,13 @@ export const postLogin = async (payload) => {
 
 export const getDoctorDetails = async () => {
   const doctorId = localStorage.getItem('doctorId')
+  if (!doctorId || doctorId === 'undefined') return null
   try {
-    const response = await api.get(`${doctorbaseUrl}/${doctorId}`)
-    const doctorData = response.data.data
-    console.log('✅ Doctor Details:', doctorData)
-    return doctorData
+    const response = await api.get(`${doctorbaseUrl}/getDoctorById/${doctorId}`)
+    return response.data?.data || response.data
   } catch (error) {
     console.error('❌ Error fetching doctor details:', error)
-    throw error
+    return null
   }
 }
 
@@ -401,7 +401,7 @@ export const averageRatings = async (doctorId) => {
 
 export const updateLogin = async (payload, userName) => {
   try {
-    const response = await api.put(`/api/physiotherapy-doctor/update-PhysioDoctorpassword/${userName}`, payload)
+    const response = await api.put(`${doctorbaseUrl}/${updatePasswordEndpoint}/${userName}`, payload)
     return response.data
   } catch (err) {
     console.error('Update login error:', err)
@@ -409,9 +409,21 @@ export const updateLogin = async (payload, userName) => {
   }
 }
 
+
+
+export const getDoctorById = async (doctorId) => {
+  try {
+    const response = await api.get(`${doctorbaseUrl}/${getDoctorByIdEndpoint}/${doctorId}`)
+    return response.data
+  } catch (err) {
+    console.error('Error fetching doctor by ID:', err)
+    throw err
+  }
+}
+
 export const updateAvailability = async (doctorId, payload) => {
   try {
-    const response = await api.put(`/api/physiotherapy-doctor/update-PhysioDoctorAvailability/${doctorId}`, payload)
+    const response = await api.put(`${doctorbaseUrl}/${updateAvailabilityEndpoint}/${doctorId}`, payload)
     return response.data
   } catch (err) {
     console.error('Update availability error:', err)
@@ -641,7 +653,7 @@ export const getInProgressDetails = async (patientId, bookingId) => {
 export const getExerciseSessionsWithRecords = async (clinicId, branchId, bookingId, patientId, therapistRecordId) => {
   try {
     const response = await api.get(
-      `${getExerciseSessionsWithRecordsEndpoint}/${clinicId}/${branchId}/${bookingId}/${patientId}/${therapistRecordId}`
+      `${baseUrl}/payment/getExerciseSessionsWithRecords/${clinicId}/${branchId}/${bookingId}/${patientId}/${therapistRecordId}`
     );
     console.log("✅ Exercise Sessions with Records:", response.data);
     return response.data;

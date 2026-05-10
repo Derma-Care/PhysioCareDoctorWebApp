@@ -1,16 +1,21 @@
-export const ipUrl = 'http://3.111.28.174:9090'
-export const baseUrl = `${ipUrl}/api/doctors`
+// export const ipUrl = 'http://3.111.28.174:9090'
+export const ipUrl = 'http://3.7.165.97:9090'
+
+
+export const baseUrl = `${ipUrl}/api/physiotherapy-doctor`
 
 // Login
-export const loginEndpoint = 'login'
-export const updateLoginEndpoint = 'update-password'
+export const loginEndpoint = 'PhysioDoctorlogin'
+export const updatePasswordEndpoint = 'update-PhysioDoctorpassword'
+export const updateAvailabilityEndpoint = 'update-PhysioDoctorAvailability'
+export const getDoctorByIdEndpoint = 'getDoctorById'
 
 // Admin
 export const adminBaseUrl = `${ipUrl}/admin`
 export const clinicbaseUrl = `${ipUrl}/admin/getClinicById`
 
 // Doctor
-export const doctorbaseUrl = `${ipUrl}/clinic-admin/doctor`
+export const doctorbaseUrl = `${ipUrl}/api/physiotherapy-doctor`
 export const getdoctorSaveDetailsEndpoint = `${ipUrl}/api/doctors/getDoctorSaveDetailsById`
 // export const getVisitHistoryByPatientIdAndDoctorIdEndpoint = `${ipUrl}/api/doctors/getVisitHistoryByPatientIdAndDoctorId`
 export const visitHistoryBypatientIdAndBookingId = `${ipUrl}/api/doctors/visitHistoryBypatientIdAndBookingId`

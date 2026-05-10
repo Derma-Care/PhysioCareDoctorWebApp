@@ -10,6 +10,7 @@ import { postLogin, getDoctorDetails, getClinicDetails } from '../../../Auth/Aut
 import { COLORS } from '../../../Themes'
 import { useToast } from '../../../utils/Toaster'
 import { useDoctorContext } from '../../../Context/DoctorContext'
+import { baseUrl, loginEndpoint } from '../../../Auth/BaseUrl'
 
 /* ─── Keyframes & global styles ─────────────────────────────────────────── */
 const KEYFRAMES = `
@@ -184,32 +185,32 @@ const ParticleCanvas = () => {
     draw()
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
   }, [])
-  return <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' }}/>
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
 }
 
 /* ─── Stat Pill ──────────────────────────────────────────────────────────── */
 const Pill = ({ icon, label, value, delay }) => (
   <div style={{
-    display:'flex', alignItems:'center', gap:12,
-    backgroundColor:'rgba(255,255,255,0.07)',
-    backdropFilter:'blur(16px)',
-    WebkitBackdropFilter:'blur(16px)',
-    border:'1px solid rgba(255,255,255,0.14)',
-    borderRadius:14, padding:'10px 20px',
-    animation:`pillSlide .6s ease both`,
+    display: 'flex', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    border: '1px solid rgba(255,255,255,0.14)',
+    borderRadius: 14, padding: '10px 20px',
+    animation: `pillSlide .6s ease both`,
     animationDelay: delay,
-    transition:'background .2s, border-color .2s',
+    transition: 'background .2s, border-color .2s',
   }}>
     <div style={{
-      width:36, height:36, borderRadius:10,
-      backgroundColor:'rgba(245,166,35,0.15)',
-      border:'1px solid rgba(245,166,35,0.25)',
-      display:'flex', alignItems:'center', justifyContent:'center',
-      fontSize:16,
+      width: 36, height: 36, borderRadius: 10,
+      backgroundColor: 'rgba(245,166,35,0.15)',
+      border: '1px solid rgba(245,166,35,0.25)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 16,
     }}>{icon}</div>
     <div>
-      <div style={{ color:'#F5A623', fontWeight:800, fontSize:17, lineHeight:1.1, fontFamily:"'Outfit',sans-serif" }}>{value}</div>
-      <div style={{ color:'rgba(255,255,255,0.5)', fontSize:11.5, marginTop:1 }}>{label}</div>
+      <div style={{ color: '#F5A623', fontWeight: 800, fontSize: 17, lineHeight: 1.1, fontFamily: "'Outfit',sans-serif" }}>{value}</div>
+      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5, marginTop: 1 }}>{label}</div>
     </div>
   </div>
 )
@@ -217,26 +218,26 @@ const Pill = ({ icon, label, value, delay }) => (
 /* ─── Hex Ring decoration ────────────────────────────────────────────────── */
 const HexRing = ({ size, x, y, color, dur, rev }) => (
   <div style={{
-    position:'absolute', left:x, top:y,
-    width:size, height:size,
-    border:`1px solid ${color}`,
-    borderRadius:'50%',
-    animation:`${rev ? 'hexRotateRev' : 'hexRotate'} ${dur}s linear infinite`,
-    pointerEvents:'none',
-    opacity:0.25,
-  }}/>
+    position: 'absolute', left: x, top: y,
+    width: size, height: size,
+    border: `1px solid ${color}`,
+    borderRadius: '50%',
+    animation: `${rev ? 'hexRotateRev' : 'hexRotate'} ${dur}s linear infinite`,
+    pointerEvents: 'none',
+    opacity: 0.25,
+  }} />
 )
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 const Login = () => {
-  const [userName, setUserName]         = useState('')
-  const [password, setPassword]         = useState('')
+  const [userName, setUserName] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors]             = useState({})
-  const [loading, setLoading]           = useState(false)
-  const [mounted, setMounted]           = useState(false)
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  const navigate  = useNavigate()
+  const navigate = useNavigate()
   const { success } = useToast()
   const { setDoctorId, setHospitalId, setDoctorDetails, setClinicDetails } = useDoctorContext()
 
@@ -259,21 +260,24 @@ const Login = () => {
     if (!validate()) return
     setLoading(true); setErrors({})
     try {
-      ;['doctorId','hospitalId','doctorDetails','clinicDetails','sessionKey']
+      ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey']
         .forEach(k => localStorage.removeItem(k))
-      const res = await postLogin({ username: userName, password, fcmToken: 'fcmToken' })
+      const res = await postLogin({ username: userName, password, fcmToken: 'fcmToken' }, `${baseUrl}/${loginEndpoint}`)
       if (res.success) {
         const { staffId, hospitalId } = res.data
         localStorage.setItem('sessionKey', Date.now())
-        localStorage.setItem('doctorId',   staffId)
+        localStorage.setItem('doctorId', staffId)
         localStorage.setItem('hospitalId', hospitalId)
-        const dd = await getDoctorDetails()
+        localStorage.setItem('doctorMobileNumber', userName)
+        
+        // Removed dd fetch to avoid 404
         const cd = await getClinicDetails()
-        if (dd && cd) {
-          localStorage.setItem('doctorDetails', JSON.stringify(dd))
-          localStorage.setItem('clinicDetails',  JSON.stringify(cd))
+        
+        if (cd) {
+          localStorage.setItem('clinicDetails', JSON.stringify(cd))
           setDoctorId(staffId); setHospitalId(hospitalId)
-          setDoctorDetails(dd); setClinicDetails(cd)
+          setClinicDetails(cd)
+          
           success(res.message || 'Login successful!')
           navigate('/dashboard')
         }
@@ -283,7 +287,7 @@ const Login = () => {
     } finally { setLoading(false) }
   }
 
-  const A = (delay) => mounted ? { animation:`floatUp .72s ease ${delay}s both` } : { opacity:0 }
+  const A = (delay) => mounted ? { animation: `floatUp .72s ease ${delay}s both` } : { opacity: 0 }
 
   return (
     <>
@@ -291,10 +295,10 @@ const Login = () => {
 
       {/* ── PAGE SHELL ──────────────────────────────────────────────────── */}
       <div style={{
-        width:'100vw', height:'100vh', overflow:'hidden',
-        display:'flex', position:'relative',
-        fontFamily:"'DM Sans',sans-serif",
-        backgroundImage:'linear-gradient(135deg, #060e1a 0%, #0d1e36 40%, #0a1628 70%, #111827 100%)',
+        width: '100vw', height: '100vh', overflow: 'hidden',
+        display: 'flex', position: 'relative',
+        fontFamily: "'DM Sans',sans-serif",
+        backgroundImage: 'linear-gradient(135deg, #060e1a 0%, #0d1e36 40%, #0a1628 70%, #111827 100%)',
       }}>
 
         {/* ── ANIMATED CANVAS PARTICLES ─────────────────────────────── */}
@@ -302,247 +306,247 @@ const Login = () => {
 
         {/* ── LARGE GLOWING ORBS ────────────────────────────────────── */}
         <div style={{
-          position:'absolute', top:'-20%', left:'-10%',
-          width:'55vw', height:'55vw', borderRadius:'50%',
-          backgroundImage:'radial-gradient(circle, rgba(27,79,138,0.28) 0%, transparent 70%)',
-          animation:'orbFloat1 18s ease-in-out infinite',
-          pointerEvents:'none', filter:'blur(1px)',
-        }}/>
+          position: 'absolute', top: '-20%', left: '-10%',
+          width: '55vw', height: '55vw', borderRadius: '50%',
+          backgroundImage: 'radial-gradient(circle, rgba(27,79,138,0.28) 0%, transparent 70%)',
+          animation: 'orbFloat1 18s ease-in-out infinite',
+          pointerEvents: 'none', filter: 'blur(1px)',
+        }} />
         <div style={{
-          position:'absolute', bottom:'-15%', right:'-5%',
-          width:'45vw', height:'45vw', borderRadius:'50%',
-          backgroundImage:'radial-gradient(circle, rgba(245,166,35,0.14) 0%, transparent 70%)',
-          animation:'orbFloat2 22s ease-in-out 3s infinite',
-          pointerEvents:'none', filter:'blur(1px)',
-        }}/>
+          position: 'absolute', bottom: '-15%', right: '-5%',
+          width: '45vw', height: '45vw', borderRadius: '50%',
+          backgroundImage: 'radial-gradient(circle, rgba(245,166,35,0.14) 0%, transparent 70%)',
+          animation: 'orbFloat2 22s ease-in-out 3s infinite',
+          pointerEvents: 'none', filter: 'blur(1px)',
+        }} />
         <div style={{
-          position:'absolute', top:'40%', left:'42%',
-          width:'22vw', height:'22vw', borderRadius:'50%',
-          backgroundImage:'radial-gradient(circle, rgba(42,109,181,0.18) 0%, transparent 70%)',
-          animation:'orbFloat3 14s ease-in-out 1s infinite',
-          pointerEvents:'none',
-        }}/>
+          position: 'absolute', top: '40%', left: '42%',
+          width: '22vw', height: '22vw', borderRadius: '50%',
+          backgroundImage: 'radial-gradient(circle, rgba(42,109,181,0.18) 0%, transparent 70%)',
+          animation: 'orbFloat3 14s ease-in-out 1s infinite',
+          pointerEvents: 'none',
+        }} />
 
         {/* ── SUBTLE GRID OVERLAY ───────────────────────────────────── */}
         <div style={{
-          position:'absolute', inset:0, pointerEvents:'none', zIndex:0,
-          backgroundImage:`
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          backgroundImage: `
             linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)
           `,
-          backgroundSize:'60px 60px',
-          animation:'gridDrift 40s linear infinite',
-          opacity:0.6,
-        }}/>
+          backgroundSize: '60px 60px',
+          animation: 'gridDrift 40s linear infinite',
+          opacity: 0.6,
+        }} />
 
         {/* ── SCAN LINE EFFECT ──────────────────────────────────────── */}
         <div style={{
-          position:'absolute', left:0, right:0, height:'2px',
-          backgroundImage:'linear-gradient(90deg,transparent,rgba(245,166,35,0.08),transparent)',
-          animation:'scanLine 10s ease-in-out 2s infinite',
-          pointerEvents:'none', zIndex:1,
-        }}/>
+          position: 'absolute', left: 0, right: 0, height: '2px',
+          backgroundImage: 'linear-gradient(90deg,transparent,rgba(245,166,35,0.08),transparent)',
+          animation: 'scanLine 10s ease-in-out 2s infinite',
+          pointerEvents: 'none', zIndex: 1,
+        }} />
 
         {/* ── ROTATING HEX RINGS ────────────────────────────────────── */}
-        <HexRing size={300} x="-80px" y="-80px"      color="rgba(245,166,35,0.2)"  dur={28} rev={false}/>
-        <HexRing size={180} x="-50px" y="-50px"      color="rgba(27,79,138,0.35)"  dur={18} rev={true}/>
-        <HexRing size={220} x="calc(100vw - 160px)" y="calc(100vh - 160px)" color="rgba(245,166,35,0.15)" dur={34} rev={false}/>
-        <HexRing size={140} x="calc(100vw - 130px)" y="calc(100vh - 130px)" color="rgba(42,109,181,0.3)"  dur={22} rev={true}/>
+        <HexRing size={300} x="-80px" y="-80px" color="rgba(245,166,35,0.2)" dur={28} rev={false} />
+        <HexRing size={180} x="-50px" y="-50px" color="rgba(27,79,138,0.35)" dur={18} rev={true} />
+        <HexRing size={220} x="calc(100vw - 160px)" y="calc(100vh - 160px)" color="rgba(245,166,35,0.15)" dur={34} rev={false} />
+        <HexRing size={140} x="calc(100vw - 130px)" y="calc(100vh - 130px)" color="rgba(42,109,181,0.3)" dur={22} rev={true} />
 
         {/* ── MEDICAL CROSS DECORATIONS ─────────────────────────────── */}
         {[
-          { x:'4%',  y:'12%', s:28, delay:0,   op:0.18 },
-          { x:'9%',  y:'58%', s:36, delay:0.9, op:0.10 },
-          { x:'27%', y:'76%', s:20, delay:1.7, op:0.12 },
-        ].map((c,i) => (
+          { x: '4%', y: '12%', s: 28, delay: 0, op: 0.18 },
+          { x: '9%', y: '58%', s: 36, delay: 0.9, op: 0.10 },
+          { x: '27%', y: '76%', s: 20, delay: 1.7, op: 0.12 },
+        ].map((c, i) => (
           <div key={i} style={{
-            position:'absolute', left:c.x, top:c.y,
-            opacity:c.op, pointerEvents:'none',
-            animation:`crossPulse 5s ease-in-out ${c.delay}s infinite`,
+            position: 'absolute', left: c.x, top: c.y,
+            opacity: c.op, pointerEvents: 'none',
+            animation: `crossPulse 5s ease-in-out ${c.delay}s infinite`,
           }}>
             <svg width={c.s} height={c.s} viewBox="0 0 32 32">
-              <rect x="12" y="2"  width="8" height="28" rx="3" fill="#F5A623"/>
-              <rect x="2"  y="12" width="28" height="8"  rx="3" fill="#F5A623"/>
+              <rect x="12" y="2" width="8" height="28" rx="3" fill="#F5A623" />
+              <rect x="2" y="12" width="28" height="8" rx="3" fill="#F5A623" />
             </svg>
           </div>
         ))}
 
         {/* ── FLOATING RISE PARTICLES ───────────────────────────────── */}
         {[
-          { x:'6%',  y:'75%', s:5, d:'.2s',  c:'rgba(245,166,35,.6)' },
-          { x:'13%', y:'60%', s:3, d:'1.4s', c:'rgba(255,255,255,.3)' },
-          { x:'20%', y:'80%', s:6, d:'.8s',  c:'rgba(245,166,35,.4)' },
-          { x:'3%',  y:'88%', s:4, d:'2.2s', c:'rgba(255,255,255,.25)' },
-          { x:'17%', y:'70%', s:5, d:'.5s',  c:'rgba(245,166,35,.5)' },
-        ].map((p,i) => (
+          { x: '6%', y: '75%', s: 5, d: '.2s', c: 'rgba(245,166,35,.6)' },
+          { x: '13%', y: '60%', s: 3, d: '1.4s', c: 'rgba(255,255,255,.3)' },
+          { x: '20%', y: '80%', s: 6, d: '.8s', c: 'rgba(245,166,35,.4)' },
+          { x: '3%', y: '88%', s: 4, d: '2.2s', c: 'rgba(255,255,255,.25)' },
+          { x: '17%', y: '70%', s: 5, d: '.5s', c: 'rgba(245,166,35,.5)' },
+        ].map((p, i) => (
           <div key={i} style={{
-            position:'absolute', left:p.x, top:p.y,
-            width:p.s, height:p.s, borderRadius:'50%',
-            backgroundColor:p.c, opacity:0, pointerEvents:'none',
-            animation:`particleRise 8s ease-in-out ${p.d} infinite`,
-          }}/>
+            position: 'absolute', left: p.x, top: p.y,
+            width: p.s, height: p.s, borderRadius: '50%',
+            backgroundColor: p.c, opacity: 0, pointerEvents: 'none',
+            animation: `particleRise 8s ease-in-out ${p.d} infinite`,
+          }} />
         ))}
 
         {/* ══ LEFT PANEL ═══════════════════════════════════════════════ */}
         <div style={{
-          flex:'0 0 52%', display:'flex', flexDirection:'column',
-          alignItems:'center', justifyContent:'center',
-          padding:'0 5vw', position:'relative', zIndex:2,
+          flex: '0 0 52%', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '0 5vw', position: 'relative', zIndex: 2,
         }}>
 
           {/* Live badge */}
           <div style={{
-            display:'inline-flex', alignItems:'center', gap:7,
-            backgroundColor:'rgba(245,166,35,0.1)',
-            border:'1px solid rgba(245,166,35,0.25)',
-            borderRadius:20, padding:'5px 14px',
-            marginBottom:24,
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            backgroundColor: 'rgba(245,166,35,0.1)',
+            border: '1px solid rgba(245,166,35,0.25)',
+            borderRadius: 20, padding: '5px 14px',
+            marginBottom: 24,
             ...A(0),
           }}>
             <div style={{
-              width:6, height:6, borderRadius:'50%', backgroundColor:'#F5A623',
-              boxShadow:'0 0 6px rgba(245,166,35,0.8)',
-            }}/>
-            <span style={{ fontSize:11, fontWeight:600, color:'#F5A623', letterSpacing:'.1em', textTransform:'uppercase', fontFamily:"'Outfit',sans-serif" }}>
+              width: 6, height: 6, borderRadius: '50%', backgroundColor: '#F5A623',
+              boxShadow: '0 0 6px rgba(245,166,35,0.8)',
+            }} />
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#F5A623', letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: "'Outfit',sans-serif" }}>
               Healthcare Platform
             </span>
           </div>
 
           {/* App icon */}
           <img src={launcherIcon} alt="App icon" style={{
-            height:88, marginBottom:20,
-            filter:'drop-shadow(0 12px 32px rgba(245,166,35,0.3))',
+            height: 88, marginBottom: 20,
+            filter: 'drop-shadow(0 12px 32px rgba(245,166,35,0.3))',
             animation: mounted ? `iconBob 4s ease-in-out 1s infinite, floatUp .7s ease 0s both` : 'none',
-          }}/>
+          }} />
 
           {/* Title block */}
-          <div style={{ textAlign:'center', maxWidth:460, ...A(.15) }}>
+          <div style={{ textAlign: 'center', maxWidth: 460, ...A(.15) }}>
             <h1 style={{
-              fontFamily:"'Outfit',sans-serif",
-              fontSize:'clamp(26px,3.2vw,40px)', fontWeight:800,
-              lineHeight:1.18, color:'#fff',
-              marginBottom:8, letterSpacing:'-0.028em',
+              fontFamily: "'Outfit',sans-serif",
+              fontSize: 'clamp(26px,3.2vw,40px)', fontWeight: 800,
+              lineHeight: 1.18, color: '#fff',
+              marginBottom: 8, letterSpacing: '-0.028em',
             }}>
               Chiselon{' '}
               <span style={{
-                backgroundImage:'linear-gradient(90deg,#F5A623 0%,#ffd17a 40%,#F5A623 80%)',
-                backgroundSize:'200% auto',
-                WebkitBackgroundClip:'text',
-                WebkitTextFillColor:'transparent',
-                animation:'shimmerText 2.8s linear infinite',
+                backgroundImage: 'linear-gradient(90deg,#F5A623 0%,#ffd17a 40%,#F5A623 80%)',
+                backgroundSize: '200% auto',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                animation: 'shimmerText 2.8s linear infinite',
               }}>
                 Clinic
               </span>
-              {' '}Management<br/>System
+              {' '}Management<br />System
             </h1>
 
             {/* Animated underline */}
             <div style={{
-              height:3, backgroundImage:'linear-gradient(90deg,#F5A623,#ffd17a)',
-              borderRadius:2, margin:'0 auto 16px',
+              height: 3, backgroundImage: 'linear-gradient(90deg,#F5A623,#ffd17a)',
+              borderRadius: 2, margin: '0 auto 16px',
               animation: mounted ? 'lineGrow .9s ease .5s both' : 'none',
               width: mounted ? undefined : 0,
-            }}/>
+            }} />
 
             <p style={{
-              color:'rgba(255,255,255,0.42)', fontSize:13,
-              marginBottom:32, letterSpacing:'.04em',
-              fontFamily:"'Outfit',sans-serif", fontWeight:300,
+              color: 'rgba(255,255,255,0.42)', fontSize: 13,
+              marginBottom: 32, letterSpacing: '.04em',
+              fontFamily: "'Outfit',sans-serif", fontWeight: 300,
             }}>
               Powered by Chiselon Technologies
             </p>
           </div>
 
-       
+
 
           {/* Ghost doctor image */}
           <img src={Doctor} alt="" aria-hidden="true" style={{
-            position:'absolute', bottom:0, right:-20,
-            maxHeight:'72%', objectFit:'contain',
-            opacity:.08, pointerEvents:'none', zIndex:0,
-            filter:'saturate(0) brightness(3)',
-          }}/>
+            position: 'absolute', bottom: 0, right: -20,
+            maxHeight: '72%', objectFit: 'contain',
+            opacity: .08, pointerEvents: 'none', zIndex: 0,
+            filter: 'saturate(0) brightness(3)',
+          }} />
         </div>
 
         {/* ── DIVIDER ────────────────────────────────────────────────── */}
         <div style={{
-          width:1,
-          backgroundImage:'linear-gradient(to bottom, transparent, rgba(245,166,35,0.3) 30%, rgba(255,255,255,0.12) 70%, transparent)',
-          alignSelf:'stretch', margin:'60px 0', flexShrink:0, zIndex:2,
-        }}/>
+          width: 1,
+          backgroundImage: 'linear-gradient(to bottom, transparent, rgba(245,166,35,0.3) 30%, rgba(255,255,255,0.12) 70%, transparent)',
+          alignSelf: 'stretch', margin: '60px 0', flexShrink: 0, zIndex: 2,
+        }} />
 
         {/* ══ RIGHT PANEL ══════════════════════════════════════════════ */}
         <div style={{
-          flex:'0 0 48%', display:'flex',
-          alignItems:'center', justifyContent:'center',
-          padding:'24px 44px', zIndex:2,
+          flex: '0 0 48%', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '24px 44px', zIndex: 2,
         }}>
           <div style={{
-            width:'100%', maxWidth:400,
-            backgroundColor:'rgba(255,255,255,0.07)',
-            backdropFilter:'blur(28px)',
-            WebkitBackdropFilter:'blur(28px)',
-            borderRadius:24,
-            border:'1px solid rgba(255,255,255,0.12)',
-            overflow:'hidden',
+            width: '100%', maxWidth: 400,
+            backgroundColor: 'rgba(255,255,255,0.07)',
+            backdropFilter: 'blur(28px)',
+            WebkitBackdropFilter: 'blur(28px)',
+            borderRadius: 24,
+            border: '1px solid rgba(255,255,255,0.12)',
+            overflow: 'hidden',
             animation: mounted ? `cardReveal .72s cubic-bezier(.22,.97,.58,1) .1s both, borderGlow 4s ease-in-out 1s infinite` : 'none',
           }}>
 
             {/* Top shimmer strip */}
             <div style={{
-              height:4,
-              backgroundImage:'linear-gradient(90deg,#1B4F8A 0%,#F5A623 40%,#ffd17a 60%,#1B4F8A 100%)',
-              backgroundSize:'200% auto',
-              animation:'stripFlow 3s linear infinite',
-            }}/>
+              height: 4,
+              backgroundImage: 'linear-gradient(90deg,#1B4F8A 0%,#F5A623 40%,#ffd17a 60%,#1B4F8A 100%)',
+              backgroundSize: '200% auto',
+              animation: 'stripFlow 3s linear infinite',
+            }} />
 
             {/* Glass inner shimmer bar */}
             <div style={{
-              height:1,
-              backgroundImage:'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)',
-              backgroundSize:'200% auto',
-              animation:'glassShimmer 6s linear infinite',
-            }}/>
+              height: 1,
+              backgroundImage: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)',
+              backgroundSize: '200% auto',
+              animation: 'glassShimmer 6s linear infinite',
+            }} />
 
-            <div style={{ padding:'1.8rem 2rem 2rem' }}>
+            <div style={{ padding: '1.8rem 2rem 2rem' }}>
 
               {/* Brand row */}
               <div style={{
-                display:'flex', alignItems:'center', gap:10,
-                marginBottom:20, ...A(.25),
+                display: 'flex', alignItems: 'center', gap: 10,
+                marginBottom: 20, ...A(.25),
               }}>
                 <div style={{
-                  width:36, height:36,
-                  backgroundColor:'rgba(245,166,35,0.15)',
-                  border:'1px solid rgba(245,166,35,0.3)',
-                  borderRadius:10,
-                  display:'flex', alignItems:'center', justifyContent:'center',
+                  width: 36, height: 36,
+                  backgroundColor: 'rgba(245,166,35,0.15)',
+                  border: '1px solid rgba(245,166,35,0.3)',
+                  borderRadius: 10,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5A623" strokeWidth="2.5">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                   </svg>
                 </div>
                 <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:'#fff', fontFamily:"'Outfit',sans-serif", lineHeight:1 }}>Chiselon</div>
-                  <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.38)', marginTop:1 }}>Doctor Portal</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: "'Outfit',sans-serif", lineHeight: 1 }}>Chiselon</div>
+                  <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.38)', marginTop: 1 }}>Doctor Portal</div>
                 </div>
               </div>
 
               {/* Logo */}
-              <div style={{ textAlign:'center', marginBottom:20, ...A(.3) }}>
+              <div style={{ textAlign: 'center', marginBottom: 20, ...A(.3) }}>
                 <img src={logo} alt="Logo" style={{
-                  height:44, marginBottom:12,
-                  filter:'brightness(0) invert(1)',
-                  opacity:0.9,
-                }}/>
+                  height: 44, marginBottom: 12,
+                  filter: 'brightness(0) invert(1)',
+                  opacity: 0.9,
+                }} />
                 <h3 style={{
-                  fontFamily:"'Outfit',sans-serif",
-                  fontSize:22, fontWeight:800,
-                  color:'#fff', marginBottom:3, letterSpacing:'-0.015em',
+                  fontFamily: "'Outfit',sans-serif",
+                  fontSize: 22, fontWeight: 800,
+                  color: '#fff', marginBottom: 3, letterSpacing: '-0.015em',
                 }}>
                   Welcome Back
                 </h3>
-                <p style={{ color:'rgba(255,255,255,0.42)', fontSize:13, margin:0 }}>
+                <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 13, margin: 0 }}>
                   Sign in to your doctor portal
                 </p>
               </div>
@@ -550,9 +554,9 @@ const Login = () => {
               {/* Error */}
               {errors.login && (
                 <CAlert color="danger" style={{
-                  fontSize:13, borderRadius:10, padding:'.5rem .85rem',
-                  marginBottom:14, backgroundColor:'rgba(220,53,69,0.15)',
-                  border:'1px solid rgba(220,53,69,0.35)', color:'#ff8a8a',
+                  fontSize: 13, borderRadius: 10, padding: '.5rem .85rem',
+                  marginBottom: 14, backgroundColor: 'rgba(220,53,69,0.15)',
+                  border: '1px solid rgba(220,53,69,0.35)', color: '#ff8a8a',
                 }}>
                   {errors.login}
                 </CAlert>
@@ -561,79 +565,79 @@ const Login = () => {
               <CForm onSubmit={handleLogin} noValidate>
 
                 {/* ── Username ── */}
-                <div style={{ marginBottom:14 }}>
+                <div style={{ marginBottom: 14 }}>
                   <label style={{
-                    fontSize:10.5, fontWeight:700,
-                    color:'rgba(245,166,35,0.85)',
-                    letterSpacing:'.1em', textTransform:'uppercase',
-                    display:'block', marginBottom:6,
-                    fontFamily:"'Outfit',sans-serif",
+                    fontSize: 10.5, fontWeight: 700,
+                    color: 'rgba(245,166,35,0.85)',
+                    letterSpacing: '.1em', textTransform: 'uppercase',
+                    display: 'block', marginBottom: 6,
+                    fontFamily: "'Outfit',sans-serif",
                   }}>Username</label>
-                  <div style={{ position:'relative' }}>
-                  <CFormInput
-   className="li"
-  type="text"
-  placeholder="Username or Mobile"
-  value={userName}
-  onChange={(e) => { setUserName(e.target.value); setErrors(p=>({...p,userName:'',login:''})) }}
-  style={{
-    paddingRight:'2.5rem', paddingLeft:'0.9rem',
-    paddingTop:'0.66rem', paddingBottom:'0.66rem',
-    borderRadius:10, fontSize:14,
-    borderColor: errors.userName ? '#dc3545' : 'rgba(255,255,255,0.14)',
-       color:'#1a1a2e',     // ← was '#fff', change to dark color
-  
-  }}
-/>
-                      <CIcon icon={cilUser} style={{ position:'absolute', top:'50%', right:'0.8rem', transform:'translateY(-50%)', color:'#1B4F8A', pointerEvents:'none' }}/>
+                  <div style={{ position: 'relative' }}>
+                    <CFormInput
+                      className="li"
+                      type="text"
+                      placeholder="Username or Mobile"
+                      value={userName}
+                      onChange={(e) => { setUserName(e.target.value); setErrors(p => ({ ...p, userName: '', login: '' })) }}
+                      style={{
+                        paddingRight: '2.5rem', paddingLeft: '0.9rem',
+                        paddingTop: '0.66rem', paddingBottom: '0.66rem',
+                        borderRadius: 10, fontSize: 14,
+                        borderColor: errors.userName ? '#dc3545' : 'rgba(255,255,255,0.14)',
+                        color: '#1a1a2e',     // ← was '#fff', change to dark color
+
+                      }}
+                    />
+                    <CIcon icon={cilUser} style={{ position: 'absolute', top: '50%', right: '0.8rem', transform: 'translateY(-50%)', color: '#1B4F8A', pointerEvents: 'none' }} />
                   </div>
-                  {errors.userName && <div style={{ fontSize:11.5, color:'#ff8a8a', marginTop:4 }}>{errors.userName}</div>}
+                  {errors.userName && <div style={{ fontSize: 11.5, color: '#ff8a8a', marginTop: 4 }}>{errors.userName}</div>}
                 </div>
 
                 {/* ── Password ── */}
-                 {/* Password */}
-                <div style={{ marginBottom:6 }}>
+                {/* Password */}
+                <div style={{ marginBottom: 6 }}>
                   <label style={{
-                     fontSize:10.5, fontWeight:700,
-                    color:'rgba(245,166,35,0.85)',
-                    letterSpacing:'.1em', textTransform:'uppercase',
-                    display:'block', marginBottom:6,
-                    fontFamily:"'Outfit',sans-serif",
+                    fontSize: 10.5, fontWeight: 700,
+                    color: 'rgba(245,166,35,0.85)',
+                    letterSpacing: '.1em', textTransform: 'uppercase',
+                    display: 'block', marginBottom: 6,
+                    fontFamily: "'Outfit',sans-serif",
                   }}>Password</label>
-                  <div style={{ position:'relative' }}>
+                  <div style={{ position: 'relative' }}>
                     <CFormInput
                       className="li"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Enter your password"
                       value={password}
-                      onChange={(e) => { setPassword(e.target.value); setErrors(p=>({...p,password:'',login:''})) }}
+                      onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '', login: '' })) }}
                       style={{
-                        paddingRight:'2.5rem', paddingLeft:'0.9rem',
-                        paddingTop:'0.65rem', paddingBottom:'0.65rem',
-                        borderRadius:10, fontSize:14,
+                        paddingRight: '2.5rem', paddingLeft: '0.9rem',
+                        paddingTop: '0.65rem', paddingBottom: '0.65rem',
+                        borderRadius: 10, fontSize: 14,
                         borderColor: errors.password ? '#dc3545' : 'rgba(27,79,138,0.22)',
-                        color:'#1a1a2e',
+                        color: '#1a1a2e',
                       }}
                     />
                     <button
                       type="button" tabIndex={-1}
                       onClick={() => setShowPassword(v => !v)}
-                      style={{ position:'absolute', top:'50%', right:'0.8rem', transform:'translateY(-50%)', backgroundColor:'transparent', border:'none', padding:0, color:'#1B4F8A', cursor:'pointer' }}
+                      style={{ position: 'absolute', top: '50%', right: '0.8rem', transform: 'translateY(-50%)', backgroundColor: 'transparent', border: 'none', padding: 0, color: '#1B4F8A', cursor: 'pointer' }}
                     >
-                      <CIcon icon={showPassword ? cilLowVision : cilEyedropper}/>
+                      <CIcon icon={showPassword ? cilLowVision : cilEyedropper} />
                     </button>
                   </div>
 
-                  {errors.password && <div style={{ fontSize:11.5, color:'#ff8a8a', marginTop:4 }}>{errors.password}</div>}
+                  {errors.password && <div style={{ fontSize: 11.5, color: '#ff8a8a', marginTop: 4 }}>{errors.password}</div>}
                 </div>
 
                 {/* Forgot link */}
-                <div style={{ textAlign:'right', marginBottom:18 }}>
+                <div style={{ textAlign: 'right', marginBottom: 18 }}>
                   <a href="#" style={{
-                    fontSize:11.5, color:'rgba(245,166,35,0.7)',
-                    textDecoration:'none', fontWeight:600,
-                    fontFamily:"'Outfit',sans-serif",
-                    letterSpacing:'.02em',
+                    fontSize: 11.5, color: 'rgba(245,166,35,0.7)',
+                    textDecoration: 'none', fontWeight: 600,
+                    fontFamily: "'Outfit',sans-serif",
+                    letterSpacing: '.02em',
                   }}>Forgot password?</a>
                 </div>
 
@@ -643,38 +647,38 @@ const Login = () => {
                   disabled={loading}
                   className="sign-btn"
                   style={{
-                    width:'100%',
-                    padding:'0.78rem',
+                    width: '100%',
+                    padding: '0.78rem',
                     backgroundColor: loading ? 'rgba(255,255,255,0.1)' : 'transparent',
                     backgroundImage: loading
                       ? 'none'
                       : 'linear-gradient(90deg,#1B4F8A 0%,#2468b8 50%,#1B4F8A 100%)',
-                    backgroundSize:'200% auto',
+                    backgroundSize: '200% auto',
                     animation: loading ? 'none' : 'stripFlow 3s linear infinite',
-                    border:'1px solid rgba(255,255,255,0.12)',
-                    borderRadius:12,
-                    color:'#fff', fontWeight:700, fontSize:15,
-                    letterSpacing:'.04em',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: 12,
+                    color: '#fff', fontWeight: 700, fontSize: 15,
+                    letterSpacing: '.04em',
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    transition:'all .22s ease',
+                    transition: 'all .22s ease',
                     boxShadow: loading ? 'none' : '0 4px 24px rgba(27,79,138,0.4)',
-                    display:'flex', alignItems:'center', justifyContent:'center', gap:9,
-                    fontFamily:"'Outfit',sans-serif",
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+                    fontFamily: "'Outfit',sans-serif",
                   }}
                 >
                   {loading ? (
                     <>
                       <span style={{
-                        width:15, height:15, borderRadius:'50%',
-                        border:'2.5px solid rgba(255,255,255,0.25)',
-                        borderTopColor:'#fff', display:'inline-block',
-                        animation:'spin .7s linear infinite',
-                      }}/>
+                        width: 15, height: 15, borderRadius: '50%',
+                        border: '2.5px solid rgba(255,255,255,0.25)',
+                        borderTopColor: '#fff', display: 'inline-block',
+                        animation: 'spin .7s linear infinite',
+                      }} />
                       Signing in…
                     </>
                   ) : (
                     <>
-                      <CIcon icon={cilLockLocked} style={{ width:16, height:16 }}/>
+                      <CIcon icon={cilLockLocked} style={{ width: 16, height: 16 }} />
                       Sign In
                     </>
                   )}
@@ -684,9 +688,9 @@ const Login = () => {
 
               {/* Footer */}
               <p style={{
-                textAlign:'center', marginTop:18,
-                fontSize:11, color:'rgba(255,255,255,0.22)',
-                letterSpacing:'.05em',
+                textAlign: 'center', marginTop: 18,
+                fontSize: 11, color: 'rgba(255,255,255,0.22)',
+                letterSpacing: '.05em',
               }}>
                 🔒 Secure · Encrypted · Chiselon Technologies
               </p>
@@ -694,11 +698,11 @@ const Login = () => {
 
             {/* Bottom strip */}
             <div style={{
-              height:3,
-              backgroundImage:'linear-gradient(90deg,#F5A623 0%,#ffd17a 50%,#F5A623 100%)',
-              backgroundSize:'200% auto',
-              animation:'stripFlow 3.5s linear infinite',
-            }}/>
+              height: 3,
+              backgroundImage: 'linear-gradient(90deg,#F5A623 0%,#ffd17a 50%,#F5A623 100%)',
+              backgroundSize: '200% auto',
+              animation: 'stripFlow 3.5s linear infinite',
+            }} />
           </div>
         </div>
 

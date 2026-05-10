@@ -40,7 +40,7 @@ const isValid = (v) =>
   !(typeof v === 'string' && v.trim().toLowerCase() === 'undefined')
 
 // ─── sub-components ──────────────────────────────────────────────────────────
-const SLabel = ({ text }) => (
+export const SLabel = ({ text }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
     <span style={{
       fontSize: '0.82rem',
@@ -100,7 +100,7 @@ const AnswerBadge = ({ answer }) => {
   )
 }
 
-const card = {
+export const card = {
   background: '#FFFFFF',
   borderRadius: 14,
   padding: '18px 20px',
@@ -109,12 +109,18 @@ const card = {
   marginBottom: 18,
 }
 
-const inputBase = {
+export const inputBase = {
   width: '100%', borderRadius: 10, border: '1.5px solid #b6cfe8',
   padding: '10px 13px', fontSize: '0.875rem',
   fontFamily: 'inherit',
   outline: 'none', background: '#FFFFFF', color: '#1a3a5c',
   boxSizing: 'border-box', resize: 'vertical',
+}
+
+export const checkboxStyle = {
+  display: 'flex', alignItems: 'center', gap: 8,
+  fontSize: '0.875rem', color: '#1a3a5c', cursor: 'pointer',
+  marginBottom: 6
 }
 
 const emptyPlaceholder = {

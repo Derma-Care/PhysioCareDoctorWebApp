@@ -819,6 +819,33 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         modifications: followUpPayload.modifications ?? null,
       },
 
+      // ── Red Flag Screening ─────────────────────────────────────────────
+      redFlags: {
+        trauma:       formData?.redFlags?.trauma       ?? false,
+        weightLoss:   formData?.redFlags?.weightLoss   ?? false,
+        fever:        formData?.redFlags?.fever         ?? false,
+        cancer:       formData?.redFlags?.cancer        ?? false,
+        nightPain:    formData?.redFlags?.nightPain     ?? false,
+        swallowing:   formData?.redFlags?.swallowing    ?? false,
+      },
+
+      // ── Neuro Info ─────────────────────────────────────────────────────
+      radiationNeuro: {
+        radiating:      formData?.radiationNeuro?.radiating      ?? false,
+        numbness:       formData?.radiationNeuro?.numbness        ?? false,
+        weakness:       formData?.radiationNeuro?.weakness        ?? false,
+        gripDifficulty: formData?.radiationNeuro?.gripDifficulty  ?? false,
+      },
+      psychosocial: {
+        stressLevel:      formData?.psychosocial?.stressLevel      ?? 'Low',
+        workSatisfaction: formData?.psychosocial?.workSatisfaction ?? false,
+        fearOfMovement:   formData?.psychosocial?.fearOfMovement   ?? false,
+      },
+      specialSymptoms: {
+        headache:  formData?.specialSymptoms?.headache  ?? false,
+        dizziness: formData?.specialSymptoms?.dizziness ?? false,
+      },
+
       treatmentTemplates,
       createdAt: todayStr(),
       prescriptionPdf,

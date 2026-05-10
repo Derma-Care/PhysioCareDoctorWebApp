@@ -65,7 +65,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   const { success, info } = useToast()
 
   const ALL_TABS = tabs || [
-    'Complaints', 'Assessment', 'Diagnosis', 'Investigation',
+    'Complaints', 'Red Flags', 'Neuro Info', 'Assessment', 'Diagnosis', 'Investigation',
     'Plan', 'HomePlan', 'FollowUp', 'Prescription', 'History', 'Reports',
   ]
 
@@ -147,47 +147,27 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       mergeAndLog('Complaints', patch)
       goToNext('Complaints')
     },
+    'Red Flags': (data = {}) => {
+      if (!data || typeof data !== 'object') { goToNext('Red Flags'); return }
+      mergeAndLog('Red Flags', { redFlags: data.redFlags })
+      goToNext('Red Flags')
+    },
+
     Assessment: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Assessment'); return }
-      const patch = {
-        assessment: {
-          chiefComplaint: data.chiefComplaint ?? '',
-          painScale: data.painScale ?? '',
-          painType: data.painType ?? '',
-          duration: data.duration ?? '',
-          onset: data.onset ?? '',
-          aggravatingFactors: data.aggravatingFactors ?? '',
-          relievingFactors: data.relievingFactors ?? '',
-          observations: data.observations ?? '',
-          difficultiesIn: Array.isArray(data.difficultiesIn) ? data.difficultiesIn : [],
-          otherDifficulty: data.otherDifficulty ?? '',
-          dailyLivingAffected: data.dailyLivingAffected ?? '',
-          postureAssessment: Array.isArray(data.postureAssessment) ? data.postureAssessment : [],
-          postureDeviations: data.postureDeviations ?? '',
-          romStatus: Array.isArray(data.romStatus) ? data.romStatus : [],
-          romRestricted: data.romRestricted ?? '',
-          romJoints: data.romJoints ?? '',
-          muscleStrength: Array.isArray(data.muscleStrength) ? data.muscleStrength : [],
-          muscleWeakness: data.muscleWeakness ?? '',
-          neurologicalSigns: Array.isArray(data.neurologicalSigns) ? data.neurologicalSigns : [],
-          posture: data.posture ?? '',
-          rangeOfMotion: data.rangeOfMotion ?? '',
-          specialTests: data.specialTests ?? '',
-          patientPain: data.patientPain ?? '',
-          painTriggers: data.painTriggers ?? '',
-          chronicRelieving: data.chronicRelieving ?? '',
-          typeOfSport: data.typeOfSport ?? '',
-          recurringInjuries: data.recurringInjuries ?? '',
-          returnToSportGoals: data.returnToSportGoals ?? '',
-          neuroDiagnosis: data.neuroDiagnosis ?? '',
-          neuroOnset: data.neuroOnset ?? '',
-          mobilityStatus: data.mobilityStatus ?? '',
-          cognitiveStatus: data.cognitiveStatus ?? '',
-        },
-        ...(data.patientPain ? { patientPain: data.patientPain } : {}),
-      }
-      mergeAndLog('Assessment', patch)
+      mergeAndLog('Assessment', { assessment: data.assessment })
       goToNext('Assessment')
+    },
+
+    'Neuro Info': (data = {}) => {
+      if (!data || typeof data !== 'object') { goToNext('Neuro Info'); return }
+      const patch = {
+        radiationNeuro: data.radiationNeuro,
+        psychosocial: data.psychosocial,
+        specialSymptoms: data.specialSymptoms,
+      }
+      mergeAndLog('Neuro Info', patch)
+      goToNext('Neuro Info')
     },
 
     Diagnosis: (data = {}) => {
