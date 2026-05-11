@@ -10,6 +10,12 @@ const RedFlagScreening = ({ seed = {}, onNext, hideFooter = false }) => {
   const [nightPain, setNightPain] = useState(seed.redFlags?.nightPain ?? false)
   const [swallowing, setSwallowing] = useState(seed.redFlags?.swallowing ?? false)
 
+  React.useEffect(() => {
+    onNext?.({
+      redFlags: { trauma, weightLoss, fever, cancer, nightPain, swallowing }
+    })
+  }, [trauma, weightLoss, fever, cancer, nightPain, swallowing])
+
   const handleNext = () => {
     onNext?.({
       redFlags: { trauma, weightLoss, fever, cancer, nightPain, swallowing }

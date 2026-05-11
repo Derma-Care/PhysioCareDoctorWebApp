@@ -35,8 +35,7 @@ api.interceptors.response.use(
 
     if (err.response) {
       const { status } = err.response
-      console.log(object)
-      switch (err.response) {
+      switch (status) {
         case 401:
           localStorage.removeItem('token')
           showInfo('Session expired. Please log in again.', { title: 'Unauthorized' })
@@ -48,7 +47,7 @@ api.interceptors.response.use(
           break
 
         case 404:
-          showInfo('The requested resource was not found.', { title: 'Not Found' })
+          // Silent 404 - don't show toast as it's often used for optional checks
           break
 
         case 500:

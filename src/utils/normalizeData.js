@@ -154,5 +154,9 @@ export const normalizeSavedData = (saved) => {
     ClinicImages: saved.ClinicImages || {},
     summary: saved.summary || {},
     patientPain: symptoms.patientPain || saved.patientPain || '',
+    redFlags: saved.redFlags || {},
+    radiationNeuro: saved.radiationNeuro || {},
+    psychosocial: saved.psychosocial || {},
+    specialSymptoms: saved.specialSymptoms || {},
   }
 }

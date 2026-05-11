@@ -18,6 +18,14 @@ const NeuroFunctionalInfo = ({ seed = {}, onNext, hideFooter = false }) => {
   const [headache, setHeadache] = useState(seed.specialSymptoms?.headache ?? false)
   const [dizziness, setDizziness] = useState(seed.specialSymptoms?.dizziness ?? false)
 
+  React.useEffect(() => {
+    onNext?.({
+      radiationNeuro: { radiating, numbness, weakness, gripDifficulty: gripDiff },
+      psychosocial: { stressLevel, workSatisfaction, fearOfMovement },
+      specialSymptoms: { headache, dizziness }
+    })
+  }, [radiating, numbness, weakness, gripDiff, stressLevel, workSatisfaction, fearOfMovement, headache, dizziness])
+
   const handleNext = () => {
     onNext?.({
       radiationNeuro: { radiating, numbness, weakness, gripDifficulty: gripDiff },

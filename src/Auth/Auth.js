@@ -66,8 +66,14 @@ export const getDoctorDetails = async () => {
     const response = await api.get(`${doctorbaseUrl}/getDoctorById/${doctorId}`)
     return response.data?.data || response.data
   } catch (error) {
-    console.error('❌ Error fetching doctor details:', error)
-    return null
+    console.error('❌ Error fetching from physiotherapy-doctor, trying /api/doctors...', error)
+    try {
+      const altResponse = await api.get(`${ipUrl}/api/doctors/getDoctorById/${doctorId}`)
+      return altResponse.data?.data || altResponse.data
+    } catch (err2) {
+      console.error('❌ Both doctor detail APIs failed.', err2)
+      return null
+    }
   }
 }
 

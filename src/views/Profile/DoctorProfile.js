@@ -473,10 +473,14 @@ const DoctorProfile = () => {
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
-        if (parsed.doctorPicture) {
-          setDoctorImage(parsed.doctorPicture.startsWith('data:image')
-            ? parsed.doctorPicture
-            : `data:image/jpeg;base64,${parsed.doctorPicture}`)
+        const clinicStored = localStorage.getItem('clinicDetails')
+        const clinicParsed = clinicStored ? JSON.parse(clinicStored) : null
+        
+        const rawPic = parsed.doctorPicture || parsed.profilePicture || clinicParsed?.hospitalLogo || clinicParsed?.clinicLogo
+        if (rawPic) {
+          setDoctorImage(rawPic.startsWith('data:image')
+            ? rawPic
+            : `data:image/jpeg;base64,${rawPic}`)
         }
         setDoctorDetails(parsed)
       } catch (e) { console.error(e) }
