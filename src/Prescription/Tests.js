@@ -190,6 +190,22 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
   const [psychosocial, setPsychosocial] = useState(formData.psychosocial || {})
   const [specialSymptoms, setSpecialSymptoms] = useState(formData.specialSymptoms || {})
 
+  // ── FIX: Sync embedded states when formData from GET API updates ──
+  useEffect(() => {
+    if (formData.redFlags && Object.keys(formData.redFlags).length > 0) {
+      setRedFlagsData(formData.redFlags)
+    }
+    if (formData.radiationNeuro && Object.keys(formData.radiationNeuro).length > 0) {
+      setRadiationNeuro(formData.radiationNeuro)
+    }
+    if (formData.psychosocial && Object.keys(formData.psychosocial).length > 0) {
+      setPsychosocial(formData.psychosocial)
+    }
+    if (formData.specialSymptoms && Object.keys(formData.specialSymptoms).length > 0) {
+      setSpecialSymptoms(formData.specialSymptoms)
+    }
+  }, [formData.redFlags, formData.radiationNeuro, formData.psychosocial, formData.specialSymptoms])
+
   const [snackbar,            setSnackbar]            = useState({ show: false, message: '', type: '' })
 
   const { patientData } = useDoctorContext()

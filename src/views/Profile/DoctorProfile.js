@@ -445,20 +445,20 @@ const ListItems = ({ items, fallback }) => {
 /* ══════════════════════════════════════════════════════════════════════════ */
 const DoctorProfile = () => {
   const [doctorDetails, setDoctorDetails] = useState(null)
-  const [activeKey, setActiveKey]         = useState(1)
-  const [ratingsData, setRatingsData]     = useState(null)
-  const [slotsData, setSlotsData]         = useState([])
-  const [doctorImage, setDoctorImage]     = useState(null)
-  const [loading, setLoading]             = useState(false)
-  const [days, setDays]                   = useState([])
-  const [selectedDate, setSelectedDate]   = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [activeKey, setActiveKey] = useState(1)
+  const [ratingsData, setRatingsData] = useState(null)
+  const [slotsData, setSlotsData] = useState([])
+  const [doctorImage, setDoctorImage] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [days, setDays] = useState([])
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
 
   // Password Modal State
   const [showPassModal, setShowPassModal] = useState(false)
-  const [newPassword, setNewPassword]     = useState('')
+  const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [passLoading, setPassLoading]     = useState(false)
-  const [passMsg, setPassMsg]             = useState({ type: '', text: '' })
+  const [passLoading, setPassLoading] = useState(false)
+  const [passMsg, setPassMsg] = useState({ type: '', text: '' })
 
   useEffect(() => {
     const today = new Date()
@@ -475,7 +475,7 @@ const DoctorProfile = () => {
         const parsed = JSON.parse(stored)
         const clinicStored = localStorage.getItem('clinicDetails')
         const clinicParsed = clinicStored ? JSON.parse(clinicStored) : null
-        
+
         const rawPic = parsed.doctorPicture || parsed.profilePicture || clinicParsed?.hospitalLogo || clinicParsed?.clinicLogo
         if (rawPic) {
           setDoctorImage(rawPic.startsWith('data:image')
@@ -592,9 +592,9 @@ const DoctorProfile = () => {
                       <div className="dp-hero-badge-dot" style={{ background: doctorDetails?.isAvailable ? COLORS.green : COLORS.rose }} />
                       <span className="dp-hero-badge-txt">{doctorDetails?.isAvailable ? 'Active Doctor' : 'Inactive'}</span>
                     </div>
-                    
+
                     {/* Availability Toggle */}
-                    <button 
+                    <button
                       onClick={async () => {
                         const newStatus = !doctorDetails?.isAvailable;
                         try {
@@ -616,7 +616,7 @@ const DoctorProfile = () => {
                       {doctorDetails?.isAvailable ? '⭕ Set Inactive' : '🟢 Set Active'}
                     </button>
 
-                    <button 
+                    {/* <button 
                       onClick={() => setShowPassModal(true)}
                       style={{
                         background: 'rgba(255,255,255,0.1)',
@@ -626,7 +626,7 @@ const DoctorProfile = () => {
                       }}
                     >
                       🔐 Change Password
-                    </button>
+                    </button> */}
                   </div>
                   <div className="dp-hero-name">
                     {capitalizeEachWord(doctorDetails?.doctorName) || 'Doctor Name'}
@@ -669,12 +669,12 @@ const DoctorProfile = () => {
               </div>
               <div className="dp-card-body">
                 <div className="dp-info-grid">
-                  <InfoItem label="Email"            value={doctorDetails?.doctorEmail} />
-                  <InfoItem label="Phone"            value={doctorDetails?.doctorMobileNumber} />
-                  <InfoItem label="Gender"           value={doctorDetails?.gender} />
-                  <InfoItem label="Languages"        value={doctorDetails?.languages?.join(', ')} />
-                  <InfoItem label="Available Days"   value={doctorDetails?.availableDays} />
-                  <InfoItem label="Available Times"  value={doctorDetails?.availableTimes} />
+                  <InfoItem label="Email" value={doctorDetails?.doctorEmail} />
+                  <InfoItem label="Phone" value={doctorDetails?.doctorMobileNumber} />
+                  <InfoItem label="Gender" value={doctorDetails?.gender} />
+                  <InfoItem label="Languages" value={doctorDetails?.languages?.join(', ')} />
+                  <InfoItem label="Available Days" value={doctorDetails?.availableDays} />
+                  <InfoItem label="Available Times" value={doctorDetails?.availableTimes} />
                 </div>
 
                 {/* Signature */}
@@ -682,9 +682,9 @@ const DoctorProfile = () => {
                   <div className="dp-section-label">Doctor Signature</div>
                   {doctorDetails?.doctorSignature
                     ? <div className="dp-sig-box">
-                        <img src={doctorDetails.doctorSignature} alt="Signature"
-                          style={{ height: 56, display: 'block' }} />
-                      </div>
+                      <img src={doctorDetails.doctorSignature} alt="Signature"
+                        style={{ height: 56, display: 'block' }} />
+                    </div>
                     : <span style={{ fontSize: 13, color: '#9ca3af' }}>No signature uploaded</span>
                   }
                 </div>
@@ -852,9 +852,9 @@ const DoctorProfile = () => {
                               <div className="dp-feedback-time">
                                 {fb.dateAndTimeAtRating
                                   ? formatDistanceToNow(
-                                      parse(fb.dateAndTimeAtRating, 'dd-MM-yyyy hh:mm:ss a', new Date()),
-                                      { addSuffix: true }
-                                    )
+                                    parse(fb.dateAndTimeAtRating, 'dd-MM-yyyy hh:mm:ss a', new Date()),
+                                    { addSuffix: true }
+                                  )
                                   : 'Unknown time'}
                               </div>
                             </div>
@@ -895,8 +895,8 @@ const DoctorProfile = () => {
                   <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     {doctorDetails?.category?.length
                       ? doctorDetails.category.map(c => (
-                          <span key={c.categoryId} className="dp-service-tag">{c.categoryName}</span>
-                        ))
+                        <span key={c.categoryId} className="dp-service-tag">{c.categoryName}</span>
+                      ))
                       : <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>No categories listed</p>
                     }
                   </div>
@@ -906,8 +906,8 @@ const DoctorProfile = () => {
                   <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     {doctorDetails?.service?.length
                       ? doctorDetails.service.map(s => (
-                          <span key={s.serviceId} className="dp-service-tag">{s.serviceName}</span>
-                        ))
+                        <span key={s.serviceId} className="dp-service-tag">{s.serviceName}</span>
+                      ))
                       : <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>No services listed</p>
                     }
                   </div>
@@ -917,10 +917,10 @@ const DoctorProfile = () => {
                   <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     {doctorDetails?.subServices?.length
                       ? doctorDetails.subServices.map((sub, i) => (
-                          <span key={i} className="dp-service-tag">
-                            {typeof sub === 'string' ? sub : sub.subServiceName || 'Unnamed'}
-                          </span>
-                        ))
+                        <span key={i} className="dp-service-tag">
+                          {typeof sub === 'string' ? sub : sub.subServiceName || 'Unnamed'}
+                        </span>
+                      ))
                       : <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>No sub-services listed</p>
                     }
                   </div>
@@ -931,8 +931,8 @@ const DoctorProfile = () => {
         )}
 
         {/* ── PASSWORD MODAL ─────────────────────────────────────── */}
-        <CModal 
-          visible={showPassModal} 
+        <CModal
+          visible={showPassModal}
           onClose={() => {
             if (!passLoading) {
               setShowPassModal(false)
@@ -987,24 +987,24 @@ const DoctorProfile = () => {
             </CForm>
           </CModalBody>
           <CModalFooter>
-            <CButton 
-              color="secondary" 
-              variant="ghost" 
+            <CButton
+              color="secondary"
+              variant="ghost"
               onClick={() => setShowPassModal(false)}
               disabled={passLoading}
               style={{ fontSize: '0.85rem' }}
             >
               Cancel
             </CButton>
-            <CButton 
-              color="primary" 
+            <CButton
+              color="primary"
               onClick={handlePasswordUpdate}
               disabled={passLoading}
-              style={{ 
-                fontSize: '0.85rem', 
-                background: '#1B4F8A', 
+              style={{
+                fontSize: '0.85rem',
+                background: '#1B4F8A',
                 borderColor: '#1B4F8A',
-                boxShadow: '0 4px 12px rgba(27,79,138,0.25)' 
+                boxShadow: '0 4px 12px rgba(27,79,138,0.25)'
               }}
             >
               {passLoading ? 'Updating...' : 'Update Password'}
