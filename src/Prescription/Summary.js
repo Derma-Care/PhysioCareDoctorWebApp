@@ -546,6 +546,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     aggravatingFactors: subjectiveAssessment.aggravatingFactors ?? assessmentRaw.aggravatingFactors ?? '',
     relievingFactors: subjectiveAssessment.relievingFactors ?? assessmentRaw.relievingFactors ?? '',
     observations: subjectiveAssessment.observations ?? assessmentRaw.observations ?? '',
+    posture: assessmentRaw.posture ?? '',
+    rangeOfMotion: assessmentRaw.rangeOfMotion ?? '',
+    specialTests: assessmentRaw.specialTests ?? '',
     difficultiesIn: Array.isArray(functionalAssessment.difficultiesIn) ? functionalAssessment.difficultiesIn : Array.isArray(assessmentRaw.difficultiesIn) ? assessmentRaw.difficultiesIn : [],
     otherDifficulty: functionalAssessment.otherDifficulty ?? assessmentRaw.otherDifficulty ?? '',
     dailyLivingAffected: functionalAssessment.dailyLivingAffected ?? assessmentRaw.dailyLivingAffected ?? '',
@@ -557,16 +560,16 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     muscleStrength: Array.isArray(physicalExamination.muscleStrength) ? physicalExamination.muscleStrength : Array.isArray(assessmentRaw.muscleStrength) ? assessmentRaw.muscleStrength : [],
     muscleWeakness: physicalExamination.muscleWeakness ?? assessmentRaw.muscleWeakness ?? '',
     neurologicalSigns: Array.isArray(physicalExamination.neurologicalSigns) ? physicalExamination.neurologicalSigns : Array.isArray(assessmentRaw.neurologicalSigns) ? assessmentRaw.neurologicalSigns : [],
-    patientPain: assessmentRaw.patientPain ?? '',
-    painTriggers: assessmentRaw.painTriggers ?? assessmentRaw.chronicPainPatients?.painTriggers ?? '',
-    chronicRelieving: assessmentRaw.chronicRelieving ?? assessmentRaw.chronicPainPatients?.relievingFactors ?? '',
-    typeOfSport: assessmentRaw.typeOfSport ?? assessmentRaw.sportsRehabPatients?.typeOfSport ?? '',
-    recurringInjuries: assessmentRaw.recurringInjuries ?? assessmentRaw.sportsRehabPatients?.recurringInjuries ?? '',
-    returnToSportGoals: assessmentRaw.returnToSportGoals ?? assessmentRaw.sportsRehabPatients?.returnToSportGoals ?? '',
-    neuroDiagnosis: assessmentRaw.neuroDiagnosis ?? assessmentRaw.neuroRehabPatients?.neuroDiagnosis ?? '',
-    neuroOnset: assessmentRaw.neuroOnset ?? assessmentRaw.neuroRehabPatients?.neuroOnset ?? '',
-    mobilityStatus: assessmentRaw.mobilityStatus ?? assessmentRaw.neuroRehabPatients?.mobilityStatus ?? '',
-    cognitiveStatus: assessmentRaw.cognitiveStatus ?? assessmentRaw.neuroRehabPatients?.cognitiveStatus ?? '',
+    patientPain: assessmentRaw.patientPain ?? complaintsAPI.patientPain ?? '',
+    painTriggers: assessmentRaw.chronicPainPatients?.painDuration ?? assessmentRaw.painTriggers ?? '',
+    chronicRelieving: assessmentRaw.chronicPainPatients?.sleepDisturbance ? 'Sleep Disturbance: Yes' : (assessmentRaw.chronicRelieving ?? ''),
+    typeOfSport: assessmentRaw.sportsRehabPatients?.sportName ?? assessmentRaw.typeOfSport ?? '',
+    recurringInjuries: assessmentRaw.sportsRehabPatients?.injuryType ?? assessmentRaw.recurringInjuries ?? '',
+    returnToSportGoals: assessmentRaw.returnToSportGoals ?? '',
+    neuroDiagnosis: assessmentRaw.neuroRehabPatients?.balanceIssue ? 'Balance Issues' : (assessmentRaw.neuroDiagnosis ?? ''),
+    neuroOnset: assessmentRaw.neuroOnset ?? '',
+    mobilityStatus: assessmentRaw.neuroRehabPatients?.walkingSupport ?? assessmentRaw.mobilityStatus ?? '',
+    cognitiveStatus: assessmentRaw.cognitiveStatus ?? '',
   }
 
   const {
@@ -574,6 +577,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     postureAssessment, postureDeviations,
     romStatus, romRestricted, romJoints,
     muscleStrength, muscleWeakness, neurologicalSigns,
+    posture, rangeOfMotion, specialTests,
     painTriggers, chronicRelieving,
     typeOfSport, recurringInjuries, returnToSportGoals,
     neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus,
@@ -596,6 +600,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         affectedArea: diagnosisObj.affectedArea ?? '',
         severity: diagnosisObj.severity ?? '',
         stage: diagnosisObj.stage ?? '',
+        differentialDiagnosis: diagnosisObj.differentialDiagnosis ?? '',
         notes: diagnosisObj.notes ?? '',
       }]
     }
@@ -686,10 +691,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
     return {
       // ── Top-level IDs ──────────────────────────────────────────────────
+      therapistRecordId: record.therapistRecordId || "TR001",
       bookingId,
       clinicId,
       branchId,
-      patientId,
 
       // ── Patient Info ───────────────────────────────────────────────────
       patientInfo: {
@@ -701,33 +706,29 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       },
 
       // ── Complaints ─────────────────────────────────────────────────────
-      // Always match the API expected shape exactly
       complaints: {
         complaintDetails: complaintDetails || '',
         painAssessmentImage: partImage || '',
         reportImages: reportImages || [],
         selectedTherapy: selectedTherapy || '',
-        selectedTherapyId: selectedTherapyID || '',   // API uses Id (no capital D)
+        selectedTherapyId: selectedTherapyID || '',
         duration: complaintDuration || '',
-        previousInjuries: previousInjuries || null,
-        currentMedications: currentMedications || null,
-        allergies: allergies || null,
-        occupation: occupation || null,
-        activityLevels: activityLevels.length ? activityLevels : null,
-        patientPain: effectivePain || null,
-        therapyAnswers: flatTherapyAnswers,          // flat array for API
+        previousInjuries: previousInjuries || '',
+        currentMedications: currentMedications || '',
+        allergies: allergies || '',
+        occupation: occupation || '',
+        activityLevels: activityLevels || [],
+        patientPain: effectivePain || '',
+        therapyAnswers: flatTherapyAnswers,
       },
 
       // ── Investigation ──────────────────────────────────────────────────
       investigation: {
         tests: investigationTestsArray,
-        selectedTests: investigationTestsArray,
         reason: investigationReason || '',
-        notes: investigationReason || '',
       },
 
       // ── Assessment ─────────────────────────────────────────────────────
-      // Matches API response shape: nested subjectiveAssessment, functionalAssessment, physicalExamination
       assessment: {
         subjectiveAssessment: {
           chiefComplaint: assessment.chiefComplaint ?? '',
@@ -740,44 +741,59 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           observations: assessment.observations ?? '',
         },
         functionalAssessment: {
-          difficultiesIn: difficultiesIn,
-          otherDifficulty: otherDifficulty || '',
-          dailyLivingAffected: dailyLivingAffected || '',
+          difficultiesIn: difficultiesIn
         },
         physicalExamination: {
           postureAssessment: postureAssessment,
-          postureDeviations: postureDeviations || '',
           rangeOfMotion: romStatus,
-          romRestricted: romRestricted || '',
-          romJoints: romJoints || '',
           muscleStrength: muscleStrength,
-          muscleWeakness: muscleWeakness || '',
-          neurologicalSigns: neurologicalSigns,
+          neurologicalSigns: neurologicalSigns
         },
-        // Pain-type specific sections
-        chronicPainPatients:
-          effectivePain === 'chronicPain'
-            ? { painTriggers, relievingFactors: chronicRelieving }
-            : null,
-        sportsRehabPatients:
-          effectivePain === 'sportsRehab'
-            ? { typeOfSport, recurringInjuries, returnToSportGoals }
-            : null,
-        neuroRehabPatients:
-          effectivePain === 'neuroRehab'
-            ? { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }
-            : null,
+        chronicPainPatients: effectivePain === 'chronicPain' ? {
+          painDuration: painTriggers || '',
+          sleepDisturbance: !!(chronicRelieving && chronicRelieving.toLowerCase().includes('yes'))
+        } : null,
+        sportsRehabPatients: effectivePain === 'sportsRehab' ? {
+          sportName: typeOfSport || '',
+          injuryType: recurringInjuries || ''
+        } : null,
+        neuroRehabPatients: effectivePain === 'neuroRehab' ? {
+          balanceIssue: !!(neuroDiagnosis && neuroDiagnosis.toLowerCase().includes('balance')),
+          walkingSupport: mobilityStatus || ''
+        } : null,
+        redFlags: {
+          trauma: (formData?.assessment?.redFlags || formData?.redFlags)?.trauma ?? false,
+          weightLoss: (formData?.assessment?.redFlags || formData?.redFlags)?.weightLoss ?? false,
+          fever: (formData?.assessment?.redFlags || formData?.redFlags)?.fever ?? false,
+          cancer: (formData?.assessment?.redFlags || formData?.redFlags)?.cancer ?? false,
+          nightPain: (formData?.assessment?.redFlags || formData?.redFlags)?.nightPain ?? false,
+          swallowing: (formData?.assessment?.redFlags || formData?.redFlags)?.swallowing ?? false,
+        },
+        radiationNeuro: {
+          radiating: (formData?.assessment?.radiationNeuro || formData?.radiationNeuro)?.radiating ?? false,
+          numbness: (formData?.assessment?.radiationNeuro || formData?.radiationNeuro)?.numbness ?? false,
+          weakness: (formData?.assessment?.radiationNeuro || formData?.radiationNeuro)?.weakness ?? false,
+          gripDifficulty: (formData?.assessment?.radiationNeuro || formData?.radiationNeuro)?.gripDifficulty ?? false,
+        },
+        psychosocial: {
+          stressLevel: (formData?.assessment?.psychosocial || formData?.psychosocial)?.stressLevel ?? 'Low',
+          workSatisfaction: (formData?.assessment?.psychosocial || formData?.psychosocial)?.workSatisfaction ?? false,
+          fearOfMovement: (formData?.assessment?.psychosocial || formData?.psychosocial)?.fearOfMovement ?? false,
+        },
+        specialSymptoms: {
+          headache: (formData?.assessment?.specialSymptoms || formData?.specialSymptoms)?.headache ?? false,
+          dizziness: (formData?.assessment?.specialSymptoms || formData?.specialSymptoms)?.dizziness ?? false,
+        },
       },
 
       // ── Diagnosis ──────────────────────────────────────────────────────
-      // API expects flat shape; send diagnosisRows only if multiple rows
       diagnosis: {
         physioDiagnosis: firstDiag.physioDiagnosis ?? '',
+        differentialDiagnosis: firstDiag.differentialDiagnosis ?? '',
         affectedArea: firstDiag.affectedArea ?? '',
         severity: firstDiag.severity ?? '',
         stage: firstDiag.stage ?? '',
         notes: firstDiag.notes ?? '',
-        ...(diagnosisRows.length > 1 ? { diagnosisRows } : {}),
       },
 
       // ── Treatment Plan ─────────────────────────────────────────────────
@@ -793,7 +809,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       },
 
       // ── Therapy Sessions ───────────────────────────────────────────────
-      // Send the raw sessions array as-is (already in API shape)
       therapySessions: sessionsList,
 
       // ── Exercise Plan ──────────────────────────────────────────────────
@@ -816,38 +831,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       followUp: {
         nextVisitDate: followUpPayload.nextVisitDate ?? '',
         reviewNotes: followUpPayload.reviewNotes ?? '',
-        modifications: followUpPayload.modifications ?? null,
+        modifications: followUpPayload.modifications ?? '',
       },
 
-      // ── Red Flag Screening ─────────────────────────────────────────────
-      redFlags: {
-        trauma:       formData?.redFlags?.trauma       ?? false,
-        weightLoss:   formData?.redFlags?.weightLoss   ?? false,
-        fever:        formData?.redFlags?.fever         ?? false,
-        cancer:       formData?.redFlags?.cancer        ?? false,
-        nightPain:    formData?.redFlags?.nightPain     ?? false,
-        swallowing:   formData?.redFlags?.swallowing    ?? false,
-      },
-
-      // ── Neuro Info ─────────────────────────────────────────────────────
-      radiationNeuro: {
-        radiating:      formData?.radiationNeuro?.radiating      ?? false,
-        numbness:       formData?.radiationNeuro?.numbness        ?? false,
-        weakness:       formData?.radiationNeuro?.weakness        ?? false,
-        gripDifficulty: formData?.radiationNeuro?.gripDifficulty  ?? false,
-      },
-      psychosocial: {
-        stressLevel:      formData?.psychosocial?.stressLevel      ?? 'Low',
-        workSatisfaction: formData?.psychosocial?.workSatisfaction ?? false,
-        fearOfMovement:   formData?.psychosocial?.fearOfMovement   ?? false,
-      },
-      specialSymptoms: {
-        headache:  formData?.specialSymptoms?.headache  ?? false,
-        dizziness: formData?.specialSymptoms?.dizziness ?? false,
-      },
-
-      treatmentTemplates,
-      createdAt: todayStr(),
       prescriptionPdf,
     }
   }
@@ -882,7 +868,13 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
   const hasAssessmentData = (
     assessment.chiefComplaint || assessment.painScale || assessment.painType ||
-    difficultiesIn.length > 0 || postureAssessment.length > 0 || romStatus.length > 0
+    difficultiesIn.length > 0 || postureAssessment.length > 0 || romStatus.length > 0 ||
+    isValid(posture) || isValid(rangeOfMotion) || isValid(specialTests) ||
+    isValid(painTriggers) || isValid(typeOfSport) || isValid(neuroDiagnosis) ||
+    Object.values(record.assessment?.redFlags || record.redFlags || {}).some(v => v === true) ||
+    Object.values(record.assessment?.radiationNeuro || record.radiationNeuro || {}).some(v => v === true) ||
+    Object.values(record.assessment?.specialSymptoms || record.specialSymptoms || {}).some(v => v === true) ||
+    Object.values(record.assessment?.psychosocial || record.psychosocial || {}).some(v => v === true)
   )
 
   const hasBackgroundData =
@@ -1042,9 +1034,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             )}
 
             {(postureAssessment.length > 0 || romStatus.length > 0 || muscleStrength.length > 0 || neurologicalSigns.length > 0) && (
-              <div style={{ marginBottom: 12 }}>
+              <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${T.border}` }}>
                 <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.purple, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🔬 Physical Examination</div>
-                <div style={{ background: T.bgLight, border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden' }}>
+                <div style={{ background: T.bgLight, border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
                   {[
                     { label: 'Posture Assessment', opts: ['Normal', 'Deviations'], sel: postureAssessment, note: postureDeviations },
                     { label: 'Range of Motion', opts: ['Normal', 'Restricted'], sel: romStatus, note: romRestricted },
@@ -1058,6 +1050,18 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                     </div>
                   ))}
                 </div>
+
+                {/* Objective Findings Section */}
+                {(isValid(posture) || isValid(rangeOfMotion) || isValid(specialTests)) && (
+                  <div style={{ background: '#FFFFFF', border: `1.5px solid ${T.borderLight}`, borderRadius: 8, padding: '12px' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>📐 Objective / Additional Findings:</div>
+                    <Grid cols={2}>
+                      {isValid(posture) && <Row label="Posture Notes" value={posture} />}
+                      {isValid(rangeOfMotion) && <Row label="ROM Notes" value={rangeOfMotion} />}
+                      {isValid(specialTests) && <Row label="Special Tests" value={specialTests} full />}
+                    </Grid>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1093,61 +1097,74 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             )}
 
             {/* Red Flags & Screening */}
-            {(Object.values(record.redFlags || {}).some(v => v === true) || 
-              Object.values(record.radiationNeuro || {}).some(v => v === true) || 
-              Object.values(record.specialSymptoms || {}).some(v => v === true)) && (
-              <div style={{ marginBottom: 12, background: '#fff1f2', border: '1.5px solid #fda4af', borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.rose, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🚩 Clinical Screening & Red Flags</div>
-                
-                {Object.values(record.redFlags || {}).some(v => v === true) && (
-                  <div style={{ marginBottom: 10 }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Red Flags:</span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                      {record.redFlags?.trauma && <Chip label="Trauma" color={T.rose} bg={T.roseLight} />}
-                      {record.redFlags?.weightLoss && <Chip label="Unexplained Weight Loss" color={T.rose} bg={T.roseLight} />}
-                      {record.redFlags?.fever && <Chip label="Fever / Night Sweats" color={T.rose} bg={T.roseLight} />}
-                      {record.redFlags?.cancer && <Chip label="History of Cancer" color={T.rose} bg={T.roseLight} />}
-                      {record.redFlags?.nightPain && <Chip label="Severe Night Pain" color={T.rose} bg={T.roseLight} />}
-                      {record.redFlags?.swallowing && <Chip label="Difficulty Swallowing" color={T.rose} bg={T.roseLight} />}
-                    </div>
-                  </div>
-                )}
+            {(() => {
+              const rf = record.assessment?.redFlags || record.redFlags || {}
+              const rn = record.assessment?.radiationNeuro || record.radiationNeuro || {}
+              const ss = record.assessment?.specialSymptoms || record.specialSymptoms || {}
 
-                {Object.values(record.radiationNeuro || {}).some(v => v === true) && (
-                  <div style={{ marginBottom: 10 }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Neurological Screening:</span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                      {record.radiationNeuro?.radiating && <Chip label="Radiating Pain" color={T.amber} bg={T.amberLight} />}
-                      {record.radiationNeuro?.numbness && <Chip label="Numbness / Tingling" color={T.amber} bg={T.amberLight} />}
-                      {record.radiationNeuro?.weakness && <Chip label="Muscle Weakness" color={T.amber} bg={T.amberLight} />}
-                      {record.radiationNeuro?.gripDifficulty && <Chip label="Grip / Fine Motor Difficulty" color={T.amber} bg={T.amberLight} />}
-                    </div>
-                  </div>
-                )}
+              if (!Object.values(rf).some(v => v === true) &&
+                !Object.values(rn).some(v => v === true) &&
+                !Object.values(ss).some(v => v === true)) return null
 
-                {Object.values(record.specialSymptoms || {}).some(v => v === true) && (
-                  <div>
-                    <span style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Special Symptoms:</span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                      {record.specialSymptoms?.headache && <Chip label="Frequent Headaches" color={T.bgcolor} bg={T.bgLight} />}
-                      {record.specialSymptoms?.dizziness && <Chip label="Dizziness / Vertigo" color={T.bgcolor} bg={T.bgLight} />}
+              return (
+                <div style={{ marginBottom: 12, background: '#fff1f2', border: '1.5px solid #fda4af', borderRadius: 8, padding: '10px 14px' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.rose, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🚩 Clinical Screening & Red Flags</div>
+
+                  {Object.values(rf).some(v => v === true) && (
+                    <div style={{ marginBottom: 10 }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Red Flags:</span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                        {rf.trauma && <Chip label="Trauma" color={T.rose} bg={T.roseLight} />}
+                        {rf.weightLoss && <Chip label="Unexplained Weight Loss" color={T.rose} bg={T.roseLight} />}
+                        {rf.fever && <Chip label="Fever / Night Sweats" color={T.rose} bg={T.roseLight} />}
+                        {rf.cancer && <Chip label="History of Cancer" color={T.rose} bg={T.roseLight} />}
+                        {rf.nightPain && <Chip label="Severe Night Pain" color={T.rose} bg={T.roseLight} />}
+                        {rf.swallowing && <Chip label="Difficulty Swallowing" color={T.rose} bg={T.roseLight} />}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+
+                  {Object.values(rn).some(v => v === true) && (
+                    <div style={{ marginBottom: 10 }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Neurological Screening:</span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                        {rn.radiating && <Chip label="Radiating Pain" color={T.amber} bg={T.amberLight} />}
+                        {rn.numbness && <Chip label="Numbness / Tingling" color={T.amber} bg={T.amberLight} />}
+                        {rn.weakness && <Chip label="Muscle Weakness" color={T.amber} bg={T.amberLight} />}
+                        {rn.gripDifficulty && <Chip label="Grip / Fine Motor Difficulty" color={T.amber} bg={T.amberLight} />}
+                      </div>
+                    </div>
+                  )}
+
+                  {Object.values(ss).some(v => v === true) && (
+                    <div>
+                      <span style={{ fontWeight: 700, fontSize: '0.7rem', color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Special Symptoms:</span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                        {ss.headache && <Chip label="Frequent Headaches" color={T.bgcolor} bg={T.bgLight} />}
+                        {ss.dizziness && <Chip label="Dizziness / Vertigo" color={T.bgcolor} bg={T.bgLight} />}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Psychosocial */}
-            {(isValid(record.psychosocial?.stressLevel) || record.psychosocial?.workSatisfaction || record.psychosocial?.fearOfMovement) && (
-              <div style={{ marginBottom: 12, background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.text, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🧠 Psychosocial Assessment</div>
-                <Grid cols={3}>
-                  {isValid(record.psychosocial?.stressLevel) && <Row label="Stress Level" value={record.psychosocial.stressLevel} highlight />}
-                  {record.psychosocial?.workSatisfaction && <Row label="Work Dissatisfaction" value="Yes" />}
-                  {record.psychosocial?.fearOfMovement && <Row label="Fear of Movement" value="Yes" />}
-                </Grid>
-              </div>
-            )}
+            {(() => {
+              const ps = record.assessment?.psychosocial || record.psychosocial || {}
+              if (!isValid(ps.stressLevel) && !ps.workSatisfaction && !ps.fearOfMovement) return null
+
+              return (
+                <div style={{ marginBottom: 12, background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 8, padding: '10px 14px' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.75rem', color: T.text, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>🧠 Psychosocial Assessment</div>
+                  <Grid cols={3}>
+                    {isValid(ps.stressLevel) && <Row label="Stress Level" value={ps.stressLevel} highlight />}
+                    {ps.workSatisfaction && <Row label="Work Dissatisfaction" value="Yes" />}
+                    {ps.fearOfMovement && <Row label="Fear of Movement" value="Yes" />}
+                  </Grid>
+                </div>
+              )
+            })()}
           </Section>
         )}
 
@@ -1157,7 +1174,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             <div style={{ overflowX: 'auto' }}>
               <table style={tableStyle}>
                 <thead>
-                  <tr>{['#', 'Physio Diagnosis', 'Affected Area', 'Severity', 'Stage', 'Notes'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                  <tr>{['#', 'Primary Diagnosis', 'Differential Diagnosis', 'Affected Area', 'Severity', 'Stage', 'Notes'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
                   {diagnosisRows.map((d, i) => {
@@ -1169,6 +1186,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                       <tr key={i}>
                         <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
                         <td style={{ ...tdStyle(i), fontWeight: 600 }}>{d.physioDiagnosis || '—'}</td>
+                        <td style={{ ...tdStyle(i), maxWidth: 180, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{d.differentialDiagnosis || '—'}</td>
                         <td style={tdStyle(i)}>{d.affectedArea || '—'}</td>
                         <td style={tdStyle(i)}>{d.severity ? <span style={{ background: sBg, color: sFg, borderRadius: 20, padding: '2px 8px', fontWeight: 700, fontSize: '0.7rem' }}>{d.severity}</span> : '—'}</td>
                         <td style={tdStyle(i)}>{d.stage ? <span style={{ background: tBg, color: tFg, borderRadius: 20, padding: '2px 8px', fontWeight: 700, fontSize: '0.7rem' }}>{d.stage}</span> : '—'}</td>

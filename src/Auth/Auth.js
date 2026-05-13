@@ -844,12 +844,12 @@ export const getTherapyExercises = async (clinicId, branchId) => {
 
 export const getFollowUpRecord = async (clinicId, branchId, patientId, bookingId) => {
   try {
-    const response = await axios.get(`${ipUrl}/api/physiotherapy-doctor/get-record/${clinicId}/${branchId}/${patientId}/${bookingId}`);
-    console.log("✅ FollowUp Record API:", response.data);
-    return response.data;
+    const response = await api.get(`${ipUrl}/api/physiotherapy-doctor/get-record/${clinicId}/${branchId}/${patientId}/${bookingId}`)
+    console.log('✅ FollowUp Record API:', response.data)
+    return response.data?.data || response.data
   } catch (error) {
-    console.error("❌ FollowUp Record API Error:", error);
-    throw error;
+    console.error('❌ FollowUp Record API Error:', error)
+    return null
   }
 }
 

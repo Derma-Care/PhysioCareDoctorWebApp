@@ -72,15 +72,12 @@ const TabContent = ({
   const handleNext = (payload) => {
     if (setFormData && payload && typeof payload === 'object') {
       if (activeTab === 'Plan') {
-        // Build the same shape that PatientAppointmentDetails.Plan handler stores
         const planPatch = {
           therapySessions: {
             sessions: Array.isArray(payload.therapySessions) ? payload.therapySessions : [],
-            // ── Preserve the full multi-therapist array ──────────────────
             therapists: Array.isArray(payload.therapists) ? payload.therapists : [],
             therapistIds: Array.isArray(payload.therapistIds) ? payload.therapistIds : [],
             therapistNames: Array.isArray(payload.therapistNames) ? payload.therapistNames : [],
-            // Single back-compat (first in list)
             therapistId: payload.therapistId ?? (payload.therapists?.[0]?.therapistId ?? ''),
             therapistName: payload.therapistName ?? (payload.therapists?.[0]?.fullName ?? ''),
             manualTherapy: payload.manualTherapy ?? '',
@@ -90,6 +87,16 @@ const TabContent = ({
           },
         }
         setFormData(prev => deepMerge(prev, planPatch))
+      } else if (activeTab === 'Assessment') {
+        setFormData(prev => deepMerge(prev, { assessment: payload }))
+      } else if (activeTab === 'Complaints') {
+        setFormData(prev => deepMerge(prev, { complaints: payload }))
+      } else if (activeTab === 'Diagnosis') {
+        setFormData(prev => deepMerge(prev, { diagnosis: payload }))
+      } else if (activeTab === 'Investigation') {
+        setFormData(prev => deepMerge(prev, { investigation: payload }))
+      } else if (activeTab === 'FollowUp') {
+        setFormData(prev => deepMerge(prev, { followUp: payload }))
       } else {
         setFormData(prev => deepMerge(prev, payload))
       }

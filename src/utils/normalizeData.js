@@ -7,7 +7,7 @@ export const normalizeSavedData = (saved) => {
 
   // 1. Map complaints -> symptoms
   const complaints = saved.complaints || {}
-  
+
   // Group flat therapyAnswers array into category-keyed object if needed
   // Handle both 'theraphy' and 'therapy' spellings
   let therapyAnswersRaw = complaints.therapyAnswers || complaints.theraphyAnswers || saved.theraphyAnswers || saved.therapyAnswers || {}
@@ -44,7 +44,7 @@ export const normalizeSavedData = (saved) => {
   const sub = assessmentRaw.subjectiveAssessment || {}
   const fun = assessmentRaw.functionalAssessment || {}
   const phy = assessmentRaw.physicalExamination || {}
-  
+
   const assessment = {
     // Subjective / DoctorSymptoms fields
     complaints: sub.chiefComplaint || assessmentRaw.chiefComplaint || assessmentRaw.complaints || symptoms.symptomDetails || '',
@@ -57,34 +57,49 @@ export const normalizeSavedData = (saved) => {
     aggravatingFactors: sub.aggravatingFactors || assessmentRaw.aggravatingFactors || '',
     relievingFactors: sub.relievingFactors || assessmentRaw.relievingFactors || '',
     observations: sub.observations || assessmentRaw.observations || '',
+    posture: assessmentRaw.posture || '',
+    rangeOfMotion: assessmentRaw.rangeOfMotion || '',
+    specialTests: assessmentRaw.specialTests || '',
     attachments: assessmentRaw.attachments || [],
-    
+
     // Functional
     difficultiesIn: Array.isArray(fun.difficultiesIn) ? fun.difficultiesIn : (fun.difficultiesIn ? [fun.difficultiesIn] : []),
     otherDifficulty: fun.otherDifficulty || assessmentRaw.otherDifficulty || '',
     dailyLivingAffected: fun.dailyLivingAffected || assessmentRaw.dailyLivingAffected || '',
-    
+
     // Physical
-    postureAssessment: Array.isArray(phy.postureAssessment) ? phy.postureAssessment : (phy.postureAssessment ? [phy.postureAssessment] : []),
+    postureAssessment: Array.isArray(phy.postureAssessment) ? phy.postureAssessment : (Array.isArray(assessmentRaw.postureAssessment) ? assessmentRaw.postureAssessment : []),
     postureDeviations: phy.postureDeviations || assessmentRaw.postureDeviations || '',
-    romStatus: Array.isArray(phy.rangeOfMotion || phy.romStatus) ? (phy.rangeOfMotion || phy.romStatus) : ((phy.rangeOfMotion || phy.romStatus) ? [phy.rangeOfMotion || phy.romStatus] : []),
+    romStatus: Array.isArray(phy.rangeOfMotion) ? phy.rangeOfMotion : (Array.isArray(phy.romStatus) ? phy.romStatus : (Array.isArray(assessmentRaw.rangeOfMotion) ? assessmentRaw.rangeOfMotion : [])),
     romRestricted: phy.romRestricted || assessmentRaw.romRestricted || '',
     romJoints: phy.romJoints || assessmentRaw.romJoints || '',
-    muscleStrength: Array.isArray(phy.muscleStrength) ? phy.muscleStrength : (phy.muscleStrength ? [phy.muscleStrength] : []),
+    muscleStrength: Array.isArray(phy.muscleStrength) ? phy.muscleStrength : (Array.isArray(assessmentRaw.muscleStrength) ? assessmentRaw.muscleStrength : []),
     muscleWeakness: phy.muscleWeakness || assessmentRaw.muscleWeakness || '',
-    neurologicalSigns: Array.isArray(phy.neurologicalSigns) ? phy.neurologicalSigns : (phy.neurologicalSigns ? [phy.neurologicalSigns] : []),
-    
+    neurologicalSigns: Array.isArray(phy.neurologicalSigns) ? phy.neurologicalSigns : (Array.isArray(assessmentRaw.neurologicalSigns) ? assessmentRaw.neurologicalSigns : []),
+
     // Condition-specific (nested in API, flat in UI)
     patientPain: symptoms.patientPain || saved.patientPain || '',
-    painTriggers: saved.assessment?.chronicPainPatients?.painTriggers || assessmentRaw.painTriggers || '',
-    chronicRelieving: saved.assessment?.chronicPainPatients?.relievingFactors || assessmentRaw.chronicRelieving || '',
-    typeOfSport: saved.assessment?.sportsRehabPatients?.typeOfSport || assessmentRaw.typeOfSport || '',
-    recurringInjuries: saved.assessment?.sportsRehabPatients?.recurringInjuries || assessmentRaw.recurringInjuries || '',
-    returnToSportGoals: saved.assessment?.sportsRehabPatients?.returnToSportGoals || assessmentRaw.returnToSportGoals || '',
-    neuroDiagnosis: saved.assessment?.neuroRehabPatients?.neuroDiagnosis || assessmentRaw.neuroDiagnosis || '',
-    neuroOnset: saved.assessment?.neuroRehabPatients?.neuroOnset || assessmentRaw.neuroOnset || '',
-    mobilityStatus: saved.assessment?.neuroRehabPatients?.mobilityStatus || assessmentRaw.mobilityStatus || '',
-    cognitiveStatus: saved.assessment?.neuroRehabPatients?.cognitiveStatus || assessmentRaw.cognitiveStatus || '',
+
+    // Chronic Pain
+    painTriggers: assessmentRaw.chronicPainPatients?.painDuration || assessmentRaw.painTriggers || '',
+    chronicRelieving: assessmentRaw.chronicPainPatients?.sleepDisturbance ? 'Sleep Disturbance: Yes' : (assessmentRaw.chronicRelieving || ''),
+
+    // Sports Rehab
+    typeOfSport: assessmentRaw.sportsRehabPatients?.sportName || assessmentRaw.typeOfSport || '',
+    recurringInjuries: assessmentRaw.sportsRehabPatients?.injuryType || assessmentRaw.recurringInjuries || '',
+    returnToSportGoals: assessmentRaw.returnToSportGoals || '',
+
+    // Neuro Rehab
+    neuroDiagnosis: assessmentRaw.neuroRehabPatients?.balanceIssue ? 'Balance Issues identified' : (assessmentRaw.neuroDiagnosis || ''),
+    neuroOnset: assessmentRaw.neuroOnset || '',
+    mobilityStatus: assessmentRaw.neuroRehabPatients?.walkingSupport || assessmentRaw.mobilityStatus || '',
+    cognitiveStatus: assessmentRaw.cognitiveStatus || '',
+
+    // ── Screening Fields (Missing in previous version) ───────────────────
+    redFlags: assessmentRaw.redFlags || saved.redFlags || {},
+    radiationNeuro: assessmentRaw.radiationNeuro || saved.radiationNeuro || {},
+    psychosocial: assessmentRaw.psychosocial || saved.psychosocial || {},
+    specialSymptoms: assessmentRaw.specialSymptoms || saved.specialSymptoms || {},
   }
 
   // 3. Map diagnosis
@@ -96,12 +111,14 @@ export const normalizeSavedData = (saved) => {
     severity: diagRaw.severity || '',
     stage: diagRaw.stage || '',
     notes: diagRaw.notes || '',
+    differentialDiagnosis: diagRaw.differentialDiagnosis || '',
     diagnosisRows: diagRaw.diagnosisRows || [
       {
         physioDiagnosis: diagRaw.physioDiagnosis || '',
         affectedArea: diagRaw.affectedArea || '',
         severity: diagRaw.severity || '',
         stage: diagRaw.stage || '',
+        differentialDiagnosis: diagRaw.differentialDiagnosis || '',
         notes: diagRaw.notes || '',
       }
     ]
@@ -111,10 +128,10 @@ export const normalizeSavedData = (saved) => {
   const tp = saved.treatmentPlan || {}
   // Handle case where therapySessions is an object containing a 'sessions' array
   const sessions = saved.therapySessions?.sessions || (Array.isArray(saved.therapySessions) ? saved.therapySessions : [])
-  
+
   const rawModalities = tp.modalitiesUsed || saved.therapySessions?.modalitiesUsed
   const rawPrecautions = tp.precautions || saved.therapySessions?.precautions
-  
+
   const therapySessions = {
     sessions: sessions,
     therapistId: tp.therapistId || saved.therapySessions?.therapistId || '',
@@ -129,7 +146,7 @@ export const normalizeSavedData = (saved) => {
   const ep = saved.exercisePlan || {}
   const exercisePlan = {
     homeAdvice: ep.homeAdvice || '',
-    exercises: ep.homeExercises || ep.exercises || [],
+    exercises: Array.isArray(ep.homeExercises) ? ep.homeExercises : (Array.isArray(ep.exercises) ? ep.exercises : []),
   }
 
   // 6. Investigation
@@ -154,9 +171,9 @@ export const normalizeSavedData = (saved) => {
     ClinicImages: saved.ClinicImages || {},
     summary: saved.summary || {},
     patientPain: symptoms.patientPain || saved.patientPain || '',
-    redFlags: saved.redFlags || {},
-    radiationNeuro: saved.radiationNeuro || {},
-    psychosocial: saved.psychosocial || {},
-    specialSymptoms: saved.specialSymptoms || {},
+    redFlags: saved.assessment?.redFlags || saved.redFlags || {},
+    radiationNeuro: saved.assessment?.radiationNeuro || saved.radiationNeuro || {},
+    psychosocial: saved.assessment?.psychosocial || saved.psychosocial || {},
+    specialSymptoms: saved.assessment?.specialSymptoms || saved.specialSymptoms || {},
   }
 }

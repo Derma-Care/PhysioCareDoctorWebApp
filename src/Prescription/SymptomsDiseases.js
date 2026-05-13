@@ -168,7 +168,6 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
   const { error } = useToast()
 
-  // FIX 2: Sync seed changes — patientPain now correctly reads seed.patientPain
   useEffect(() => {
     if (!seed || typeof seed !== 'object') return
     if (isValid(seed.symptomDetails)) setSymptomDetails(seed.symptomDetails)
@@ -252,6 +251,8 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
     run()
   }, [patientData?.clinicId, patientData?.branchId, patientData?.bookingId])
 
+
+
   const handleNext = () => {
     // FIX 3: include selectedTherapyID and patientPain correctly in payload
     const payload = {
@@ -334,6 +335,8 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           </div>
         )}
       </div>
+
+
 
       {/* ── Loading Banner ── */}
       {loadingBooking && (

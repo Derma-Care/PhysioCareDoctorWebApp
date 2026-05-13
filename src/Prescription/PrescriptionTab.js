@@ -7,16 +7,16 @@ import { useToast } from '../utils/Toaster'
 /* ─── Diagnosis static options ─────────────────────────────────────────── */
 const SEVERITY_OPTIONS = [
   { label: 'Select severity...', value: '' },
-  { label: 'Mild',     value: 'Mild' },
+  { label: 'Mild', value: 'Mild' },
   { label: 'Moderate', value: 'Moderate' },
-  { label: 'Severe',   value: 'Severe' },
+  { label: 'Severe', value: 'Severe' },
 ]
 
 const STAGE_OPTIONS = [
   { label: 'Select stage...', value: '' },
-  { label: 'Acute',     value: 'Acute' },
+  { label: 'Acute', value: 'Acute' },
   { label: 'Sub-acute', value: 'Sub-acute' },
-  { label: 'Chronic',   value: 'Chronic' },
+  { label: 'Chronic', value: 'Chronic' },
 ]
 
 /* ─── Styles ─────────────────────────────────────────────────────────── */
@@ -60,7 +60,7 @@ const DiagTextInput = ({ value, onChange, placeholder = '' }) => (
     placeholder={placeholder}
     style={diagInputStyle}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+    onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
   />
 )
 
@@ -70,7 +70,7 @@ const DiagSelect = ({ value, onChange, options }) => (
     onChange={e => onChange(e.target.value)}
     style={{ ...diagInputStyle, cursor: 'pointer', appearance: 'auto' }}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+    onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
   >
     {options.map(o => (
       <option key={o.value} value={o.value}>{o.label}</option>
@@ -86,21 +86,59 @@ const DiagTextarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
     rows={rows}
     style={{ ...diagInputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+    onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
   />
 )
 
 /* ══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
-const PrescriptionTab = ({ seed = {}, onNext }) => {
+const PrescriptionTab = ({ seed = {}, onNext, formData = {} }) => {
+
+  const rawAss = formData.assessment || {}
+  const sub = rawAss.subjectiveAssessment || {}
+  const fun = rawAss.functionalAssessment || {}
+  const phy = rawAss.physicalExamination || {}
+
+  // Flatten for easy display
+  const assessment = {
+    chiefComplaint: sub.chiefComplaint || rawAss.chiefComplaint || formData.symptoms?.complaintDetails || '',
+    painScale: sub.painScale || rawAss.painScale || 0,
+    painType: sub.painType || rawAss.painType || '',
+    posture: phy.postureAssessment || rawAss.posture || '',
+    rangeOfMotion: phy.rangeOfMotion || rawAss.rangeOfMotion || '',
+    specialTests: rawAss.specialTests || '',
+    redFlags: rawAss.redFlags || {},
+    radiationNeuro: rawAss.radiationNeuro || {},
+    specialSymptoms: rawAss.specialSymptoms || {},
+    psychosocial: rawAss.psychosocial || {},
+    chronic: rawAss.chronicPainPatients || {},
+    sports: rawAss.sportsRehabPatients || {},
+    neuro: rawAss.neuroRehabPatients || {},
+    difficultiesIn: fun.difficultiesIn || rawAss.difficultiesIn || [],
+  }
+
+  const isValid = (val) => val && (typeof val === 'string' ? val.trim().length > 0 : (Array.isArray(val) ? val.length > 0 : true))
+  const hasAssessmentData = (
+    isValid(assessment.chiefComplaint) || assessment.painScale > 0 || isValid(assessment.painType) ||
+    (assessment.difficultiesIn?.length > 0) || isValid(assessment.posture) || isValid(assessment.rangeOfMotion) ||
+    isValid(assessment.specialTests) ||
+    Object.values(assessment.redFlags).some(v => v === true) ||
+    Object.values(assessment.radiationNeuro).some(v => v === true) ||
+    Object.values(assessment.specialSymptoms).some(v => v === true) ||
+    Object.values(assessment.psychosocial).some(v => v === true) ||
+    Object.values(assessment.chronic || {}).some(v => !!v) ||
+    Object.values(assessment.sports || {}).some(v => !!v) ||
+    Object.values(assessment.neuro || {}).some(v => !!v)
+  )
 
   /* ── State ── */
   const [physioDiagnosis, setPhysioDiagnosis] = useState(seed.diagnosis?.physioDiagnosis ?? '')
-  const [affectedArea,    setAffectedArea]    = useState(seed.diagnosis?.affectedArea    ?? '')
-  const [severity,        setSeverity]        = useState(seed.diagnosis?.severity        ?? '')
-  const [stage,           setStage]           = useState(seed.diagnosis?.stage           ?? '')
-  const [diagNotes,       setDiagNotes]       = useState(seed.diagnosis?.notes           ?? '')
+  const [affectedArea, setAffectedArea] = useState(seed.diagnosis?.affectedArea ?? '')
+  const [severity, setSeverity] = useState(seed.diagnosis?.severity ?? '')
+  const [stage, setStage] = useState(seed.diagnosis?.stage ?? '')
+  const [differentialDiagnosis, setDifferentialDiagnosis] = useState(seed.diagnosis?.differentialDiagnosis ?? '')
+  const [diagNotes, setDiagNotes] = useState(seed.diagnosis?.notes ?? '')
 
   const { warning } = useToast()
   const seedRef = useRef(null)
@@ -111,16 +149,17 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
     if (!seed?.diagnosis) return
 
     setPhysioDiagnosis(seed.diagnosis.physioDiagnosis ?? '')
-    setAffectedArea(seed.diagnosis.affectedArea       ?? '')
-    setSeverity(seed.diagnosis.severity               ?? '')
-    setStage(seed.diagnosis.stage                     ?? '')
-    setDiagNotes(seed.diagnosis.notes                 ?? '')
+    setAffectedArea(seed.diagnosis.affectedArea ?? '')
+    setSeverity(seed.diagnosis.severity ?? '')
+    setStage(seed.diagnosis.stage ?? '')
+    setDifferentialDiagnosis(seed.diagnosis.differentialDiagnosis ?? '')
+    setDiagNotes(seed.diagnosis.notes ?? '')
   }, [seed])
 
   /* ── handleNext ── */
   const handleNext = () => {
     const payload = {
-      diagnosis: { physioDiagnosis, affectedArea, severity, stage, notes: diagNotes },
+      diagnosis: { physioDiagnosis, affectedArea, severity, stage, differentialDiagnosis, notes: diagNotes },
     }
     onNext?.(payload)
     console.log('🚀 PrescriptionTab payload:', payload)
@@ -151,6 +190,7 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
       >
         <CCardBody>
 
+
           {/* Section header */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
@@ -177,7 +217,7 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
           {/* 2-col grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 28px', marginBottom: 16 }}>
 
-            <DiagField label="Physio Diagnosis">
+            <DiagField label="Primary Diagnosis">
               <DiagTextInput
                 value={physioDiagnosis}
                 onChange={setPhysioDiagnosis}
@@ -203,15 +243,27 @@ const PrescriptionTab = ({ seed = {}, onNext }) => {
 
           </div>
 
-          {/* Notes — full width */}
-          <DiagField label="Notes">
-            <DiagTextarea
-              value={diagNotes}
-              onChange={setDiagNotes}
-              placeholder="e.g. No radiating pain observed"
-              rows={3}
-            />
-          </DiagField>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 28px', marginBottom: 16 }}>
+            {/* Differential Diagnosis */}
+            <DiagField label="Differential Diagnosis">
+              <DiagTextarea
+                value={differentialDiagnosis}
+                onChange={setDifferentialDiagnosis}
+                placeholder="e.g. Possible herniated disc"
+                rows={3}
+              />
+            </DiagField>
+
+            {/* Notes */}
+            <DiagField label="Notes">
+              <DiagTextarea
+                value={diagNotes}
+                onChange={setDiagNotes}
+                placeholder="e.g. No radiating pain observed"
+                rows={3}
+              />
+            </DiagField>
+          </div>
 
         </CCardBody>
       </CCard>

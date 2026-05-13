@@ -185,10 +185,10 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
   const [cognitiveStatus,     setCognitiveStatus]     = useState(seed.cognitiveStatus    ?? '')
   
   // Embedded states
-  const [redFlagsData, setRedFlagsData] = useState(formData.redFlags || {})
-  const [radiationNeuro, setRadiationNeuro] = useState(formData.radiationNeuro || {})
-  const [psychosocial, setPsychosocial] = useState(formData.psychosocial || {})
-  const [specialSymptoms, setSpecialSymptoms] = useState(formData.specialSymptoms || {})
+  const [redFlagsData, setRedFlagsData] = useState(formData.assessment?.redFlags || formData.redFlags || {})
+  const [radiationNeuro, setRadiationNeuro] = useState(formData.assessment?.radiationNeuro || formData.radiationNeuro || {})
+  const [psychosocial, setPsychosocial] = useState(formData.assessment?.psychosocial || formData.psychosocial || {})
+  const [specialSymptoms, setSpecialSymptoms] = useState(formData.assessment?.specialSymptoms || formData.specialSymptoms || {})
 
   // ── FIX: Sync embedded states when formData from GET API updates ──
   useEffect(() => {
@@ -211,42 +211,64 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
   const { patientData } = useDoctorContext()
 
   useEffect(() => {
-    const s = seed || {}
-    if (s.duration) {
-      const parts = s.duration.split(' ')
-      setDurationValue(parts[0] || '')
-      setDurationUnit(parts[1]?.replace(/s$/, '') || 'day')
+    if (!seed || typeof seed !== 'object') return
+    const s = seed.subjectiveAssessment || seed || {}
+    const f = seed.functionalAssessment || seed || {}
+    const p = seed.physicalExamination || seed || {}
+
+    // Subjective
+    if (s.painScale) setPainScale(s.painScale)
+    if (s.painType) setPainType(s.painType)
+    if (isValid(s.duration)) {
+      const parts = String(s.duration).split(' ')
+      if (parts.length >= 2) {
+        setDurationValue(parts[0])
+        setDurationUnit(parts[1].replace(/s$/, ''))
+      } else {
+        setDurationValue(s.duration)
+      }
     }
-    setPainScale(s.painScale ?? '')
-    setPainType(s.painType ?? '')
-    setOnset(s.onset ?? '')
-    setAggravatingFactors(s.aggravatingFactors ?? '')
-    setRelievingFactors(s.relievingFactors ?? '')
-    setPosture(s.posture ?? '')
-    setRangeOfMotion(s.rangeOfMotion ?? '')
-    setSpecialTests(s.specialTests ?? '')
-    setObservations(s.observations ?? '')
-    setDifficultiesIn(s.difficultiesIn ?? [])
-    setOtherDifficulty(s.otherDifficulty ?? '')
-    setDailyLivingAffected(s.dailyLivingAffected ?? '')
-    setPostureAssessment(s.postureAssessment ?? [])
-    setPostureDeviations(s.postureDeviations ?? '')
-    setRomStatus(s.romStatus ?? [])
-    setRomRestricted(s.romRestricted ?? '')
-    setRomJoints(s.romJoints ?? '')
-    setMuscleStrength(s.muscleStrength ?? [])
-    setMuscleWeakness(s.muscleWeakness ?? '')
-    setNeurologicalSigns(s.neurologicalSigns ?? [])
-    if (s.patientPain) setPatientPain(s.patientPain)
-    setPainTriggers(s.painTriggers ?? '')
-    setChronicRelieving(s.chronicRelieving ?? '')
-    setTypeOfSport(s.typeOfSport ?? '')
-    setRecurringInjuries(s.recurringInjuries ?? '')
-    setReturnToSportGoals(s.returnToSportGoals ?? '')
-    setNeuroDiagnosis(s.neuroDiagnosis ?? '')
-    setNeuroOnset(s.neuroOnset ?? '')
-    setMobilityStatus(s.mobilityStatus ?? '')
-    setCognitiveStatus(s.cognitiveStatus ?? '')
+    if (s.onset) setOnset(s.onset)
+    if (s.aggravatingFactors) setAggravatingFactors(s.aggravatingFactors)
+    if (s.relievingFactors) setRelievingFactors(s.relievingFactors)
+    if (s.observations) setObservations(s.observations)
+
+    // Functional
+    setDifficultiesIn(f.difficultiesIn ?? [])
+    setOtherDifficulty(f.otherDifficulty ?? '')
+    setDailyLivingAffected(f.dailyLivingAffected ?? '')
+
+    // Physical
+    setPostureAssessment(p.postureAssessment ?? [])
+    setPostureDeviations(p.postureDeviations ?? '')
+    setRomStatus(p.rangeOfMotion || p.romStatus || [])
+    setRomRestricted(p.romRestricted ?? '')
+    setRomJoints(p.romJoints ?? '')
+    setMuscleStrength(p.muscleStrength ?? [])
+    setMuscleWeakness(p.muscleWeakness ?? '')
+    setNeurologicalSigns(p.neurologicalSigns ?? [])
+
+    // Screening
+    setRedFlagsData(p.redFlags || formData.assessment?.redFlags || formData.redFlags || {})
+    setRadiationNeuro(p.radiationNeuro || formData.assessment?.radiationNeuro || formData.radiationNeuro || {})
+    setPsychosocial(p.psychosocial || formData.assessment?.psychosocial || formData.psychosocial || {})
+    setSpecialSymptoms(p.specialSymptoms || formData.assessment?.specialSymptoms || formData.specialSymptoms || {})
+
+    // Condition-specific
+    const cp = seed.chronicPainPatients || seed || {}
+    const sp = seed.sportsRehabPatients || seed || {}
+    const nr = seed.neuroRehabPatients || seed || {}
+
+    if (isValid(seed.patientPain)) setPatientPain(seed.patientPain)
+    setPainTriggers(cp.painTriggers ?? cp.painTriggers ?? '')
+    setChronicRelieving(cp.relievingFactors || cp.chronicRelieving || '')
+    setTypeOfSport(sp.sportName || sp.typeOfSport || '')
+    setRecurringInjuries(sp.recurringInjuries ?? '')
+    setReturnToSportGoals(sp.returnToSportGoals ?? '')
+    setNeuroDiagnosis(nr.neuroDiagnosis ?? '')
+    setNeuroOnset(nr.neuroOnset ?? '')
+    setMobilityStatus(nr.mobilityStatus ?? '')
+    setCognitiveStatus(nr.cognitiveStatus ?? '')
   }, [seed])
 
   const cameFromBackend = isValid(seed.patientPain)

@@ -97,11 +97,26 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
 
 
+  const TABS = useMemo(() => {
+    let list = ALL_TABS
+    if (fromDoctorTemplate) {
+      list = formData?.symptoms?.complaints?.trim() ? ALL_TABS : ['Complaints']
+    }
+
+    // status confirmed means history reports has to be disabled
+    const currentStatus = patientData?.status || patient?.status || ''
+    if (currentStatus.toLowerCase() === 'confirmed') {
+      list = list.filter(t => t !== 'History' && t !== 'Reports')
+    }
+
+    return list
+  }, [ALL_TABS, fromDoctorTemplate, formData?.symptoms?.complaints, patientData?.status, patient?.status])
+
   /* ── Go to next tab ── */
   const goToNext = useCallback((current) => {
-    const i = ALL_TABS.indexOf(current)
-    if (i > -1 && i < ALL_TABS.length - 1) setActiveTab(ALL_TABS[i + 1])
-  }, [ALL_TABS])
+    const i = TABS.indexOf(current)
+    if (i > -1 && i < TABS.length - 1) setActiveTab(TABS[i + 1])
+  }, [TABS])
 
   /* ── mergeAndLog ── */
   const mergeAndLog = useCallback((tabName, patch) => {
@@ -156,22 +171,25 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     },
     'Red Flags': (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Red Flags'); return }
-      mergeAndLog('Red Flags', { redFlags: data.redFlags })
+      const rf = data.redFlags ?? data
+      mergeAndLog('Red Flags', { redFlags: rf })
       goToNext('Red Flags')
     },
 
     Assessment: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Assessment'); return }
-      mergeAndLog('Assessment', { assessment: data.assessment })
+      // The incoming data is already the assessment payload, so we wrap it ourselves
+      const assessmentData = data.assessment ?? data
+      mergeAndLog('Assessment', { assessment: assessmentData })
       goToNext('Assessment')
     },
 
     'Neuro Info': (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Neuro Info'); return }
       const patch = {
-        radiationNeuro: data.radiationNeuro,
-        psychosocial: data.psychosocial,
-        specialSymptoms: data.specialSymptoms,
+        radiationNeuro: data.radiationNeuro ?? data,
+        psychosocial: data.psychosocial ?? data,
+        specialSymptoms: data.specialSymptoms ?? data,
       }
       mergeAndLog('Neuro Info', patch)
       goToNext('Neuro Info')
@@ -179,12 +197,25 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
     Diagnosis: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Diagnosis'); return }
+      const d = data.diagnosis ?? data
       const patch = {
         diagnosis: {
-          // FIX: preserve full diagnosisRows array — not just first row
-          diagnosisRows: Array.isArray(data.diagnosis?.diagnosisRows)
-            ? data.diagnosis.diagnosisRows
-            : [{ physioDiagnosis: data.diagnosis?.physioDiagnosis ?? '', affectedArea: data.diagnosis?.affectedArea ?? '', severity: data.diagnosis?.severity ?? '', stage: data.diagnosis?.stage ?? '', notes: data.diagnosis?.notes ?? '' }],
+          physioDiagnosis: d.physioDiagnosis ?? '',
+          affectedArea: d.affectedArea ?? '',
+          severity: d.severity ?? '',
+          stage: d.stage ?? '',
+          differentialDiagnosis: d.differentialDiagnosis ?? '',
+          notes: d.notes ?? '',
+          diagnosisRows: Array.isArray(d.diagnosisRows)
+            ? d.diagnosisRows
+            : [{
+                physioDiagnosis: d.physioDiagnosis ?? '',
+                affectedArea: d.affectedArea ?? '',
+                severity: d.severity ?? '',
+                stage: d.stage ?? '',
+                differentialDiagnosis: d.differentialDiagnosis ?? '',
+                notes: d.notes ?? ''
+              }],
         },
       }
       mergeAndLog('Diagnosis', patch)
@@ -194,14 +225,15 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     // FIX: store investigation with BOTH key names (selectedTests for internal use, tests for API compat)
     Investigation: (data = {}) => {
       if (!data || typeof data !== 'object') { goToNext('Investigation'); return }
-      const tests = data.investigation?.selectedTests ?? data.investigation?.tests ?? []
-      const notes = data.investigation?.notes ?? data.investigation?.reason ?? ''
+      const inv = data.investigation ?? data
+      const tests = inv.selectedTests ?? inv.tests ?? []
+      const notes = inv.notes ?? inv.reason ?? ''
       const patch = {
         investigation: {
           selectedTests: tests,
-          tests: tests,   // duplicate so buildPayload finds it either way
+          tests: tests,
           notes: notes,
-          reason: notes,   // duplicate for same reason
+          reason: notes,
         },
       }
       mergeAndLog('Investigation', patch)
@@ -295,12 +327,6 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       goToNext('Summary')
     },
   }
-
-  /* ── Template mode ── */
-  const TABS = useMemo(() => {
-    if (!fromDoctorTemplate) return ALL_TABS
-    return formData?.symptoms?.complaints?.trim() ? ALL_TABS : ['Complaints']
-  }, [ALL_TABS, fromDoctorTemplate, formData?.symptoms?.complaints])
 
   useEffect(() => { if (fromDoctorTemplate) setActiveTab('Complaints') }, [fromDoctorTemplate])
 

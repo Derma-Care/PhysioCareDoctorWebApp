@@ -157,7 +157,7 @@ const RadioBtn = ({ label, emoji, value, active, onClick }) => (
 )
 
 /* ─── Multi-Therapist Search ─────────────────────────────────────────────── */
-const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChange, hasError }) => {
+const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChange, hasError, onRefresh }) => {
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState(false)
 
@@ -183,34 +183,55 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
   return (
     <div style={{ position: 'relative' }}>
       {/* Input */}
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-        <input
-          value={search}
-          onChange={e => { setSearch(e.target.value); setOpen(true) }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 200)}
-          placeholder={
-            loading
-              ? 'Loading therapists...'
-              : !therapists.length
-                ? 'No therapists available'
-                : 'Search by ID or name to add therapist...'
-          }
-          disabled={loading}
-          style={{
-            ...inputStyle,
-            opacity: loading ? 0.6 : 1,
-            borderColor: hasError ? '#e53e3e' : selectedTherapists.length > 0 ? '#38a169' : '#b6cfe8',
-            backgroundColor: hasError ? '#fff5f5' : '#FFFFFF',
-            boxShadow: hasError ? '0 0 0 3px rgba(229,62,62,0.12)' : 'none',
-          }}
-        />
-        {search && (
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <input
+            value={search}
+            onChange={e => { setSearch(e.target.value); setOpen(true) }}
+            onFocus={() => setOpen(true)}
+            onBlur={() => setTimeout(() => setOpen(false), 200)}
+            placeholder={
+              loading
+                ? 'Loading therapists...'
+                : !therapists.length
+                  ? 'No therapists available'
+                  : 'Search by ID or name to add therapist...'
+            }
+            disabled={loading}
+            style={{
+              ...inputStyle,
+              opacity: loading ? 0.6 : 1,
+              borderColor: hasError ? '#e53e3e' : selectedTherapists.length > 0 ? '#38a169' : '#b6cfe8',
+              backgroundColor: hasError ? '#fff5f5' : '#FFFFFF',
+              boxShadow: hasError ? '0 0 0 3px rgba(229,62,62,0.12)' : 'none',
+            }}
+          />
+          {search && (
+            <button
+              type="button"
+              onMouseDown={e => { e.preventDefault(); setSearch('') }}
+              style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontWeight: 700, fontSize: 14, padding: '2px 4px' }}
+            >✕</button>
+          )}
+        </div>
+
+        {onRefresh && (
           <button
             type="button"
-            onMouseDown={e => { e.preventDefault(); setSearch('') }}
-            style={{ position: 'absolute', right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontWeight: 700, fontSize: 14, padding: '2px 4px' }}
-          >✕</button>
+            onClick={onRefresh}
+            disabled={loading}
+            title="Refresh therapist list"
+            style={{
+              width: 38, height: 38, borderRadius: 8, border: '1.5px solid #1B4F8A',
+              background: '#f0f6ff', color: '#1B4F8A', cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+              transition: 'all 0.2s', flexShrink: 0
+            }}
+            onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#1B4F8A'; e.currentTarget.style.color = '#fff' } }}
+            onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = '#f0f6ff'; e.currentTarget.style.color = '#1B4F8A' } }}
+          >
+            {loading ? '⌛' : '🔄'}
+          </button>
         )}
       </div>
 
@@ -1196,6 +1217,21 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     }
   }
 
+  const refreshTherapists = useCallback(() => {
+    if (!idsReady) return
+    setLoadingTherapists(true)
+    getTherapists(clinicId, branchId)
+      .then(data => {
+        setTherapists(Array.isArray(data) ? data : [])
+        toastSuccess('Therapist list refreshed')
+      })
+      .catch(err => {
+        console.error('❌ Error refreshing therapists:', err)
+        toastError('Failed to refresh therapists.')
+      })
+      .finally(() => setLoadingTherapists(false))
+  }, [idsReady, clinicId, branchId, toastSuccess, toastError])
+
   useEffect(() => {
     if (!idsReady || exercisesFetchedRef.current) return
     exercisesFetchedRef.current = true
@@ -1852,6 +1888,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
               loading={loadingTherapists}
               selectedTherapists={selectedTherapists}
               hasError={!!errors.therapist}
+              onRefresh={refreshTherapists}
               onChange={(updated) => {
                 setSelectedTherapists(updated)
                 if (updated.length > 0) setErrors(prev => ({ ...prev, therapist: undefined }))
