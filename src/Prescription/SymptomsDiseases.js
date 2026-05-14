@@ -27,12 +27,32 @@ const toImageSrc = (raw) => {
   return `data:image/jpeg;base64,${raw}`
 }
 
-const flattenTherapyAnswers = (obj = {}) => {
-  if (!obj || typeof obj !== 'object') return []
-  return Object.entries(obj).map(([category, qList]) => ({
-    category,
-    questions: Array.isArray(qList) ? qList : [],
-  }))
+const flattenTherapyAnswers = (input) => {
+  if (!input) return []
+
+  // If it's already an array (API shape)
+  if (Array.isArray(input)) {
+    const grouped = {}
+    input.forEach(q => {
+      const cat = q.questionKey || 'General'
+      if (!grouped[cat]) grouped[cat] = []
+      grouped[cat].push(q)
+    })
+    return Object.entries(grouped).map(([category, questions]) => ({
+      category,
+      questions
+    }))
+  }
+
+  // If it's an object (internal shape)
+  if (typeof input === 'object') {
+    return Object.entries(input).map(([category, qList]) => ({
+      category,
+      questions: Array.isArray(qList) ? qList : [],
+    }))
+  }
+
+  return []
 }
 
 const isValid = (v) =>
@@ -59,6 +79,9 @@ const StatusBadge = ({ status }) => {
     Confirmed: { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
     Pending: { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
     Cancelled: { bg: '#FEE2E2', color: '#991B1B', border: '#FECACA' },
+    'On-Going': { bg: '#FFF4E0', color: COLORS.orange, border: COLORS.orange + '40' },
+    'In-Progress': { bg: '#FFF4E0', color: COLORS.orange, border: COLORS.orange + '40' },
+    Completed: { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' },
   }
   const s = map[status] || { bg: '#F3F4F6', color: '#374151', border: '#D1D5DB' }
   return (
@@ -140,9 +163,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       ? seed.attachments
       : Array.isArray(patientData?.attachments) ? patientData.attachments : []
   )
-  const [loadingBooking, setLoadingBooking] = useState(false)
-  const [bookingRecord, setBookingRecord] = useState(null)
-  const [partImage, setPartImage] = useState(seed.partImage ?? '')
+  const [partImage, setPartImage] = useState(seed.partImage ?? patientData?.partImage ?? '')
   const [showDiagramModal, setShowDiagramModal] = useState(false)
   const [theraphyAnswers, setTheraphyAnswers] = useState(seed.theraphyAnswers ?? {})
   const [selectedTherapy, setSelectedTherapy] = useState(seed.selectedTherapy ?? '')
@@ -171,13 +192,32 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   useEffect(() => {
     if (!seed || typeof seed !== 'object') return
     if (isValid(seed.symptomDetails)) setSymptomDetails(seed.symptomDetails)
+    else if (isValid(patientData?.problem)) setSymptomDetails(patientData.problem)
+
     if (isValid(seed.duration)) setDuration(seed.duration)
-    if (Array.isArray(seed.attachments) && seed.attachments.length) setAttachments(seed.attachments)
+    else if (isValid(patientData?.symptomsDuration)) setDuration(patientData.symptomsDuration)
+
     if (isValid(seed.partImage)) setPartImage(seed.partImage)
+    else if (isValid(patientData?.partImage)) setPartImage(patientData.partImage)
+    else if (isValid(patientData?.painAssessmentImage)) setPartImage(patientData.painAssessmentImage)
+
+    if (Array.isArray(seed.attachments) && seed.attachments.length) setAttachments(seed.attachments)
+    else if (Array.isArray(patientData?.attachments) && patientData.attachments.length) setAttachments(patientData.attachments)
+
     if (Array.isArray(seed.parts) && seed.parts.length) setParts(seed.parts)
+    else if (Array.isArray(patientData?.parts)) setParts(patientData.parts)
+    else if (Array.isArray(patientData?.selectedBodyPart)) setParts(patientData.selectedBodyPart)
+    else if (typeof patientData?.selectedBodyPart === 'string') {
+      const splitParts = patientData.selectedBodyPart.split(',').map(p => p.trim()).filter(Boolean)
+      setParts(splitParts)
+    }
     if (isValid(seed.selectedTherapy)) setSelectedTherapy(seed.selectedTherapy)
     if (isValid(seed.selectedTherapyID)) setSelectedTherapyID(seed.selectedTherapyID)
+
     if (seed.theraphyAnswers && typeof seed.theraphyAnswers === 'object') setTheraphyAnswers(seed.theraphyAnswers)
+    else if (patientData?.theraphyAnswers && typeof patientData.theraphyAnswers === 'object') setTheraphyAnswers(patientData.theraphyAnswers)
+    else if (Array.isArray(patientData?.therapyAnswers)) setTheraphyAnswers(patientData.therapyAnswers)
+
     if (Array.isArray(seed.attachmentImages) && seed.attachmentImages.length) setAttachmentImages(seed.attachmentImages)
     if (isValid(seed.previousInjuries)) setPreviousInjuries(seed.previousInjuries)
     if (isValid(seed.currentMedications)) setCurrentMedications(seed.currentMedications)
@@ -185,71 +225,15 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
     if (isValid(seed.occupation)) setOccupation(seed.occupation)
     if (isValid(seed.insuranceProvider)) setInsuranceProvider(seed.insuranceProvider)
     if (Array.isArray(seed.activityLevels) && seed.activityLevels.length) setActivityLevels(seed.activityLevels)
-    // ✅ FIXED
-    if (isValid(seed.patientPain)) {
-      setPatientPain(seed.patientPain)
-    }
-    else if (isValid(seed.reasonforVisit)) {
-      setPatientPain(seed.reasonforVisit)
-    }
-    else if (isValid(patientData?.reasonforVisit)) {   // ⭐ IMPORTANT
-      setPatientPain(patientData.reasonforVisit)
-    }
-    else if (isValid(patientData?.patientPain)) {
-      setPatientPain(patientData.patientPain)
-    }
-    else if (isValid(patientData?.problem)) {          // fallback
-      setPatientPain(patientData.problem)
-    }
+
+    // ✅ FIXED Fallback for patientPain / Reason for Visit
+    if (isValid(seed.patientPain)) setPatientPain(seed.patientPain)
+    else if (isValid(seed.reasonforVisit)) setPatientPain(seed.reasonforVisit)
+    else if (isValid(patientData?.patientPain)) setPatientPain(patientData.patientPain)
+    else if (isValid(patientData?.reasonforVisit)) setPatientPain(patientData.reasonforVisit)
+    else if (isValid(patientData?.problem)) setPatientPain(patientData.problem)
   }, [seed, patientData])
 
-  useEffect(() => {
-    const clinicId = patientData?.clinicId
-    const branchId = patientData?.branchId
-    if (!clinicId || !branchId) return
-    const run = async () => {
-      setLoadingBooking(true)
-      try {
-        const json = await getBookingDetails(clinicId, branchId)
-        const list = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : [json]
-        const record = list.find((b) => b.bookingId === patientData?.bookingId) ?? list[0]
-        if (!record) return
-        setBookingRecord(record)
-        if (isValid(record.problem) && !isValid(seed.symptomDetails)) setSymptomDetails(record.problem)
-        if (isValid(record.symptomsDuration) && !isValid(seed.duration)) setDuration(record.symptomsDuration.trim())
-        else if (!isValid(seed.duration)) setDuration('0 Days')
-        if (isValid(record.subServiceName) && !isValid(seed.selectedTherapy)) setSelectedTherapy(record.subServiceName)
-        if (isValid(record.subServiceId) && !isValid(seed.selectedTherapyID)) setSelectedTherapyID(record.subServiceId)
-        if (record.partImage && !isValid(seed.partImage)) setPartImage(record.partImage)
-        if (Array.isArray(record.parts) && record.parts.length && !(Array.isArray(seed.parts) && seed.parts.length)) setParts(record.parts)
-        if (record.theraphyAnswers && typeof record.theraphyAnswers === 'object' && !Object.keys(seed.theraphyAnswers ?? {}).length) setTheraphyAnswers(record.theraphyAnswers)
-        if (isValid(record.previousInjuries) && !isValid(seed.previousInjuries)) setPreviousInjuries(record.previousInjuries)
-        if (isValid(record.currentMedications) && !isValid(seed.currentMedications)) setCurrentMedications(record.currentMedications)
-        if (isValid(record.allergies) && !isValid(seed.allergies)) setAllergies(record.allergies)
-        if (isValid(record.occupation) && !isValid(seed.occupation)) setOccupation(record.occupation)
-        if (isValid(record.insuranceProvider) && !isValid(seed.insuranceProvider)) setInsuranceProvider(record.insuranceProvider)
-        if (Array.isArray(record.activityLevels) && record.activityLevels.length && !(Array.isArray(seed.activityLevels) && seed.activityLevels.length)) setActivityLevels(record.activityLevels)
-        // FIX: read patientPain from booking record
-        if (isValid(record.patientPain) && !isValid(seed.patientPain)) setPatientPain(record.patientPain)
-        if (Array.isArray(record.attachments) && record.attachments.length && !(Array.isArray(seed.attachmentImages) && seed.attachmentImages.length)) {
-          setAttachmentImages(record.attachments)
-          setAttachments((prev) => {
-            const existingSet = new Set(prev.map((a) => a?.url ?? a))
-            const newItems = record.attachments
-              .filter((a) => !existingSet.has(a))
-              .map((raw, idx) => ({ url: toImageSrc(raw), name: `attachment_${idx + 1}`, isBase64: true }))
-            return [...prev, ...newItems]
-          })
-        }
-      } catch (e) {
-        console.error('❌ Booking fetch failed:', e)
-        error?.('Could not load booking details.')
-      } finally {
-        setLoadingBooking(false)
-      }
-    }
-    run()
-  }, [patientData?.clinicId, patientData?.branchId, patientData?.bookingId])
 
 
 
@@ -289,7 +273,6 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   }
 
   const therapyGroups = useMemo(() => flattenTherapyAnswers(theraphyAnswers), [theraphyAnswers])
-  const bk = bookingRecord
 
   const focusBlue = (e) => (e.target.style.borderColor = '#1B4F8A')
   const blurBlue = (e) => (e.target.style.borderColor = '#b6cfe8')
@@ -319,7 +302,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           </h5>
         </div>
 
-        {bk && (
+        {patientData && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               background: '#EFF6FF', borderRadius: 24, padding: '6px 16px',
@@ -329,9 +312,9 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
               boxShadow: '0 2px 6px rgba(27,79,138,0.10)',
             }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#1B4F8A' }} />
-              {bk.name} · {bk.age}yr {bk.gender?.charAt(0)}
+              {patientData.name} · {patientData.age}yr {patientData.gender?.charAt(0)}
             </div>
-            <StatusBadge status={bk.status} />
+            <StatusBadge status={patientData.status} />
           </div>
         )}
       </div>
@@ -339,16 +322,6 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
 
 
       {/* ── Loading Banner ── */}
-      {loadingBooking && (
-        <div style={{
-          background: '#EFF6FF', padding: '8px 20px',
-          display: 'flex', alignItems: 'center', gap: 8,
-          borderBottom: '1px solid #b6cfe8',
-        }}>
-          <CSpinner size="sm" style={{ color: '#1B4F8A' }} />
-          <span style={{ color: '#1B4F8A', fontSize: 13 }}>Loading booking details…</span>
-        </div>
-      )}
 
       {/* ── Two-Column Main Grid ── */}
       <div style={{

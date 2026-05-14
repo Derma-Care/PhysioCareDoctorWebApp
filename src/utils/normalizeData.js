@@ -37,6 +37,7 @@ export const normalizeSavedData = (saved) => {
     occupation: complaints.occupation || '',
     insuranceProvider: complaints.insuranceProvider || '',
     activityLevels: complaints.activityLevels || [],
+    parts: complaints.parts || saved.parts || complaints.selectedBodyPart || [],
   }
 
   // 2. Flatten nested assessment

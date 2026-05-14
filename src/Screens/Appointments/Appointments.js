@@ -23,25 +23,49 @@ import { getAppointments } from '../../Auth/Auth'
 import { useDoctorContext } from '../../Context/DoctorContext'
 
 const tabLabels = {
-  upcoming: 'Upcoming',
-  inprogress: 'In-Progress',
+  all: 'All',
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  dueForInvestigation: 'Due for Investigation',
+  investigationDone: 'Investigation Done',
+  followUpNeeded: 'Follow-up Needed',
+  cancelled: 'Cancelled',
+  rescheduled: 'Rescheduled',
+  drop: 'Drop',
+  noReply: 'No Reply',
   completed: 'Completed',
+  "on-going": 'On-Going',
+  inprogress: "In-Progress",
+
+  followUpPending: 'Follow-up Pending',
 }
 
 const tabToNumberMap = {
-  upcoming: 1,
-  inprogress: 4,
+  all: 0,
+  pending: 6, // Assumption for new status IDs
+  confirmed: 1,
+  cancelled: 2,
   completed: 3,
+  inprogress: 4,
+  noshow: 5,
+  dueForInvestigation: 7,
+  investigationDone: 8,
+  followUpNeeded: 9,
+  rescheduled: 10,
+  drop: 11,
+  noReply: 12,
+  followUpPending: 13,
 }
 
 const Appointments = ({ searchTerm = '' }) => {
   const { doctorDetails } = useDoctorContext()
   const branches = doctorDetails?.branches || []
 
-  const [activeTab, setActiveTab] = useState('upcoming')
+  const [activeTab, setActiveTab] = useState('all')
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState('All')
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedBranch, setSelectedBranch] = useState(null)
   const [selectedDate, setSelectedDate] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -68,15 +92,19 @@ const Appointments = ({ searchTerm = '' }) => {
     setLoading(true)
     try {
       if (activeTab === 'all') {
-        const [upcoming, active, completed] = await Promise.all([
+        const [upcoming, active, completed, cancelled, noshow] = await Promise.all([
           getAppointments(`1?_=${Date.now()}`),
           getAppointments(`4?_=${Date.now()}`),
           getAppointments(`3?_=${Date.now()}`),
+          getAppointments(`2?_=${Date.now()}`),
+          getAppointments(`5?_=${Date.now()}`),
         ])
         setAppointments([
           ...(upcoming || []),
           ...(active || []),
           ...(completed || []),
+          ...(cancelled || []),
+          ...(noshow || []),
         ])
       } else {
         const tabNumber = tabToNumberMap[activeTab]
@@ -97,14 +125,16 @@ const Appointments = ({ searchTerm = '' }) => {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [activeTab, filter, selectedBranch, selectedDate, searchTerm])
+  }, [activeTab, filter, selectedBranch, selectedDate, searchTerm, searchQuery])
 
-  const safeSearch = searchTerm.toLowerCase()
+  const safeSearch = (searchQuery || searchTerm).toLowerCase()
 
   const filteredPatients = Array.isArray(appointments)
     ? appointments
       .filter((p) => {
-        const matchesSearch = p.name?.toLowerCase().includes(safeSearch)
+        const matchesSearch =
+          p.name?.toLowerCase().includes(safeSearch) ||
+          p.patientMobileNumber?.toLowerCase().includes(safeSearch)
         const matchesFilter =
           filter === 'All' ||
           filter === 'First-Time & Follow-up' ||
@@ -206,7 +236,7 @@ const Appointments = ({ searchTerm = '' }) => {
                           ({filteredPatients.length})
                         </span>
                       </CDropdownToggle>
-                      <CDropdownMenu placement="end">
+                      <CDropdownMenu placement="end" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                         <CDropdownItem
                           active={activeTab === 'all'}
                           onClick={() => {
@@ -217,7 +247,7 @@ const Appointments = ({ searchTerm = '' }) => {
                         >
                           All
                         </CDropdownItem>
-                        {Object.keys(tabLabels).map((key) => (
+                        {Object.keys(tabLabels).filter(k => k !== 'all').map((key) => (
                           <CDropdownItem
                             key={key}
                             active={activeTab === key}
@@ -232,6 +262,64 @@ const Appointments = ({ searchTerm = '' }) => {
                         ))}
                       </CDropdownMenu>
                     </CDropdown>
+
+                    {/* Search Bar */}
+                    <div style={{ position: 'relative' }}>
+                      <span
+                        style={{
+                          position: 'absolute',
+                          left: '10px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          color: COLORS.black,
+                          pointerEvents: 'none',
+                          fontSize: '13px',
+                        }}
+                      >
+                        🔍
+                      </span>
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search patient name or mobile..."
+                        style={{
+                          width: '260px',
+                          paddingLeft: '32px',
+                          paddingRight: searchQuery ? '28px' : '10px',
+                          paddingTop: '6px',
+                          paddingBottom: '6px',
+                          borderRadius: '8px',
+                          border: `1.5px solid ${COLORS.bgcolor}40`,
+                          fontSize: '13px',
+                          outline: 'none',
+                          backgroundColor: COLORS.white,
+                          color: COLORS.black,
+                          transition: 'border-color 0.2s',
+                        }}
+                        onFocus={(e) => (e.target.style.borderColor = COLORS.bgcolor)}
+                        onBlur={(e) => (e.target.style.borderColor = `${COLORS.bgcolor}40`)}
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          style={{
+                            position: 'absolute',
+                            right: '8px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: COLORS.black,
+                            fontSize: '13px',
+                            padding: 0,
+                          }}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
 
                     {/* First-Time & Follow-up */}
                     {/* <button
@@ -455,11 +543,15 @@ const Appointments = ({ searchTerm = '' }) => {
                               backgroundColor:
                                 p.status === 'Confirmed' ? '#EAF7F0'
                                   : p.status === 'In-Progress' ? '#FFF4E0'
-                                    : '#F0F6FF',
+                                    : p.status === 'Cancelled' ? '#FFF0F0'
+                                      : p.status === 'No-Show' ? '#F4F4F4'
+                                        : '#F0F6FF',
                               color:
                                 p.status === 'Confirmed' ? '#1B8A56'
                                   : p.status === 'In-Progress' ? COLORS.orange
-                                    : COLORS.black,
+                                    : p.status === 'Cancelled' ? '#D32F2F'
+                                      : p.status === 'No-Show' ? '#616161'
+                                        : COLORS.black,
                               borderRadius: '20px',
                               padding: '3px 10px',
                               fontSize: '12px',

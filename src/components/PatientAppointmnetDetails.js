@@ -86,10 +86,13 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       ; (async () => {
         try {
           const data = await getInProgressDetails(patient.patientId, patient.bookingId)
-          setDetails(data)
-          const saved = data?.savedDetails?.[0] || {}
-          const normalized = normalizeSavedData(saved)
-          setFormData(normalized)
+          if (data) {
+            setDetails(data)
+            setFormData(prev => ({
+              ...prev,
+              ...normalizeSavedData(data?.savedDetails?.[0] || {}),
+            }))
+          }
         } catch (err) { console.error('❌ Failed to fetch in-progress details:', err) }
       })()
     }

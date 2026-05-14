@@ -263,7 +263,7 @@ const Dashboard = () => {
             <CTable className="mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
               <CTableHead>
                 <CTableRow>
-                  {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Consultation', 'Branch', 'Action'].map(
+                  {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Consultation', 'Branch', 'Visit Type', 'Follow-up Status', 'Status', 'Action'].map(
                     (header, i) => (
                       <CTableHeaderCell
                         key={i}
@@ -291,7 +291,7 @@ const Dashboard = () => {
                 {currentPatients.length === 0 ? (
                   <CTableRow>
                     <CTableDataCell
-                      colSpan="8"
+                      colSpan="11"
                       className="text-center py-4"
                       style={{ color: COLORS.gray, fontSize: '14px' }}
                     >
@@ -348,7 +348,58 @@ const Dashboard = () => {
                           color: COLORS.black,
                         }}
                       >
-                        {branches.find((b) => b.branchId === item.branchId)?.branchName || 'N/A'}
+                        {item?.branchname || 'N/A'}
+                      </CTableDataCell>
+                      <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px', color: COLORS.black, textTransform: 'capitalize' }}>
+                        {item.visitType ? item.visitType.replace(/_/g, ' ').toLowerCase() : 'N/A'}
+                      </CTableDataCell>
+                      <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px', color: COLORS.black, textTransform: 'capitalize' }}>
+                        <span
+                          style={{
+                            backgroundColor:
+                              item.followupStatus && item.followupStatus.toLowerCase() !== 'pending'
+                                ? '#EAF1FB'
+                                : 'transparent',
+                            color:
+                              item.followupStatus && item.followupStatus.toLowerCase() !== 'pending'
+                                ? COLORS.bgcolor
+                                : COLORS.gray,
+                            borderRadius: '12px',
+                            padding: '2px 8px',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                          }}
+                        >
+                          {item.followupStatus || 'N/A'}
+                        </span>
+                      </CTableDataCell>
+                      <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px' }}>
+                        <span
+                          style={{
+                            backgroundColor:
+                              item.status === 'Confirmed' ? '#EAF7F0'
+                                : item.status === 'In-Progress' || item.status === 'On-Going' ? '#FFF4E0'
+                                  : item.status === 'Cancelled' || item.status === 'Drop' ? '#FFF0F0'
+                                    : item.status === 'No-Show' || item.status === 'No Reply' ? '#F4F4F4'
+                                      : item.status === 'Completed' ? '#EAF7F0'
+                                        : item.status === 'Due for Investigation' || item.status === 'Investigation Done' ? '#EBF5FF'
+                                          : '#F0F6FF',
+                            color:
+                              item.status === 'Confirmed' ? '#1B8A56'
+                                : item.status === 'In-Progress' || item.status === 'On-Going' ? COLORS.orange
+                                  : item.status === 'Cancelled' || item.status === 'Drop' ? '#D32F2F'
+                                    : item.status === 'No-Show' || item.status === 'No Reply' ? '#616161'
+                                      : item.status === 'Completed' ? '#1B8A56'
+                                        : item.status === 'Due for Investigation' || item.status === 'Investigation Done' ? COLORS.bgcolor
+                                          : COLORS.black,
+                            borderRadius: '20px',
+                            padding: '3px 10px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                          }}
+                        >
+                          {item.status}
+                        </span>
                       </CTableDataCell>
                       <CTableDataCell className="text-center" style={{ padding: '10px 12px' }}>
                         <TooltipButton patient={item} tab={item.status} />
