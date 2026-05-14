@@ -118,16 +118,21 @@ const TooltipButton = ({ patient, onSelect, tab, disabled }) => {
       console.log('🧐 [TooltipButton] Clicked View. Raw Status:', tab, '| Raw VisitType:', patient?.visitType)
       console.log('🧐 [TooltipButton] Evaluated isTargetStatus:', isTargetStatus, '| isFollowUp:', isFollowUp)
 
-      if (isFollowUp || isTargetStatus) {
+      if (isFollowUp || isTargetStatus || tabLower === 'ongoing') {
         const clinicId = localStorage.getItem('hospitalId')
         const branchId = patient.branchId
-        const data = await getFollowUpRecord(clinicId, branchId, patient.patientId, patient.bookingId)
-        console.log('✅ [TooltipButton] API Response (Follow-up):', data)
 
-        let recordObj = data?.data
-        if (Array.isArray(recordObj)) recordObj = recordObj[0]
-        details = recordObj || data || {}
-        formData = normalizeSavedData(details)
+        const resp = await getFollowUpRecord(clinicId, branchId, patient.patientId, patient.bookingId)
+        console.log('✅ [TooltipButton] API Response:', resp)
+
+        // The API returns response.data.data or response.data.
+        // We need to find the record object, which might be the response itself or the first element of an array.
+        const record = Array.isArray(resp) ? resp[0] : (resp?.data && !Array.isArray(resp.data) ? resp.data : resp)
+        details = record || {}
+
+        // Handle nested savedDetails if present (common in some In-Progress responses)
+        const saved = details?.savedDetails?.[0] || details
+        formData = normalizeSavedData(saved)
       }
 
       setPatientData({ ...patient, details })

@@ -8,56 +8,56 @@ import { capitalizeEachWord } from "./CaptalZeWord";
 // ─────────────────────────────────────────────────────────────────────────────
 const C = {
   // Brand
-  navy:      "#1B4F8A",   // bgcolor / primary
-  navyDark:  "#163f70",   // darker navy for hover/depth
-  navyDeep:  "#0f2d52",   // deepest navy (header bg)
-  navyMid:   "#2A6DB5",   // secondary / lighter navy
-  orange:    "#f9c571",   // accent orange
-  orangeDk:  "#e8a93a",   // darker orange for borders/text
-  orangeLt:  "#fdf3dc",   // very light orange tint
-  white:     "#ffffff",
+  navy: "#1B4F8A",   // bgcolor / primary
+  navyDark: "#163f70",   // darker navy for hover/depth
+  navyDeep: "#0f2d52",   // deepest navy (header bg)
+  navyMid: "#2A6DB5",   // secondary / lighter navy
+  orange: "#f9c571",   // accent orange
+  orangeDk: "#e8a93a",   // darker orange for borders/text
+  orangeLt: "#fdf3dc",   // very light orange tint
+  white: "#ffffff",
   // Light blues (for programs)
-  skyBrand:  "#e8f1fb",   // light blue bg for programs
+  skyBrand: "#e8f1fb",   // light blue bg for programs
   skyBorder: "#b8d0f0",   // border for light blue cards
-  skyText:   "#1B4F8A",   // text on light blue
+  skyText: "#1B4F8A",   // text on light blue
   // Grays
-  gray50:    "#f8fafc",
-  gray100:   "#f0f4f8",
-  gray150:   "#e5ecf3",
-  gray200:   "#d4dfec",
-  gray300:   "#b0c1d4",
-  gray400:   "#7a94b0",
-  gray500:   "#5a7592",
-  gray600:   "#3d5a75",
-  gray700:   "#2a3f55",
-  gray800:   "#1a2a3a",
+  gray50: "#f8fafc",
+  gray100: "#f0f4f8",
+  gray150: "#e5ecf3",
+  gray200: "#d4dfec",
+  gray300: "#b0c1d4",
+  gray400: "#7a94b0",
+  gray500: "#5a7592",
+  gray600: "#3d5a75",
+  gray700: "#2a3f55",
+  gray800: "#1a2a3a",
   // Semantic
-  red50:     "#fef2f2",
-  red100:    "#fee2e2",
-  red500:    "#ef4444",
-  red600:    "#dc2626",
-  red700:    "#b91c1c",
-  amber50:   "#fffbeb",
-  amber100:  "#fef3c7",
-  amber600:  "#d97706",
-  amber700:  "#b45309",
-  em50:      "#ecfdf5",
-  em100:     "#d1fae5",
-  em200:     "#a7f3d0",
-  em400:     "#34d399",
-  em500:     "#10b981",
-  em600:     "#059669",
-  em700:     "#047857",
-  em800:     "#065f46",
-  purple50:  "#faf5ff",
+  red50: "#fef2f2",
+  red100: "#fee2e2",
+  red500: "#ef4444",
+  red600: "#dc2626",
+  red700: "#b91c1c",
+  amber50: "#fffbeb",
+  amber100: "#fef3c7",
+  amber600: "#d97706",
+  amber700: "#b45309",
+  em50: "#ecfdf5",
+  em100: "#d1fae5",
+  em200: "#a7f3d0",
+  em400: "#34d399",
+  em500: "#10b981",
+  em600: "#059669",
+  em700: "#047857",
+  em800: "#065f46",
+  purple50: "#faf5ff",
   purple100: "#ede9fe",
   purple600: "#7c3aed",
   purple700: "#6d28d9",
-  blue50:    "#eff6ff",
-  blue100:   "#dbeafe",
-  blue600:   "#2563eb",
-  blue700:   "#1d4ed8",
-  teal:      "#16a085",
+  blue50: "#eff6ff",
+  blue100: "#dbeafe",
+  blue600: "#2563eb",
+  blue700: "#1d4ed8",
+  teal: "#16a085",
 };
 
 const L = {
@@ -120,8 +120,8 @@ const S = StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: 4,
   },
-  hDate:       { fontSize: 7.5, color: C.gray300, textAlign: "right", marginBottom: 2 },
-  hRef:        { fontSize: 7,   color: C.gray500, textAlign: "right", marginBottom: 2 },
+  hDate: { fontSize: 7.5, color: C.gray300, textAlign: "right", marginBottom: 2 },
+  hRef: { fontSize: 7, color: C.gray500, textAlign: "right", marginBottom: 2 },
   hStatusWrap: { flexDirection: "row", justifyContent: "flex-end", marginTop: 3 },
   hStatusPill: {
     borderRadius: 2,
@@ -156,9 +156,9 @@ const S = StyleSheet.create({
     borderBottomColor: C.orange, borderLeftColor: C.orange,
   },
   pbAvatarTx: { fontSize: 12, fontFamily: "Helvetica-Bold", color: C.orange },
-  pbName:     { fontSize: 14, fontFamily: "Helvetica-Bold", color: C.white, letterSpacing: -0.1 },
-  pbMeta:     { fontSize: 7.5, color: C.gray300, marginTop: 3, letterSpacing: 0.2 },
-  pbRight:    { alignItems: "flex-end" },
+  pbName: { fontSize: 14, fontFamily: "Helvetica-Bold", color: C.white, letterSpacing: -0.1 },
+  pbMeta: { fontSize: 7.5, color: C.gray300, marginTop: 3, letterSpacing: 0.2 },
+  pbRight: { alignItems: "flex-end" },
   pbIdWrap: {
     backgroundColor: C.navyDark,
     borderRadius: 3,
@@ -253,15 +253,15 @@ const S = StyleSheet.create({
     padding: 12,
     marginBottom: 6,
   },
-  cEm:     { borderLeftColor: C.em500,     borderLeftWidth: 3 },
-  cGold:   { borderLeftColor: C.orange,    borderLeftWidth: 3 },
-  cRed:    { borderLeftColor: C.red500,    borderLeftWidth: 3 },
-  cAmber:  { borderLeftColor: C.amber600,  borderLeftWidth: 3 },
-  cBlue:   { borderLeftColor: C.navyMid,   borderLeftWidth: 3 },
+  cEm: { borderLeftColor: C.em500, borderLeftWidth: 3 },
+  cGold: { borderLeftColor: C.orange, borderLeftWidth: 3 },
+  cRed: { borderLeftColor: C.red500, borderLeftWidth: 3 },
+  cAmber: { borderLeftColor: C.amber600, borderLeftWidth: 3 },
+  cBlue: { borderLeftColor: C.navyMid, borderLeftWidth: 3 },
   cPurple: { borderLeftColor: C.purple600, borderLeftWidth: 3 },
-  cSky:    { borderLeftColor: C.teal,      borderLeftWidth: 3 },
-  cSlate:  { borderLeftColor: C.gray400,   borderLeftWidth: 3 },
-  cNavy:   { borderLeftColor: C.navy,      borderLeftWidth: 3 },
+  cSky: { borderLeftColor: C.teal, borderLeftWidth: 3 },
+  cSlate: { borderLeftColor: C.gray400, borderLeftWidth: 3 },
+  cNavy: { borderLeftColor: C.navy, borderLeftWidth: 3 },
 
   complaintBox: {
     backgroundColor: C.red50,
@@ -275,9 +275,9 @@ const S = StyleSheet.create({
 
   // ── GRID ──
   grid: { flexDirection: "row", flexWrap: "wrap" },
-  c2:  { width: "50%",    marginBottom: 10, paddingRight: 14 },
-  c3:  { width: "33.33%", marginBottom: 10, paddingRight: 10 },
-  c4:  { width: "25%",    marginBottom: 10, paddingRight: 8  },
+  c2: { width: "50%", marginBottom: 10, paddingRight: 14 },
+  c3: { width: "33.33%", marginBottom: 10, paddingRight: 10 },
+  c4: { width: "25%", marginBottom: 10, paddingRight: 8 },
 
   // ── FIELD: label clearly visible ──
   fieldBox: { marginBottom: 4 },
@@ -293,8 +293,8 @@ const S = StyleSheet.create({
     paddingLeft: 4, paddingRight: 4,
     borderRadius: 2,
   },
-  val:   { fontSize: 8, color: C.gray700, lineHeight: 1.5 },
-  valB:  { fontSize: 8, color: C.navyDeep, fontFamily: "Helvetica-Bold", lineHeight: 1.5 },
+  val: { fontSize: 8, color: C.gray700, lineHeight: 1.5 },
+  valB: { fontSize: 8, color: C.navyDeep, fontFamily: "Helvetica-Bold", lineHeight: 1.5 },
   valXL: { fontSize: 12, color: C.navy, fontFamily: "Helvetica-Bold" },
 
   chipRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 3 },
@@ -308,32 +308,32 @@ const S = StyleSheet.create({
   },
   chipTx: { fontSize: 6.5, fontFamily: "Helvetica-Bold" },
   // Brand chips
-  chipNavy:    { backgroundColor: C.navy,    borderTopColor: C.navyDark, borderRightColor: C.navyDark, borderBottomColor: C.navyDark, borderLeftColor: C.navyDark },
-  chipNavyTx:  { color: C.white },
-  chipOrange:  { backgroundColor: C.orangeLt,borderTopColor: C.orangeDk, borderRightColor: C.orangeDk, borderBottomColor: C.orangeDk, borderLeftColor: C.orangeDk },
-  chipOrangeTx:{ color: C.orangeDk },
+  chipNavy: { backgroundColor: C.navy, borderTopColor: C.navyDark, borderRightColor: C.navyDark, borderBottomColor: C.navyDark, borderLeftColor: C.navyDark },
+  chipNavyTx: { color: C.white },
+  chipOrange: { backgroundColor: C.orangeLt, borderTopColor: C.orangeDk, borderRightColor: C.orangeDk, borderBottomColor: C.orangeDk, borderLeftColor: C.orangeDk },
+  chipOrangeTx: { color: C.orangeDk },
   // Semantic chips
-  chipEm:      { backgroundColor: C.em50,     borderTopColor: C.em200,    borderRightColor: C.em200,    borderBottomColor: C.em200,    borderLeftColor: C.em200    },
-  chipEmTx:    { color: C.em700 },
-  chipRed:     { backgroundColor: C.red50,    borderTopColor: C.red100,   borderRightColor: C.red100,   borderBottomColor: C.red100,   borderLeftColor: C.red100   },
-  chipRedTx:   { color: C.red700 },
-  chipAmb:     { backgroundColor: C.amber50,  borderTopColor: C.amber100, borderRightColor: C.amber100, borderBottomColor: C.amber100, borderLeftColor: C.amber100 },
-  chipAmbTx:   { color: C.amber700 },
-  chipBlue:    { backgroundColor: C.blue50,   borderTopColor: C.blue100,  borderRightColor: C.blue100,  borderBottomColor: C.blue100,  borderLeftColor: C.blue100  },
-  chipBlueTx:  { color: C.blue700 },
-  chipPur:     { backgroundColor: C.purple50, borderTopColor: C.purple100,borderRightColor: C.purple100,borderBottomColor: C.purple100,borderLeftColor: C.purple100},
-  chipPurTx:   { color: C.purple700 },
-  chipSky:     { backgroundColor: C.skyBrand, borderTopColor: C.skyBorder,borderRightColor: C.skyBorder,borderBottomColor: C.skyBorder,borderLeftColor: C.skyBorder},
-  chipSkyTx:   { color: C.skyText },
-  chipSlate:   { backgroundColor: C.gray100,  borderTopColor: C.gray200,  borderRightColor: C.gray200,  borderBottomColor: C.gray200,  borderLeftColor: C.gray200  },
+  chipEm: { backgroundColor: C.em50, borderTopColor: C.em200, borderRightColor: C.em200, borderBottomColor: C.em200, borderLeftColor: C.em200 },
+  chipEmTx: { color: C.em700 },
+  chipRed: { backgroundColor: C.red50, borderTopColor: C.red100, borderRightColor: C.red100, borderBottomColor: C.red100, borderLeftColor: C.red100 },
+  chipRedTx: { color: C.red700 },
+  chipAmb: { backgroundColor: C.amber50, borderTopColor: C.amber100, borderRightColor: C.amber100, borderBottomColor: C.amber100, borderLeftColor: C.amber100 },
+  chipAmbTx: { color: C.amber700 },
+  chipBlue: { backgroundColor: C.blue50, borderTopColor: C.blue100, borderRightColor: C.blue100, borderBottomColor: C.blue100, borderLeftColor: C.blue100 },
+  chipBlueTx: { color: C.blue700 },
+  chipPur: { backgroundColor: C.purple50, borderTopColor: C.purple100, borderRightColor: C.purple100, borderBottomColor: C.purple100, borderLeftColor: C.purple100 },
+  chipPurTx: { color: C.purple700 },
+  chipSky: { backgroundColor: C.skyBrand, borderTopColor: C.skyBorder, borderRightColor: C.skyBorder, borderBottomColor: C.skyBorder, borderLeftColor: C.skyBorder },
+  chipSkyTx: { color: C.skyText },
+  chipSlate: { backgroundColor: C.gray100, borderTopColor: C.gray200, borderRightColor: C.gray200, borderBottomColor: C.gray200, borderLeftColor: C.gray200 },
   chipSlateTx: { color: C.gray600 },
 
   divider: { borderBottomWidth: 1, borderBottomColor: C.gray100, marginTop: 8, marginBottom: 8 },
 
-  pbTrack:  { height: 7, backgroundColor: C.gray100, borderRadius: 3.5, marginTop: 4, marginBottom: 3, overflow: "hidden" },
-  pbFill:   { height: 7, borderRadius: 3.5 },
+  pbTrack: { height: 7, backgroundColor: C.gray100, borderRadius: 3.5, marginTop: 4, marginBottom: 3, overflow: "hidden" },
+  pbFill: { height: 7, borderRadius: 3.5 },
   pbLabels: { flexDirection: "row", justifyContent: "space-between" },
-  pbLblTx:  { fontSize: 6, color: C.gray400 },
+  pbLblTx: { fontSize: 6, color: C.gray400 },
 
   checkRow: {
     flexDirection: "row", alignItems: "flex-start",
@@ -356,9 +356,9 @@ const S = StyleSheet.create({
     borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderLeftWidth: 1,
     borderTopColor: C.gray150, borderRightColor: C.gray150, borderBottomColor: C.gray150, borderLeftColor: C.gray150,
   },
-  checkOnTx:  { fontSize: 7, color: C.white, fontFamily: "Helvetica-Bold" },
+  checkOnTx: { fontSize: 7, color: C.white, fontFamily: "Helvetica-Bold" },
   checkOffTx: { fontSize: 7, color: C.gray400 },
-  checkNote:  { fontSize: 6, color: C.gray500, fontStyle: "italic", marginTop: 3, flex: 1 },
+  checkNote: { fontSize: 6, color: C.gray500, fontStyle: "italic", marginTop: 3, flex: 1 },
 
   qaWrap: {
     borderRadius: L.cardR, overflow: "hidden", marginBottom: 6,
@@ -370,7 +370,7 @@ const S = StyleSheet.create({
     paddingTop: 7, paddingBottom: 7, paddingLeft: 12, paddingRight: 12,
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
-  qaHeadTx:    { fontSize: 8, fontFamily: "Helvetica-Bold", color: C.white },
+  qaHeadTx: { fontSize: 8, fontFamily: "Helvetica-Bold", color: C.white },
   qaHeadCount: { fontSize: 6.5, color: C.orange },
   qaRow: {
     flexDirection: "row", alignItems: "center",
@@ -384,7 +384,7 @@ const S = StyleSheet.create({
     marginRight: 8, flexShrink: 0,
   },
   qaNumTx: { fontSize: 6, color: C.navyDeep, fontFamily: "Helvetica-Bold" },
-  qaQ:    { fontSize: 7.5, color: C.gray600, flex: 1, paddingRight: 12, lineHeight: 1.5 },
+  qaQ: { fontSize: 7.5, color: C.gray600, flex: 1, paddingRight: 12, lineHeight: 1.5 },
 
   tbl: {
     borderRadius: L.cardR, overflow: "hidden", marginBottom: 6,
@@ -396,34 +396,34 @@ const S = StyleSheet.create({
     backgroundColor: C.navy,
     paddingTop: 7, paddingBottom: 7, paddingLeft: 12, paddingRight: 12,
   },
-  tHCell:  { fontSize: 6.5, color: C.orange, fontFamily: "Helvetica-Bold", paddingRight: 6, letterSpacing: 0.5, textTransform: "uppercase" },
+  tHCell: { fontSize: 6.5, color: C.orange, fontFamily: "Helvetica-Bold", paddingRight: 6, letterSpacing: 0.5, textTransform: "uppercase" },
   tRow: {
     flexDirection: "row",
     borderTopWidth: 1, borderTopColor: C.gray100,
     paddingTop: 6, paddingBottom: 6, paddingLeft: 12, paddingRight: 12,
   },
   tRowAlt: { backgroundColor: C.gray50 },
-  tCell:   { fontSize: 7.5, color: C.gray500, paddingRight: 6, lineHeight: 1.4 },
-  tCellB:  { fontSize: 7.5, color: C.navyDeep, fontFamily: "Helvetica-Bold", paddingRight: 6 },
-  tCellEm: { fontSize: 7.5, color: C.em600,    fontFamily: "Helvetica-Bold", paddingRight: 6 },
-  tCellNum:{ fontSize: 7,   color: C.gray400,  paddingRight: 6 },
+  tCell: { fontSize: 7.5, color: C.gray500, paddingRight: 6, lineHeight: 1.4 },
+  tCellB: { fontSize: 7.5, color: C.navyDeep, fontFamily: "Helvetica-Bold", paddingRight: 6 },
+  tCellEm: { fontSize: 7.5, color: C.em600, fontFamily: "Helvetica-Bold", paddingRight: 6 },
+  tCellNum: { fontSize: 7, color: C.gray400, paddingRight: 6 },
 
-  sevMild:        { backgroundColor: C.em50,    borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
-  sevModerate:    { backgroundColor: C.amber50, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
-  sevSevere:      { backgroundColor: C.red50,   borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
-  sevMildTx:      { fontSize: 6.5, color: C.em700,    fontFamily: "Helvetica-Bold" },
-  sevModerateTx:  { fontSize: 6.5, color: C.amber700, fontFamily: "Helvetica-Bold" },
-  sevSevereTx:    { fontSize: 6.5, color: C.red700,   fontFamily: "Helvetica-Bold" },
+  sevMild: { backgroundColor: C.em50, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
+  sevModerate: { backgroundColor: C.amber50, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
+  sevSevere: { backgroundColor: C.red50, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
+  sevMildTx: { fontSize: 6.5, color: C.em700, fontFamily: "Helvetica-Bold" },
+  sevModerateTx: { fontSize: 6.5, color: C.amber700, fontFamily: "Helvetica-Bold" },
+  sevSevereTx: { fontSize: 6.5, color: C.red700, fontFamily: "Helvetica-Bold" },
 
-  stageAcute:     { backgroundColor: C.red50,    borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
-  stageSub:       { backgroundColor: C.amber50,  borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
-  stageChronic:   { backgroundColor: C.purple50, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
-  stageAcuteTx:   { fontSize: 6.5, color: C.red700,    fontFamily: "Helvetica-Bold" },
-  stageSubTx:     { fontSize: 6.5, color: C.amber700,  fontFamily: "Helvetica-Bold" },
+  stageAcute: { backgroundColor: C.red50, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
+  stageSub: { backgroundColor: C.amber50, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
+  stageChronic: { backgroundColor: C.purple50, borderRadius: 2, paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6 },
+  stageAcuteTx: { fontSize: 6.5, color: C.red700, fontFamily: "Helvetica-Bold" },
+  stageSubTx: { fontSize: 6.5, color: C.amber700, fontFamily: "Helvetica-Bold" },
   stageChronicTx: { fontSize: 6.5, color: C.purple700, fontFamily: "Helvetica-Bold" },
 
   // ── PACKAGE — navy themed ──
-  pkgWrap:   { marginBottom: 8 },
+  pkgWrap: { marginBottom: 8 },
   pkgHeader: {
     backgroundColor: C.navyDeep,
     paddingTop: 9, paddingBottom: 9, paddingLeft: 14, paddingRight: 14,
@@ -487,14 +487,14 @@ const S = StyleSheet.create({
   img: { width: 75, height: 75, borderRadius: 4, marginRight: 8, marginBottom: 6 },
 
   sigSection: { marginTop: 20, flexDirection: "row", justifyContent: "flex-end" },
-  sigBox:     { alignItems: "center", width: 140, marginLeft: 32 },
+  sigBox: { alignItems: "center", width: 140, marginLeft: 32 },
   sigLine: {
     borderTopWidth: 2, borderTopColor: C.orange,
     width: "100%", marginBottom: 6, marginTop: 28,
   },
   sigRole: { fontSize: 6, color: C.gray400, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.8 },
   sigName: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.navy, textAlign: "center", marginTop: 2 },
-  sigSub:  { fontSize: 6.5, color: C.gray500, textAlign: "center", marginTop: 1 },
+  sigSub: { fontSize: 6.5, color: C.gray500, textAlign: "center", marginTop: 1 },
 
   footer: {
     backgroundColor: C.navyDeep,
@@ -504,8 +504,8 @@ const S = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: C.navy,
   },
   footerAccentLine: { height: 2, backgroundColor: C.orange },
-  ftLeft:  { fontSize: 7,   color: C.orange },
-  ftMid:   { fontSize: 6,   color: C.gray500, textAlign: "center", letterSpacing: 0.3 },
+  ftLeft: { fontSize: 7, color: C.orange },
+  ftMid: { fontSize: 6, color: C.gray500, textAlign: "center", letterSpacing: 0.3 },
   ftRight: { fontSize: 6.5, color: C.gray400 },
 });
 
@@ -521,19 +521,19 @@ function resolve(props) {
   const root = bookingData ?? (isFull(formData) ? formData : null);
   const pick = (key, explicitProp, fb = {}) =>
     root?.[key] != null ? root[key]
-    : explicitProp != null ? explicitProp
-    : formData?.[key] != null ? formData[key]
-    : fb;
+      : explicitProp != null ? explicitProp
+        : formData?.[key] != null ? formData[key]
+          : fb;
 
-  const patient         = pick("patientInfo",     patientData,             {});
-  const complaintsRaw   = pick("complaints",      props.complaintsData,    {});
-  const assessment      = pick("assessment",      props.assessmentData,    {});
-  const diagnosisRaw    = pick("diagnosis",       props.diagnosisData,     {});
-  const treatmentPlan   = pick("treatmentPlan",   props.treatmentData,     {});
-  const therapySessions = pick("therapySessions", props.sessionsData,      []);
-  const exercisePlan    = pick("exercisePlan",    props.exerciseData,      {});
-  const followUp        = pick("followUp",        props.followUpData,      {});
-  const investigationRaw= pick("investigation",   props.investigationData, {});
+  const patient = pick("patientInfo", patientData, {});
+  const complaintsRaw = pick("complaints", props.complaintsData, {});
+  const assessment = pick("assessment", props.assessmentData, {});
+  const diagnosisRaw = pick("diagnosis", props.diagnosisData, {});
+  const treatmentPlan = pick("treatmentPlan", props.treatmentData, {});
+  const therapySessions = pick("therapySessions", props.sessionsData, []);
+  const exercisePlan = pick("exercisePlan", props.exerciseData, {});
+  const followUp = pick("followUp", props.followUpData, {});
+  const investigationRaw = pick("investigation", props.investigationData, {});
 
   const investigation = {
     tests: (() => {
@@ -544,11 +544,11 @@ function resolve(props) {
   };
 
   const background = {
-    previousInjuries:   root?.previousInjuries   ?? formData?.previousInjuries   ?? patientData?.previousInjuries   ?? "",
+    previousInjuries: root?.previousInjuries ?? formData?.previousInjuries ?? patientData?.previousInjuries ?? "",
     currentMedications: root?.currentMedications ?? formData?.currentMedications ?? patientData?.currentMedications ?? "",
-    allergies:          root?.allergies           ?? formData?.allergies           ?? patientData?.allergies           ?? "",
-    occupation:         root?.occupation          ?? formData?.occupation          ?? patientData?.occupation          ?? "",
-    insuranceProvider:  root?.insuranceProvider   ?? formData?.insuranceProvider   ?? patientData?.insuranceProvider   ?? "",
+    allergies: root?.allergies ?? formData?.allergies ?? patientData?.allergies ?? "",
+    occupation: root?.occupation ?? formData?.occupation ?? patientData?.occupation ?? "",
+    insuranceProvider: root?.insuranceProvider ?? formData?.insuranceProvider ?? patientData?.insuranceProvider ?? "",
     activityLevels: (() => {
       const v = root?.activityLevels ?? formData?.activityLevels ?? patientData?.activityLevels ?? [];
       return Array.isArray(v) ? v : [];
@@ -562,9 +562,9 @@ function resolve(props) {
   else if (typeof rawAnswers === "object") therapyAnswersObj = rawAnswers;
 
   const complaints = {
-    complaintDetails:    complaintsRaw?.complaintDetails ?? "",
-    duration:            complaintsRaw?.duration ?? "",
-    selectedTherapy:     complaintsRaw?.selectedTherapy ?? "",
+    complaintDetails: complaintsRaw?.complaintDetails ?? "",
+    duration: complaintsRaw?.duration ?? "",
+    selectedTherapy: complaintsRaw?.selectedTherapy ?? "",
     painAssessmentImage: complaintsRaw?.painAssessmentImage ?? "",
     reportImages: Array.isArray(complaintsRaw?.reportImages) ? complaintsRaw.reportImages : [],
     therapyAnswersObj,
@@ -579,8 +579,8 @@ function resolve(props) {
   else if (Array.isArray(therapySessions?.sessions)) sessionsList = therapySessions.sessions;
   if (sessionsList.length === 1 && Array.isArray(sessionsList[0])) sessionsList = sessionsList[0];
 
-  const overallStatus    = (!Array.isArray(therapySessions) && therapySessions?.overallStatus) ? therapySessions.overallStatus : "";
-  const topTherapistId   = therapySessions?.therapistId   ?? "";
+  const overallStatus = (!Array.isArray(therapySessions) && therapySessions?.overallStatus) ? therapySessions.overallStatus : "";
+  const topTherapistId = therapySessions?.therapistId ?? "";
   const topTherapistName = therapySessions?.therapistName ?? "";
 
   const homeExercises = Array.isArray(exercisePlan?.homeExercises)
@@ -594,8 +594,8 @@ function resolve(props) {
   const parts = formData?.parts ?? root?.symptoms?.parts ?? patientData?.parts ?? [];
   const treatmentTemplates = Array.isArray(root?.treatmentTemplates) ? root.treatmentTemplates : [];
   const bookingId = root?.bookingId ?? formData?.bookingId ?? null;
-  const clinicId  = root?.clinicId  ?? formData?.clinicId  ?? null;
-  const branchId  = root?.branchId  ?? formData?.branchId  ?? null;
+  const clinicId = root?.clinicId ?? formData?.clinicId ?? null;
+  const branchId = root?.branchId ?? formData?.branchId ?? null;
 
   return {
     patient, complaints, investigation, background,
@@ -618,12 +618,12 @@ const hv = (v) =>
   String(v).trim() !== "" && String(v).toLowerCase() !== "undefined";
 
 const PAIN_LABEL = {
-  chronicPain:      "Chronic Pain",
-  sportsRehab:      "Sports Rehab",
-  neuroRehab:       "Neuro Rehab",
-  acutePain:        "Acute Pain",
-  neuropathicPain:  "Neuropathic Pain",
-  referredPain:     "Referred Pain",
+  chronicPain: "Chronic Pain",
+  sportsRehab: "Sports Rehab",
+  neuroRehab: "Neuro Rehab",
+  acutePain: "Acute Pain",
+  neuropathicPain: "Neuropathic Pain",
+  referredPain: "Referred Pain",
   inflammatoryPain: "Inflammatory Pain",
 };
 
@@ -710,16 +710,16 @@ const FV = ({ label, value, bold = false }) => {
 
 const Chip = ({ text, variant = "em" }) => {
   const map = {
-    navy:   [S.chipNavy,   S.chipNavyTx],
+    navy: [S.chipNavy, S.chipNavyTx],
     orange: [S.chipOrange, S.chipOrangeTx],
-    em:     [S.chipEm,     S.chipEmTx],
-    red:    [S.chipRed,    S.chipRedTx],
-    amber:  [S.chipAmb,    S.chipAmbTx],
-    blue:   [S.chipBlue,   S.chipBlueTx],
-    purple: [S.chipPur,    S.chipPurTx],
-    sky:    [S.chipSky,    S.chipSkyTx],
-    slate:  [S.chipSlate,  S.chipSlateTx],
-    gold:   [S.chipOrange, S.chipOrangeTx],
+    em: [S.chipEm, S.chipEmTx],
+    red: [S.chipRed, S.chipRedTx],
+    amber: [S.chipAmb, S.chipAmbTx],
+    blue: [S.chipBlue, S.chipBlueTx],
+    purple: [S.chipPur, S.chipPurTx],
+    sky: [S.chipSky, S.chipSkyTx],
+    slate: [S.chipSlate, S.chipSlateTx],
+    gold: [S.chipOrange, S.chipOrangeTx],
   };
   const [bg, tx] = map[variant] || map.em;
   return <View style={[S.chip, bg]}><Text style={[S.chipTx, tx]}>{text}</Text></View>;
@@ -731,12 +731,12 @@ const AnswerBadge = ({ answer }) => {
     return <Chip text="Not answered" variant="slate" />;
   const up = display.toUpperCase();
   if (up === "YES") return <Chip text="YES" variant="em" />;
-  if (up === "NO")  return <Chip text="NO"  variant="red" />;
+  if (up === "NO") return <Chip text="NO" variant="red" />;
   return <Chip text={display} variant="sky" />;
 };
 
 const PainBar = ({ scaleText }) => {
-  const m   = String(scaleText ?? "").match(/(\d+)\s*\/\s*(\d+)/);
+  const m = String(scaleText ?? "").match(/(\d+)\s*\/\s*(\d+)/);
   const num = m ? parseInt(m[1]) : parseInt(String(scaleText ?? "0")) || 0;
   const max = m ? parseInt(m[2]) : 10;
   const pct = Math.min((num / max) * 100, 100);
@@ -788,9 +788,9 @@ const CheckRow = ({ label, options, selected, note, last = false }) => (
 const SevBadge = ({ sev }) => {
   if (!hv(sev)) return <Text style={S.tCell}>—</Text>;
   const map = {
-    Mild:     [S.sevMild,     S.sevMildTx],
+    Mild: [S.sevMild, S.sevMildTx],
     Moderate: [S.sevModerate, S.sevModerateTx],
-    Severe:   [S.sevSevere,   S.sevSevereTx],
+    Severe: [S.sevSevere, S.sevSevereTx],
   };
   const [bg, tx] = map[sev] || map.Mild;
   return <View style={bg}><Text style={tx}>{sev}</Text></View>;
@@ -799,9 +799,9 @@ const SevBadge = ({ sev }) => {
 const StageBadge = ({ stage }) => {
   if (!hv(stage)) return <Text style={S.tCell}>—</Text>;
   const map = {
-    Acute:       [S.stageAcute,   S.stageAcuteTx],
-    "Sub-acute": [S.stageSub,     S.stageSubTx],
-    Chronic:     [S.stageChronic, S.stageChronicTx],
+    Acute: [S.stageAcute, S.stageAcuteTx],
+    "Sub-acute": [S.stageSub, S.stageSubTx],
+    Chronic: [S.stageChronic, S.stageChronicTx],
   };
   const [bg, tx] = map[stage] || map["Sub-acute"];
   return <View style={bg}><Text style={tx}>{stage}</Text></View>;
@@ -821,22 +821,22 @@ const ExerciseTable = ({ exercises }) => {
     <View style={S.tbl}>
       <View style={S.tHead}>
         <Text style={[S.tHCell, { flex: 0.25 }]}>#</Text>
-        <Text style={[S.tHCell, { flex: 2.2  }]}>Exercise</Text>
+        <Text style={[S.tHCell, { flex: 2.2 }]}>Exercise</Text>
         <Text style={[S.tHCell, { flex: 0.65 }]}>Sessions</Text>
         <Text style={[S.tHCell, { flex: 0.55 }]}>Sets</Text>
         <Text style={[S.tHCell, { flex: 0.55 }]}>Reps</Text>
-        <Text style={[S.tHCell, { flex: 1.2  }]}>Frequency</Text>
-        <Text style={[S.tHCell, { flex: 2    }]}>Notes</Text>
+        <Text style={[S.tHCell, { flex: 1.2 }]}>Frequency</Text>
+        <Text style={[S.tHCell, { flex: 2 }]}>Notes</Text>
       </View>
       {exercises.map((ex, i) => (
         <View key={i} style={[S.tRow, i % 2 === 1 ? S.tRowAlt : {}]}>
           <Text style={[S.tCellNum, { flex: 0.25 }]}>{i + 1}</Text>
-          <Text style={[S.tCellB,   { flex: 2.2  }]}>{dv(ex.name || ex.exerciseName)}</Text>
-          <Text style={[S.tCell,    { flex: 0.65 }]}>{dv(ex.noOfSessions ?? ex.session ?? ex.sessions)}</Text>
-          <Text style={[S.tCell,    { flex: 0.55 }]}>{dv(ex.sets)}</Text>
-          <Text style={[S.tCell,    { flex: 0.55 }]}>{dv(ex.repetitions ?? ex.reps)}</Text>
-          <Text style={[S.tCell,    { flex: 1.2  }]}>{dv(ex.frequency)}</Text>
-          <Text style={[S.tCell,    { flex: 2, lineHeight: 1.4 }]}>{dv(ex.notes)}</Text>
+          <Text style={[S.tCellB, { flex: 2.2 }]}>{dv(ex.name || ex.exerciseName)}</Text>
+          <Text style={[S.tCell, { flex: 0.65 }]}>{dv(ex.noOfSessions ?? ex.session ?? ex.sessions)}</Text>
+          <Text style={[S.tCell, { flex: 0.55 }]}>{dv(ex.sets)}</Text>
+          <Text style={[S.tCell, { flex: 0.55 }]}>{dv(ex.repetitions ?? ex.reps)}</Text>
+          <Text style={[S.tCell, { flex: 1.2 }]}>{dv(ex.frequency)}</Text>
+          <Text style={[S.tCell, { flex: 2, lineHeight: 1.4 }]}>{dv(ex.notes)}</Text>
         </View>
       ))}
     </View>
@@ -862,13 +862,13 @@ const TherapyBlock = ({ therapy }) => (
 
 const MetaBar = ({ sess, therapistId, therapistName }) => {
   const tName = sess.therapistName || therapistName || "";
-  const tId   = sess.therapistId   || therapistId   || "";
+  const tId = sess.therapistId || therapistId || "";
   if (!tName && !tId && !sess.serviceType) return null;
   return (
     <View style={S.metaBar}>
       {sess.serviceType && <Chip text={`Type: ${sess.serviceType}`} variant="slate" />}
       {tName && <Chip text={`Therapist: ${tName}`} variant="navy" />}
-      {tId   && <Chip text={`ID: ${tId}`}           variant="sky" />}
+      {tId && <Chip text={`ID: ${tId}`} variant="sky" />}
     </View>
   );
 };
@@ -887,21 +887,21 @@ const SessionBlock = ({ sess, isLast, therapistId, therapistName }) => {
           <MetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
           {Array.isArray(sess.programs) && sess.programs.length > 0
             ? sess.programs.map((prog, pi) => (
-                <View key={pi} style={{ marginBottom: pi < sess.programs.length - 1 ? 10 : 0 }}>
-                  <View style={S.progHeader} wrap={false}>
-                    <Text style={S.progTitle}>{prog.programName || `Program ${pi + 1}`}</Text>
-                    {prog.totalPrice > 0 && <Text style={{ fontSize: 7, color: C.orange }}>Rs. {prog.totalPrice}</Text>}
-                  </View>
-                  <View style={S.progBody}>
-                    {Array.isArray(prog.therapyData ?? prog.therophyData)
-                      ? (prog.therapyData ?? prog.therophyData).map((t, ti) => <TherapyBlock key={ti} therapy={t} />)
-                      : <Text style={{ fontSize: 7, color: C.gray400, fontStyle: "italic" }}>No therapy data.</Text>}
-                  </View>
+              <View key={pi} style={{ marginBottom: pi < sess.programs.length - 1 ? 10 : 0 }}>
+                <View style={S.progHeader} wrap={false}>
+                  <Text style={S.progTitle}>{prog.programName || `Program ${pi + 1}`}</Text>
+                  {prog.totalPrice > 0 && <Text style={{ fontSize: 7, color: C.orange }}>Rs. {prog.totalPrice}</Text>}
                 </View>
-              ))
+                <View style={S.progBody}>
+                  {Array.isArray(prog.therapyData ?? prog.therophyData)
+                    ? (prog.therapyData ?? prog.therophyData).map((t, ti) => <TherapyBlock key={ti} therapy={t} />)
+                    : <Text style={{ fontSize: 7, color: C.gray400, fontStyle: "italic" }}>No therapy data.</Text>}
+                </View>
+              </View>
+            ))
             : Array.isArray(sess.therapyData ?? sess.therophyData)
-            ? (sess.therapyData ?? sess.therophyData).map((t, ti) => <TherapyBlock key={ti} therapy={t} />)
-            : <Text style={{ fontSize: 7, color: C.gray400, fontStyle: "italic" }}>No data.</Text>}
+              ? (sess.therapyData ?? sess.therophyData).map((t, ti) => <TherapyBlock key={ti} therapy={t} />)
+              : <Text style={{ fontSize: 7, color: C.gray400, fontStyle: "italic" }}>No data.</Text>}
         </View>
       </View>
     );
@@ -986,45 +986,45 @@ const PrescriptionPDF = (props) => {
     day: "2-digit", month: "long", year: "numeric",
   });
 
-  const subj  = assessment.subjectiveAssessment ?? assessment ?? {};
+  const subj = assessment.subjectiveAssessment ?? assessment ?? {};
   const func_ = assessment.functionalAssessment ?? {};
-  const phys  = assessment.physicalExamination  ?? {};
-  const chron = assessment.chronicPainPatients  ?? {};
-  const sport = assessment.sportsRehabPatients  ?? {};
-  const neuro = assessment.neuroRehabPatients   ?? {};
+  const phys = assessment.physicalExamination ?? {};
+  const chron = assessment.chronicPainPatients ?? {};
+  const sport = assessment.sportsRehabPatients ?? {};
+  const neuro = assessment.neuroRehabPatients ?? {};
 
-  const painScale          = subj.painScale         ?? assessment.painScale          ?? "";
-  const chiefComplaint     = subj.chiefComplaint     ?? assessment.chiefComplaint     ?? "";
-  const painType           = subj.painType           ?? assessment.painType           ?? "";
-  const dur                = subj.duration           ?? assessment.duration           ?? "";
-  const onset              = subj.onset              ?? assessment.onset              ?? "";
+  const painScale = subj.painScale ?? assessment.painScale ?? "";
+  const chiefComplaint = subj.chiefComplaint ?? assessment.chiefComplaint ?? "";
+  const painType = subj.painType ?? assessment.painType ?? "";
+  const dur = subj.duration ?? assessment.duration ?? "";
+  const onset = subj.onset ?? assessment.onset ?? "";
   const aggravatingFactors = subj.aggravatingFactors ?? assessment.aggravatingFactors ?? "";
-  const relievingFactors   = subj.relievingFactors   ?? assessment.relievingFactors   ?? "";
-  const observations       = subj.observations       ?? assessment.observations       ?? "";
+  const relievingFactors = subj.relievingFactors ?? assessment.relievingFactors ?? "";
+  const observations = subj.observations ?? assessment.observations ?? "";
 
-  const difficultiesIn      = Array.isArray(func_.difficultiesIn) ? func_.difficultiesIn : Array.isArray(assessment.difficultiesIn) ? assessment.difficultiesIn : [];
-  const otherDifficulty     = func_.otherDifficulty     ?? assessment.otherDifficulty     ?? "";
+  const difficultiesIn = Array.isArray(func_.difficultiesIn) ? func_.difficultiesIn : Array.isArray(assessment.difficultiesIn) ? assessment.difficultiesIn : [];
+  const otherDifficulty = func_.otherDifficulty ?? assessment.otherDifficulty ?? "";
   const dailyLivingAffected = func_.dailyLivingAffected ?? assessment.dailyLivingAffected ?? "";
 
   const postureAssessment = Array.isArray(phys.postureAssessment) ? phys.postureAssessment : Array.isArray(assessment.postureAssessment) ? assessment.postureAssessment : [];
   const postureDeviations = phys.postureDeviations ?? assessment.postureDeviations ?? "";
-  const romStatus         = Array.isArray(phys.rangeOfMotion) ? phys.rangeOfMotion : Array.isArray(assessment.romStatus) ? assessment.romStatus : [];
-  const romRestricted     = phys.romRestricted ?? assessment.romRestricted ?? "";
-  const romJoints         = phys.romJoints     ?? assessment.romJoints     ?? "";
-  const muscleStrength    = Array.isArray(phys.muscleStrength) ? phys.muscleStrength : Array.isArray(assessment.muscleStrength) ? assessment.muscleStrength : [];
-  const muscleWeakness    = phys.muscleWeakness    ?? assessment.muscleWeakness    ?? "";
+  const romStatus = Array.isArray(phys.rangeOfMotion) ? phys.rangeOfMotion : Array.isArray(assessment.romStatus) ? assessment.romStatus : [];
+  const romRestricted = phys.romRestricted ?? assessment.romRestricted ?? "";
+  const romJoints = phys.romJoints ?? assessment.romJoints ?? "";
+  const muscleStrength = Array.isArray(phys.muscleStrength) ? phys.muscleStrength : Array.isArray(assessment.muscleStrength) ? assessment.muscleStrength : [];
+  const muscleWeakness = phys.muscleWeakness ?? assessment.muscleWeakness ?? "";
   const neurologicalSigns = Array.isArray(phys.neurologicalSigns) ? phys.neurologicalSigns : Array.isArray(assessment.neurologicalSigns) ? assessment.neurologicalSigns : [];
 
-  const patientPain        = background.patientPain;
-  const painTriggers       = chron.painTriggers       ?? assessment.painTriggers       ?? "";
-  const chronicRelieving   = chron.relievingFactors   ?? assessment.chronicRelieving   ?? "";
-  const typeOfSport        = sport.typeOfSport        ?? assessment.typeOfSport        ?? "";
-  const recurringInjuries  = sport.recurringInjuries  ?? assessment.recurringInjuries  ?? "";
+  const patientPain = background.patientPain;
+  const painTriggers = chron.painTriggers ?? assessment.painTriggers ?? "";
+  const chronicRelieving = chron.relievingFactors ?? assessment.chronicRelieving ?? "";
+  const typeOfSport = sport.typeOfSport ?? assessment.typeOfSport ?? "";
+  const recurringInjuries = sport.recurringInjuries ?? assessment.recurringInjuries ?? "";
   const returnToSportGoals = sport.returnToSportGoals ?? assessment.returnToSportGoals ?? "";
-  const neuroDiagnosis     = neuro.neuroDiagnosis     ?? assessment.neuroDiagnosis     ?? "";
-  const neuroOnset         = neuro.neuroOnset         ?? assessment.neuroOnset         ?? "";
-  const mobilityStatus     = neuro.mobilityStatus     ?? assessment.mobilityStatus     ?? "";
-  const cognitiveStatus    = neuro.cognitiveStatus    ?? assessment.cognitiveStatus    ?? "";
+  const neuroDiagnosis = neuro.neuroDiagnosis ?? assessment.neuroDiagnosis ?? "";
+  const neuroOnset = neuro.neuroOnset ?? assessment.neuroOnset ?? "";
+  const mobilityStatus = neuro.mobilityStatus ?? assessment.mobilityStatus ?? "";
+  const cognitiveStatus = neuro.cognitiveStatus ?? assessment.cognitiveStatus ?? "";
 
   const hasAssessment =
     chiefComplaint || painScale || painType ||
@@ -1043,22 +1043,22 @@ const PrescriptionPDF = (props) => {
       (qs) => Array.isArray(qs) && qs.some((q) => hv(q.question))
     );
 
-  const patientName   = patient?.patientName || patient?.name || patient?.fullName || "";
-  const doctorName    = doctorData?.name || doctorData?.fullName || doctorData?.doctorName || treatmentPlan?.doctorName || "";
+  const patientName = patient?.patientName || patient?.name || patient?.fullName || "";
+  const doctorName = doctorData?.name || doctorData?.fullName || doctorData?.doctorName || treatmentPlan?.doctorName || "";
   const therapistName = treatmentPlan?.therapistName || topTherapistName || "";
-  const initials      = getInitials(patientName);
+  const initials = getInitials(patientName);
 
   // Address split into lines
   const addressLines = splitAddress(clicniData?.address);
 
   const statusColor =
-    overallStatus === "Completed"   ? C.em600    :
-    overallStatus === "Cancelled"   ? C.red600   :
-    overallStatus === "In Progress" ? C.navyMid  : C.amber600;
+    overallStatus === "Completed" ? C.em600 :
+      overallStatus === "Cancelled" ? C.red600 :
+        overallStatus === "In Progress" ? C.navyMid : C.amber600;
   const statusBg =
-    overallStatus === "Completed"   ? C.em50     :
-    overallStatus === "Cancelled"   ? C.red50    :
-    overallStatus === "In Progress" ? C.skyBrand : C.amber50;
+    overallStatus === "Completed" ? C.em50 :
+      overallStatus === "Cancelled" ? C.red50 :
+        overallStatus === "In Progress" ? C.skyBrand : C.amber50;
 
   return (
     <Document>
@@ -1077,11 +1077,11 @@ const PrescriptionPDF = (props) => {
               {/* Address rendered line by line so it wraps in 3-4 lines */}
               {addressLines.length > 0
                 ? addressLines.map((line, i) => (
-                    <Text key={i} style={S.hAddress}>{line}</Text>
-                  ))
+                  <Text key={i} style={S.hAddress}>{line}</Text>
+                ))
                 : hv(clicniData?.address) && (
-                    <Text style={S.hAddress}>{clicniData.address}</Text>
-                  )
+                  <Text style={S.hAddress}>{clicniData.address}</Text>
+                )
               }
               <View style={{ flexDirection: "row", marginTop: 3 }}>
                 {hv(clicniData?.phone) && <Text style={[S.hMeta, { marginRight: 14 }]}>T: {clicniData.phone}</Text>}
@@ -1139,17 +1139,17 @@ const PrescriptionPDF = (props) => {
           <SectionBlock num="01" title="Patient & Booking Information">
             <View style={S.card} wrap={false}>
               <View style={S.grid}>
-                {hv(patientName)                     && <View style={S.c3}><FV label="Full Name"  value={capitalizeEachWord(patientName)} bold /></View>}
-                {hv(patient?.age)                    && <View style={S.c3}><FV label="Age"        value={`${patient.age} years`} /></View>}
-                {hv(patient?.sex || patient?.gender) && <View style={S.c3}><FV label="Gender"     value={patient?.sex || patient?.gender} /></View>}
-                {hv(patient?.mobileNumber)           && <View style={S.c3}><FV label="Mobile"     value={patient.mobileNumber} /></View>}
-                {hv(bookingId)                       && <View style={S.c3}><FV label="Booking ID" value={bookingId} /></View>}
-                {hv(clinicId)                        && <View style={S.c3}><FV label="Clinic ID"  value={clinicId} /></View>}
-                {hv(branchId)                        && <View style={S.c3}><FV label="Branch ID"  value={branchId} /></View>}
-                {hv(clicniData?.name)                && <View style={S.c3}><FV label="Clinic"     value={clicniData.name} /></View>}
-                {hv(doctorName)                      && <View style={S.c3}><FV label="Doctor"     value={doctorName} bold /></View>}
-                {hv(doctorData?.doctorId)            && <View style={S.c3}><FV label="Doctor ID"  value={doctorData.doctorId} /></View>}
-                {hv(overallStatus)                   && <View style={S.c3}><FV label="Status"     value={overallStatus} bold /></View>}
+                {hv(patientName) && <View style={S.c3}><FV label="Full Name" value={capitalizeEachWord(patientName)} bold /></View>}
+                {hv(patient?.age) && <View style={S.c3}><FV label="Age" value={`${patient.age} years`} /></View>}
+                {hv(patient?.sex || patient?.gender) && <View style={S.c3}><FV label="Gender" value={patient?.sex || patient?.gender} /></View>}
+                {hv(patient?.mobileNumber) && <View style={S.c3}><FV label="Mobile" value={patient.mobileNumber} /></View>}
+                {hv(bookingId) && <View style={S.c3}><FV label="Booking ID" value={bookingId} /></View>}
+                {hv(clinicId) && <View style={S.c3}><FV label="Clinic ID" value={clinicId} /></View>}
+                {hv(branchId) && <View style={S.c3}><FV label="Branch ID" value={branchId} /></View>}
+                {hv(clicniData?.name) && <View style={S.c3}><FV label="Clinic" value={clicniData.name} /></View>}
+                {hv(doctorName) && <View style={S.c3}><FV label="Doctor" value={doctorName} bold /></View>}
+                {hv(doctorData?.doctorId) && <View style={S.c3}><FV label="Doctor ID" value={doctorData.doctorId} /></View>}
+                {hv(overallStatus) && <View style={S.c3}><FV label="Status" value={overallStatus} bold /></View>}
               </View>
             </View>
           </SectionBlock>
@@ -1167,7 +1167,7 @@ const PrescriptionPDF = (props) => {
               )}
               <View style={S.card} wrap={false}>
                 <View style={S.grid}>
-                  {hv(complaints.duration)        && <View style={S.c3}><FV label="Duration"         value={complaints.duration} bold /></View>}
+                  {hv(complaints.duration) && <View style={S.c3}><FV label="Duration" value={complaints.duration} bold /></View>}
                   {hv(complaints.selectedTherapy) && <View style={S.c3}><FV label="Selected Therapy" value={complaints.selectedTherapy} /></View>}
                   {complaints.reportImages.length > 0 && <View style={S.c3}><FV label="Attached Reports" value={`${complaints.reportImages.length} image(s)`} /></View>}
                 </View>
@@ -1207,11 +1207,11 @@ const PrescriptionPDF = (props) => {
             <SectionBlock num="03" title="Patient Background & History">
               <View style={S.card} wrap={false}>
                 <View style={S.grid}>
-                  {hv(background.previousInjuries)   && <View style={S.c2}><FV label="Previous Injuries"   value={background.previousInjuries} /></View>}
+                  {hv(background.previousInjuries) && <View style={S.c2}><FV label="Previous Injuries" value={background.previousInjuries} /></View>}
                   {hv(background.currentMedications) && <View style={S.c2}><FV label="Current Medications" value={background.currentMedications} /></View>}
-                  {hv(background.allergies)           && <View style={S.c2}><FV label="Allergies"           value={background.allergies} /></View>}
-                  {hv(background.occupation)          && <View style={S.c2}><FV label="Occupation"          value={background.occupation} /></View>}
-                  {hv(background.insuranceProvider)   && <View style={S.c2}><FV label="Insurance Provider"  value={background.insuranceProvider} /></View>}
+                  {hv(background.allergies) && <View style={S.c2}><FV label="Allergies" value={background.allergies} /></View>}
+                  {hv(background.occupation) && <View style={S.c2}><FV label="Occupation" value={background.occupation} /></View>}
+                  {hv(background.insuranceProvider) && <View style={S.c2}><FV label="Insurance Provider" value={background.insuranceProvider} /></View>}
                   {hv(background.patientPain) && (
                     <View style={S.c2}>
                       <FV label="Pain Category" value={PAIN_LABEL[background.patientPain] || background.patientPain} bold />
@@ -1282,12 +1282,12 @@ const PrescriptionPDF = (props) => {
                 <Text style={S.subSecTitle}>Subjective Assessment</Text>
                 {hv(painScale) && <PainBar scaleText={painScale} />}
                 <View style={S.grid}>
-                  {hv(chiefComplaint)     && <View style={S.c2}><FV label="Chief Complaint"    value={chiefComplaint} bold /></View>}
-                  {hv(painType)           && <View style={S.c2}><FV label="Pain Type"           value={painType} /></View>}
-                  {hv(dur)               && <View style={S.c2}><FV label="Duration"            value={dur} /></View>}
-                  {hv(onset)             && <View style={S.c2}><FV label="Onset"               value={onset} /></View>}
-                  {hv(aggravatingFactors)&& <View style={S.c2}><FV label="Aggravating Factors" value={aggravatingFactors} /></View>}
-                  {hv(relievingFactors)  && <View style={S.c2}><FV label="Relieving Factors"   value={relievingFactors} /></View>}
+                  {hv(chiefComplaint) && <View style={S.c2}><FV label="Chief Complaint" value={chiefComplaint} bold /></View>}
+                  {hv(painType) && <View style={S.c2}><FV label="Pain Type" value={painType} /></View>}
+                  {hv(dur) && <View style={S.c2}><FV label="Duration" value={dur} /></View>}
+                  {hv(onset) && <View style={S.c2}><FV label="Onset" value={onset} /></View>}
+                  {hv(aggravatingFactors) && <View style={S.c2}><FV label="Aggravating Factors" value={aggravatingFactors} /></View>}
+                  {hv(relievingFactors) && <View style={S.c2}><FV label="Relieving Factors" value={relievingFactors} /></View>}
                 </View>
                 {hv(observations) && <FV label="Clinical Observations" value={observations} />}
               </View>
@@ -1313,9 +1313,9 @@ const PrescriptionPDF = (props) => {
               {(postureAssessment.length > 0 || romStatus.length > 0 || muscleStrength.length > 0 || neurologicalSigns.length > 0) && (
                 <View style={[S.cardAccent, S.cSlate]} wrap={false}>
                   <Text style={S.subSecTitle}>Physical Examination</Text>
-                  {postureAssessment.length > 0 && <CheckRow label="Posture Assessment" options={["Normal", "Deviations"]}      selected={postureAssessment} note={postureDeviations} />}
-                  {romStatus.length > 0         && <CheckRow label="Range of Motion"    options={["Normal", "Restricted"]}      selected={romStatus}         note={romRestricted ? `${romRestricted}${romJoints ? " · " + romJoints : ""}` : romJoints} />}
-                  {muscleStrength.length > 0    && <CheckRow label="Muscle Strength"    options={["Normal", "Weakness in"]}     selected={muscleStrength}    note={muscleWeakness} />}
+                  {postureAssessment.length > 0 && <CheckRow label="Posture Assessment" options={["Normal", "Deviations"]} selected={postureAssessment} note={postureDeviations} />}
+                  {romStatus.length > 0 && <CheckRow label="Range of Motion" options={["Normal", "Restricted"]} selected={romStatus} note={romRestricted ? `${romRestricted}${romJoints ? " · " + romJoints : ""}` : romJoints} />}
+                  {muscleStrength.length > 0 && <CheckRow label="Muscle Strength" options={["Normal", "Weakness in"]} selected={muscleStrength} note={muscleWeakness} />}
                   {neurologicalSigns.length > 0 && <CheckRow label="Neurological Signs" options={["Normal", "Balance", "Coordination", "Sensation issues"]} selected={neurologicalSigns} last />}
                 </View>
               )}
@@ -1325,7 +1325,7 @@ const PrescriptionPDF = (props) => {
                 <View style={[S.cardAccent, S.cRed]} wrap={false}>
                   <Text style={S.subSecTitle}>Chronic Pain Assessment</Text>
                   <View style={S.grid}>
-                    {hv(painTriggers)     && <View style={S.c2}><FV label="Pain Triggers"     value={painTriggers} /></View>}
+                    {hv(painTriggers) && <View style={S.c2}><FV label="Pain Triggers" value={painTriggers} /></View>}
                     {hv(chronicRelieving) && <View style={S.c2}><FV label="Relieving Factors" value={chronicRelieving} /></View>}
                   </View>
                 </View>
@@ -1336,8 +1336,8 @@ const PrescriptionPDF = (props) => {
                 <View style={[S.cardAccent, S.cNavy]} wrap={false}>
                   <Text style={S.subSecTitle}>Sports Rehabilitation Assessment</Text>
                   <View style={S.grid}>
-                    {hv(typeOfSport)        && <View style={S.c2}><FV label="Type of Sport"       value={typeOfSport} /></View>}
-                    {hv(recurringInjuries)  && <View style={S.c2}><FV label="Recurring Injuries"  value={recurringInjuries} /></View>}
+                    {hv(typeOfSport) && <View style={S.c2}><FV label="Type of Sport" value={typeOfSport} /></View>}
+                    {hv(recurringInjuries) && <View style={S.c2}><FV label="Recurring Injuries" value={recurringInjuries} /></View>}
                     {hv(returnToSportGoals) && <View style={{ width: "100%" }}><FV label="Return-to-Sport Goals" value={returnToSportGoals} /></View>}
                   </View>
                 </View>
@@ -1348,9 +1348,9 @@ const PrescriptionPDF = (props) => {
                 <View style={[S.cardAccent, S.cPurple]} wrap={false}>
                   <Text style={S.subSecTitle}>Neuro Rehabilitation Assessment</Text>
                   <View style={S.grid}>
-                    {hv(neuroDiagnosis)  && <View style={S.c2}><FV label="Diagnosis"       value={neuroDiagnosis} bold /></View>}
-                    {hv(neuroOnset)      && <View style={S.c2}><FV label="Onset"            value={neuroOnset} /></View>}
-                    {hv(mobilityStatus)  && <View style={S.c2}><FV label="Mobility Status"  value={mobilityStatus} /></View>}
+                    {hv(neuroDiagnosis) && <View style={S.c2}><FV label="Diagnosis" value={neuroDiagnosis} bold /></View>}
+                    {hv(neuroOnset) && <View style={S.c2}><FV label="Onset" value={neuroOnset} /></View>}
+                    {hv(mobilityStatus) && <View style={S.c2}><FV label="Mobility Status" value={mobilityStatus} /></View>}
                     {hv(cognitiveStatus) && <View style={S.c2}><FV label="Cognitive Status" value={cognitiveStatus} /></View>}
                   </View>
                 </View>
@@ -1364,20 +1364,20 @@ const PrescriptionPDF = (props) => {
               <View style={S.tbl}>
                 <View style={S.tHead}>
                   <Text style={[S.tHCell, { flex: 0.25 }]}>#</Text>
-                  <Text style={[S.tHCell, { flex: 2.2  }]}>Diagnosis</Text>
-                  <Text style={[S.tHCell, { flex: 1.5  }]}>Affected Area</Text>
-                  <Text style={[S.tHCell, { flex: 0.9  }]}>Severity</Text>
-                  <Text style={[S.tHCell, { flex: 1    }]}>Stage</Text>
-                  <Text style={[S.tHCell, { flex: 2.2  }]}>Clinical Notes</Text>
+                  <Text style={[S.tHCell, { flex: 2.2 }]}>Diagnosis</Text>
+                  <Text style={[S.tHCell, { flex: 1.5 }]}>Affected Area</Text>
+                  <Text style={[S.tHCell, { flex: 0.9 }]}>Severity</Text>
+                  <Text style={[S.tHCell, { flex: 1 }]}>Stage</Text>
+                  <Text style={[S.tHCell, { flex: 2.2 }]}>Clinical Notes</Text>
                 </View>
                 {diagnosisRows.map((diag, i) => (
                   <View key={i} style={[S.tRow, i % 2 === 1 ? S.tRowAlt : {}]} wrap={false}>
                     <Text style={[S.tCellNum, { flex: 0.25 }]}>{i + 1}</Text>
-                    <Text style={[S.tCellB,   { flex: 2.2  }]}>{diag.physioDiagnosis || "—"}</Text>
-                    <Text style={[S.tCell,    { flex: 1.5  }]}>{diag.affectedArea    || "—"}</Text>
+                    <Text style={[S.tCellB, { flex: 2.2 }]}>{diag.physioDiagnosis || "—"}</Text>
+                    <Text style={[S.tCell, { flex: 1.5 }]}>{diag.affectedArea || "—"}</Text>
                     <View style={{ flex: 0.9, justifyContent: "center" }}><SevBadge sev={diag.severity} /></View>
-                    <View style={{ flex: 1,   justifyContent: "center" }}><StageBadge stage={diag.stage} /></View>
-                    <Text style={[S.tCell,    { flex: 2.2, lineHeight: 1.5 }]}>{diag.notes || "—"}</Text>
+                    <View style={{ flex: 1, justifyContent: "center" }}><StageBadge stage={diag.stage} /></View>
+                    <Text style={[S.tCell, { flex: 2.2, lineHeight: 1.5 }]}>{diag.notes || "—"}</Text>
                   </View>
                 ))}
               </View>
@@ -1389,11 +1389,11 @@ const PrescriptionPDF = (props) => {
             <SectionBlock num="08" title="Treatment Plan">
               <View style={[S.cardAccent, S.cNavy]} wrap={false}>
                 <View style={S.grid}>
-                  {hv(doctorName)               && <View style={S.c2}><FV label="Assigned Doctor"   value={doctorName} bold /></View>}
-                  {hv(doctorData?.doctorId)     && <View style={S.c2}><FV label="Doctor ID"          value={doctorData.doctorId} /></View>}
-                  {hv(therapistName)            && <View style={S.c2}><FV label="Assigned Therapist" value={therapistName} bold /></View>}
-                  {hv(topTherapistId)           && <View style={S.c2}><FV label="Therapist ID"       value={topTherapistId} /></View>}
-                  {hv(treatmentPlan?.frequency) && <View style={S.c2}><FV label="Session Frequency"  value={treatmentPlan.frequency} /></View>}
+                  {hv(doctorName) && <View style={S.c2}><FV label="Assigned Doctor" value={doctorName} bold /></View>}
+                  {hv(doctorData?.doctorId) && <View style={S.c2}><FV label="Doctor ID" value={doctorData.doctorId} /></View>}
+                  {hv(therapistName) && <View style={S.c2}><FV label="Assigned Therapist" value={therapistName} bold /></View>}
+                  {hv(topTherapistId) && <View style={S.c2}><FV label="Therapist ID" value={topTherapistId} /></View>}
+                  {hv(treatmentPlan?.frequency) && <View style={S.c2}><FV label="Session Frequency" value={treatmentPlan.frequency} /></View>}
                 </View>
                 {hv(treatmentPlan?.manualTherapy) && (
                   <View style={{ marginTop: 4 }}><FV label="Manual Therapy Techniques" value={treatmentPlan.manualTherapy} /></View>
@@ -1444,22 +1444,22 @@ const PrescriptionPDF = (props) => {
                 <View style={S.tbl}>
                   <View style={S.tHead}>
                     <Text style={[S.tHCell, { flex: 0.25 }]}>#</Text>
-                    <Text style={[S.tHCell, { flex: 2    }]}>Exercise</Text>
+                    <Text style={[S.tHCell, { flex: 2 }]}>Exercise</Text>
                     <Text style={[S.tHCell, { flex: 0.55 }]}>Sets</Text>
                     <Text style={[S.tHCell, { flex: 0.55 }]}>Reps</Text>
-                    <Text style={[S.tHCell, { flex: 0.9  }]}>Duration</Text>
-                    <Text style={[S.tHCell, { flex: 0.9  }]}>Frequency</Text>
-                    <Text style={[S.tHCell, { flex: 2.5  }]}>Instructions</Text>
+                    <Text style={[S.tHCell, { flex: 0.9 }]}>Duration</Text>
+                    <Text style={[S.tHCell, { flex: 0.9 }]}>Frequency</Text>
+                    <Text style={[S.tHCell, { flex: 2.5 }]}>Instructions</Text>
                   </View>
                   {homeExercises.map((ex, i) => (
                     <View key={i} style={[S.tRow, i % 2 === 1 ? S.tRowAlt : {}]} wrap={false}>
                       <Text style={[S.tCellNum, { flex: 0.25 }]}>{i + 1}</Text>
-                      <Text style={[S.tCellB,   { flex: 2    }]}>{ex.name || "—"}</Text>
-                      <Text style={[S.tCell,    { flex: 0.55 }]}>{dv(ex.sets)}</Text>
-                      <Text style={[S.tCell,    { flex: 0.55 }]}>{dv(ex.reps)}</Text>
-                      <Text style={[S.tCell,    { flex: 0.9  }]}>{dv(ex.duration)}</Text>
-                      <Text style={[S.tCell,    { flex: 0.9  }]}>{dv(ex.frequency)}</Text>
-                      <Text style={[S.tCell,    { flex: 2.5, lineHeight: 1.5 }]}>{dv(ex.instructions)}</Text>
+                      <Text style={[S.tCellB, { flex: 2 }]}>{ex.name || "—"}</Text>
+                      <Text style={[S.tCell, { flex: 0.55 }]}>{dv(ex.sets)}</Text>
+                      <Text style={[S.tCell, { flex: 0.55 }]}>{dv(ex.reps)}</Text>
+                      <Text style={[S.tCell, { flex: 0.9 }]}>{dv(ex.duration)}</Text>
+                      <Text style={[S.tCell, { flex: 0.9 }]}>{dv(ex.frequency)}</Text>
+                      <Text style={[S.tCell, { flex: 2.5, lineHeight: 1.5 }]}>{dv(ex.instructions)}</Text>
                     </View>
                   ))}
                 </View>
@@ -1492,15 +1492,15 @@ const PrescriptionPDF = (props) => {
                           text={followUpEntry.treatmentStatus}
                           variant={
                             ["Active", "Completed"].includes(followUpEntry.treatmentStatus) ? "em"
-                            : followUpEntry.treatmentStatus === "Discharged" ? "red"
-                            : "amber"
+                              : followUpEntry.treatmentStatus === "Discharged" ? "red"
+                                : "amber"
                           }
                         />
                       </View>
                     </View>
                   )}
                 </View>
-                {hv(followUpEntry.reviewNotes)   && <View style={{ marginTop: 6 }}><FV label="Review Notes"            value={followUpEntry.reviewNotes} /></View>}
+                {hv(followUpEntry.reviewNotes) && <View style={{ marginTop: 6 }}><FV label="Review Notes" value={followUpEntry.reviewNotes} /></View>}
                 {hv(followUpEntry.modifications) && <View style={{ marginTop: 6 }}><FV label="Treatment Modifications" value={followUpEntry.modifications} /></View>}
               </View>
             </SectionBlock>
@@ -1512,18 +1512,18 @@ const PrescriptionPDF = (props) => {
               <View style={S.tbl}>
                 <View style={S.tHead}>
                   <Text style={[S.tHCell, { flex: 0.25 }]}>#</Text>
-                  <Text style={[S.tHCell, { flex: 1.8  }]}>Condition</Text>
-                  <Text style={[S.tHCell, { flex: 1.8  }]}>Manual Therapy</Text>
-                  <Text style={[S.tHCell, { flex: 1    }]}>Duration</Text>
-                  <Text style={[S.tHCell, { flex: 1    }]}>Frequency</Text>
+                  <Text style={[S.tHCell, { flex: 1.8 }]}>Condition</Text>
+                  <Text style={[S.tHCell, { flex: 1.8 }]}>Manual Therapy</Text>
+                  <Text style={[S.tHCell, { flex: 1 }]}>Duration</Text>
+                  <Text style={[S.tHCell, { flex: 1 }]}>Frequency</Text>
                 </View>
                 {treatmentTemplates.map((t, i) => (
                   <View key={i} style={[S.tRow, i % 2 === 1 ? S.tRowAlt : {}]} wrap={false}>
                     <Text style={[S.tCellNum, { flex: 0.25 }]}>{i + 1}</Text>
-                    <Text style={[S.tCellB,   { flex: 1.8  }]}>{t.condition     || "—"}</Text>
-                    <Text style={[S.tCell,    { flex: 1.8  }]}>{t.manualTherapy || "—"}</Text>
-                    <Text style={[S.tCell,    { flex: 1    }]}>{t.duration      || "—"}</Text>
-                    <Text style={[S.tCell,    { flex: 1    }]}>{t.frequency     || "—"}</Text>
+                    <Text style={[S.tCellB, { flex: 1.8 }]}>{t.condition || "—"}</Text>
+                    <Text style={[S.tCell, { flex: 1.8 }]}>{t.manualTherapy || "—"}</Text>
+                    <Text style={[S.tCell, { flex: 1 }]}>{t.duration || "—"}</Text>
+                    <Text style={[S.tCell, { flex: 1 }]}>{t.frequency || "—"}</Text>
                   </View>
                 ))}
               </View>
@@ -1539,7 +1539,7 @@ const PrescriptionPDF = (props) => {
                   <Text style={S.sigRole}>Authorized by</Text>
                   <Text style={S.sigName}>{doctorName}</Text>
                   {hv(doctorData?.qualification) && <Text style={S.sigSub}>{doctorData.qualification}</Text>}
-                  {hv(doctorData?.regNumber)     && <Text style={S.sigSub}>Reg. {doctorData.regNumber}</Text>}
+                  {hv(doctorData?.regNumber) && <Text style={S.sigSub}>Reg. {doctorData.regNumber}</Text>}
                 </View>
               )}
               {hv(therapistName) && (

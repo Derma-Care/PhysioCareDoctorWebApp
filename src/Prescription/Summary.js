@@ -212,11 +212,11 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
             </div>
             <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
               <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-              {Array.isArray(sess.programs) && sess.programs.map((prog, pIdx) => (
-                <div key={pIdx} style={{ marginBottom: pIdx < sess.programs.length - 1 ? 14 : 0 }}>
+              {(Array.isArray(sess.programs) || Array.isArray(sess.programList)) && (Array.isArray(sess.programs) ? sess.programs : sess.programList).map((prog, pIdx) => (
+                <div key={pIdx} style={{ marginBottom: pIdx < (Array.isArray(sess.programs) ? sess.programs : sess.programList).length - 1 ? 14 : 0 }}>
                   <div style={{ padding: '7px 12px', background: T.bgcolor, borderRadius: '7px 7px 0 0', color: T.white, fontWeight: 700, fontSize: '0.8rem' }}>🎯 {prog.programName || `Program ${pIdx + 1}`}</div>
                   <div style={{ border: `1.5px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 7px 7px', padding: '10px' }}>
-                    {Array.isArray(prog.therapyData ?? prog.therophyData) && (prog.therapyData ?? prog.therophyData ?? []).map((therapy, tIdx) => (
+                    {(Array.isArray(prog.therapyData) || Array.isArray(prog.therophyData) || Array.isArray(prog.activities)) && (prog.therapyData ?? prog.therophyData ?? prog.activities ?? []).map((therapy, tIdx) => (
                       <TherapyBlock key={tIdx} therapyName={therapy.therapyName} exercises={therapy.exercises || []} />
                     ))}
                   </div>
@@ -227,7 +227,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
         )
 
         if (serviceType === 'program') {
-          const therapies = sess.therapyData ?? sess.therophyData ?? []
+          const therapies = sess.therapyData ?? sess.therophyData ?? sess.activities ?? sess.programActivities ?? []
           return (
             <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
               <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>

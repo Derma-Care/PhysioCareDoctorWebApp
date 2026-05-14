@@ -74,9 +74,10 @@ const AppHeader = () => {
   const handleSearch = (e) => {
     const value = e.target.value
     setSearchTerm(value)
-    const filtered = todayAppointments.filter((p) =>
-      p.name.toLowerCase().includes(value.toLowerCase())
-    )
+    const filtered = todayAppointments.filter((p) => {
+      const patientName = (p.name || p.patientName || '').toLowerCase()
+      return patientName.includes(value.toLowerCase())
+    })
     setSearchResults(filtered)
   }
 

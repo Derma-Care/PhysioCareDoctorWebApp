@@ -861,78 +861,111 @@ const restoreTherophyDataState = (sessions) => {
   const mapped = {}
 
   sessions.forEach((sess) => {
-    if (sess.serviceType === 'package' && Array.isArray(sess.programs)) {
+    // Handle Package
+    if (sess.serviceType === 'package' && (Array.isArray(sess.programs) || Array.isArray(sess.programList))) {
       const pkgId = sess.packageId || ''
-      sess.programs.forEach((prog) => {
-        const progName = prog.programName || ''
-          ; (prog.therapyData || []).forEach((therapy, tIdx) => {
-            const key = `${pkgId}__${progName}__${therapy.therapyName}__${tIdx}`
-            mapped[key] = {
-              checked: true,
-              packageId: pkgId, packageName: sess.packageName || '',
-              programId: prog.programId || '', programName: progName,
-              therapyId: therapy.therapyId || '', therapyName: therapy.therapyName || '',
-              exercises: (therapy.exercises || []).map(ex => ({
-                ...ex, exerciseName: ex.exerciseName || ex.name || '',
-                sessions: ex.noOfSessions ?? ex.sessions ?? '',
-                sets: ex.sets ?? '', reps: ex.repetitions ?? ex.reps ?? '',
-                frequencyCount: parseFrequency(ex.frequency).count,
-                frequencyUnit: parseFrequency(ex.frequency).unit,
-                notes: ex.notes ?? '', _checked: true,
-              }))
-            }
-          })
+      const programs = Array.isArray(sess.programs) ? sess.programs : sess.programList
+      programs.forEach((prog) => {
+        const progName = prog.programName || prog.name || ''
+
+        // Handle both 'therapyData' and 'therophyData' or 'activities' or 'programActivities'
+        const therapies = Array.isArray(prog.therapyData)
+          ? prog.therapyData
+          : (Array.isArray(prog.therophyData)
+            ? prog.therophyData
+            : (Array.isArray(prog.activities)
+              ? prog.activities
+              : (Array.isArray(prog.programActivities)
+                ? prog.programActivities
+                : (Array.isArray(prog.program_activities) ? prog.program_activities : []))))
+
+        therapies.forEach((therapy, tIdx) => {
+          const key = `${pkgId}__${progName}__${therapy.therapyName || therapy.name || ''}__${tIdx}`
+          mapped[key] = {
+            checked: true,
+            packageId: pkgId, packageName: sess.packageName || sess.name || '',
+            programId: prog.id || prog.programId || '', programName: progName,
+            therapyId: therapy.id || therapy.therapyId || '', therapyName: therapy.therapyName || therapy.name || '',
+            exercises: (therapy.exercises || therapy.activities || []).map(ex => ({
+              ...ex, exerciseName: ex.name || ex.exerciseName || '',
+              sessions: ex.noOfSessions ?? ex.session ?? ex.sessions ?? '',
+              sets: ex.sets ?? '', reps: ex.repetitions ?? ex.reps ?? '',
+              frequencyCount: parseFrequency(ex.frequency || ex.frequencyCount).count,
+              frequencyUnit: parseFrequency(ex.frequency || ex.frequencyCount).unit,
+              notes: ex.notes ?? '',
+              duration: ex.duration || ex.activityDuration || '',
+              video: ex.video || ex.videoUrl || '',
+              _checked: true,
+            }))
+          }
+        })
       })
-    } else if (sess.serviceType === 'program' && Array.isArray(sess.therapyData)) {
-      const progId = sess.programId || ''
-      sess.therapyData.forEach((therapy, tIdx) => {
-        const key = `${progId}__${therapy.therapyName}__${tIdx}`
+    }
+    // Handle Program
+    else if (sess.serviceType === 'program' && (Array.isArray(sess.therapyData) || Array.isArray(sess.therophyData) || Array.isArray(sess.activities) || Array.isArray(sess.programActivities))) {
+      const progId = sess.programId || sess.id || ''
+      const therapies = Array.isArray(sess.therapyData)
+        ? sess.therapyData
+        : (Array.isArray(sess.therophyData)
+          ? sess.therophyData
+          : (Array.isArray(sess.activities)
+            ? sess.activities
+            : (Array.isArray(sess.programActivities)
+              ? sess.programActivities
+              : (Array.isArray(sess.program_activities) ? sess.program_activities : []))))
+
+      therapies.forEach((therapy, tIdx) => {
+        const key = `${progId}__${therapy.therapyName || therapy.name || ''}__${tIdx}`
         mapped[key] = {
           checked: true,
-          programId: progId, programName: sess.programName || '',
-          therapyId: therapy.therapyId || '', therapyName: therapy.therapyName || '',
-          exercises: (therapy.exercises || []).map(ex => ({
-            ...ex, exerciseName: ex.exerciseName || ex.name || '',
-            sessions: ex.noOfSessions ?? ex.sessions ?? '',
+          programId: progId, programName: sess.programName || sess.name || '',
+          therapyId: therapy.id || therapy.therapyId || '', therapyName: therapy.therapyName || therapy.name || '',
+          exercises: (therapy.exercises || therapy.activities || []).map(ex => ({
+            ...ex, exerciseName: ex.name || ex.exerciseName || '',
+            sessions: ex.noOfSessions ?? ex.session ?? ex.sessions ?? '',
             sets: ex.sets ?? '', reps: ex.repetitions ?? ex.reps ?? '',
-            frequencyCount: parseFrequency(ex.frequency).count,
-            frequencyUnit: parseFrequency(ex.frequency).unit,
-            notes: ex.notes ?? '', _checked: true,
+            frequencyCount: parseFrequency(ex.frequency || ex.frequencyCount).count,
+            frequencyUnit: parseFrequency(ex.frequency || ex.frequencyCount).unit,
+            notes: ex.notes ?? '',
+            duration: ex.duration || ex.activityDuration || '',
+            video: ex.video || ex.videoUrl || '',
+            _checked: true,
           }))
         }
       })
-    } else if (sess.serviceType === 'exercise' && Array.isArray(sess.exercises)) {
-      const exId = sess.exerciseId || 'exercise'
+    }
+    // Handle Therapy
+    else if (sess.serviceType === 'therapy' && (Array.isArray(sess.exercises) || Array.isArray(sess.activities))) {
+      const therapyName = sess.therapyName || sess.name || ''
+      const therapyId = sess.therapyId || sess.id || ''
+      const key = `${therapyId}__${therapyName}__0`
+      mapped[key] = {
+        checked: true, therapyId, therapyName,
+        exercises: (sess.exercises || sess.activities || []).map(ex => ({
+          ...ex, exerciseName: ex.name || ex.exerciseName || '',
+          sessions: ex.noOfSessions ?? ex.session ?? ex.sessions ?? '',
+          sets: ex.sets ?? '', reps: ex.repetitions ?? ex.reps ?? '',
+          frequencyCount: parseFrequency(ex.frequency || ex.frequencyCount).count,
+          frequencyUnit: parseFrequency(ex.frequency || ex.frequencyCount).unit,
+          notes: ex.notes ?? '', _checked: true,
+        }))
+      }
+    }
+    // Handle Exercise
+    else if (sess.serviceType === 'exercise' && Array.isArray(sess.exercises)) {
+      const exId = sess.exerciseId || sess.id || 'exercise'
       const key = `${exId}__exercise__0`
       mapped[key] = {
         checked: true, therapyName: sess.exerciseName || sess.name || 'Exercise',
         exercises: sess.exercises.map(ex => ({
           ...ex, exerciseName: ex.exerciseName || ex.name || '',
-          sessions: ex.noOfSessions ?? ex.sessions ?? '',
+          sessions: ex.noOfSessions ?? ex.session ?? ex.sessions ?? '',
           sets: ex.sets ?? '', reps: ex.repetitions ?? ex.reps ?? '',
-          frequencyCount: parseFrequency(ex.frequency).count,
-          frequencyUnit: parseFrequency(ex.frequency).unit,
+          frequencyCount: parseFrequency(ex.frequency || ex.frequencyCount).count,
+          frequencyUnit: parseFrequency(ex.frequency || ex.frequencyCount).unit,
           notes: ex.notes ?? '', _checked: true,
         }))
       }
-    } else {
-      const therapyData = Array.isArray(sess.therapyData) ? sess.therapyData : []
-      const sessId = sess.therapyId || sess.programId || sess.packageId || 'unknown'
-      therapyData.forEach((therapy, tIndex) => {
-        const key = `${sessId}__${therapy.therapyName}__${tIndex}`
-        mapped[key] = {
-          checked: true,
-          therapyName: therapy.therapyName || '',
-          exercises: (therapy.exercises || []).map(ex => ({
-            ...ex, exerciseName: ex.name || ex.exerciseName || '',
-            sessions: ex.noOfSessions ?? ex.session ?? ex.sessions ?? '',
-            sets: ex.sets ?? '', reps: ex.repetitions ?? ex.reps ?? '',
-            frequencyCount: parseFrequency(ex.frequency).count,
-            frequencyUnit: parseFrequency(ex.frequency).unit,
-            notes: ex.notes ?? '', _checked: true,
-          }))
-        }
-      })
     }
   })
 
@@ -1185,7 +1218,11 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!idsReady) return
+    if (!idsReady) {
+      console.warn('🕒 Skipping fetchDataByMode: clinicId or branchId missing', { clinicId, branchId })
+      return
+    }
+    console.log(`🎬 Triggering fetchDataByMode for mode: ${mode}`)
     fetchDataByMode()
   }, [idsReady, clinicId, branchId, mode]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1200,6 +1237,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   }
 
   const fetchDataByMode = async () => {
+    console.log(`🌐 fetchDataByMode called. Mode: ${mode}, Clinic: ${clinicId}, Branch: ${branchId}`)
     setLoadingTherapists(true)
     setLoadingPrograms(true)
     try {
@@ -1207,10 +1245,20 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
         getTherapists(clinicId, branchId),
         getServiceByMode(mode, clinicId, branchId),
       ])
-      setTherapists(therapistRes.status === 'fulfilled' && Array.isArray(therapistRes.value) ? therapistRes.value : [])
-      setPrograms(serviceRes.status === 'fulfilled' && Array.isArray(serviceRes.value) ? serviceRes.value : [])
+
+      if (therapistRes.status === 'fulfilled') {
+        console.log(`✅ Fetched ${therapistRes.value?.length || 0} therapists`)
+        setTherapists(Array.isArray(therapistRes.value) ? therapistRes.value : [])
+      }
+
+      if (serviceRes.status === 'fulfilled') {
+        console.log(`✅ Fetched ${serviceRes.value?.length || 0} ${mode}(s)`)
+        setPrograms(Array.isArray(serviceRes.value) ? serviceRes.value : [])
+      } else {
+        console.error(`❌ Failed to fetch ${mode}s:`, serviceRes.reason)
+      }
     } catch (err) {
-      console.error('❌ fetchDataByMode error:', err)
+      console.error('❌ fetchDataByMode unexpected error:', err)
     } finally {
       setLoadingTherapists(false)
       setLoadingPrograms(false)
@@ -1281,47 +1329,132 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
       console.log(`✅ ${mode} detail for ${id}:`, data)
 
       if (mode === 'package') {
-        const programsList = Array.isArray(data?.programs) ? data.programs : []
+        // Robust check for programs array (handle both 'programs' and 'programList')
+        const programsList = (
+          (Array.isArray(data?.programs) && data.programs.length > 0) ? data.programs :
+            ((Array.isArray(data?.programList) && data.programList.length > 0) ? data.programList :
+              (Array.isArray(data?.programIds) ? data.programIds : []))
+        )
+
+        console.log(`📦 Found ${programsList.length} programs/IDs in package ${id}`)
+
         const mapped = {}
-        programsList.forEach((program) => {
-          const programName = program.programName || program.name || ''
-          const therophyData = Array.isArray(program.therophyData) ? program.therophyData : []
-          therophyData.forEach((therapy, tIndex) => {
-            const key = `${id}__${programName}__${therapy.therapyName}__${tIndex}`
+
+        // ── HYDRATION ──────────────────────────────────────────────────────
+        const hydratedPrograms = await Promise.all(programsList.map(async (item) => {
+          // item could be an object {id, programName...} or a string ID
+          const pId = typeof item === 'string' ? item : (item.id || item.programId)
+          if (!pId) return item
+
+          // Check if it's already hydrated (has therapies)
+          const therapies = (Array.isArray(item.therophyData) || Array.isArray(item.therapyData) || Array.isArray(item.activities) || Array.isArray(item.programActivities) || Array.isArray(item.therapyDetails))
+            ? (item.therophyData ?? item.therapyData ?? item.activities ?? item.programActivities ?? item.therapyDetails)
+            : null
+
+          if (therapies && therapies.length > 0) return item
+
+          try {
+            toast.info(`Fetching details for ${item.programName || 'program'}...`, { autoClose: 800 })
+            const fullProg = await getProgramsByBranchAndId(clinicId, branchId, pId)
+            return fullProg || item
+          } catch (err) {
+            console.error(`❌ Hydration failed for program ${pId}:`, err)
+            return item
+          }
+        }))
+
+        hydratedPrograms.forEach((program) => {
+          if (!program) return
+          console.log(`🔎 Mapping program: ${program.programName || program.name || 'Unknown'}`)
+          const programName = program.programName || program.name || 'Program'
+
+          const therapiesRaw = (
+            program.therophyData ??
+            program.therapyData ??
+            program.activities ??
+            program.programActivities ??
+            program.program_activities ??
+            program.therapyDetails ??
+            program.therapyList ??
+            program.exercises ??
+            []
+          )
+
+          const therapiesArr = Array.isArray(therapiesRaw) ? therapiesRaw : (therapiesRaw ? [therapiesRaw] : [])
+
+          therapiesArr.forEach((therapy, tIndex) => {
+            if (!therapy) return
+            const therapyName = therapy.therapyName || therapy.name || therapy.activityName || 'General Therapy'
+            const key = `${id}__${programName}__${therapyName}__${tIndex}`
+
+            const rawExercises = therapy.exercises || therapy.activities || therapy.activityList || therapy.therapyActivities || (Array.isArray(therapy) ? therapy : [])
+            const exercisesArr = Array.isArray(rawExercises) ? rawExercises : []
+
             mapped[key] = {
               checked: true,
-              packageId: data.packageId || id, packageName: data.packageName || '',
-              programId: program.id || program.programId || '', programName,
-              therapyId: therapy.id || '', therapyName: therapy.therapyName || '',
-              exercises: (therapy.exercises || []).map(ex => ({
-                ...ex, exerciseName: ex.name || ex.exerciseName || '',
-                sessions: ex.session ?? ex.sessions ?? '', sets: ex.sets ?? '',
+              packageId: data.packageId || id,
+              packageName: data.packageName || data.name || 'Package',
+              programId: program.id || program.programId || '',
+              programName,
+              therapyId: therapy.id || therapy.therapyId || '',
+              therapyName,
+              exercises: exercisesArr.map(ex => ({
+                ...ex,
+                exerciseName: ex.name || ex.exerciseName || ex.activityName || 'Exercise',
+                sessions: ex.noOfSessions ?? ex.session ?? ex.sessions ?? ex.sessionsCount ?? '',
+                sets: ex.sets ?? '',
                 reps: ex.repetitions ?? ex.reps ?? '',
-                frequencyCount: parseFrequency(ex.frequency).count,
-                frequencyUnit: parseFrequency(ex.frequency).unit,
-                notes: ex.notes ?? '', _checked: true,
+                frequencyCount: parseFrequency(ex.frequency || ex.frequencyCount).count,
+                frequencyUnit: parseFrequency(ex.frequency || ex.frequencyCount).unit,
+                notes: ex.notes ?? '',
+                duration: ex.duration || ex.activityDuration || ex.durationTime || '',
+                video: ex.video || ex.videoUrl || '',
+                _checked: true,
               }))
             }
           })
         })
+
+        const count = Object.keys(mapped).length
+        console.log(`✅ Package ${id} mapped with ${count} therapy/exercise blocks`)
+        if (count > 0) toast.success(`Loaded package contents successfully.`)
+        else toast.warning(`Package "${data.packageName || 'Selected'}" contains no exercise data.`)
+
         setTherophyDataState(prev => ({ ...prev, ...mapped }))
 
       } else if (mode === 'program') {
-        const therophyData = Array.isArray(data?.therophyData) ? data.therophyData : []
+        // Handle 'therophyData', 'therapyData', 'activities', 'programActivities'
+        const therapies = Array.isArray(data?.therophyData)
+          ? data.therophyData
+          : (Array.isArray(data?.therapyData)
+            ? data.therapyData
+            : (Array.isArray(data?.activities)
+              ? data.activities
+              : (Array.isArray(data?.programActivities)
+                ? data.programActivities
+                : (Array.isArray(data?.program_activities) ? data.program_activities : []))))
+
         const mapped = {}
-        therophyData.forEach((therapy, tIndex) => {
-          const key = `${id}__${therapy.therapyName}__${tIndex}`
+        therapies.forEach((therapy, tIndex) => {
+          const key = `${id}__${therapy.therapyName || therapy.name || ''}__${tIndex}`
           mapped[key] = {
             checked: true,
-            programId: data.programId || data.id || id, programName: data.programName || '',
-            therapyId: therapy.id || '', therapyName: therapy.therapyName || '',
-            exercises: (therapy.exercises || []).map(ex => ({
-              ...ex, exerciseName: ex.name || ex.exerciseName || '',
-              sessions: ex.session ?? ex.sessions ?? '', sets: ex.sets ?? '',
+            programId: id,
+            programName: data.programName || data.name || '',
+            therapyId: therapy.id || therapy.therapyId || '',
+            therapyName: therapy.therapyName || therapy.name || '',
+            exercises: (therapy.exercises || therapy.activities || []).map(ex => ({
+              ...ex,
+              exerciseName: ex.name || ex.exerciseName || '',
+              sessions: ex.noOfSessions ?? ex.session ?? ex.sessions ?? '',
+              sets: ex.sets ?? '',
               reps: ex.repetitions ?? ex.reps ?? '',
-              frequencyCount: parseFrequency(ex.frequency).count,
-              frequencyUnit: parseFrequency(ex.frequency).unit,
-              notes: ex.notes ?? '', _checked: true,
+              frequencyCount: parseFrequency(ex.frequency || ex.frequencyCount).count,
+              frequencyUnit: parseFrequency(ex.frequency || ex.frequencyCount).unit,
+              notes: ex.notes ?? '',
+              duration: ex.duration || ex.activityDuration || '',
+              video: ex.video || ex.videoUrl || '',
+              _checked: true,
             }))
           }
         })
@@ -1464,6 +1597,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   }
 
   const handleModeChange = (val) => {
+    console.log(`🔄 Mode manually changed to: ${val}. Triggering fetch...`)
     setMode(val)
     setSelectedItems(new Map())
     setBulkPending(new Set())
@@ -1474,6 +1608,8 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     setTherophyDataState({})
     restoredFromSeedRef.current = false
     setErrors({})
+    // Explicitly call fetch to ensure it happens immediately
+    fetchDataByMode()
   }
 
   /* ── Validate ── only flag therapies error when user has ZERO checked ── */
@@ -1699,23 +1835,31 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                     (multiple selection allowed)
                   </span>
                 </label>
-                {programs.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => { setShowBrowsePanel(v => !v); setBrowseSearch(''); setBulkPending(new Set()) }}
-                    style={{
-                      padding: '7px 18px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
-                      border: '1.5px solid #1B4F8A',
-                      background: showBrowsePanel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
-                      color: showBrowsePanel ? '#fff' : '#1B4F8A',
-                      fontWeight: 700, fontSize: '0.85rem',
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      boxShadow: showBrowsePanel ? '0 2px 8px rgba(27,79,138,0.25)' : 'none',
-                    }}
-                  >
-                    📚 {showBrowsePanel ? '✕ Close' : `Browse ${mode === 'exercise' ? 'Activity' : mode.charAt(0).toUpperCase() + mode.slice(1)}s`}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log('📚 Browse button clicked')
+                    setShowBrowsePanel(v => !v)
+                    setBrowseSearch('')
+                    setBulkPending(new Set())
+                    // If list is empty, try to fetch again
+                    if (programs.length === 0) {
+                      console.log('Empty list detected on Browse click. Refreshing...')
+                      fetchDataByMode()
+                    }
+                  }}
+                  style={{
+                    padding: '7px 18px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                    border: '1.5px solid #1B4F8A',
+                    background: showBrowsePanel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
+                    color: showBrowsePanel ? '#fff' : '#1B4F8A',
+                    fontWeight: 700, fontSize: '0.85rem',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    boxShadow: showBrowsePanel ? '0 2px 8px rgba(27,79,138,0.25)' : 'none',
+                  }}
+                >
+                  📚 {showBrowsePanel ? '✕ Close' : (loadingPrograms ? 'Loading...' : `Browse ${mode === 'exercise' ? 'Activity' : mode.charAt(0).toUpperCase() + mode.slice(1)}s`)}
+                </button>
               </div>
 
               {errors.service && (

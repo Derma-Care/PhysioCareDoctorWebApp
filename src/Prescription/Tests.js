@@ -22,27 +22,37 @@ const ONSET_OPTIONS = [
 ]
 const PATIENT_PAIN_OPTIONS = [
   { label: 'Select patient pain type...', value: '' },
-  { label: 'Chronic Pain',  value: 'chronicPain' },
-  { label: 'Sports Rehab',  value: 'sportsRehab' },
-  { label: 'Neuro Rehab',   value: 'neuroRehab' },
+  { label: 'Acute Pain',      value: 'acutePain' },
+  { label: 'Chronic Pain',    value: 'chronicPain' },
+  { label: 'Mechanical Pain', value: 'mechanicalPain' },
+  { label: 'Neuropathic Pain', value: 'neuropathicPain' },
+  { label: 'Inflammatory Pain', value: 'inflammatoryPain' },
+  { label: 'Myofascial Pain', value: 'myofascialPain' },
+  { label: 'Postural Pain',   value: 'posturalPain' },
+  { label: 'Sports Rehab',    value: 'sportsRehab' },
+  { label: 'Neuro Rehab',     value: 'neuroRehab' },
+  { label: 'Orthopedic Rehab', value: 'orthopedicRehab' },
+  { label: 'Pediatric Rehab', value: 'pediatricRehab' },
+  { label: 'Geriatric Rehab', value: 'geriatricRehab' },
+  { label: 'Cardiac Rehab',   value: 'cardiacRehab' },
 ]
 const FUNCTIONAL_DIFFICULTIES = [
   'Walking', 'Climbing stairs', 'Sitting/Standing', 'Lifting/Carrying', 'Sports/Training',
 ]
-const POSTURE_OPTIONS  = ['Normal', 'Deviations']
-const ROM_OPTIONS      = ['Normal', 'Restricted']
+const POSTURE_OPTIONS = ['Normal', 'Deviations']
+const ROM_OPTIONS = ['Normal', 'Restricted']
 const STRENGTH_OPTIONS = ['Normal', 'Weakness in']
-const NEURO_OPTIONS    = ['Normal', 'Balance', 'Coordination', 'Sensation issues']
+const NEURO_OPTIONS = ['Normal', 'Balance', 'Coordination', 'Sensation issues']
 
 /* ─── Tabs config ────────────────────────────────────────────────────────── */
 const TABS = [
-  { id: 'subjective',         label: 'Subjective',          icon: '📋' },
-  { id: 'functional',         label: 'Functional',           icon: '🏃' },
-  { id: 'physical',           label: 'Physical Exam',        icon: '🔬' },
-  { id: 'objective',          label: 'Objective',            icon: '📐' },
-  { id: 'painClassification', label: 'Pain Classification',  icon: '💊' },
-  { id: 'redFlags',           label: 'Red Flags',            icon: '🚩' },
-  { id: 'neuroInfo',          label: 'Neuro Info',           icon: '🧠' },
+  { id: 'subjective', label: 'Subjective', icon: '📋' },
+  { id: 'functional', label: 'Functional', icon: '🏃' },
+  { id: 'physical', label: 'Physical Exam', icon: '🔬' },
+  { id: 'objective', label: 'Objective', icon: '📐' },
+  { id: 'painClassification', label: 'Pain Classification', icon: '💊' },
+  { id: 'redFlags', label: 'Red Flags', icon: '🚩' },
+  { id: 'neuroInfo', label: 'Neuro Info', icon: '🧠' },
 ]
 
 /* ─── Styles ─────────────────────────────────────────────────────────────── */
@@ -86,14 +96,14 @@ const TextInput = ({ value, onChange, placeholder = '' }) => (
   <input value={value} onChange={e => onChange(e.target.value)}
     placeholder={placeholder} style={inputStyle}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')} />
+    onBlur={e => (e.target.style.borderColor = '#b6cfe8')} />
 )
 
 const NativeSelect = ({ value, onChange, options }) => (
   <select value={value} onChange={e => onChange(e.target.value)}
     style={{ ...inputStyle, cursor: 'pointer', appearance: 'auto' }}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}>
+    onBlur={e => (e.target.style.borderColor = '#b6cfe8')}>
     {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
   </select>
 )
@@ -103,7 +113,7 @@ const Textarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
     placeholder={placeholder} rows={rows}
     style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')} />
+    onBlur={e => (e.target.style.borderColor = '#b6cfe8')} />
 )
 
 const SectionHeader = ({ icon, title, color = '#1B4F8A' }) => (
@@ -151,39 +161,52 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
   /* ── tab state ── */
   const [activeTab, setActiveTab] = useState(0)
 
-  const [painScale,           setPainScale]           = useState(seed.painScale          ?? '')
-  const [painType,            setPainType]            = useState(seed.painType           ?? '')
-  const [durationValue,       setDurationValue]       = useState('')
-  const [durationUnit,        setDurationUnit]        = useState('day')
-  const [onset,               setOnset]               = useState(seed.onset              ?? '')
-  const [aggravatingFactors,  setAggravatingFactors]  = useState(seed.aggravatingFactors ?? '')
-  const [relievingFactors,    setRelievingFactors]    = useState(seed.relievingFactors   ?? '')
-  const [observations,        setObservations]        = useState(seed.observations       ?? '')
-  const [posture,             setPosture]             = useState(seed.posture            ?? '')
-  const [rangeOfMotion,       setRangeOfMotion]       = useState(seed.rangeOfMotion      ?? '')
-  const [specialTests,        setSpecialTests]        = useState(seed.specialTests       ?? '')
-  const [difficultiesIn,      setDifficultiesIn]      = useState(seed.difficultiesIn     ?? [])
-  const [otherDifficulty,     setOtherDifficulty]     = useState(seed.otherDifficulty    ?? '')
+  const [painScale, setPainScale] = useState(seed.painScale ?? '')
+  const [painType, setPainType] = useState(seed.painType ?? '')
+  const [durationValue, setDurationValue] = useState('')
+  const [durationUnit, setDurationUnit] = useState('day')
+  const [onset, setOnset] = useState(seed.onset ?? '')
+  const [aggravatingFactors, setAggravatingFactors] = useState(seed.aggravatingFactors ?? '')
+  const [relievingFactors, setRelievingFactors] = useState(seed.relievingFactors ?? '')
+  const [observations, setObservations] = useState(seed.observations ?? '')
+  const [posture, setPosture] = useState(seed.posture ?? '')
+  const [rangeOfMotion, setRangeOfMotion] = useState(seed.rangeOfMotion ?? '')
+  const [specialTests, setSpecialTests] = useState(seed.specialTests ?? '')
+  const [difficultiesIn, setDifficultiesIn] = useState(seed.difficultiesIn ?? [])
+  const [otherDifficulty, setOtherDifficulty] = useState(seed.otherDifficulty ?? '')
   const [dailyLivingAffected, setDailyLivingAffected] = useState(seed.dailyLivingAffected ?? '')
-  const [postureAssessment,   setPostureAssessment]   = useState(seed.postureAssessment  ?? [])
-  const [postureDeviations,   setPostureDeviations]   = useState(seed.postureDeviations  ?? '')
-  const [romStatus,           setRomStatus]           = useState(seed.romStatus          ?? [])
-  const [romRestricted,       setRomRestricted]       = useState(seed.romRestricted      ?? '')
-  const [romJoints,           setRomJoints]           = useState(seed.romJoints          ?? '')
-  const [muscleStrength,      setMuscleStrength]      = useState(seed.muscleStrength     ?? [])
-  const [muscleWeakness,      setMuscleWeakness]      = useState(seed.muscleWeakness     ?? '')
-  const [neurologicalSigns,   setNeurologicalSigns]   = useState(seed.neurologicalSigns  ?? [])
-  const [patientPain,         setPatientPain]         = useState(seed.patientPain        ?? '')
-  const [painTriggers,        setPainTriggers]        = useState(seed.painTriggers       ?? '')
-  const [chronicRelieving,    setChronicRelieving]    = useState(seed.chronicRelieving   ?? '')
-  const [typeOfSport,         setTypeOfSport]         = useState(seed.typeOfSport        ?? '')
-  const [recurringInjuries,   setRecurringInjuries]   = useState(seed.recurringInjuries  ?? '')
-  const [returnToSportGoals,  setReturnToSportGoals]  = useState(seed.returnToSportGoals ?? '')
-  const [neuroDiagnosis,      setNeuroDiagnosis]      = useState(seed.neuroDiagnosis     ?? '')
-  const [neuroOnset,          setNeuroOnset]          = useState(seed.neuroOnset         ?? '')
-  const [mobilityStatus,      setMobilityStatus]      = useState(seed.mobilityStatus     ?? '')
-  const [cognitiveStatus,     setCognitiveStatus]     = useState(seed.cognitiveStatus    ?? '')
-  
+  const [postureAssessment, setPostureAssessment] = useState(seed.postureAssessment ?? [])
+  const [postureDeviations, setPostureDeviations] = useState(seed.postureDeviations ?? '')
+  const [romStatus, setRomStatus] = useState(seed.romStatus ?? [])
+  const [romRestricted, setRomRestricted] = useState(seed.romRestricted ?? '')
+  const [romJoints, setRomJoints] = useState(seed.romJoints ?? '')
+  const [muscleStrength, setMuscleStrength] = useState(seed.muscleStrength ?? [])
+  const [muscleWeakness, setMuscleWeakness] = useState(seed.muscleWeakness ?? '')
+  const [neurologicalSigns, setNeurologicalSigns] = useState(seed.neurologicalSigns ?? [])
+  const [patientPain, setPatientPain] = useState(seed.patientPain ?? '')
+  const [painTriggers, setPainTriggers] = useState(seed.painTriggers ?? '')
+  const [chronicRelieving, setChronicRelieving] = useState(seed.chronicRelieving ?? '')
+  const [typeOfSport, setTypeOfSport] = useState(seed.typeOfSport ?? '')
+  const [recurringInjuries, setRecurringInjuries] = useState(seed.recurringInjuries ?? '')
+  const [returnToSportGoals, setReturnToSportGoals] = useState(seed.returnToSportGoals ?? '')
+  const [neuroDiagnosis, setNeuroDiagnosis] = useState(seed.neuroDiagnosis ?? '')
+  const [neuroOnset, setNeuroOnset] = useState(seed.neuroOnset ?? '')
+  const [mobilityStatus, setMobilityStatus] = useState(seed.mobilityStatus ?? '')
+  const [cognitiveStatus, setCognitiveStatus] = useState(seed.cognitiveStatus ?? '')
+
+  // New Classification States
+  const [acuteMechanism, setAcuteMechanism] = useState(seed.acuteMechanism ?? '')
+  const [acuteInflammation, setAcuteInflammation] = useState(seed.acuteInflammation ?? '')
+  const [mechanicalTriggers, setMechanicalTriggers] = useState(seed.mechanicalTriggers ?? '')
+  const [neuropathicNature, setNeuropathicNature] = useState(seed.neuropathicNature ?? '')
+  const [inflammatoryMorning, setInflammatoryMorning] = useState(seed.inflammatoryMorning ?? '')
+  const [myofascialTriggers, setMyofascialTriggers] = useState(seed.myofascialTriggers ?? '')
+  const [posturalTolerance, setPosturalTolerance] = useState(seed.posturalTolerance ?? '')
+  const [orthoSurgery, setOrthoSurgery] = useState(seed.orthoSurgery ?? '')
+  const [pediatricMilestones, setPediatricMilestones] = useState(seed.pediatricMilestones ?? '')
+  const [geriatricFalls, setGeriatricFalls] = useState(seed.geriatricFalls ?? '')
+  const [cardiacVitals, setCardiacVitals] = useState(seed.cardiacVitals ?? '')
+
   // Embedded states
   const [redFlagsData, setRedFlagsData] = useState(formData.assessment?.redFlags || formData.redFlags || {})
   const [radiationNeuro, setRadiationNeuro] = useState(formData.assessment?.radiationNeuro || formData.radiationNeuro || {})
@@ -206,7 +229,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
     }
   }, [formData.redFlags, formData.radiationNeuro, formData.psychosocial, formData.specialSymptoms])
 
-  const [snackbar,            setSnackbar]            = useState({ show: false, message: '', type: '' })
+  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
 
   const { patientData } = useDoctorContext()
 
@@ -272,7 +295,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
   }, [seed])
 
   const cameFromBackend = isValid(seed.patientPain)
-  const effectivePain   = cameFromBackend ? seed.patientPain : patientPain
+  const effectivePain = cameFromBackend ? seed.patientPain : patientPain
 
   /* ── Duration: block negatives ── */
   const handleDurationChange = (val) => {
@@ -299,8 +322,18 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
       muscleStrength, muscleWeakness, neurologicalSigns,
       patientPain: effectivePain,
       ...(effectivePain === 'chronicPain' && { painTriggers, chronicRelieving }),
-      ...(effectivePain === 'sportsRehab' && { typeOfSport, recurringInjuries, returnToSportGoals }),
-      ...(effectivePain === 'neuroRehab'  && { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }),
+      ...(effectivePain === 'sportsRehab'  && { typeOfSport, recurringInjuries, returnToSportGoals }),
+      ...(effectivePain === 'neuroRehab'   && { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }),
+      ...(effectivePain === 'acutePain'    && { acuteMechanism, acuteInflammation }),
+      ...(effectivePain === 'mechanicalPain' && { mechanicalTriggers, posturalTolerance }),
+      ...(effectivePain === 'neuropathicPain' && { neuropathicNature, neuroDiagnosis }),
+      ...(effectivePain === 'inflammatoryPain' && { inflammatoryMorning, relievingFactors }),
+      ...(effectivePain === 'myofascialPain' && { myofascialTriggers, observations }),
+      ...(effectivePain === 'posturalPain' && { posturalTolerance, observations }),
+      ...(effectivePain === 'orthopedicRehab' && { orthoSurgery, mobilityStatus }),
+      ...(effectivePain === 'pediatricRehab' && { pediatricMilestones, dailyLivingAffected }),
+      ...(effectivePain === 'geriatricRehab' && { geriatricFalls, mobilityStatus }),
+      ...(effectivePain === 'cardiacRehab' && { cardiacVitals, painScale }),
       // Merged embedded data
       redFlags: redFlagsData,
       radiationNeuro,
@@ -334,12 +367,12 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
                     placeholder="Value"
                     style={{ ...inputStyle, flex: 1 }}
                     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-                    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+                    onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
                   />
                   <select value={durationUnit} onChange={e => setDurationUnit(e.target.value)}
                     style={{ ...inputStyle, flex: 1 }}
                     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-                    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}>
+                    onBlur={e => (e.target.style.borderColor = '#b6cfe8')}>
                     <option value="day">Day/s</option>
                     <option value="week">Week/s</option>
                     <option value="month">Month/s</option>
@@ -585,6 +618,176 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
               </div>
             )}
 
+            {/* Acute Pain */}
+            {effectivePain === 'acutePain' && (
+              <div style={{ marginBottom: 24, background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#991b1b', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>🚨</span> Acute Pain Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Mechanism of Injury">
+                    <Textarea value={acuteMechanism} onChange={setAcuteMechanism} placeholder="e.g. sudden fall, twisting motion..." rows={3} />
+                  </Field>
+                  <Field label="Inflammation Signs (Swelling/Redness)">
+                    <TextInput value={acuteInflammation} onChange={setAcuteInflammation} placeholder="e.g. mild swelling, no redness..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Mechanical Pain */}
+            {effectivePain === 'mechanicalPain' && (
+              <div style={{ marginBottom: 24, background: '#f8fafc', border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#334155', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>⚙️</span> Mechanical Pain Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Movement Triggers">
+                    <Textarea value={mechanicalTriggers} onChange={setMechanicalTriggers} placeholder="e.g. forward bending, rotation..." rows={3} />
+                  </Field>
+                  <Field label="Postural Relationship">
+                    <TextInput value={posturalTolerance} onChange={setPosturalTolerance} placeholder="e.g. pain after 30 mins sitting..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Neuropathic Pain */}
+            {effectivePain === 'neuropathicPain' && (
+              <div style={{ marginBottom: 24, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#5b21b6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>⚡</span> Neuropathic Pain Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Nature of Pain">
+                    <TextInput value={neuropathicNature} onChange={setNeuropathicNature} placeholder="e.g. burning, tingling, electric shock..." />
+                  </Field>
+                  <Field label="Dermatomal Distribution">
+                    <TextInput value={neuroDiagnosis} onChange={setNeuroDiagnosis} placeholder="e.g. L5 distribution, radiating to calf..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Inflammatory Pain */}
+            {effectivePain === 'inflammatoryPain' && (
+              <div style={{ marginBottom: 24, background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#92400e', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>🔥</span> Inflammatory Pain Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Morning Stiffness Duration">
+                    <TextInput value={inflammatoryMorning} onChange={setInflammatoryMorning} placeholder="e.g. 45 minutes, improves with movement..." />
+                  </Field>
+                  <Field label="Response to NSAIDs/Rest">
+                    <TextInput value={relievingFactors} onChange={setRelievingFactors} placeholder="e.g. good response to Ibuprofen..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Myofascial Pain */}
+            {effectivePain === 'myofascialPain' && (
+              <div style={{ marginBottom: 24, background: '#fef2f2', border: '1.5px solid #fecaca', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#991b1b', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>🧶</span> Myofascial Pain Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Trigger Point Locations">
+                    <TextInput value={myofascialTriggers} onChange={setMyofascialTriggers} placeholder="e.g. Upper Trapezius, Levator Scapulae..." />
+                  </Field>
+                  <Field label="Referred Pain Patterns">
+                    <TextInput value={observations} onChange={setObservations} placeholder="e.g. radiates to temple, behind eye..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Postural Pain */}
+            {effectivePain === 'posturalPain' && (
+              <div style={{ marginBottom: 24, background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0369a1', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>🪑</span> Postural Pain Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Sitting/Standing Tolerance">
+                    <TextInput value={posturalTolerance} onChange={setPosturalTolerance} placeholder="e.g. pain after 20 mins sitting..." />
+                  </Field>
+                  <Field label="Ergonomic Factors">
+                    <TextInput value={observations} onChange={setObservations} placeholder="e.g. poor desk setup, low monitor..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Orthopedic Rehab */}
+            {effectivePain === 'orthopedicRehab' && (
+              <div style={{ marginBottom: 24, background: '#f8fafc', border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#334155', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>🦴</span> Orthopedic Rehab Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Post-Op Surgery Date & Type">
+                    <TextInput value={orthoSurgery} onChange={setOrthoSurgery} placeholder="e.g. TKR Left, 12th Oct 2023..." />
+                  </Field>
+                  <Field label="Weight Bearing Status">
+                    <TextInput value={mobilityStatus} onChange={setMobilityStatus} placeholder="e.g. Partial WB, use of crutches..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Pediatric Rehab */}
+            {effectivePain === 'pediatricRehab' && (
+              <div style={{ marginBottom: 24, background: '#fff1f2', border: '1.5px solid #fecdd3', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#9f1239', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>👶</span> Pediatric Rehab Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Developmental Milestones">
+                    <Textarea value={pediatricMilestones} onChange={setPediatricMilestones} placeholder="e.g. delayed crawling, sitting balance..." rows={3} />
+                  </Field>
+                  <Field label="Parental Concerns">
+                    <TextInput value={dailyLivingAffected} onChange={setDailyLivingAffected} placeholder="e.g. difficulty in play, feeding..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Geriatric Rehab */}
+            {effectivePain === 'geriatricRehab' && (
+              <div style={{ marginBottom: 24, background: '#fdf4ff', border: '1.5px solid #f5d0fe', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#86198f', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>👵</span> Geriatric Rehab Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Fall History / Risk">
+                    <TextInput value={geriatricFalls} onChange={setGeriatricFalls} placeholder="e.g. 2 falls in last 6 months..." />
+                  </Field>
+                  <Field label="Balance Confidence">
+                    <TextInput value={mobilityStatus} onChange={setMobilityStatus} placeholder="e.g. afraid to walk outside alone..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Cardiac Rehab */}
+            {effectivePain === 'cardiacRehab' && (
+              <div style={{ marginBottom: 24, background: '#fff7ed', border: '1.5px solid #ffedd5', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#9a3412', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>❤️</span> Cardiac Rehab Patients
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 28px' }}>
+                  <Field label="Resting Vitals (HR/BP)">
+                    <TextInput value={cardiacVitals} onChange={setCardiacVitals} placeholder="e.g. HR 72, BP 130/85..." />
+                  </Field>
+                  <Field label="Borg Scale (Exertion)">
+                    <TextInput value={painScale} onChange={setPainScale} placeholder="e.g. 11 (light exertion)..." />
+                  </Field>
+                </div>
+              </div>
+            )}
+
             {/* Neuro Rehab */}
             {effectivePain === 'neuroRehab' && (
               <div style={{ marginBottom: 24, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 10, padding: '16px 20px' }}>
@@ -612,23 +815,23 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
 
       case 'redFlags':
         return (
-          <RedFlagScreening 
-            seed={{ redFlags: redFlagsData }} 
-            onNext={(p) => setRedFlagsData(p.redFlags)} 
-            hideFooter={true} 
+          <RedFlagScreening
+            seed={{ redFlags: redFlagsData }}
+            onNext={(p) => setRedFlagsData(p.redFlags)}
+            hideFooter={true}
           />
         )
 
       case 'neuroInfo':
         return (
-          <NeuroFunctionalInfo 
-            seed={{ radiationNeuro, psychosocial, specialSymptoms }} 
+          <NeuroFunctionalInfo
+            seed={{ radiationNeuro, psychosocial, specialSymptoms }}
             onNext={(p) => {
               setRadiationNeuro(p.radiationNeuro)
               setPsychosocial(p.psychosocial)
               setSpecialSymptoms(p.specialSymptoms)
-            }} 
-            hideFooter={true} 
+            }}
+            hideFooter={true}
           />
         )
 
@@ -679,7 +882,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
                 }}>
                   {TABS.map((tab, idx) => {
                     const isActive = idx === activeTab
-                    const isDone   = idx < activeTab
+                    const isDone = idx < activeTab
                     return (
                       <button
                         key={tab.id}

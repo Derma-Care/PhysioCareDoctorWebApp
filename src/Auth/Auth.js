@@ -138,10 +138,27 @@ export const getAppointments = async (number) => {
   const hospitalId = localStorage.getItem('hospitalId')
   try {
     const response = await api.get(`${appointmentsbaseUrl}/${hospitalId}/${doctorId}/${number}`)
-    const appointments = response?.data?.data
-    return Array.isArray(appointments) ? appointments : []
+    console.log(`📡 getAppointments(${number}) raw:`, response.data)
+    
+    // Check various common locations for the array
+    let data = response?.data?.data
+    if (!Array.isArray(data)) {
+      if (Array.isArray(response?.data)) {
+        data = response.data
+      } else if (Array.isArray(response?.data?.data?.appointments)) {
+        data = response.data.data.appointments
+      } else if (Array.isArray(response?.data?.data?.list)) {
+        data = response.data.data.list
+      } else if (data && typeof data === 'object') {
+        // If data is an object, try to find any array property
+        const arrayProp = Object.values(data).find(v => Array.isArray(v))
+        if (arrayProp) data = arrayProp
+      }
+    }
+    
+    return Array.isArray(data) ? data : []
   } catch (error) {
-    console.error('❌ Error fetching appointment details:', error)
+    console.error('❌ Error fetching appointments:', error)
     return []
   }
 }
