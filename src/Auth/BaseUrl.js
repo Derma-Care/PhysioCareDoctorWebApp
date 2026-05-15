@@ -1,5 +1,5 @@
-// export const ipUrl = 'http://3.111.28.174:9090'
-export const ipUrl = 'http://3.7.165.97:9090'
+export const ipUrl = 'http://3.111.28.174:9090'
+// export const ipUrl = 'http://3.7.165.97:9090'
 
 
 export const baseUrl = `${ipUrl}/api/physiotherapy-doctor`
@@ -24,7 +24,7 @@ export const getDoctorSlotsEndpoint = `${ipUrl}/clinic-admin/getDoctorslots`
 // Appointments
 export const todayappointmentsbaseUrl = `${ipUrl}/api/physiotherapy-doctor/getTodaysAppointmentsByUsingClinicIdAndDoctorId`
 export const todayfutureappointmentsbaseUrl = `${ipUrl}/api/doctors/getFutureDoctorappointmentsByDoctorId`
-export const appointmentsbaseUrl = `${ipUrl}/api/doctors/appointments/filter`
+export const appointmentsbaseUrl = `${ipUrl}/api/doctors/getDoctorAppointmentsonStatus`
 export const appointmentsCountbaseUrl = `${ipUrl}/api/doctors/appointments/completed`
 export const bookingDetailsUrl = `${ipUrl}/clinic-admin/getAllbookingsDetailsByClinicAndBranchId`
 

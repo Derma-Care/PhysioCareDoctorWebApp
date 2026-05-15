@@ -4,6 +4,8 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import { COLORS } from "../Themes";
 import { getDoctorDetails } from "../Auth/Auth";
+import { motion, AnimatePresence } from "framer-motion";
+import logo from "../assets/images/ic_launcher.png";
 
 // ─── Time helpers ─────────────────────────────────────────────────────────────
 const convertTo24Hr = (time12h) => {
@@ -82,12 +84,12 @@ const getLocalDateStr = (d) => new Date(d).toLocaleDateString("en-CA");
 
 // ─── Status colour map (using theme colours where possible) ───────────────────
 const STATUS_COLORS = {
-  confirmed:    { bg: COLORS.bgcolor,  label: "Confirmed"   }, // navy
-  "in-progress":{ bg: COLORS.orange,  label: "In-Progress" }, // yellow
-  "in progress":{ bg: COLORS.orange,  label: "In-Progress" },
-  completed:    { bg: "#28a745",       label: "Completed"   }, // green
-  cancelled:    { bg: "#d9534f",       label: "Cancelled"   }, // red
-  canceled:     { bg: "#d9534f",       label: "Cancelled"   },
+  confirmed: { bg: COLORS.bgcolor, label: "Confirmed" }, // navy
+  "in-progress": { bg: COLORS.orange, label: "In-Progress" }, // yellow
+  "in progress": { bg: COLORS.orange, label: "In-Progress" },
+  completed: { bg: "#28a745", label: "Completed" }, // green
+  cancelled: { bg: "#d9534f", label: "Cancelled" }, // red
+  canceled: { bg: "#d9534f", label: "Cancelled" },
 };
 
 const getStatusStyle = (status = "") => {
@@ -125,13 +127,13 @@ const generatePopover = (appt) => (
     {/* Body */}
     <div style={{ backgroundColor: "#fff", padding: "10px 14px" }}>
       {[
-        ["Name",        appt.name],
-        ["Age & Gender",`${appt.age}, ${appt.gender}`],
-        ["Mobile",      appt.patientMobileNumber || appt.mobileNumber],
-        ["Branch",      `${appt.branchname}, ${appt.clinicName}`],
-        ["Doctor",      appt.doctorName],
+        ["Name", appt.name],
+        ["Age & Gender", `${appt.age}, ${appt.gender}`],
+        ["Mobile", appt.patientMobileNumber || appt.mobileNumber],
+        ["Branch", `${appt.branchName}`],
+        ["Doctor", appt.doctorName],
         ["Date & Time", `${formatFullDate(new Date(appt.serviceDate))}, ${appt.servicetime}`],
-        ["Status",      appt.status],
+        ["Status", appt.status],
       ].map(([label, value]) => (
         <div
           key={label}
@@ -169,22 +171,25 @@ const CalendarModal = ({
   defaultBookedSlots = [],
   days = 15,
   interval = 30,
-  handleClick = () => {},
+  handleClick = () => { },
   fetchAppointments,
   intervalMs = 60000,
+  loading = false,
 }) => {
-  const [timeSlots, setTimeSlots]   = useState([]);
+  const [timeSlots, setTimeSlots] = useState([]);
   const [clinicTimes, setClinicTimes] = useState({ open: "", close: "" });
+  const [isTimingsLoading, setIsTimingsLoading] = useState(false);
   const dates = generateDates(days);
 
   useEffect(() => {
     const fetchClinicTimings = async () => {
+      setIsTimingsLoading(true);
       try {
         const doctorData = await getDoctorDetails();
         if (doctorData?.availableTimes) {
           const [openTime, closeTime] = doctorData.availableTimes.split(" - ").map((t) => t.trim());
           if (openTime && closeTime) {
-            const open  = convertTo24Hr(openTime);
+            const open = convertTo24Hr(openTime);
             const close = convertTo24Hr(closeTime);
             setClinicTimes({ open, close });
             setTimeSlots(generateTimeSlots(open, close, interval));
@@ -196,10 +201,14 @@ const CalendarModal = ({
         }
       } catch {
         setTimeSlots([]);
+      } finally {
+        setIsTimingsLoading(false);
       }
     };
     fetchClinicTimings();
   }, [interval]);
+
+  const isLoading = loading || isTimingsLoading;
 
   useEffect(() => {
     if (!visible || !fetchAppointments) return;
@@ -209,9 +218,9 @@ const CalendarModal = ({
   }, [visible, fetchAppointments, intervalMs]);
 
   const getAppointments = (dateObj, slotStart, slotEnd) => {
-    const dateStr  = getLocalDateStr(dateObj);
+    const dateStr = getLocalDateStr(dateObj);
     const startMin = toMinutes(slotStart);
-    const endMin   = slotEnd ? toMinutes(slotEnd) : startMin + interval;
+    const endMin = slotEnd ? toMinutes(slotEnd) : startMin + interval;
     return (todayAppointments || []).filter((appt) => {
       if (!appt.serviceDate || !appt.servicetime) return false;
       if (getLocalDateStr(appt.serviceDate) !== dateStr) return false;
@@ -221,9 +230,9 @@ const CalendarModal = ({
   };
 
   const isDefaultBooked = (dateObj, slotStart, slotEnd) => {
-    const dateStr  = getLocalDateStr(dateObj);
+    const dateStr = getLocalDateStr(dateObj);
     const startMin = toMinutes(slotStart);
-    const endMin   = slotEnd ? toMinutes(slotEnd) : startMin + interval;
+    const endMin = slotEnd ? toMinutes(slotEnd) : startMin + interval;
     return (defaultBookedSlots || []).some((slot) => {
       if (!slot.date || !slot.time) return false;
       if (getLocalDateStr(slot.date) !== dateStr) return false;
@@ -309,9 +318,9 @@ const CalendarModal = ({
           {/* Legend */}
           <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
             <LegendDot color={COLORS.bgcolor} label="Confirmed" />
-            <LegendDot color={COLORS.orange}  label="In-Progress" />
-            <LegendDot color="#28a745"         label="Completed" />
-            <LegendDot color="#d9534f"         label="Cancelled" />
+            <LegendDot color={COLORS.orange} label="In-Progress" />
+            <LegendDot color="#28a745" label="Completed" />
+            <LegendDot color="#d9534f" label="Cancelled" />
           </div>
         </CModalTitle>
       </CModalHeader>
@@ -326,7 +335,44 @@ const CalendarModal = ({
             borderRadius: "0 0 8px 8px",
           }}
         >
-          {timeSlots.length === 0 ? (
+          {isLoading ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "300px",
+                gap: "20px",
+              }}
+            >
+              <motion.img
+                src={logo}
+                alt="Loading..."
+                style={{ width: "70px", opacity: 0.8 }}
+                animate={{
+                  scale: [1, 1.1, 1],
+                  opacity: [0.6, 1, 0.6],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: COLORS.bgcolor,
+                  fontWeight: "600",
+                  letterSpacing: "0.5px",
+                  textTransform: "uppercase",
+                }}
+              >
+                Syncing Calendar...
+              </div>
+            </div>
+          ) : timeSlots.length === 0 ? (
             <div
               style={{
                 textAlign: "center",
@@ -390,10 +436,10 @@ const CalendarModal = ({
 
                   {/* Data cells */}
                   {dates.map((d, j) => {
-                    const nextSlot     = timeSlots[i + 1] || null;
+                    const nextSlot = timeSlots[i + 1] || null;
                     const appointments = getAppointments(d, slot, nextSlot);
-                    const defBooked    = isDefaultBooked(d, slot, nextSlot);
-                    const isEven       = i % 2 === 0;
+                    const defBooked = isDefaultBooked(d, slot, nextSlot);
+                    const isEven = i % 2 === 0;
 
                     return (
                       <div
@@ -406,7 +452,7 @@ const CalendarModal = ({
                         {appointments.length > 0 ? (
                           appointments.map((appt) => {
                             const { bg, label } = getStatusStyle(appt.status);
-                            const isClickable   = appt.status?.toLowerCase() !== "completed";
+                            const isClickable = appt.status?.toLowerCase() !== "completed";
 
                             return (
                               <OverlayTrigger

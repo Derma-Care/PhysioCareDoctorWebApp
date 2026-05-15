@@ -21,9 +21,11 @@ const toImageSrc = (raw) => {
   if (!raw || typeof raw !== 'string') return null
   if (raw.startsWith('http') || raw.startsWith('blob:') || raw.startsWith('/')) return raw
   if (raw.startsWith('data:')) return raw
-  if (raw.startsWith('/9j/')) return `data:image/jpeg;base64,${raw}`
-  if (raw.startsWith('iVBOR')) return `data:image/png;base64,${raw}`
-  if (raw.startsWith('R0lGO')) return `data:image/gif;base64,${raw}`
+  const trimmed = raw.trim().toUpperCase()
+  if (trimmed.startsWith('/9J/')) return `data:image/jpeg;base64,${raw}`
+  if (trimmed.startsWith('IVBOR')) return `data:image/png;base64,${raw}`
+  if (trimmed.startsWith('R0LGO')) return `data:image/gif;base64,${raw}`
+  if (trimmed.startsWith('JVBER')) return `data:application/pdf;base64,${raw}`
   return `data:image/jpeg;base64,${raw}`
 }
 
@@ -133,12 +135,10 @@ const emptyPlaceholder = {
 // ─── main component ──────────────────────────────────────────────────────────
 const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
 
-  const [symptomDetails, setSymptomDetails] = useState(seed.symptomDetails ?? patientData?.problem ?? '')
-  const [duration, setDuration] = useState(seed.duration ?? patientData?.symptomsDuration ?? '0 Days')
+  const [symptomDetails, setSymptomDetails] = useState(seed.symptomDetails ?? '')
+  const [duration, setDuration] = useState(seed.duration ?? '0 Days')
   const [attachments, setAttachments] = useState(
-    Array.isArray(seed.attachments) && seed.attachments.length
-      ? seed.attachments
-      : Array.isArray(patientData?.attachments) ? patientData.attachments : []
+    Array.isArray(seed.attachments) && seed.attachments.length ? seed.attachments : []
   )
   const [loadingBooking, setLoadingBooking] = useState(false)
   const [bookingRecord, setBookingRecord] = useState(null)
@@ -156,14 +156,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const [insuranceProvider, setInsuranceProvider] = useState(seed.insuranceProvider ?? '')
   const [activityLevels, setActivityLevels] = useState(Array.isArray(seed.activityLevels) ? seed.activityLevels : [])
 
-  // FIX 1: Read patientPain from seed.patientPain (not seed.reasonforVisit)
-  const [patientPain, setPatientPain] = useState(
-    seed.patientPain ??
-    seed.reasonforVisit ??   // ✅ your field
-    patientData?.reasonforVisit ??  // ✅ ADD THIS
-    patientData?.patientPain ??
-    ''
-  )
+  const [patientPain, setPatientPain] = useState(seed.reasonforVisit ?? '')
 
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
   const { error } = useToast()
@@ -185,53 +178,86 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
     if (isValid(seed.occupation)) setOccupation(seed.occupation)
     if (isValid(seed.insuranceProvider)) setInsuranceProvider(seed.insuranceProvider)
     if (Array.isArray(seed.activityLevels) && seed.activityLevels.length) setActivityLevels(seed.activityLevels)
-    // ✅ FIXED
-    if (isValid(seed.patientPain)) {
-      setPatientPain(seed.patientPain)
-    }
-    else if (isValid(seed.reasonforVisit)) {
-      setPatientPain(seed.reasonforVisit)
-    }
-    else if (isValid(patientData?.reasonforVisit)) {   // ⭐ IMPORTANT
-      setPatientPain(patientData.reasonforVisit)
-    }
-    else if (isValid(patientData?.patientPain)) {
-      setPatientPain(patientData.patientPain)
-    }
-    else if (isValid(patientData?.problem)) {          // fallback
-      setPatientPain(patientData.problem)
-    }
-  }, [seed, patientData])
+    if (isValid(seed.patientPain)) setPatientPain(seed.patientPain)
+    else if (isValid(seed.reasonforVisit)) setPatientPain(seed.reasonforVisit)
+  }, [seed])
 
   useEffect(() => {
-    const clinicId = patientData?.clinicId
-    const branchId = patientData?.branchId
-    if (!clinicId || !branchId) return
+    const bookingId = patientData?.bookingId
+    console.log("✅ getBookingDetails record:", bookingId)
+
+    if (!bookingId) return
+
     const run = async () => {
       setLoadingBooking(true)
       try {
-        const json = await getBookingDetails(clinicId, branchId)
-        const list = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : [json]
-        const record = list.find((b) => b.bookingId === patientData?.bookingId) ?? list[0]
-        if (!record) return
+        const rawRecord = await getBookingDetails(bookingId)
+        console.log("✅ getBookingDetails raw result:", rawRecord)
+
+        // Flatten if the record is still nested (e.g. { data: { ... } })
+        const record = (rawRecord?.data && !rawRecord.bookingId) ? rawRecord.data : rawRecord
+
+        if (!record || (!record.bookingId && !record.problem)) {
+          console.warn("⚠️ No valid record data found")
+          return
+        }
+
         setBookingRecord(record)
-        if (isValid(record.problem) && !isValid(seed.symptomDetails)) setSymptomDetails(record.problem)
-        if (isValid(record.symptomsDuration) && !isValid(seed.duration)) setDuration(record.symptomsDuration.trim())
-        else if (!isValid(seed.duration)) setDuration('0 Days')
-        if (isValid(record.subServiceName) && !isValid(seed.selectedTherapy)) setSelectedTherapy(record.subServiceName)
-        if (isValid(record.subServiceId) && !isValid(seed.selectedTherapyID)) setSelectedTherapyID(record.subServiceId)
-        if (record.partImage && !isValid(seed.partImage)) setPartImage(record.partImage)
-        if (Array.isArray(record.parts) && record.parts.length && !(Array.isArray(seed.parts) && seed.parts.length)) setParts(record.parts)
-        if (record.theraphyAnswers && typeof record.theraphyAnswers === 'object' && !Object.keys(seed.theraphyAnswers ?? {}).length) setTheraphyAnswers(record.theraphyAnswers)
-        if (isValid(record.previousInjuries) && !isValid(seed.previousInjuries)) setPreviousInjuries(record.previousInjuries)
-        if (isValid(record.currentMedications) && !isValid(seed.currentMedications)) setCurrentMedications(record.currentMedications)
-        if (isValid(record.allergies) && !isValid(seed.allergies)) setAllergies(record.allergies)
-        if (isValid(record.occupation) && !isValid(seed.occupation)) setOccupation(record.occupation)
-        if (isValid(record.insuranceProvider) && !isValid(seed.insuranceProvider)) setInsuranceProvider(record.insuranceProvider)
-        if (Array.isArray(record.activityLevels) && record.activityLevels.length && !(Array.isArray(seed.activityLevels) && seed.activityLevels.length)) setActivityLevels(record.activityLevels)
-        // FIX: read patientPain from booking record
-        if (isValid(record.patientPain) && !isValid(seed.patientPain)) setPatientPain(record.patientPain)
-        if (Array.isArray(record.attachments) && record.attachments.length && !(Array.isArray(seed.attachmentImages) && seed.attachmentImages.length)) {
+
+        // Hydrate state from booking record (Unconditionally use API data)
+        console.log("🔍 Hydrating symptoms from record:", {
+          problem: record.problem,
+          duration: record.symptomsDuration,
+          therapy: record.subServiceName,
+          patientPain: record.patientPain
+        })
+
+        if (isValid(record.problem)) {
+          console.log("✅ Setting symptomDetails:", record.problem)
+          setSymptomDetails(record.problem)
+        }
+
+        if (isValid(record.symptomsDuration)) {
+          console.log("✅ Setting duration:", record.symptomsDuration)
+          setDuration(record.symptomsDuration.trim())
+        } else {
+          setDuration('0 Days')
+        }
+
+        if (isValid(record.subServiceName)) {
+          console.log("✅ Setting selectedTherapy:", record.subServiceName)
+          setSelectedTherapy(record.subServiceName)
+        }
+        if (isValid(record.subServiceId)) setSelectedTherapyID(record.subServiceId)
+
+        if (record.partImage) {
+          console.log("✅ Setting partImage (exists)")
+          setPartImage(record.partImage)
+        }
+        if (Array.isArray(record.parts) && record.parts.length) {
+          console.log("✅ Setting parts:", record.parts)
+          setParts(record.parts)
+        }
+
+        if (record.theraphyAnswers && typeof record.theraphyAnswers === 'object') {
+          console.log("✅ Setting theraphyAnswers:", record.theraphyAnswers)
+          setTheraphyAnswers(record.theraphyAnswers)
+        }
+
+        if (isValid(record.previousInjuries)) setPreviousInjuries(record.previousInjuries)
+        if (isValid(record.currentMedications)) setCurrentMedications(record.currentMedications)
+        if (isValid(record.allergies)) setAllergies(record.allergies)
+        if (isValid(record.occupation)) setOccupation(record.occupation)
+        if (isValid(record.insuranceProvider)) setInsuranceProvider(record.insuranceProvider)
+        if (Array.isArray(record.activityLevels) && record.activityLevels.length) setActivityLevels(record.activityLevels)
+
+        if (isValid(record.patientPain)) {
+          console.log("✅ Setting patientPain:", record.patientPain)
+          setPatientPain(record.patientPain)
+        }
+
+        if (Array.isArray(record.attachments) && record.attachments.length) {
+          console.log("✅ Setting attachmentImages:", record.attachments.length, "items")
           setAttachmentImages(record.attachments)
           setAttachments((prev) => {
             const existingSet = new Set(prev.map((a) => a?.url ?? a))
@@ -249,7 +275,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       }
     }
     run()
-  }, [patientData?.clinicId, patientData?.branchId, patientData?.bookingId])
+  }, [patientData?.bookingId])
 
 
 

@@ -36,6 +36,7 @@ const Dashboard = () => {
   const [itemsPerPage] = useState(10);
   const [futureAppointments, setFutureAppointments] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loadingCalendar, setLoadingCalendar] = useState(false);
 
   const fetchAppointments = useCallback(async () => {
     try {
@@ -50,6 +51,7 @@ const Dashboard = () => {
   }, [doctorDetails?.id, setTodayAppointments]);
 
   const fetchFutureAppointments = useCallback(async () => {
+    setLoadingCalendar(true);
     try {
       const response = await getTodayFutureAppointments();
       if (response.statusCode === 200) {
@@ -60,6 +62,8 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error fetching future appointments:', error);
       setFutureAppointments([]);
+    } finally {
+      setLoadingCalendar(false);
     }
   }, []);
 
@@ -129,7 +133,7 @@ const Dashboard = () => {
               </button>
 
               {/* Consultation type buttons */}
-              {Object.entries(consultationCounts).map(([type, count]) => (
+              {/* {Object.entries(consultationCounts).map(([type, count]) => (
                 <button
                   key={type}
                   onClick={() => setSelectedType(type)}
@@ -147,7 +151,7 @@ const Dashboard = () => {
                 >
                   {type} ({count})
                 </button>
-              ))}
+              ))} */}
             </div>
 
             {/* RIGHT: Search + Branch Dropdown + Calendar */}
@@ -263,7 +267,7 @@ const Dashboard = () => {
             <CTable className="mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
               <CTableHead>
                 <CTableRow>
-                  {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Consultation', 'Branch', 'Visit Type', 'Follow-up Status', 'Status', 'Action'].map(
+                  {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Branch', 'Visit Type', 'Follow-up Status', 'Status', 'Action'].map(
                     (header, i) => (
                       <CTableHeaderCell
                         key={i}
@@ -316,7 +320,7 @@ const Dashboard = () => {
                         {capitalizeFirst(item.name)}
                       </CTableDataCell>
                       <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px', color: COLORS.black }}>
-                        {item.patientMobileNumber}
+                        {item.patientMobileNumber || item.mobileNumber}
                       </CTableDataCell>
                       <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px', color: COLORS.black }}>
                         {item.serviceDate}
@@ -324,7 +328,7 @@ const Dashboard = () => {
                       <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px', color: COLORS.black }}>
                         {item.servicetime}
                       </CTableDataCell>
-                      <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px' }}>
+                      {/* <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px' }}>
                         <span
                           style={{
                             backgroundColor: '#EAF1FB',
@@ -335,9 +339,9 @@ const Dashboard = () => {
                             fontWeight: '500',
                           }}
                         >
-                          {item.consultationType}
+                          {item.visitType}
                         </span>
-                      </CTableDataCell>
+                      </CTableDataCell> */}
                       <CTableDataCell
                         style={{
                           fontSize: '13px',
@@ -348,7 +352,7 @@ const Dashboard = () => {
                           color: COLORS.black,
                         }}
                       >
-                        {item?.branchname || 'N/A'}
+                        {item?.branchName || 'N/A'}
                       </CTableDataCell>
                       <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px', color: COLORS.black, textTransform: 'capitalize' }}>
                         {item.visitType ? item.visitType.replace(/_/g, ' ').toLowerCase() : 'N/A'}
@@ -465,6 +469,7 @@ const Dashboard = () => {
           defaultBookedSlots={[]}
           handleClick={handleCalendarClick}
           fetchAppointments={fetchFutureAppointments}
+          loading={loadingCalendar}
         />
       )}
     </div>

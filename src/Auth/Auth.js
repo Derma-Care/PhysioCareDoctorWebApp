@@ -134,12 +134,13 @@ export const getTodayFutureAppointments = async () => {
   }
 }
 
-export const getAppointments = async (number) => {
+export const getAppointments = async (status) => {
   const doctorId = localStorage.getItem('doctorId')
   const hospitalId = localStorage.getItem('hospitalId')
+  const branchId = localStorage.getItem('branchId')
   try {
-    const response = await api.get(`${appointmentsbaseUrl}/${hospitalId}/${doctorId}/${number}`)
-    console.log(`📡 getAppointments(${number}) raw:`, response.data)
+    const response = await api.get(`${appointmentsbaseUrl}/${hospitalId}/000101/${doctorId}/${status}`)
+    console.log(`📡 getAppointments(${status}) raw:`, response.data)
 
     // Check various common locations for the array
     let data = response?.data?.data

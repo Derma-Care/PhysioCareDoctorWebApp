@@ -40,21 +40,21 @@ const tabLabels = {
   followUpPending: 'Follow-up Pending',
 }
 
-const tabToNumberMap = {
-  all: 0,
-  pending: 6, // Assumption for new status IDs
-  confirmed: 1,
-  cancelled: 2,
-  completed: 3,
-  inprogress: 4,
-  noshow: 5,
-  dueForInvestigation: 7,
-  investigationDone: 8,
-  followUpNeeded: 9,
-  rescheduled: 10,
-  drop: 11,
-  noReply: 12,
-  followUpPending: 13,
+const tabToStatusMap = {
+  all: 'All',
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  cancelled: 'Cancelled',
+  completed: 'Completed',
+  inprogress: 'In-Progress',
+  noshow: 'No Reply',
+  dueForInvestigation: 'Due for Investigation',
+  investigationDone: 'Investigation Done',
+  followUpNeeded: 'Follow-up Needed',
+  rescheduled: 'Rescheduled',
+  drop: 'Drop',
+  noReply: 'No Reply',
+  followUpPending: 'Follow-up Pending',
 }
 
 const Appointments = ({ searchTerm = '' }) => {
@@ -92,23 +92,23 @@ const Appointments = ({ searchTerm = '' }) => {
     setLoading(true)
     try {
       if (activeTab === 'all') {
-        const [upcoming, active, completed, cancelled, noshow] = await Promise.all([
-          getAppointments(`1?_=${Date.now()}`),
-          getAppointments(`4?_=${Date.now()}`),
-          getAppointments(`3?_=${Date.now()}`),
-          getAppointments(`2?_=${Date.now()}`),
-          getAppointments(`5?_=${Date.now()}`),
+        const [upcoming, active, completed, cancelled, drop] = await Promise.all([
+          getAppointments('Confirmed'),
+          getAppointments('In-Progress'),
+          getAppointments('Completed'),
+          getAppointments('Cancelled'),
+          getAppointments('Drop'),
         ])
         setAppointments([
           ...(upcoming || []),
           ...(active || []),
           ...(completed || []),
           ...(cancelled || []),
-          ...(noshow || []),
+          ...(drop || []),
         ])
       } else {
-        const tabNumber = tabToNumberMap[activeTab]
-        const data = await getAppointments(`${tabNumber}?_=${Date.now()}`)
+        const status = tabToStatusMap[activeTab]
+        const data = await getAppointments(status)
         setAppointments(data || [])
       }
     } catch (err) {
@@ -134,7 +134,7 @@ const Appointments = ({ searchTerm = '' }) => {
       .filter((p) => {
         const matchesSearch =
           p.name?.toLowerCase().includes(safeSearch) ||
-          p.patientMobileNumber?.toLowerCase().includes(safeSearch)
+          p.patientMobileNumber?.toLowerCase().includes(safeSearch) || p.mobileNumber?.toLowerCase().includes(safeSearch)
         const matchesFilter =
           filter === 'All' ||
           filter === 'First-Time & Follow-up' ||
@@ -440,7 +440,7 @@ const Appointments = ({ searchTerm = '' }) => {
                     className="text-nowrap"
                     style={{ fontSize: '0.875rem' }}
                   >
-                    {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Consultation', 'Branch', 'Visit Type', 'Follow-up Status', 'Status', 'Action'].map(
+                    {['S.No', 'Name', 'Mobile', 'Date', 'Time', 'Branch', 'Visit Type', 'Follow-up Status', 'Status', 'Action'].map(
                       (header) => (
                         <CTableHeaderCell
                           key={header}
@@ -498,7 +498,7 @@ const Appointments = ({ searchTerm = '' }) => {
                           {p.name ? p.name.charAt(0).toUpperCase() + p.name.slice(1) : 'NA'}
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black }}>
-                          {p.patientMobileNumber}
+                          {p.patientMobileNumber || p.mobileNumber}
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black }}>
                           {p.serviceDate}
@@ -506,7 +506,7 @@ const Appointments = ({ searchTerm = '' }) => {
                         <CTableDataCell style={{ padding: '10px 12px', color: COLORS.black }}>
                           {p.servicetime}
                         </CTableDataCell>
-                        <CTableDataCell style={{ padding: '10px 12px' }}>
+                        {/* <CTableDataCell style={{ padding: '10px 12px' }}>
                           <span
                             style={{
                               backgroundColor: '#EAF1FB',
@@ -519,7 +519,7 @@ const Appointments = ({ searchTerm = '' }) => {
                           >
                             {p.consultationType}
                           </span>
-                        </CTableDataCell>
+                        </CTableDataCell> */}
                         <CTableDataCell
                           style={{
                             padding: '10px 12px',
