@@ -35,6 +35,7 @@ import {
   therapyUrl,
   exerciseUrl,
   packageUrl,
+  packageUrlId,
   programUrlId,
   therapyUrlId,
   exerciseUrlId,
@@ -139,7 +140,7 @@ export const getAppointments = async (number) => {
   try {
     const response = await api.get(`${appointmentsbaseUrl}/${hospitalId}/${doctorId}/${number}`)
     console.log(`📡 getAppointments(${number}) raw:`, response.data)
-    
+
     // Check various common locations for the array
     let data = response?.data?.data
     if (!Array.isArray(data)) {
@@ -155,7 +156,7 @@ export const getAppointments = async (number) => {
         if (arrayProp) data = arrayProp
       }
     }
-    
+
     return Array.isArray(data) ? data : []
   } catch (error) {
     console.error('❌ Error fetching appointments:', error)
@@ -825,15 +826,30 @@ export const addOrSearchMedicine = async (medicineName) => {
     console.error("❌ Error adding medicine:", error.response?.data || error.message)
     return false
   }
+
+
 }
 
-export const getBookingDetails = async (clinicId, branchId) => {
+export const getBookingDetails = async (booking) => {
+  const bookingId = typeof booking === 'object' ? booking.bookingId : booking
+  if (!bookingId) {
+    console.warn('⚠️ getBookingDetails called without a valid bookingId')
+    return null
+  }
   try {
-    const response = await api.get(`${bookingDetailsUrl}/${clinicId}/${branchId}`)
+    const url = `${ipUrl}/api/customer/getBookedService/${bookingId}`
+    console.log('📡 getBookingDetails requesting:', url)
+    const response = await api.get(url)
+
+    // The API might return { data: { ... } } or { success: true, data: { ... } }
+    // We want the inner data object.
+    if (response.data?.data) {
+      return response.data.data
+    }
     return response.data
   } catch (error) {
     console.error('❌ Booking API Error:', error)
-    throw error
+    return null
   }
 }
 

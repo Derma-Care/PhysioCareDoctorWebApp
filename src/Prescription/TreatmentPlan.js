@@ -13,6 +13,7 @@ import {
   getExercisesByBranchAndIdAndId,
   getPackagesByBranchAndId,
 } from '../Auth/Auth'
+import { useDoctorContext } from '../Context/DoctorContext'
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 const FREQ_UNITS = ['Day', 'Week', 'Month']
@@ -821,7 +822,7 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
 }
 
 /* ─── TherapyBlock ───────────────────────────────────────────────────────── */
-const TherapyBlock = ({ therapyKey, therapy, checked, onToggle, exercises, onUpdateExercises, loading }) => (
+const TherapyBlock = ({ therapyKey, therapy, checked, onToggle, exercises, onUpdateExercises, loading, programName }) => (
   <div style={{ border: `2px solid ${checked ? '#1B4F8A' : '#dde8f2'}`, borderRadius: 10, overflow: 'hidden', transition: 'border-color 0.18s', marginBottom: 12 }}>
     <div
       onClick={(e) => { e.stopPropagation(); onToggle(therapyKey) }}
@@ -831,7 +832,14 @@ const TherapyBlock = ({ therapyKey, therapy, checked, onToggle, exercises, onUpd
         style={{ width: 20, height: 20, borderRadius: 5, flexShrink: 0, border: `2px solid ${checked ? '#1B4F8A' : '#a0bcda'}`, background: checked ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {checked && <span style={{ color: '#fff', fontSize: '0.72rem', lineHeight: 1, fontWeight: 700 }}>✓</span>}
       </div>
-      <span style={{ fontWeight: 700, fontSize: '0.93rem', color: '#1B4F8A', flex: 1 }}>{therapy}</span>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {programName && (
+          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#4a7abf', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: -2 }}>
+            {programName}
+          </span>
+        )}
+        <span style={{ fontWeight: 700, fontSize: '0.93rem', color: '#1B4F8A' }}>{therapy}</span>
+      </div>
       {loading
         ? <span style={{ fontSize: '0.78rem', color: '#4a7abf', fontWeight: 500 }}>Loading exercises...</span>
         : <span style={{ fontSize: '0.78rem', color: checked ? '#1B4F8A' : '#8fa8c0', fontWeight: 600 }}>
@@ -1130,14 +1138,16 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   const savedSessions = Array.isArray(seed?.sessions) ? seed.sessions : []
   const savedSession = savedSessions[0] ?? {}
 
-  const { toasts, toastError, toastSuccess } = useToast()
+  const { toasts, toastError, toastSuccess, toastWarning } = useToast()
   const [errors, setErrors] = useState({})
 
   const inferredMode = savedSession.serviceType || seed.serviceType || 'package'
   const [mode, setMode] = useState(inferredMode)
 
+  const { doctorDetails } = useDoctorContext()
   const clinicId = localStorage.getItem('hospitalId')
-  const branchId = patientData?.branchId
+  // Try to find branchId from patient record, then context, then localStorage
+  const branchId = patientData?.branchId || doctorDetails?.branches?.[0]?.branchId || localStorage.getItem('branchId')
   const idsReady = !!(clinicId && branchId)
 
   const [therapists, setTherapists] = useState([])
@@ -1319,14 +1329,33 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     setLoadingByItemId(prev => ({ ...prev, [id]: true }))
     try {
       let data = null
-      switch (mode) {
-        case 'package': data = await getPackagesByBranchAndId(clinicId, branchId, id); break
-        case 'program': data = await getProgramsByBranchAndId(clinicId, branchId, id); break
-        case 'therapy': data = await getTherapiesByBranchAndId(clinicId, branchId, id); break
-        case 'exercise': data = await getExercisesByBranchAndIdAndId(clinicId, branchId, id); break
-        default: data = obj
+      
+      // Check if we already have programs/activities in the object to avoid failing API calls
+      const hasAlreadyNested = (o) => {
+        if (!o) return false
+        if (mode === 'package') return (Array.isArray(o.programs) && o.programs.length > 0) || (Array.isArray(o.programList) && o.programList.length > 0) || (Array.isArray(o.programIds) && o.programIds.length > 0)
+        if (mode === 'program') return (Array.isArray(o.therophyData) && o.therophyData.length > 0) || (Array.isArray(o.therapyData) && o.therapyData.length > 0) || (Array.isArray(o.activities) && o.activities.length > 0)
+        return false
+      }
+
+      if (hasAlreadyNested(obj)) {
+        console.log(`⚡ Using existing nested data for ${mode} ${id}`)
+        data = obj
+      } else {
+        switch (mode) {
+          case 'package': data = await getPackagesByBranchAndId(clinicId, branchId, id); break
+          case 'program': data = await getProgramsByBranchAndId(clinicId, branchId, id); break
+          case 'therapy': data = await getTherapiesByBranchAndId(clinicId, branchId, id); break
+          case 'exercise': data = await getExercisesByBranchAndIdAndId(clinicId, branchId, id); break
+          default: data = obj
+        }
       }
       console.log(`✅ ${mode} detail for ${id}:`, data)
+      if (!data) {
+        console.error(`❌ No data returned for ${mode} ${id}`)
+        toastError(`Failed to load ${mode} details.`)
+        return
+      }
 
       if (mode === 'package') {
         // Robust check for programs array (handle both 'programs' and 'programList')
@@ -1354,8 +1383,10 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           if (therapies && therapies.length > 0) return item
 
           try {
-            toast.info(`Fetching details for ${item.programName || 'program'}...`, { autoClose: 800 })
-            const fullProg = await getProgramsByBranchAndId(clinicId, branchId, pId)
+            console.log(`📡 Fetching details for ${item.programName || 'program'}...`)
+            let fullProg = await getProgramsByBranchAndId(clinicId, branchId, pId)
+            // Flatten if array
+            if (Array.isArray(fullProg)) fullProg = fullProg[0]
             return fullProg || item
           } catch (err) {
             console.error(`❌ Hydration failed for program ${pId}:`, err)
@@ -1363,32 +1394,35 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
           }
         }))
 
-        hydratedPrograms.forEach((program) => {
+        hydratedPrograms.forEach((program, pIdx) => {
           if (!program) return
-          console.log(`🔎 Mapping program: ${program.programName || program.name || 'Unknown'}`)
-          const programName = program.programName || program.name || 'Program'
+          const programName = program.programName || program.name || `Program ${pIdx + 1}`
+          console.log(`🔎 [Package Hydration] Mapping program: ${programName}`, program)
 
-          const therapiesRaw = (
-            program.therophyData ??
-            program.therapyData ??
-            program.activities ??
-            program.programActivities ??
-            program.program_activities ??
-            program.therapyDetails ??
-            program.therapyList ??
-            program.exercises ??
-            []
+          const therapiesArr = (
+            (Array.isArray(program.therophyData) && program.therophyData.length > 0) ? program.therophyData :
+              (Array.isArray(program.therapyData) && program.therapyData.length > 0) ? program.therapyData :
+                (Array.isArray(program.activities) && program.activities.length > 0) ? program.activities :
+                  (Array.isArray(program.programActivities) && program.programActivities.length > 0) ? program.programActivities :
+                    (Array.isArray(program.therapyDetails) && program.therapyDetails.length > 0) ? program.therapyDetails :
+                      (Array.isArray(program.therapyList) && program.therapyList.length > 0) ? program.therapyList :
+                        (Array.isArray(program.exercises) && program.exercises.length > 0) ? program.exercises : []
           )
 
-          const therapiesArr = Array.isArray(therapiesRaw) ? therapiesRaw : (therapiesRaw ? [therapiesRaw] : [])
+          console.log(`   └─ Found ${therapiesArr.length} therapies for ${programName}`)
 
           therapiesArr.forEach((therapy, tIndex) => {
             if (!therapy) return
             const therapyName = therapy.therapyName || therapy.name || therapy.activityName || 'General Therapy'
             const key = `${id}__${programName}__${therapyName}__${tIndex}`
 
-            const rawExercises = therapy.exercises || therapy.activities || therapy.activityList || therapy.therapyActivities || (Array.isArray(therapy) ? therapy : [])
-            const exercisesArr = Array.isArray(rawExercises) ? rawExercises : []
+            const exercisesArr = (
+              Array.isArray(therapy.exercises) ? therapy.exercises :
+                Array.isArray(therapy.activities) ? therapy.activities :
+                  Array.isArray(therapy.activityList) ? therapy.activityList :
+                    Array.isArray(therapy.therapyActivities) ? therapy.therapyActivities :
+                      (Array.isArray(therapy) ? therapy : [])
+            )
 
             mapped[key] = {
               checked: true,
@@ -1407,7 +1441,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                 frequencyCount: parseFrequency(ex.frequency || ex.frequencyCount).count,
                 frequencyUnit: parseFrequency(ex.frequency || ex.frequencyCount).unit,
                 notes: ex.notes ?? '',
-                duration: ex.duration || ex.activityDuration || ex.durationTime || '',
+                duration: ex.duration || ex.activityDuration || '',
                 video: ex.video || ex.videoUrl || '',
                 _checked: true,
               }))
@@ -1417,8 +1451,8 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
 
         const count = Object.keys(mapped).length
         console.log(`✅ Package ${id} mapped with ${count} therapy/exercise blocks`)
-        if (count > 0) toast.success(`Loaded package contents successfully.`)
-        else toast.warning(`Package "${data.packageName || 'Selected'}" contains no exercise data.`)
+        if (count > 0) toastSuccess(`Loaded package contents successfully.`)
+        else toastWarning(`Package "${data.packageName || 'Selected'}" contains no exercise data.`)
 
         setTherophyDataState(prev => ({ ...prev, ...mapped }))
 
@@ -1987,6 +2021,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                           return (
                             <TherapyBlock
                               key={key} therapyKey={key} therapy={ts.therapyName || key}
+                              programName={ts.programName}
                               checked={ts.checked} onToggle={toggleTherophyData}
                               exercises={ts.exercises || []}
                               onUpdateExercises={updated => updateTherophyDataExercises(key, updated)}
