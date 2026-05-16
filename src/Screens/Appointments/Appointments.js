@@ -201,6 +201,7 @@ const Appointments = ({ searchTerm = '' }) => {
                     <CDropdown className="themed-dropdown-menu" style={{ cursor: 'pointer' }}>
                       <CDropdownToggle
                         size="sm"
+                        disabled={loading}
                         className="d-flex align-items-center gap-2"
                         style={{
                           backgroundColor: COLORS.bgcolor,
@@ -210,6 +211,7 @@ const Appointments = ({ searchTerm = '' }) => {
                           fontWeight: '600',
                           fontSize: '13px',
                           padding: '6px 14px',
+                          cursor: loading ? 'not-allowed' : 'pointer',
                         }}
                       >
                         <span>{getDropdownLabel()}</span>
@@ -357,6 +359,7 @@ const Appointments = ({ searchTerm = '' }) => {
                   <CDropdown className="themed-dropdown-menu" style={{ cursor: 'pointer' }}>
                     <CDropdownToggle
                       size="sm"
+                      disabled={loading}
                       className="d-flex align-items-center gap-2"
                       style={{
                         backgroundColor: COLORS.white,
@@ -366,6 +369,7 @@ const Appointments = ({ searchTerm = '' }) => {
                         fontWeight: '600',
                         fontSize: '13px',
                         padding: '6px 14px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
                       }}
                     >
                       {selectedBranch ? selectedBranch.branchName : 'All Branches'}

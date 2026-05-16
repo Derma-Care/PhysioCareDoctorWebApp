@@ -859,7 +859,8 @@ export const getTherapists = async (clinicId, branchId) => {
   try {
     const response = await api.get(`${therapistUrl}/${clinicId}/${branchId}`)
     console.log("✅ Therapist API:", response.data)
-    return response.data?.data || []
+    const raw = response.data?.data ?? response.data ?? []
+    return Array.isArray(raw) ? raw : []
   } catch (error) {
     console.error("❌ Therapist API Error:", error)
     return []

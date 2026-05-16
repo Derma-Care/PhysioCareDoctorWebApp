@@ -550,8 +550,8 @@ const DoctorProfile = () => {
 
   const TABS = [
     { key: 1, label: '👤 Doctor Info' },
-    { key: 3, label: '⭐ Ratings' },
-    { key: 4, label: '🛠 Services' },
+    // { key: 3, label: '⭐ Ratings' },
+    // { key: 4, label: '🛠 Services' },
     { key: 2, label: '🕐 Slots' },
   ]
 
@@ -609,7 +609,7 @@ const DoctorProfile = () => {
                       }}
                       style={{
                         background: doctorDetails?.isAvailable ? COLORS.rose : COLORS.green,
-                        color: '#fff', border: 'none', borderRadius: 8, padding: '4px 12px',
+                        color: 'var(--text-color)', border: 'none', borderRadius: 8, padding: '4px 12px',
                         fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
                       }}
                     >
@@ -653,10 +653,10 @@ const DoctorProfile = () => {
                     <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.inClinicFee || 0}</div>
                     <div className="dp-hero-stat-lbl">In-clinic fee</div>
                   </div>
-                  <div className="dp-hero-stat">
+                  {/* <div className="dp-hero-stat">
                     <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.vedioConsultationFee || 0}</div>
                     <div className="dp-hero-stat-lbl">Video fee</div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

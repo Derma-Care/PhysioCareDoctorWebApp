@@ -161,6 +161,7 @@ const RadioBtn = ({ label, emoji, value, active, onClick }) => (
 const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChange, hasError, onRefresh }) => {
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState(false)
+  const [hoveredTherapist, setHoveredTherapist] = useState(null)
 
   const filtered = therapists.filter(t => {
     const q = search.toLowerCase()
@@ -173,7 +174,7 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
     if (isSelected(t.therapistId)) {
       onChange(selectedTherapists.filter(st => st.therapistId !== t.therapistId))
     } else {
-      onChange([...selectedTherapists, { therapistId: t.therapistId, fullName: t.fullName }])
+      onChange([...selectedTherapists, t])
     }
   }
 
@@ -245,9 +246,9 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
       {/* Dropdown */}
       {open && !loading && (
         <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff',
+          position: 'absolute', bottom: '100%', left: 0, right: 0, background: '#fff',
           border: '1px solid #b6cfe8', borderRadius: 8, maxHeight: 220, overflowY: 'auto',
-          zIndex: 1000, boxShadow: '0 4px 16px rgba(27,79,138,0.12)', marginTop: 2,
+          zIndex: 1000, boxShadow: '0 -4px 16px rgba(27,79,138,0.12)', marginBottom: 2,
         }}>
           {filtered.length > 0 ? filtered.map((t, i) => {
             const sel = isSelected(t.therapistId)
@@ -272,9 +273,38 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
                 }}>
                   {sel && <span style={{ color: '#fff', fontSize: '0.6rem', fontWeight: 700 }}>✓</span>}
                 </div>
-                <span style={{ flex: 1 }}>
-                  <strong style={{ color: '#1B4F8A' }}>{t.therapistId}</strong>
-                  <span style={{ color: '#1a3a5c' }}> — {t.fullName}</span>
+                <span 
+                  style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}
+                  onMouseLeave={() => setHoveredTherapist(null)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <strong style={{ color: '#1B4F8A', fontSize: '0.9rem' }}>{t.therapistId}</strong>
+                    <span style={{ color: '#1a3a5c', fontWeight: 600 }}>— {t.fullName}</span>
+                    
+                    {/* Service Type Badge */}
+                    {Array.isArray(t.services) && t.services.length > 0 && (
+                      <span style={{ background: '#e6fffa', border: '1px solid #81e6d9', padding: '2px 8px', borderRadius: 12, fontSize: '0.65rem', color: '#234e52', fontWeight: 700, textTransform: 'capitalize' }}>
+                        {t.services.join(', ')}
+                      </span>
+                    )}
+
+                    {/* View Button placed at the end */}
+                    <div 
+                      style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}
+                      onMouseEnter={() => setHoveredTherapist(t.therapistId)}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <span style={{ cursor: 'pointer', color: '#319795', fontSize: '0.7rem', padding: '2px 8px', background: '#e6fffa', borderRadius: 12, border: '1px solid #81e6d9', fontWeight: 700 }}>👁️ View Details</span>
+                    </div>
+                  </div>
+                  
+                  {/* Expandable Line: Specialization and Expertise */}
+                  {hoveredTherapist === t.therapistId && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: '0.72rem', color: '#4a5568', background: '#f8fafc', padding: '6px 10px', borderRadius: 6, marginTop: 4 }}>
+                      <span><strong style={{ color: '#718096' }}>Specialization:</strong> {Array.isArray(t.specializations) && t.specializations.length > 0 ? t.specializations.join(', ') : 'N/A'}</span>
+                      <span><strong style={{ color: '#718096' }}>Expertise:</strong> {Array.isArray(t.expertiseAreas) && t.expertiseAreas.length > 0 ? t.expertiseAreas.join(', ') : 'N/A'}</span>
+                    </div>
+                  )}
                 </span>
                 {sel && <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.8rem' }}>Selected</span>}
               </div>
@@ -1236,6 +1266,15 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     fetchDataByMode()
   }, [idsReady, clinicId, branchId, mode]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!idsReady) return
+    setLoadingTherapists(true)
+    getTherapists(clinicId, branchId)
+      .then(data => setTherapists(Array.isArray(data) ? data : []))
+      .catch(err => console.error('❌ Error fetching therapists:', err))
+      .finally(() => setLoadingTherapists(false))
+  }, [idsReady, clinicId, branchId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const getServiceByMode = async (m, cId, bId) => {
     switch (m) {
       case 'package': return await getPackagesByBranch(cId, bId)
@@ -1248,29 +1287,16 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
 
   const fetchDataByMode = async () => {
     console.log(`🌐 fetchDataByMode called. Mode: ${mode}, Clinic: ${clinicId}, Branch: ${branchId}`)
-    setLoadingTherapists(true)
+    setPrograms([]) // Clear stale data before fetching new mode
     setLoadingPrograms(true)
     try {
-      const [therapistRes, serviceRes] = await Promise.allSettled([
-        getTherapists(clinicId, branchId),
-        getServiceByMode(mode, clinicId, branchId),
-      ])
-
-      if (therapistRes.status === 'fulfilled') {
-        console.log(`✅ Fetched ${therapistRes.value?.length || 0} therapists`)
-        setTherapists(Array.isArray(therapistRes.value) ? therapistRes.value : [])
-      }
-
-      if (serviceRes.status === 'fulfilled') {
-        console.log(`✅ Fetched ${serviceRes.value?.length || 0} ${mode}(s)`)
-        setPrograms(Array.isArray(serviceRes.value) ? serviceRes.value : [])
-      } else {
-        console.error(`❌ Failed to fetch ${mode}s:`, serviceRes.reason)
-      }
+      const serviceRes = await getServiceByMode(mode, clinicId, branchId)
+      console.log(`✅ Fetched ${serviceRes?.length || 0} ${mode}(s)`)
+      setPrograms(Array.isArray(serviceRes) ? serviceRes : [])
     } catch (err) {
       console.error('❌ fetchDataByMode unexpected error:', err)
+      setPrograms([])
     } finally {
-      setLoadingTherapists(false)
       setLoadingPrograms(false)
     }
   }
@@ -1329,7 +1355,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     setLoadingByItemId(prev => ({ ...prev, [id]: true }))
     try {
       let data = null
-      
+
       // Check if we already have programs/activities in the object to avoid failing API calls
       const hasAlreadyNested = (o) => {
         if (!o) return false
@@ -1631,7 +1657,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   }
 
   const handleModeChange = (val) => {
-    console.log(`🔄 Mode manually changed to: ${val}. Triggering fetch...`)
+    console.log(`🔄 Mode manually changed to: ${val}.`)
     setMode(val)
     setSelectedItems(new Map())
     setBulkPending(new Set())
@@ -1642,8 +1668,9 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
     setTherophyDataState({})
     restoredFromSeedRef.current = false
     setErrors({})
-    // Explicitly call fetch to ensure it happens immediately
-    fetchDataByMode()
+    // Removed explicit fetchDataByMode() call here because setMode is asynchronous.
+    // The useEffect listening to [mode] will automatically trigger fetchDataByMode
+    // with the correct updated mode value exactly once.
   }
 
   /* ── Validate ── only flag therapies error when user has ZERO checked ── */

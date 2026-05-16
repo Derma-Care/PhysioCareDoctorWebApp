@@ -1,5 +1,5 @@
-export const ipUrl = 'http://3.111.28.174:9090'
-// export const ipUrl = 'http://3.7.165.97:9090'
+// export const ipUrl = 'http://3.111.28.174:9090'
+export const ipUrl = 'http://3.7.165.97:9090'
 
 
 export const baseUrl = `${ipUrl}/api/physiotherapy-doctor`
