@@ -130,7 +130,7 @@ const generatePopover = (appt) => (
         ["Name", appt.name],
         ["Age & Gender", `${appt.age}, ${appt.gender}`],
         ["Mobile", appt.patientMobileNumber || appt.mobileNumber],
-        ["Branch", `${appt.branchName}`],
+        ["Branch", `${appt.branchname}`],
         ["Doctor", appt.doctorName],
         ["Date & Time", `${formatFullDate(new Date(appt.serviceDate))}, ${appt.servicetime}`],
         ["Status", appt.status],

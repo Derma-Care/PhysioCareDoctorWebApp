@@ -139,7 +139,8 @@ export const getAppointments = async (status) => {
   const hospitalId = localStorage.getItem('hospitalId')
   const branchId = localStorage.getItem('branchId')
   try {
-    const response = await api.get(`${appointmentsbaseUrl}/${hospitalId}/000101/${doctorId}/${status}`)
+    const formattedStatus = status ? status.toLowerCase() : 'all';
+    const response = await api.get(`${appointmentsbaseUrl}/${hospitalId}/${doctorId}/${formattedStatus}`)
     console.log(`📡 getAppointments(${status}) raw:`, response.data)
 
     // Check various common locations for the array

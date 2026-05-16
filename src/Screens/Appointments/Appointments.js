@@ -23,7 +23,6 @@ import { getAppointments } from '../../Auth/Auth'
 import { useDoctorContext } from '../../Context/DoctorContext'
 
 const tabLabels = {
-  all: 'All',
   pending: 'Pending',
   confirmed: 'Confirmed',
   dueForInvestigation: 'Due for Investigation',
@@ -41,12 +40,12 @@ const tabLabels = {
 }
 
 const tabToStatusMap = {
-  all: 'All',
   pending: 'Pending',
   confirmed: 'Confirmed',
   cancelled: 'Cancelled',
   completed: 'Completed',
   inprogress: 'In-Progress',
+  "on-going": 'On-Going',
   noshow: 'No Reply',
   dueForInvestigation: 'Due for Investigation',
   investigationDone: 'Investigation Done',
@@ -61,7 +60,7 @@ const Appointments = ({ searchTerm = '' }) => {
   const { doctorDetails } = useDoctorContext()
   const branches = doctorDetails?.branches || []
 
-  const [activeTab, setActiveTab] = useState('all')
+  const [activeTab, setActiveTab] = useState('confirmed')
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState('All')
@@ -91,26 +90,9 @@ const Appointments = ({ searchTerm = '' }) => {
     isFetchingRef.current = true
     setLoading(true)
     try {
-      if (activeTab === 'all') {
-        const [upcoming, active, completed, cancelled, drop] = await Promise.all([
-          getAppointments('Confirmed'),
-          getAppointments('In-Progress'),
-          getAppointments('Completed'),
-          getAppointments('Cancelled'),
-          getAppointments('Drop'),
-        ])
-        setAppointments([
-          ...(upcoming || []),
-          ...(active || []),
-          ...(completed || []),
-          ...(cancelled || []),
-          ...(drop || []),
-        ])
-      } else {
-        const status = tabToStatusMap[activeTab]
-        const data = await getAppointments(status)
-        setAppointments(data || [])
-      }
+      const status = tabToStatusMap[activeTab]
+      const data = await getAppointments(status)
+      setAppointments(data || [])
     } catch (err) {
       console.error('Error fetching appointments:', err)
     } finally {
@@ -156,8 +138,7 @@ const Appointments = ({ searchTerm = '' }) => {
   const totalPages = Math.ceil(filteredPatients.length / itemsPerPage)
 
   const getDropdownLabel = () => {
-    if (activeTab === 'all') return 'All'
-    return tabLabels[activeTab]
+    return tabLabels[activeTab] || 'Select Status'
   }
 
   // helper: is this filter button active?
@@ -237,17 +218,7 @@ const Appointments = ({ searchTerm = '' }) => {
                         </span>
                       </CDropdownToggle>
                       <CDropdownMenu placement="end" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                        <CDropdownItem
-                          active={activeTab === 'all'}
-                          onClick={() => {
-                            setActiveTab('all')
-                            setFilter('All')
-                            setSelectedBranch(null)
-                          }}
-                        >
-                          All
-                        </CDropdownItem>
-                        {Object.keys(tabLabels).filter(k => k !== 'all').map((key) => (
+                        {Object.keys(tabLabels).map((key) => (
                           <CDropdownItem
                             key={key}
                             active={activeTab === key}
