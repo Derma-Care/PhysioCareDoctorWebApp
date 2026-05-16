@@ -10,7 +10,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000, // 15 sec timeout to detect slow internet
+  timeout: 60000, // 15 sec timeout to detect slow internet
 })
 
 // Request Interceptor
@@ -60,7 +60,7 @@ api.interceptors.response.use(
     } else {
       // No response → Network/server issue
       if (err.code === 'ECONNABORTED') {
-       // showInfo('Request timed out. Please check your internet connection.', { title: 'Timeout' })
+        // showInfo('Request timed out. Please check your internet connection.', { title: 'Timeout' })
       } else {
         //   showInfo('Network error. Please check your connection.', { title: 'Network Error' })
       }
