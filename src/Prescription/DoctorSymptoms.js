@@ -323,7 +323,7 @@ const DoctorSymptoms = ({ seed = {}, onNext, sidebarWidth = 0, patientData, setF
     onNext?.(payload)
   }
 
-  const canProceed = !!complaints && complaints.trim() !== ''
+  const canProceed = true // !!complaints && complaints.trim() !== ''
 
   return (
     <CCard className="border-1 bg-white mb-5" style={{ backgroundColor: 'transparent' }}>
