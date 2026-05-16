@@ -134,13 +134,13 @@ export const getTodayFutureAppointments = async () => {
   }
 }
 
-export const getAppointments = async (status) => {
+export const getAppointments = async (status, branchId) => {
   const doctorId = localStorage.getItem('doctorId')
   const hospitalId = localStorage.getItem('hospitalId')
-  const branchId = localStorage.getItem('branchId')
+  const effectiveBranchId = branchId
   try {
-    const formattedStatus = status ? status.toLowerCase() : 'all';
-    const response = await api.get(`${appointmentsbaseUrl}/${hospitalId}/${doctorId}/${formattedStatus}`)
+    const formattedStatus = status.toLowerCase();
+    const response = await api.get(`${appointmentsbaseUrl}/${hospitalId}/${effectiveBranchId}/${doctorId}/${formattedStatus}`)
     console.log(`📡 getAppointments(${status}) raw:`, response.data)
 
     // Check various common locations for the array
@@ -159,10 +159,18 @@ export const getAppointments = async (status) => {
       }
     }
 
-    return Array.isArray(data) ? data : []
+    return {
+      success: true,
+      data: Array.isArray(data) ? data : [],
+      message: response?.data?.message || ""
+    }
   } catch (error) {
     console.error('❌ Error fetching appointments:', error)
-    return []
+    return {
+      success: false,
+      data: [],
+      message: error.response?.data?.message || error.message || "Failed to fetch appointments"
+    }
   }
 }
 

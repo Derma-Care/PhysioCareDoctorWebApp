@@ -28,7 +28,7 @@ import { capitalizeFirst, capitalizeWords } from '../utils/CaptalZeWord'
 import './AppHeader.css'
 
 const AppHeader = () => {
-  const { patientData, setTodayAppointments, todayAppointments } = useDoctorContext()
+  const { patientData, setTodayAppointments, todayAppointments, clinicDetails } = useDoctorContext()
 
   useEffect(() => {
     appointmentDetails()
@@ -42,7 +42,6 @@ const AppHeader = () => {
   }
 
   const headerRef = useRef()
-  const [clinic, setClinic] = useState(null)
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
@@ -53,17 +52,6 @@ const AppHeader = () => {
     })
   }, [])
 
-  useEffect(() => {
-    const fetchClinic = async () => {
-      try {
-        const res = await getClinicDetails()
-        setClinic(res)
-      } catch (err) {
-        console.error('Error fetching clinic:', err)
-      }
-    }
-    fetchClinic()
-  }, [])
 
   const { day, date, time } = getDateParts()
   const [searchTerm, setSearchTerm] = useState('')
@@ -166,7 +154,7 @@ const AppHeader = () => {
               padding: '0 8px',
             }}
           >
-            {clinic ? (
+            {clinicDetails ? (
               <>
                 <h5
                   style={{
@@ -177,7 +165,7 @@ const AppHeader = () => {
                     letterSpacing: '0.3px',
                   }}
                 >
-                  {capitalizeWords(clinic.name) || 'Clinic Name'}
+                  {capitalizeWords(clinicDetails.name) || 'Clinic Name'}
                 </h5>
               </>
             ) : (
