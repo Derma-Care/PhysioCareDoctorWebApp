@@ -151,24 +151,189 @@ const tableStyle = { width: '100%', borderCollapse: 'collapse', fontSize: '0.78r
 const thStyle = { padding: '6px 10px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.72rem', background: T.bgcolor, color: T.white }
 const tdStyle = (i) => ({ padding: '5px 10px', borderBottom: `1px solid ${T.border}`, background: i % 2 === 0 ? T.bgLight : T.white })
 
+const renderAvailableDetails = (ex) => {
+  const details = []
+  
+  if (ex.sets !== undefined && ex.sets !== null && String(ex.sets).trim() !== '' && String(ex.sets).trim() !== '0') {
+    details.push(
+      <div key="sets" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Sets:</strong>
+        <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg="#fff" />
+      </div>
+    )
+  }
+  
+  const repsVal = ex.repetitions ?? ex.reps
+  if (repsVal !== undefined && repsVal !== null && String(repsVal).trim() !== '' && String(repsVal).trim() !== '0') {
+    details.push(
+      <div key="reps" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Reps:</strong>
+        <Chip label={`🔄 ${repsVal}`} color={T.teal} bg="#fff" />
+      </div>
+    )
+  }
+
+  if (ex.bodyPart && String(ex.bodyPart).trim() !== '') {
+    details.push(
+      <div key="bodyPart" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Body Part:</strong>
+        <Chip label={`🦴 ${ex.bodyPart}`} color={T.bgcolor} bg="#fff" />
+      </div>
+    )
+  }
+
+  if (ex.intensity && String(ex.intensity).trim() !== '') {
+    details.push(
+      <div key="intensity" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Intensity:</strong>
+        <span style={{ background: '#fef3c7', color: '#d97706', border: '1px solid #fde68a', borderRadius: 20, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700 }}>⚡ {ex.intensity}</span>
+      </div>
+    )
+  }
+
+  if (ex.assistanceLevel && String(ex.assistanceLevel).trim() !== '') {
+    details.push(
+      <div key="assistance" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Assistance Level:</strong>
+        <span style={{ background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: 20, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700 }}>🤝 {ex.assistanceLevel}</span>
+      </div>
+    )
+  }
+
+  if (ex.machine && String(ex.machine).trim() !== '') {
+    details.push(
+      <div key="machine" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Machine/Equipment:</strong>
+        <span style={{ color: '#374151', fontWeight: 600 }}>🛠️ {ex.machine}</span>
+      </div>
+    )
+  }
+
+  if (ex.technique && String(ex.technique).trim() !== '') {
+    details.push(
+      <div key="technique" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Technique:</strong>
+        <span style={{ color: '#374151' }}>{ex.technique}</span>
+      </div>
+    )
+  }
+
+  if (ex.area && String(ex.area).trim() !== '') {
+    details.push(
+      <div key="area" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Area:</strong>
+        <span style={{ color: '#374151' }}>📍 {ex.area}</span>
+      </div>
+    )
+  }
+
+  const metricVal = ex.metric
+  const valVal = ex.value
+  const unitVal = ex.unit
+  if (metricVal && String(metricVal).trim() !== '') {
+    details.push(
+      <div key="metric" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>{metricVal}:</strong>
+        <span style={{ color: '#111827', fontWeight: 600 }}>{valVal} {unitVal}</span>
+      </div>
+    )
+  }
+
+  const notesVal = ex.notes || ex.instructions
+  const notesElement = (notesVal && String(notesVal).trim() !== '') ? (
+    <div key="notes" style={{ width: '100%', marginTop: 4, borderTop: `1px dashed ${T.border}`, paddingTop: 4 }}>
+      <strong>Notes / Instructions:</strong>{' '}
+      <span style={{ color: '#4b5563', fontStyle: 'italic' }}>{notesVal}</span>
+    </div>
+  ) : null
+
+  if (details.length === 0 && !notesElement) {
+    return <span style={{ color: T.textLight, fontStyle: 'italic' }}>No additional details available</span>
+  }
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 20px', fontSize: '0.75rem', alignItems: 'center' }}>
+      {details}
+      {notesElement}
+    </div>
+  )
+}
+
 const ExerciseTableDisplay = ({ exercises }) => {
+  const [expandedRows, setExpandedRows] = useState({})
+
   if (!exercises || exercises.length === 0) return <div style={{ padding: '8px 12px', color: T.textLight, fontStyle: 'italic', fontSize: '0.78rem' }}>No exercises</div>
+
+  const toggleRow = (idx) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }))
+  }
+
+  const hasSessions = exercises.some(ex => {
+    const s = ex.noOfSessions ?? ex.session ?? ex.sessions
+    return s !== undefined && s !== null && String(s).trim() !== ''
+  })
+  const hasDuration = exercises.some(ex => {
+    const d = ex.duration ?? ex.activityDuration ?? ex.activityduration
+    return d !== undefined && d !== null && String(d).trim() !== ''
+  })
+
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={tableStyle}>
-        <thead><tr>{['#', 'Exercise Name', 'Sessions', 'Sets', 'Reps', 'Frequency', 'Notes'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
+        <thead>
+          <tr>
+            <th style={thStyle}>#</th>
+            <th style={thStyle}>Exercise Name</th>
+            {hasSessions && <th style={{ ...thStyle, textAlign: 'center' }}>Sessions</th>}
+            {hasDuration && <th style={{ ...thStyle, textAlign: 'center' }}>Duration</th>}
+            <th style={{ ...thStyle, textAlign: 'center' }}>Action</th>
+          </tr>
+        </thead>
         <tbody>
-          {exercises.map((ex, i) => (
-            <tr key={i}>
-              <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
-              <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</td>
-              <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(ex.noOfSessions ?? ex.session ?? ex.sessions)}</td>
-              <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
-              <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.repetitions || ex.reps) ? <Chip label={`🔄 ${ex.repetitions || ex.reps}`} color={T.teal} bg={T.tealLight} /> : '—'}</td>
-              <td style={{ ...tdStyle(i), whiteSpace: 'nowrap' }}>{ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600, color: T.bgcolor }}>📆 {ex.frequency}</span> : '—'}</td>
-              <td style={{ ...tdStyle(i), maxWidth: 140 }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.notes}>{ex.notes || '—'}</div></td>
-            </tr>
-          ))}
+          {exercises.map((ex, i) => {
+            const isExpanded = !!expandedRows[i]
+            const sessions = ex.noOfSessions ?? ex.session ?? ex.sessions
+            const duration = ex.duration ?? ex.activityDuration ?? ex.activityduration
+
+            return (
+              <React.Fragment key={i}>
+                <tr>
+                  <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
+                  <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</td>
+                  {hasSessions && <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(sessions)}</td>}
+                  {hasDuration && <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(duration)}</td>}
+                  <td style={{ ...tdStyle(i), textAlign: 'center' }}>
+                    <button
+                      onClick={() => toggleRow(i)}
+                      style={{
+                        background: T.bgcolor,
+                        color: T.white,
+                        border: 'none',
+                        borderRadius: 4,
+                        padding: '3px 8px',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      {isExpanded ? 'Hide' : 'View'}
+                    </button>
+                  </td>
+                </tr>
+                {isExpanded && (
+                  <tr>
+                    <td colSpan={3 + (hasSessions ? 1 : 0) + (hasDuration ? 1 : 0)} style={{ padding: '8px 12px', background: T.bgLight, borderBottom: `1px solid ${T.border}` }}>
+                      {renderAvailableDetails(ex)}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            )
+          })}
         </tbody>
       </table>
     </div>
@@ -198,87 +363,156 @@ const SessionMetaBar = ({ sess, therapistId, therapistName }) => {
 }
 
 const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) => {
+  const [expandedRows, setExpandedRows] = useState({})
+
   if (!sessionsList || sessionsList.length === 0) return <div style={{ padding: '12px', textAlign: 'center', color: T.textLight, fontSize: '0.8rem' }}>No therapy session data found.</div>
+
+  const allExercises = []
+  sessionsList.forEach((sess) => {
+    const serviceType = (sess.serviceType || '').toLowerCase()
+    
+    const addExercises = (exercisesList, typeName) => {
+      if (Array.isArray(exercisesList)) {
+        exercisesList.forEach(ex => {
+          allExercises.push({
+            ...ex,
+            activityType: ex.activityType || typeName || sess.packageName || sess.programName || sess.therapyName || sess.serviceType || '—'
+          })
+        })
+      }
+    }
+
+    if (serviceType === 'package') {
+      const programs = sess.programs || sess.programList || []
+      programs.forEach(prog => {
+        const therapies = prog.therapyData || prog.therophyData || prog.activities || []
+        therapies.forEach(therapy => {
+          addExercises(therapy.exercises, therapy.therapyName)
+        })
+      })
+    } else if (serviceType === 'program') {
+      const therapies = sess.therapyData ?? sess.therophyData ?? sess.activities ?? sess.programActivities ?? []
+      therapies.forEach(t => {
+        addExercises(t.exercises, t.therapyName)
+      })
+    } else if (serviceType === 'therapy') {
+      addExercises(sess.exercises, sess.therapyName)
+    } else if (serviceType === 'exercise') {
+      addExercises(sess.exercises, 'Exercise')
+    } else {
+      const therapies = sess.therapyData || []
+      therapies.forEach(t => {
+        addExercises(t.exercises, t.therapyName)
+      })
+      if (sess.exercises) {
+        addExercises(sess.exercises, sess.serviceType)
+      }
+    }
+  })
+
+  if (allExercises.length === 0) return <div style={{ padding: '12px', textAlign: 'center', color: T.textLight, fontSize: '0.8rem' }}>No exercises/activities found.</div>
+
+  const toggleRow = (idx) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }))
+  }
+
+  const uniqueTherapistNames = Array.from(new Set(
+    sessionsList
+      .map(s => s.therapistName || therapistName)
+      .filter(name => name !== undefined && name !== null && name.trim() !== '')
+  ))
+  const uniqueTherapistIds = Array.from(new Set(
+    sessionsList
+      .map(s => s.therapistId || therapistId)
+      .filter(id => id !== undefined && id !== null && String(id).trim() !== '')
+  ))
+
   return (
-    <>
-      {sessionsList.map((sess, si) => {
-        const serviceType = (sess.serviceType || '').toLowerCase()
-        const isLast = si === sessionsList.length - 1
+    <div style={{ border: `1.5px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
+      {/* Session Header Info if available */}
+      {(uniqueTherapistNames.length > 0 || uniqueTherapistIds.length > 0) && (
+        <div style={{ padding: '10px 14px', background: T.bgLight, borderBottom: `1px solid ${T.border}`, fontSize: '0.78rem', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          {uniqueTherapistNames.length > 0 && (
+            <div>
+              <strong>Therapist Name(s):</strong>{' '}
+              <span style={{ color: T.textMid }}>{uniqueTherapistNames.join(', ')}</span>
+            </div>
+          )}
+          {uniqueTherapistIds.length > 0 && (
+            <div>
+              <strong>Therapist ID(s):</strong>{' '}
+              <span style={{ color: T.textMid }}>{uniqueTherapistIds.join(', ')}</span>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div style={{ overflowX: 'auto' }}>
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>#</th>
+              <th style={thStyle}>Activity Name</th>
+              <th style={thStyle}>Type</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Sessions</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Duration</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Frequency</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allExercises.map((ex, i) => {
+              const isExpanded = !!expandedRows[i]
+              const sessions = ex.noOfSessions ?? ex.session ?? ex.sessions
+              const duration = ex.duration ?? ex.activityDuration ?? ex.activityduration
 
-        if (serviceType === 'package') return (
-          <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
-            <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
-              <span>📦 {sess.packageName || 'Package'}</span>
-            </div>
-            <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
-              <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-              {(Array.isArray(sess.programs) || Array.isArray(sess.programList)) && (Array.isArray(sess.programs) ? sess.programs : sess.programList).map((prog, pIdx) => (
-                <div key={pIdx} style={{ marginBottom: pIdx < (Array.isArray(sess.programs) ? sess.programs : sess.programList).length - 1 ? 14 : 0 }}>
-                  <div style={{ padding: '7px 12px', background: T.bgcolor, borderRadius: '7px 7px 0 0', color: T.white, fontWeight: 700, fontSize: '0.8rem' }}>🎯 {prog.programName || `Program ${pIdx + 1}`}</div>
-                  <div style={{ border: `1.5px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 7px 7px', padding: '10px' }}>
-                    {(Array.isArray(prog.therapyData) || Array.isArray(prog.therophyData) || Array.isArray(prog.activities)) && (prog.therapyData ?? prog.therophyData ?? prog.activities ?? []).map((therapy, tIdx) => (
-                      <TherapyBlock key={tIdx} therapyName={therapy.therapyName} exercises={therapy.exercises || []} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-
-        if (serviceType === 'program') {
-          const therapies = sess.therapyData ?? sess.therophyData ?? sess.activities ?? sess.programActivities ?? []
-          return (
-            <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
-              <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
-                <span>🎯 {sess.programName || 'Program'}</span>
-              </div>
-              <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
-                <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-                {Array.isArray(therapies) && therapies.length > 0
-                  ? therapies.map((t, tIdx) => <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} />)
-                  : <div style={{ color: T.textLight, fontSize: '0.78rem', fontStyle: 'italic', padding: '6px' }}>No therapies found.</div>}
-              </div>
-            </div>
-          )
-        }
-
-        if (serviceType === 'therapy') return (
-          <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
-            <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
-              <span>💊 {sess.therapyName || 'Therapy Session'}</span>
-            </div>
-            <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
-              <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-              {Array.isArray(sess.exercises) && sess.exercises.length > 0
-                ? <div style={{ border: `1px solid ${T.border}`, borderRadius: 7, overflow: 'hidden' }}><ExerciseTableDisplay exercises={sess.exercises} /></div>
-                : <div style={{ color: T.textLight, fontSize: '0.78rem', fontStyle: 'italic', padding: '6px' }}>No exercises found.</div>}
-            </div>
-          </div>
-        )
-
-        if (serviceType === 'exercise') return (
-          <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
-            <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
-              <span>🏋️ Exercise Session</span>
-            </div>
-            <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
-              <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-              <ExerciseTableDisplay exercises={sess.exercises || []} />
-            </div>
-          </div>
-        )
-
-        return (
-          <div key={si} style={{ marginBottom: isLast ? 0 : 18 }}>
-            <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-            {Array.isArray(sess.therapyData) && sess.therapyData.map((t, tIdx) => (
-              <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} />
-            ))}
-          </div>
-        )
-      })}
-    </>
+              return (
+                <React.Fragment key={i}>
+                  <tr>
+                    <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
+                    <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</td>
+                    <td style={{ ...tdStyle(i), fontWeight: 500 }}>{ex.activityType || '—'}</td>
+                    <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(sessions)}</td>
+                    <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(duration)}</td>
+                    <td style={{ ...tdStyle(i), textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      {ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600, color: T.bgcolor }}>📆 {ex.frequency}</span> : '—'}
+                    </td>
+                    <td style={{ ...tdStyle(i), textAlign: 'center' }}>
+                      <button
+                        onClick={() => toggleRow(i)}
+                        style={{
+                          background: T.bgcolor,
+                          color: T.white,
+                          border: 'none',
+                          borderRadius: 4,
+                          padding: '3px 8px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        {isExpanded ? 'Hide' : 'View'}
+                      </button>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={7} style={{ padding: '8px 12px', background: T.bgLight, borderBottom: `1px solid ${T.border}` }}>
+                        {renderAvailableDetails(ex)}
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
 
@@ -636,16 +870,14 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   else if (Array.isArray(therapySessionsRaw?.sessions)) sessionsList = therapySessionsRaw.sessions
   if (sessionsList.length === 1 && Array.isArray(sessionsList[0])) sessionsList = sessionsList[0]
 
-  // ─── Exercise Plan ────────────────────────────────────────────────────────
-  // API shape  : record.exercisePlan → { homeAdvice, homeExercises[] }
-  // Internal   : formData.exercisePlan → { homeAdvice, exercises[], homeExercises[] }
   const exercisePlanObj = record.exercisePlan ?? formData?.exercisePlan ?? {}
   const homeExercises = (() => {
+    if (Array.isArray(formData?.exercisePlan?.exercises) && formData.exercisePlan.exercises.length) return formData.exercisePlan.exercises
     if (Array.isArray(exercisePlanObj.homeExercises) && exercisePlanObj.homeExercises.length) return exercisePlanObj.homeExercises
     if (Array.isArray(exercisePlanObj.exercises) && exercisePlanObj.exercises.length) return exercisePlanObj.exercises
     return []
   })()
-  const homeAdvice = exercisePlanObj.homeAdvice ?? ''
+  const homeAdvice = formData?.exercisePlan?.homeAdvice ?? exercisePlanObj.homeAdvice ?? ''
 
   // ─── Follow Up ────────────────────────────────────────────────────────────
   // API shape  : record.followUp → { nextVisitDate, reviewNotes, modifications }
@@ -815,15 +1047,19 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       exercisePlan: {
         homeAdvice,
         homeExercises: homeExercises.map(ex => ({
-          id: ex.id ?? '',
+          id: ex.therapyExercisesId || ex.id || '',
+          therapyExercisesId: ex.therapyExercisesId || ex.id || '',
           name: ex.name ?? ex.exerciseName ?? '',
           sets: String(ex.sets ?? ''),
           reps: String(ex.reps ?? ex.repetitions ?? ''),
-          duration: ex.duration || '10 mins',
+          duration: ex.activityDuration || ex.activityduration || ex.duration || '',
+          // activityDuration: ex.activityDuration || ex.activityduration || ex.duration || '',
           frequency: ex.frequency ?? null,
           instructions: ex.instructions ?? ex.notes ?? '',
           videoUrl: ex.videoUrl ?? ex.youtubeUrl ?? '',
-          thumbnail: ex.thumbnail ?? '',
+          // thumbnail: ex.thumbnail ?? '',
+          // sessions: ex.sessions || ex.session || '',
+          session: ex.sessions || ex.session || '',
         })),
       },
 
@@ -1243,7 +1479,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             {homeExercises.length > 0 && (
               <div style={{ overflowX: 'auto', marginBottom: isValid(homeAdvice) ? 12 : 0 }}>
                 <table style={tableStyle}>
-                  <thead><tr>{['#', 'Exercise', 'Sets', 'Reps', 'Frequency', 'Instructions'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
+                  <thead><tr>{['#', 'Exercise', 'Sets', 'Reps', 'Sessions', 'Act. Duration', 'Frequency', 'Instructions'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
                   <tbody>
                     {homeExercises.map((ex, i) => (
                       <tr key={i}>
@@ -1251,6 +1487,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
                         <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.name || ex.exerciseName || '—'}</td>
                         <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
                         <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.reps || ex.repetitions) ? <Chip label={`🔄 ${ex.reps || ex.repetitions}`} color={T.teal} bg={T.tealLight} /> : '—'}</td>
+                        <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.sessions || ex.session) ? <Chip label={`🗓 ${ex.sessions || ex.session}`} color={T.navy} bg={T.bgLight} /> : '—'}</td>
+                        <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.activityDuration || ex.activityduration || ex.duration) ? <Chip label={`⏱ ${ex.activityDuration || ex.activityduration || ex.duration}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
                         <td style={tdStyle(i)}>{ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600 }}>📆 {ex.frequency}</span> : '—'}</td>
                         <td style={{ ...tdStyle(i), maxWidth: 220 }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions || ex.notes}>{ex.instructions || ex.notes || '—'}</div></td>
                       </tr>

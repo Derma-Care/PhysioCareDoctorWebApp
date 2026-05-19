@@ -6,7 +6,7 @@ import { getTherapyExercises, getTodayAppointments } from '../Auth/Auth'
 /* ─── Empty exercise entry ───────────────────────────────────────────────── */
 const EMPTY_EXERCISE = {
   name: '', sets: '', reps: '', sessions: '', frequencyValue: '', frequencyUnit: 'day',
-  instructions: '', videoUrl: '', thumbnail: '',
+  instructions: '', videoUrl: '', thumbnail: '', activityDuration: '',
 }
 
 /* ─── Frequency unit options ─────────────────────────────────────────────── */
@@ -99,7 +99,7 @@ const labelStyle = {
 
 const gridFive = {
   display: 'grid',
-  gridTemplateColumns: '1fr 1fr 1fr 2fr',
+  gridTemplateColumns: '1fr 1fr 1fr 1.5fr 2fr',
   gap: '16px 20px',
   marginBottom: 16,
 }
@@ -326,13 +326,13 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
   const normaliseSeedExercises = (arr) => {
     if (!Array.isArray(arr)) return []
     return arr.map(ex => {
-      if (ex.frequencyValue !== undefined) return ex
       const match = String(ex.frequency || '').match(/^(\d+)\s*(day|week|month)?/i)
       return {
         ...ex,
-        frequencyValue: match ? match[1] : '',
-        frequencyUnit: match?.[2]?.toLowerCase() || 'day',
-        frequency: undefined,
+        sessions: ex.sessions || ex.session || '',
+        activityDuration: ex.activityDuration || ex.duration || '',
+        frequencyValue: ex.frequencyValue !== undefined ? ex.frequencyValue : (match ? match[1] : ''),
+        frequencyUnit: ex.frequencyUnit !== undefined ? ex.frequencyUnit : (match?.[2]?.toLowerCase() || 'day'),
       }
     })
   }
@@ -449,6 +449,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
           instructions: ex.notes || '',
           videoUrl: ex.video || '',
           thumbnail: ex.image || '',
+          activityDuration: ex.activityDuration || ex.duration || '',
         }
       })
     setExercises(prev => [...prev, ...toAdd])
@@ -756,6 +757,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                                   instructions: exNotes || f.instructions,
                                   videoUrl: exVideo || f.videoUrl,
                                   thumbnail: exImage || f.thumbnail,
+                                  activityDuration: ex.activityDuration || ex.duration || f.activityDuration || '',
                                 }))
                                 setSearch(exName)
                                 setShowDropdown(false)
@@ -835,6 +837,17 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                       min={1} max={500}
                       placeholder="e.g. 10"
                       hasError={!!fieldErrors.sessions}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Act. Duration</label>
+                    <input
+                      value={form.activityDuration || ''}
+                      onChange={e => set('activityDuration')(e.target.value)}
+                      placeholder="e.g. 50 mins"
+                      style={inputStyle}
+                      onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+                      onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
                     />
                   </div>
                   <div style={{ gridColumn: 'span 1' }}>
@@ -924,7 +937,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)', color: '#fff' }}>
-                      {['#', 'Name', 'Sets', 'Reps', 'Sessions', 'Frequency', 'Instructions', 'Video', 'Actions'].map(h => (
+                      {['#', 'Name', 'Sets', 'Reps', 'Sessions', 'Act. Duration', 'Frequency', 'Instructions', 'Video', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
@@ -949,6 +962,11 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                           <td style={{ padding: '10px 14px', textAlign: 'center' }}>
                             {ex.sessions
                               ? <span style={{ background: '#dceeff', color: '#1B4F8A', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>🗓 {ex.sessions}</span>
+                              : '—'}
+                          </td>
+                          <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                            {ex.activityDuration
+                              ? <span style={{ background: '#dceeff', color: '#1B4F8A', borderRadius: 10, padding: '2px 9px', fontWeight: 700, fontSize: '0.78rem' }}>⏱ {ex.activityDuration}</span>
                               : '—'}
                           </td>
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>

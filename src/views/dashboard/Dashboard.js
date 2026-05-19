@@ -352,7 +352,7 @@ const Dashboard = () => {
                           color: COLORS.black,
                         }}
                       >
-                        {item.branchname || 'N/A'}
+                        {item.branchName || 'N/A'}
                       </CTableDataCell>
                       <CTableDataCell style={{ fontSize: '13px', padding: '10px 12px', color: COLORS.black, textTransform: 'capitalize' }}>
                         {item.visitType ? item.visitType.replace(/_/g, ' ').toLowerCase() : 'N/A'}

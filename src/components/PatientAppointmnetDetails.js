@@ -212,13 +212,13 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           diagnosisRows: Array.isArray(d.diagnosisRows)
             ? d.diagnosisRows
             : [{
-                physioDiagnosis: d.physioDiagnosis ?? '',
-                affectedArea: d.affectedArea ?? '',
-                severity: d.severity ?? '',
-                stage: d.stage ?? '',
-                differentialDiagnosis: d.differentialDiagnosis ?? '',
-                notes: d.notes ?? ''
-              }],
+              physioDiagnosis: d.physioDiagnosis ?? '',
+              affectedArea: d.affectedArea ?? '',
+              severity: d.severity ?? '',
+              stage: d.stage ?? '',
+              differentialDiagnosis: d.differentialDiagnosis ?? '',
+              notes: d.notes ?? ''
+            }],
         },
       }
       mergeAndLog('Diagnosis', patch)
@@ -272,13 +272,14 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           homeAdvice: data.exercisePlan?.homeAdvice ?? data.homeAdvice ?? '',
           exercises: rawExercises,
           homeExercises: rawExercises.map(ex => ({
-            id: ex.id ?? ex._id ?? '',
+            therapyExercisesId: ex.therapyExercisesId ?? ex._id ?? '',
             name: ex.name ?? '',
             sets: String(ex.sets ?? ''),
             reps: String(ex.reps ?? ''),
             frequency: ex.frequency ?? '',
             instructions: ex.instructions ?? '',
             videoUrl: ex.videoUrl ?? '',
+            sessions: ex.sessions,
             thumbnail: ex.thumbnail ?? '',
           })),
         },

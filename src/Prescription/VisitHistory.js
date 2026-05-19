@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import FileUploader from './FileUploader'
 import { CSpinner } from '@coreui/react'
-import { getVisitHistoryByPatientIdAndBookingId, getExerciseSessionsWithRecords } from '../Auth/Auth'
+import { getVisitHistoryByPatientIdAndBookingId, getExerciseSessionsWithRecords, getCompletedTherapyRecord } from '../Auth/Auth'
 import ReportDetails from '../components/Reports/Reports'
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────────
@@ -223,30 +223,191 @@ const AnswerBadge = ({ answer }) => {
 }
 
 // ─── Exercise Table ────────────────────────────────────────────────────────────
+const renderAvailableDetails = (ex) => {
+  const details = []
+
+  if (ex.sets !== undefined && ex.sets !== null && String(ex.sets).trim() !== '' && String(ex.sets).trim() !== '0') {
+    details.push(
+      <div key="sets" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Sets:</strong>
+        <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg="#fff" />
+      </div>
+    )
+  }
+
+  const repsVal = ex.repetitions ?? ex.reps
+  if (repsVal !== undefined && repsVal !== null && String(repsVal).trim() !== '' && String(repsVal).trim() !== '0') {
+    details.push(
+      <div key="reps" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Reps:</strong>
+        <Chip label={`🔄 ${repsVal}`} color={T.teal} bg="#fff" />
+      </div>
+    )
+  }
+
+  if (ex.bodyPart && String(ex.bodyPart).trim() !== '') {
+    details.push(
+      <div key="bodyPart" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Body Part:</strong>
+        <Chip label={`🦴 ${ex.bodyPart}`} color={T.bgcolor} bg="#fff" />
+      </div>
+    )
+  }
+
+  if (ex.intensity && String(ex.intensity).trim() !== '') {
+    details.push(
+      <div key="intensity" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Intensity:</strong>
+        <span style={{ background: '#fef3c7', color: '#d97706', border: '1px solid #fde68a', borderRadius: 20, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700 }}>⚡ {ex.intensity}</span>
+      </div>
+    )
+  }
+
+  if (ex.assistanceLevel && String(ex.assistanceLevel).trim() !== '') {
+    details.push(
+      <div key="assistance" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Assistance Level:</strong>
+        <span style={{ background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: 20, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700 }}>🤝 {ex.assistanceLevel}</span>
+      </div>
+    )
+  }
+
+  if (ex.machine && String(ex.machine).trim() !== '') {
+    details.push(
+      <div key="machine" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Machine/Equipment:</strong>
+        <span style={{ color: '#374151', fontWeight: 600 }}>🛠️ {ex.machine}</span>
+      </div>
+    )
+  }
+
+  if (ex.technique && String(ex.technique).trim() !== '') {
+    details.push(
+      <div key="technique" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Technique:</strong>
+        <span style={{ color: '#374151' }}>{ex.technique}</span>
+      </div>
+    )
+  }
+
+  if (ex.area && String(ex.area).trim() !== '') {
+    details.push(
+      <div key="area" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>Area:</strong>
+        <span style={{ color: '#374151' }}>📍 {ex.area}</span>
+      </div>
+    )
+  }
+
+  const metricVal = ex.metric
+  const valVal = ex.value
+  const unitVal = ex.unit
+  if (metricVal && String(metricVal).trim() !== '') {
+    details.push(
+      <div key="metric" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <strong>{metricVal}:</strong>
+        <span style={{ color: '#111827', fontWeight: 600 }}>{valVal} {unitVal}</span>
+      </div>
+    )
+  }
+
+  const notesVal = ex.notes || ex.instructions
+  const notesElement = (notesVal && String(notesVal).trim() !== '') ? (
+    <div key="notes" style={{ width: '100%', marginTop: 4, borderTop: `1px dashed ${T.border}`, paddingTop: 4 }}>
+      <strong>Notes / Instructions:</strong>{' '}
+      <span style={{ color: '#4b5563', fontStyle: 'italic' }}>{notesVal}</span>
+    </div>
+  ) : null
+
+  if (details.length === 0 && !notesElement) {
+    return <span style={{ color: T.textLight, fontStyle: 'italic' }}>No additional details available</span>
+  }
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 20px', fontSize: '0.75rem', alignItems: 'center' }}>
+      {details}
+      {notesElement}
+    </div>
+  )
+}
+
 const ExerciseTableDisplay = ({ exercises }) => {
+  const [expandedRows, setExpandedRows] = useState({})
+
   if (!exercises || exercises.length === 0) return (
     <div style={{ padding: '8px 12px', color: T.textLight, fontStyle: 'italic', fontSize: '0.78rem' }}>No exercises</div>
   )
+
+  const toggleRow = (idx) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }))
+  }
+
+  const hasSessions = exercises.some(ex => {
+    const s = ex.noOfSessions ?? ex.session ?? ex.sessions
+    return s !== undefined && s !== null && String(s).trim() !== ''
+  })
+  const hasDuration = exercises.some(ex => {
+    const d = ex.duration ?? ex.activityDuration ?? ex.activityduration
+    return d !== undefined && d !== null && String(d).trim() !== ''
+  })
+
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={tableStyle}>
         <thead>
-          <tr>{['#', 'Exercise Name', 'Sessions', 'Sets', 'Reps', 'Frequency', 'Notes'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+          <tr>
+            <th style={thStyle}>#</th>
+            <th style={thStyle}>Exercise Name</th>
+            {hasSessions && <th style={{ ...thStyle, textAlign: 'center' }}>Sessions</th>}
+            {hasDuration && <th style={{ ...thStyle, textAlign: 'center' }}>Duration</th>}
+            <th style={{ ...thStyle, textAlign: 'center' }}>Action</th>
+          </tr>
         </thead>
         <tbody>
-          {exercises.map((ex, i) => (
-            <tr key={i}>
-              <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
-              <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</td>
-              <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(ex.noOfSessions ?? ex.session ?? ex.sessions)}</td>
-              <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
-              <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.repetitions || ex.reps) ? <Chip label={`🔄 ${ex.repetitions || ex.reps}`} color={T.teal} bg={T.tealLight} /> : '—'}</td>
-              <td style={{ ...tdStyle(i), whiteSpace: 'nowrap' }}>{ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600, color: T.bgcolor }}>📆 {ex.frequency}</span> : '—'}</td>
-              <td style={{ ...tdStyle(i), maxWidth: 140 }}>
-                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.notes}>{ex.notes || '—'}</div>
-              </td>
-            </tr>
-          ))}
+          {exercises.map((ex, i) => {
+            const isExpanded = !!expandedRows[i]
+            const sessions = ex.noOfSessions ?? ex.session ?? ex.sessions
+            const duration = ex.duration ?? ex.activityDuration ?? ex.activityduration
+
+            return (
+              <React.Fragment key={i}>
+                <tr>
+                  <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
+                  <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</td>
+                  {hasSessions && <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(sessions)}</td>}
+                  {hasDuration && <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(duration)}</td>}
+                  <td style={{ ...tdStyle(i), textAlign: 'center' }}>
+                    <button
+                      onClick={() => toggleRow(i)}
+                      style={{
+                        background: T.bgcolor,
+                        color: T.white,
+                        border: 'none',
+                        borderRadius: 4,
+                        padding: '3px 8px',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      {isExpanded ? 'Hide' : 'View'}
+                    </button>
+                  </td>
+                </tr>
+                {isExpanded && (
+                  <tr>
+                    <td colSpan={3 + (hasSessions ? 1 : 0) + (hasDuration ? 1 : 0)} style={{ padding: '8px 12px', background: T.bgLight, borderBottom: `1px solid ${T.border}` }}>
+                      {renderAvailableDetails(ex)}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            )
+          })}
         </tbody>
       </table>
     </div>
@@ -282,120 +443,177 @@ const SessionMetaBar = ({ sess, therapistId, therapistName }) => {
 
 // ─── Therapy Sessions Display ──────────────────────────────────────────────────
 const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName, onViewSessions }) => {
+  const [expandedRows, setExpandedRows] = useState({})
+
   if (!sessionsList || sessionsList.length === 0) return (
     <div style={{ padding: '12px', textAlign: 'center', color: T.textLight, fontSize: '0.8rem' }}>No therapy session data found.</div>
   )
+
+  const allExercises = []
+  sessionsList.forEach((sess) => {
+    const serviceType = (sess.serviceType || '').toLowerCase()
+
+    const addExercises = (exercisesList, typeName) => {
+      if (Array.isArray(exercisesList)) {
+        exercisesList.forEach(ex => {
+          allExercises.push({
+            ...ex,
+            activityType: ex.activityType || typeName || sess.packageName || sess.programName || sess.therapyName || sess.serviceType || '—'
+          })
+        })
+      }
+    }
+
+    if (serviceType === 'package') {
+      const programs = sess.programs || sess.programList || []
+      programs.forEach(prog => {
+        const therapies = prog.therapyData || prog.therophyData || prog.activities || []
+        therapies.forEach(therapy => {
+          addExercises(therapy.exercises, therapy.therapyName)
+        })
+      })
+    } else if (serviceType === 'program') {
+      const therapies = sess.therapyData ?? sess.therophyData ?? sess.activities ?? sess.programActivities ?? []
+      therapies.forEach(t => {
+        addExercises(t.exercises, t.therapyName)
+      })
+    } else if (serviceType === 'therapy') {
+      addExercises(sess.exercises, sess.therapyName)
+    } else if (serviceType === 'exercise') {
+      addExercises(sess.exercises, 'Exercise')
+    } else {
+      const therapies = sess.therapyData || []
+      therapies.forEach(t => {
+        addExercises(t.exercises, t.therapyName)
+      })
+      if (sess.exercises) {
+        addExercises(sess.exercises, sess.serviceType)
+      }
+    }
+  })
+
+  if (allExercises.length === 0) return (
+    <div style={{ padding: '12px', textAlign: 'center', color: T.textLight, fontSize: '0.8rem' }}>No exercises/activities found.</div>
+  )
+
+  const toggleRow = (idx) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }))
+  }
+
+  const uniqueTherapistNames = Array.from(new Set(
+    sessionsList
+      .map(s => s.therapistName || therapistName)
+      .filter(name => name !== undefined && name !== null && name.trim() !== '')
+  ))
+  const uniqueTherapistIds = Array.from(new Set(
+    sessionsList
+      .map(s => s.therapistId || therapistId)
+      .filter(id => id !== undefined && id !== null && String(id).trim() !== '')
+  ))
+
+  const SessionsBtn = () => (
+    <button
+      onClick={() => onViewSessions && onViewSessions(sessionsList[0])}
+      style={{
+        background: T.orange, color: T.bgcolor, border: 'none',
+        borderRadius: 6, padding: '4px 12px', fontSize: '0.72rem',
+        fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      }}
+      onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+      onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+    >
+      📊 Sessions
+    </button>
+  )
+
   return (
-    <>
-      {sessionsList.map((sess, si) => {
-        const serviceType = (sess.serviceType || '').toLowerCase()
-        const isLast = si === sessionsList.length - 1
-
-        const SessionsBtn = () => (
-          <button
-            onClick={() => onViewSessions && onViewSessions(sess)}
-            style={{
-              background: T.orange, color: T.bgcolor, border: 'none',
-              borderRadius: 6, padding: '4px 12px', fontSize: '0.72rem',
-              fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-          >
-            📊 Sessions
-          </button>
-        )
-
-        if (serviceType === 'package') {
-          return (
-            <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
-              <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
-                <span>📦 {sess.packageName || 'Package'}</span>
-                <SessionsBtn />
-              </div>
-              <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
-                <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-                {Array.isArray(sess.programs) && sess.programs.length > 0 && sess.programs.map((prog, pIdx) => (
-                  <div key={pIdx} style={{ marginBottom: pIdx < sess.programs.length - 1 ? 14 : 0 }}>
-                    <div style={{ padding: '7px 12px', background: T.bgcolor, borderRadius: '7px 7px 0 0', color: T.white, fontWeight: 700, fontSize: '0.8rem' }}>
-                      🎯 {prog.programName || `Program ${pIdx + 1}`}
-                    </div>
-                    <div style={{ border: `1.5px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 7px 7px', padding: '10px' }}>
-                      {Array.isArray(prog.therapyData ?? prog.therophyData) && (prog.therapyData ?? prog.therophyData ?? []).map((therapy, tIdx) => (
-                        <TherapyBlock key={tIdx} therapyName={therapy.therapyName} exercises={therapy.exercises || []} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+    <div style={{ border: `1.5px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
+      {/* Session Header Info if available */}
+      <div style={{ padding: '10px 14px', background: T.bgLight, borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 16, fontSize: '0.78rem', flexWrap: 'wrap' }}>
+          {uniqueTherapistNames.length > 0 && (
+            <div>
+              <strong>Therapist Name(s):</strong>{' '}
+              <span style={{ color: T.textMid }}>{uniqueTherapistNames.join(', ')}</span>
             </div>
-          )
-        }
-
-        if (serviceType === 'program') {
-          const therapies = sess.therapyData ?? sess.therophyData ?? []
-          return (
-            <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
-              <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
-                <span>🎯 {sess.programName || 'Program'}</span>
-                <SessionsBtn />
-              </div>
-              <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
-                <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-                {Array.isArray(therapies) && therapies.length > 0
-                  ? therapies.map((t, tIdx) => <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} />)
-                  : <div style={{ color: T.textLight, fontSize: '0.78rem', fontStyle: 'italic', padding: '6px' }}>No therapies found.</div>}
-              </div>
+          )}
+          {uniqueTherapistIds.length > 0 && (
+            <div>
+              <strong>Therapist ID(s):</strong>{' '}
+              <span style={{ color: T.textMid }}>{uniqueTherapistIds.join(', ')}</span>
             </div>
-          )
-        }
+          )}
+        </div>
+        <SessionsBtn />
+      </div>
 
-        if (serviceType === 'therapy') {
-          return (
-            <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
-              <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
-                <span>💊 {sess.therapyName || 'Therapy Session'}</span>
-                <SessionsBtn />
-              </div>
-              <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
-                <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-                {Array.isArray(sess.exercises) && sess.exercises.length > 0
-                  ? <div style={{ border: `1px solid ${T.border}`, borderRadius: 7, overflow: 'hidden' }}><ExerciseTableDisplay exercises={sess.exercises} /></div>
-                  : <div style={{ color: T.textLight, fontSize: '0.78rem', fontStyle: 'italic', padding: '6px' }}>No exercises found.</div>}
-              </div>
-            </div>
-          )
-        }
+      <div style={{ overflowX: 'auto' }}>
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>#</th>
+              <th style={thStyle}>Activity Name</th>
+              <th style={thStyle}>Type</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Sessions</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Duration</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Frequency</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allExercises.map((ex, i) => {
+              const isExpanded = !!expandedRows[i]
+              const sessions = ex.noOfSessions ?? ex.session ?? ex.sessions
+              const duration = ex.duration ?? ex.activityDuration ?? ex.activityduration
 
-        if (serviceType === 'exercise') {
-          return (
-            <div key={si} style={{ marginBottom: isLast ? 0 : 20 }}>
-              <div style={{ padding: '8px 14px', background: T.bgcolor, borderRadius: '10px 10px 0 0', color: T.white, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `2px solid ${T.orange}` }}>
-                <span>🏋️ Exercise Session</span>
-                <SessionsBtn />
-              </div>
-              <div style={{ border: `2px solid ${T.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
-                <SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} />
-                <ExerciseTableDisplay exercises={sess.exercises || []} />
-              </div>
-            </div>
-          )
-        }
-
-        return (
-          <div key={si} style={{ marginBottom: isLast ? 0 : 18 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ flex: 1 }}><SessionMetaBar sess={sess} therapistId={therapistId} therapistName={therapistName} /></div>
-              <SessionsBtn />
-            </div>
-            {Array.isArray(sess.therapyData) && sess.therapyData.map((t, tIdx) => (
-              <TherapyBlock key={tIdx} therapyName={t.therapyName} exercises={t.exercises || []} />
-            ))}
-          </div>
-        )
-      })}
-    </>
+              return (
+                <React.Fragment key={i}>
+                  <tr>
+                    <td style={{ ...tdStyle(i), fontWeight: 700, color: T.bgcolor }}>{i + 1}</td>
+                    <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.exerciseName || ex.name || '—'}</td>
+                    <td style={{ ...tdStyle(i), fontWeight: 500 }}>{ex.activityType || '—'}</td>
+                    <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(sessions)}</td>
+                    <td style={{ ...tdStyle(i), textAlign: 'center' }}>{dash(duration)}</td>
+                    <td style={{ ...tdStyle(i), textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      {ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600, color: T.bgcolor }}>📆 {ex.frequency}</span> : '—'}
+                    </td>
+                    <td style={{ ...tdStyle(i), textAlign: 'center' }}>
+                      <button
+                        onClick={() => toggleRow(i)}
+                        style={{
+                          background: T.bgcolor,
+                          color: T.white,
+                          border: 'none',
+                          borderRadius: 4,
+                          padding: '3px 8px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        {isExpanded ? 'Hide' : 'View'}
+                      </button>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={7} style={{ padding: '8px 12px', background: T.bgLight, borderBottom: `1px solid ${T.border}` }}>
+                        {renderAvailableDetails(ex)}
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
 
@@ -411,106 +629,106 @@ const QuestionnaireSection = ({ therapyGroups }) => {
   const validQs = questions.filter(q => isValid(q.question))
 
   return (
-  <AccordionItem 
-  title="📝 Therapy Questionnaire" 
-  badge={`${validGroups.length} categories`}
->
-  {/* Category Tabs */}
-  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-    {validGroups.map(({ category, questions: qs }, idx) => {
-      const vqs = qs.filter(q => isValid(q.question))
-      const ans = vqs.filter(q => isValid(q.answer) && q.answer.toLowerCase() !== 'undefined').length
-      const isActive = activeTab === idx
+    <AccordionItem
+      title="📝 Therapy Questionnaire"
+      badge={`${validGroups.length} categories`}
+    >
+      {/* Category Tabs */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+        {validGroups.map(({ category, questions: qs }, idx) => {
+          const vqs = qs.filter(q => isValid(q.question))
+          const ans = vqs.filter(q => isValid(q.answer) && q.answer.toLowerCase() !== 'undefined').length
+          const isActive = activeTab === idx
 
-      return (
-        <button
-          key={category}
-          onClick={() => setActiveTab(idx)}
-          style={{
-            border: `2px solid ${isActive ? T.orange : T.border}`,
-            borderRadius: 10,
-            padding: '5px 12px',
-            cursor: 'pointer',
-            background: isActive ? T.bgcolor : T.white,
-            color: isActive ? T.white : T.textMid,
-            fontWeight: 700,
-            fontSize: 11,
-            transition: 'all 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            textTransform: 'capitalize',
-          }}
-        >
-          {category}
-          <span
-            style={{
-              background: isActive ? T.orange : T.bgLight,
-              color: T.bgcolor,
-              borderRadius: 10,
-              padding: '1px 6px',
-              fontSize: 10,
-              fontWeight: 800
-            }}
-          >
-            {ans}/{vqs.length}
-          </span>
-        </button>
-      )
-    })}
-  </div>
-
-  {/* Questions List */}
-  <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${T.border}` }}>
-    {validQs.map((q, idx) => {
-      const hasAns = isValid(q.answer) && q.answer.toLowerCase() !== 'undefined'
-
-      return (
-        <div
-          key={q.questionId ?? idx}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 14,
-            padding: '9px 14px',
-            borderBottom: idx < validQs.length - 1 ? `1px solid ${T.borderLight}` : 'none',
-            background: idx % 2 === 0 ? T.bgLight : T.white,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flex: 1 }}>
-            <span
+          return (
+            <button
+              key={category}
+              onClick={() => setActiveTab(idx)}
               style={{
-                display: 'inline-flex',
+                border: `2px solid ${isActive ? T.orange : T.border}`,
+                borderRadius: 10,
+                padding: '5px 12px',
+                cursor: 'pointer',
+                background: isActive ? T.bgcolor : T.white,
+                color: isActive ? T.white : T.textMid,
+                fontWeight: 700,
+                fontSize: 11,
+                transition: 'all 0.2s',
+                display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                minWidth: 20,
-                height: 20,
-                borderRadius: '50%',
-                background: hasAns ? T.bgcolor : T.border,
-                color: hasAns ? T.white : T.textLight,
-                fontSize: 9,
-                fontWeight: 800,
-                flexShrink: 0,
-                marginTop: 1,
+                gap: 6,
+                textTransform: 'capitalize',
               }}
             >
-              {idx + 1}
-            </span>
+              {category}
+              <span
+                style={{
+                  background: isActive ? T.orange : T.bgLight,
+                  color: T.bgcolor,
+                  borderRadius: 10,
+                  padding: '1px 6px',
+                  fontSize: 10,
+                  fontWeight: 800
+                }}
+              >
+                {ans}/{vqs.length}
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
-            <span style={{ fontSize: 12, color: T.text, fontWeight: 500, lineHeight: 1.4 }}>
-              {q.question || `Question ${q.questionId}`}
-            </span>
-          </div>
+      {/* Questions List */}
+      <div style={{ borderRadius: 10, overflow: 'hidden', border: `1px solid ${T.border}` }}>
+        {validQs.map((q, idx) => {
+          const hasAns = isValid(q.answer) && q.answer.toLowerCase() !== 'undefined'
 
-          <div style={{ flexShrink: 0 }}>
-            <AnswerBadge answer={q.answer} />
-          </div>
-        </div>
-      )
-    })}
-  </div>
-</AccordionItem>
+          return (
+            <div
+              key={q.questionId ?? idx}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 14,
+                padding: '9px 14px',
+                borderBottom: idx < validQs.length - 1 ? `1px solid ${T.borderLight}` : 'none',
+                background: idx % 2 === 0 ? T.bgLight : T.white,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flex: 1 }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    background: hasAns ? T.bgcolor : T.border,
+                    color: hasAns ? T.white : T.textLight,
+                    fontSize: 9,
+                    fontWeight: 800,
+                    flexShrink: 0,
+                    marginTop: 1,
+                  }}
+                >
+                  {idx + 1}
+                </span>
+
+                <span style={{ fontSize: 12, color: T.text, fontWeight: 500, lineHeight: 1.4 }}>
+                  {q.question || `Question ${q.questionId}`}
+                </span>
+              </div>
+
+              <div style={{ flexShrink: 0 }}>
+                <AnswerBadge answer={q.answer} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </AccordionItem>
   )
 }
 
@@ -861,8 +1079,16 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
   const [sessionRecords, setSessionRecords] = useState(null)
   const [sessionLoading, setSessionLoading] = useState(false)
   const [showSessionModal, setShowSessionModal] = useState(false)
+  const [activeVisit, setActiveVisit] = useState(null)
+
+  // Completed Record Modal State
+  const [completedRecord, setCompletedRecord] = useState(null)
+  const [completedLoading, setCompletedLoading] = useState(false)
+  const [showCompletedModal, setShowCompletedModal] = useState(false)
+  const [completedExerciseName, setCompletedExerciseName] = useState('')
 
   const handleViewSessions = async (sess, v) => {
+    setActiveVisit(v)
     const cId = v.clinicId || localStorage.getItem('hospitalId')
     const bId = v.branchId
     const bookId = v.bookingId
@@ -871,7 +1097,6 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
 
     if (!cId || !bId || !bookId || !pId || !trId) {
       console.warn('Missing IDs for session fetch:', { cId, bId, bookId, pId, trId })
-      // Even if missing, we try or show empty
     }
 
     setSessionLoading(true)
@@ -890,6 +1115,36 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
       setSessionRecords([])
     } finally {
       setSessionLoading(false)
+    }
+  }
+
+  const handleViewCompletedRecord = async (visit, session, exerciseName) => {
+    const cId = visit.clinicId || localStorage.getItem('hospitalId')
+    const bId = visit.branchId
+    const trId = visit.therapistRecordId
+    const sId = session.sessionId
+
+    if (!cId || !bId || !trId || !sId) {
+      console.warn('Missing IDs for completed record fetch:', { cId, bId, trId, sId })
+    }
+
+    setCompletedLoading(true)
+    setCompletedExerciseName(exerciseName)
+    setShowCompletedModal(true)
+    setCompletedRecord(null)
+
+    try {
+      const res = await getCompletedTherapyRecord(cId, bId, trId, sId)
+      if (res?.success && res.data) {
+        setCompletedRecord(res.data)
+      } else {
+        setCompletedRecord(null)
+      }
+    } catch (err) {
+      console.error('Error fetching completed therapy record:', err)
+      setCompletedRecord(null)
+    } finally {
+      setCompletedLoading(false)
     }
   }
 
@@ -966,7 +1221,7 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
             <AccordionItem title={v.title} defaultOpen={idx === 0} badge={idx === 0 ? 'Latest' : null}>
 
               {/* 1. Patient Complaints (unified) */}
-              <AccordionItem  icon="🩺" title="Patient Complaints">
+              <AccordionItem icon="🩺" title="Patient Complaints">
 
                 {/* Core complaint fields in grid */}
                 <Grid cols={3}>
@@ -1255,125 +1510,125 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                 </AccordionItem>
 
                 {/* 8. Treatment Plan */}
-            <AccordionItem title="🧑‍⚕️ Treatment Plan">
+                <AccordionItem title="🧑‍⚕️ Treatment Plan">
 
-  {/* ---------------- PLAN SECTION ---------------- */}
-  {(isValid(v.treatmentPlanDisplay?.therapistId) ||
-    isValid(v.treatmentPlanDisplay?.therapistName) ||
-    isValid(v.treatmentPlanDisplay?.doctorName) ||
-    isValid(v.treatmentPlanDisplay?.manualTherapy) ||
-    isValid(v.treatmentPlanDisplay?.precautions)) && (
-    
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ fontWeight: 700, marginBottom: 8 }}>🧑‍⚕️ Plan</div>
+                  {/* ---------------- PLAN SECTION ---------------- */}
+                  {(isValid(v.treatmentPlanDisplay?.therapistId) ||
+                    isValid(v.treatmentPlanDisplay?.therapistName) ||
+                    isValid(v.treatmentPlanDisplay?.doctorName) ||
+                    isValid(v.treatmentPlanDisplay?.manualTherapy) ||
+                    isValid(v.treatmentPlanDisplay?.precautions)) && (
 
-      <Grid cols={2}>
-        {isValid(v.treatmentPlanDisplay?.doctorId) && <Row label="Doctor ID" value={v.treatmentPlanDisplay.doctorId} />}
-        {isValid(v.treatmentPlanDisplay?.doctorName) && <Row label="Doctor Name" value={v.treatmentPlanDisplay.doctorName} />}
-        {isValid(v.treatmentPlanDisplay?.therapistId) && <Row label="Therapist ID" value={v.treatmentPlanDisplay.therapistId} />}
-        {isValid(v.treatmentPlanDisplay?.therapistName) && <Row label="Therapist Name" value={v.treatmentPlanDisplay.therapistName} highlight />}
-        {isValid(v.treatmentPlanDisplay?.manualTherapy) && <Row label="Manual Therapy" value={v.treatmentPlanDisplay.manualTherapy} />}
-        {isValid(v.treatmentPlanDisplay?.patientResponse) && <Row label="Patient Response" value={v.treatmentPlanDisplay.patientResponse} />}
-      </Grid>
+                      <div style={{ marginBottom: 16 }}>
+                        <div style={{ fontWeight: 700, marginBottom: 8 }}>🧑‍⚕️ Plan</div>
 
-      {/* Precautions */}
-      {Array.isArray(v.treatmentPlanDisplay?.precautions) && v.treatmentPlanDisplay.precautions.filter(Boolean).length > 0 && (
-        <div style={{ marginTop: 8 }}>
-          <span style={labelStyle}>Precautions:</span>
-          {v.treatmentPlanDisplay.precautions.map((p, i) => (
-            <Chip key={i} label={p} color={T.rose} bg={T.roseLight} />
-          ))}
-        </div>
-      )}
+                        <Grid cols={2}>
+                          {isValid(v.treatmentPlanDisplay?.doctorId) && <Row label="Doctor ID" value={v.treatmentPlanDisplay.doctorId} />}
+                          {isValid(v.treatmentPlanDisplay?.doctorName) && <Row label="Doctor Name" value={v.treatmentPlanDisplay.doctorName} />}
+                          {isValid(v.treatmentPlanDisplay?.therapistId) && <Row label="Therapist ID" value={v.treatmentPlanDisplay.therapistId} />}
+                          {isValid(v.treatmentPlanDisplay?.therapistName) && <Row label="Therapist Name" value={v.treatmentPlanDisplay.therapistName} highlight />}
+                          {isValid(v.treatmentPlanDisplay?.manualTherapy) && <Row label="Manual Therapy" value={v.treatmentPlanDisplay.manualTherapy} />}
+                          {isValid(v.treatmentPlanDisplay?.patientResponse) && <Row label="Patient Response" value={v.treatmentPlanDisplay.patientResponse} />}
+                        </Grid>
 
-      {/* Modalities */}
-      {Array.isArray(v.treatmentPlanDisplay?.modalitiesUsed) && v.treatmentPlanDisplay.modalitiesUsed.length > 0 && (
-        <div style={{ marginTop: 8 }}>
-          <span style={labelStyle}>Modalities Used:</span>
-          {v.treatmentPlanDisplay.modalitiesUsed.map((m, i) => (
-            <Chip key={i} label={m} color={T.bgcolor} bg={T.bgLight} />
-          ))}
-        </div>
-      )}
-    </div>
-  )}
+                        {/* Precautions */}
+                        {Array.isArray(v.treatmentPlanDisplay?.precautions) && v.treatmentPlanDisplay.precautions.filter(Boolean).length > 0 && (
+                          <div style={{ marginTop: 8 }}>
+                            <span style={labelStyle}>Precautions:</span>
+                            {v.treatmentPlanDisplay.precautions.map((p, i) => (
+                              <Chip key={i} label={p} color={T.rose} bg={T.roseLight} />
+                            ))}
+                          </div>
+                        )}
 
-  {/* ---------------- TREATMENTS SECTION ---------------- */}
-  {v.treatments?.length > 0 && (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ fontWeight: 700, marginBottom: 8 }}>💊 Treatments</div>
+                        {/* Modalities */}
+                        {Array.isArray(v.treatmentPlanDisplay?.modalitiesUsed) && v.treatmentPlanDisplay.modalitiesUsed.length > 0 && (
+                          <div style={{ marginTop: 8 }}>
+                            <span style={labelStyle}>Modalities Used:</span>
+                            {v.treatmentPlanDisplay.modalitiesUsed.map((m, i) => (
+                              <Chip key={i} label={m} color={T.bgcolor} bg={T.bgLight} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-        {v.treatments.map((t, i) => (
-          <Chip key={i} label={t.name} color={T.bgcolor} bg={T.bgLight} />
-        ))}
-      </div>
+                  {/* ---------------- TREATMENTS SECTION ---------------- */}
+                  {v.treatments?.length > 0 && (
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>💊 Treatments</div>
 
-      {v.treatmentSchedules &&
-        Object.entries(v.treatmentSchedules).map(([name, meta]) => (
-          <div key={name} style={cardStyle}>
-            <div style={cardHeader}>
-              <span>{name}</span>
-              <span style={badgeStyle}>
-                {freqLabel(meta?.frequency)} · {meta?.sittings ?? 0} sittings
-              </span>
-            </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                        {v.treatments.map((t, i) => (
+                          <Chip key={i} label={t.name} color={T.bgcolor} bg={T.bgLight} />
+                        ))}
+                      </div>
 
-            <div style={cardBody}>
-              <Row label="Start Date" value={meta?.startDate} />
+                      {v.treatmentSchedules &&
+                        Object.entries(v.treatmentSchedules).map(([name, meta]) => (
+                          <div key={name} style={cardStyle}>
+                            <div style={cardHeader}>
+                              <span>{name}</span>
+                              <span style={badgeStyle}>
+                                {freqLabel(meta?.frequency)} · {meta?.sittings ?? 0} sittings
+                              </span>
+                            </div>
 
-              {meta?.dates?.length > 0 && (
-                <table style={tableStyle}>
-                  <thead>
-                    <tr>
-                      {['S.No', 'Date', 'Sitting'].map(h => <th key={h} style={thStyle}>{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {meta.dates.map((d, i) => (
-                      <tr key={i}>
-                        <td style={tdStyle(i)}>{i + 1}</td>
-                        <td style={tdStyle(i)}>{d?.date ?? '—'}</td>
-                        <td style={tdStyle(i)}>{d?.sitting ?? '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                            <div style={cardBody}>
+                              <Row label="Start Date" value={meta?.startDate} />
 
-              {meta?.reason && (
-                <div style={reasonStyle}>
-                  <strong>Reason:</strong> {meta.reason}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-    </div>
-  )}
+                              {meta?.dates?.length > 0 && (
+                                <table style={tableStyle}>
+                                  <thead>
+                                    <tr>
+                                      {['S.No', 'Date', 'Sitting'].map(h => <th key={h} style={thStyle}>{h}</th>)}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {meta.dates.map((d, i) => (
+                                      <tr key={i}>
+                                        <td style={tdStyle(i)}>{i + 1}</td>
+                                        <td style={tdStyle(i)}>{d?.date ?? '—'}</td>
+                                        <td style={tdStyle(i)}>{d?.sitting ?? '—'}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              )}
 
-  {/* ---------------- THERAPY SESSIONS ---------------- */}
-  <div>
-    <div style={{ fontWeight: 700, marginBottom: 8 }}>🏥 Therapy Sessions</div>
+                              {meta?.reason && (
+                                <div style={reasonStyle}>
+                                  <strong>Reason:</strong> {meta.reason}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
 
-    {isValid(v.overallStatus) && (
-      <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={labelStyle}>Overall Status:</span>
-        <span style={statusBadge}>{v.overallStatus}</span>
-      </div>
-    )}
+                  {/* ---------------- THERAPY SESSIONS ---------------- */}
+                  <div>
+                    <div style={{ fontWeight: 700, marginBottom: 8 }}>🏥 Therapy Sessions</div>
 
-    <TherapySessionsDisplay
-      sessionsList={v.sessionsList}
-      therapistId={v.topTherapistId}
-      therapistName={v.topTherapistName}
-      onViewSessions={(sess) => handleViewSessions(sess, v)}
-    />
-  </div>
+                    {isValid(v.overallStatus) && (
+                      <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={labelStyle}>Overall Status:</span>
+                        <span style={statusBadge}>{v.overallStatus}</span>
+                      </div>
+                    )}
 
-</AccordionItem>
+                    <TherapySessionsDisplay
+                      sessionsList={v.sessionsList}
+                      therapistId={v.topTherapistId}
+                      therapistName={v.topTherapistName}
+                      onViewSessions={(sess) => handleViewSessions(sess, v)}
+                    />
+                  </div>
 
-            
+                </AccordionItem>
+
+
 
                 {/* 12. Home Plan */}
                 {(v.homeExercises?.length > 0 || isValid(v.homeAdvice)) && (
@@ -1382,7 +1637,7 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                       <div style={{ overflowX: 'auto', marginBottom: isValid(v.homeAdvice) ? 12 : 0 }}>
                         <table style={tableStyle}>
                           <thead>
-                            <tr>{['#', 'Exercise', 'Sets', 'Reps', 'Frequency', 'Instructions'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
+                            <tr>{['#', 'Exercise', 'Sets', 'Reps', 'Sessions', 'Act. Duration', 'Frequency', 'Instructions'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
                           </thead>
                           <tbody>
                             {v.homeExercises.map((ex, i) => (
@@ -1391,6 +1646,8 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                                 <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.name || '—'}</td>
                                 <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
                                 <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.reps ? <Chip label={`🔄 ${ex.reps}`} color={T.teal} bg={T.tealLight} /> : '—'}</td>
+                                <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.sessions || ex.session) ? <Chip label={`🗓 ${ex.sessions || ex.session}`} color={T.navy} bg={T.bgLight} /> : '—'}</td>
+                                <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.activityDuration || ex.duration) ? <Chip label={`⏱ ${ex.activityDuration || ex.duration}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
                                 <td style={tdStyle(i)}>{ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600 }}>📆 {ex.frequency}</span> : '—'}</td>
                                 <td style={{ ...tdStyle(i), maxWidth: 220 }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>{ex.instructions || '—'}</div></td>
                               </tr>
@@ -1570,8 +1827,18 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                                   </td>
                                   <td style={{ padding: '10px 16px', fontSize: '0.8rem', color: T.textMid, fontWeight: 600 }}>{sess.status}</td>
                                   <td style={{ padding: '10px 16px', fontSize: '0.8rem', color: T.textLight }}>
-                                    {sess.therapistRecord ? (
-                                      <span style={{ color: T.teal, fontWeight: 600 }}>Available</span>
+                                    {sess.status === 'Completed' ? (
+                                      <span
+                                        onClick={() => handleViewCompletedRecord(activeVisit, sess, ex.exerciseName)}
+                                        style={{
+                                          color: T.teal,
+                                          fontWeight: 700,
+                                          textDecoration: 'underline',
+                                          cursor: 'pointer'
+                                        }}
+                                      >
+                                        Available
+                                      </span>
                                     ) : (
                                       <span style={{ fontStyle: 'italic' }}>No record</span>
                                     )}
@@ -1604,6 +1871,200 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
             <div style={{ padding: '16px 24px', borderTop: `1px solid ${T.borderLight}`, display: 'flex', justifyContent: 'flex-end', background: T.bgLight }}>
               <button
                 onClick={() => setShowSessionModal(false)}
+                style={{
+                  background: T.bgcolor, color: T.white, border: 'none',
+                  borderRadius: 8, padding: '8px 20px', fontSize: '0.85rem',
+                  fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                }}
+              >Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Completed Performance Record Details Modal */}
+      {showCompletedModal && (
+        <div className='custom-modal' style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(27,79,138,0.4)', backdropFilter: 'blur(4px)',
+          zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 20
+        }}>
+          <div style={{
+            background: T.white, borderRadius: 16, width: '100%', maxWidth: 600,
+            maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.3)', overflow: 'hidden',
+            animation: 'modalSlideUp 0.3s ease-out'
+          }}>
+            {/* Header */}
+            <div style={{
+              background: T.bgcolor, padding: '16px 24px', display: 'flex',
+              alignItems: 'center', justifyContent: 'space-between',
+              borderBottom: `3px solid ${T.orange}`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 20 }}>📝</span>
+                <h4 style={{ margin: 0, color: T.white, fontSize: '1.1rem', fontWeight: 700 }}>
+                  Session Performance Record
+                </h4>
+              </div>
+              <button
+                onClick={() => setShowCompletedModal(false)}
+                style={{
+                  background: 'rgba(255,255,255,0.15)', border: 'none', color: T.white,
+                  width: 30, height: 30, borderRadius: '50%', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18, fontWeight: 700, transition: 'background 0.2s'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+                onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+              >✕</button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+              {completedLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '50px 0', gap: 15 }}>
+                  <CSpinner style={{ color: T.bgcolor }} />
+                  <span style={{ color: T.textMid, fontWeight: 600, fontSize: '0.9rem' }}>Fetching performance details...</span>
+                </div>
+              ) : completedRecord ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Header activity info */}
+                  <div style={{ background: T.bgLight, padding: 14, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: '0.72rem', color: T.textLight, fontWeight: 600, textTransform: 'uppercase' }}>ACTIVITY / EXERCISE</div>
+                    <div style={{ fontSize: '1.05rem', color: T.bgcolor, fontWeight: 700 }}>{completedExerciseName || 'Therapy Session'}</div>
+                  </div>
+
+                  {/* Performance Stats */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
+                    {/* Sets Done */}
+                    {isValid(completedRecord.setsDone) && (
+                      <div style={{ padding: 10, background: '#fff', border: `1.5px solid ${T.border}`, borderRadius: 8, textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.72rem', color: T.textLight, fontWeight: 600, textTransform: 'uppercase' }}>Sets Done</div>
+                        <div style={{ fontSize: '1.2rem', color: T.bgcolor, fontWeight: 700, marginTop: 4 }}>🔁 {completedRecord.setsDone}</div>
+                      </div>
+                    )}
+                    {/* Repetitions Done */}
+                    {isValid(completedRecord.repetationDone) && (
+                      <div style={{ padding: 10, background: '#fff', border: `1.5px solid ${T.border}`, borderRadius: 8, textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.72rem', color: T.textLight, fontWeight: 600, textTransform: 'uppercase' }}>Reps Done</div>
+                        <div style={{ fontSize: '1.2rem', color: T.teal, fontWeight: 700, marginTop: 4 }}>🔄 {completedRecord.repetationDone}</div>
+                      </div>
+                    )}
+                    {/* Duration */}
+                    {isValid(completedRecord.duration) && (
+                      <div style={{ padding: 10, background: '#fff', border: `1.5px solid ${T.border}`, borderRadius: 8, textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.72rem', color: T.textLight, fontWeight: 600, textTransform: 'uppercase' }}>Duration</div>
+                        <div style={{ fontSize: '1.2rem', color: T.purple, fontWeight: 700, marginTop: 4 }}>⏱️ {completedRecord.duration}</div>
+                      </div>
+                    )}
+                    {/* Pain Progression */}
+                    {(isValid(completedRecord.painBefore) || isValid(completedRecord.painAfter)) && (
+                      <div style={{ padding: 10, background: '#fff', border: `1.5px solid ${T.border}`, borderRadius: 8, textAlign: 'center', gridColumn: 'span 2' }}>
+                        <div style={{ fontSize: '0.72rem', color: T.textLight, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Pain Progression (Before ➔ After)</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 2 }}>
+                          <span style={{ fontSize: '1rem', fontWeight: 700, color: T.green }}>🔥 {completedRecord.painBefore || 0}/10</span>
+                          <span style={{ fontSize: '1.2rem', color: T.textLight }}>➔</span>
+                          <span style={{ fontSize: '1rem', fontWeight: 700, color: T.rose }}>🔥 {completedRecord.painAfter || 0}/10</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* General Info Card */}
+                  <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, padding: 14, background: '#fff', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {isValid(completedRecord.patientResponse) && <Row label="Patient Response" value={completedRecord.patientResponse} />}
+                    {isValid(completedRecord.nextPlan) && <Row label="Next Plan" value={completedRecord.nextPlan} />}
+                    {isValid(completedRecord.serviceType) && <Row label="Service Type" value={completedRecord.serviceType} />}
+                    {isValid(completedRecord.location) && <Row label="Location" value={completedRecord.location} />}
+                    {isValid(completedRecord.therapistId) && <Row label="Recorded By (ID)" value={completedRecord.therapistId} highlight />}
+                    {isValid(completedRecord.completedDate) && (
+                      <Row
+                        label="Completed On"
+                        value={`${completedRecord.completedDate} ${completedRecord.completedTime || ''}`}
+                      />
+                    )}
+                  </div>
+
+                  {/* Media Attachments Section */}
+                  {((completedRecord.beforeImage && completedRecord.beforeImage !== 'null') ||
+                    (completedRecord.afterImage && completedRecord.afterImage !== 'null') ||
+                    (completedRecord.beforeVideo && completedRecord.beforeVideo !== 'null') ||
+                    (completedRecord.afterVideo && completedRecord.afterVideo !== 'null') ||
+                    (completedRecord.voiceRecord && completedRecord.voiceRecord !== 'null')) ? (
+                    <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, padding: 14, background: '#fff' }}>
+                      <div style={{ fontSize: '0.75rem', color: T.bgcolor, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Media Attachments</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {completedRecord.beforeImage && completedRecord.beforeImage !== 'null' && (
+                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: T.textLight }}>Before Image:</span>
+                            <a href={completedRecord.beforeImage} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={toImageSrc(completedRecord.beforeImage)}
+                                style={{ width: '100%', height: '180px', objectFit: 'contain', display: 'block', borderRadius: 6, border: `1px solid ${T.border}`, background: '#f8fafc' }}
+                                alt="Before Session"
+                              />
+                            </a>
+                          </div>
+                        )}
+                        {completedRecord.afterImage && completedRecord.afterImage !== 'null' && (
+                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: T.textLight }}>After Image:</span>
+                            <a href={completedRecord.afterImage} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={toImageSrc(completedRecord.afterImage)}
+                                style={{ width: '100%', height: '180px', objectFit: 'contain', display: 'block', borderRadius: 6, border: `1px solid ${T.border}`, background: '#f8fafc' }}
+                                alt="After Session"
+                              />
+                            </a>
+                          </div>
+                        )}
+                        {completedRecord.beforeVideo && completedRecord.beforeVideo !== 'null' && (
+                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: T.textLight }}>Before Video:</span>
+                            <video src={completedRecord.beforeVideo} controls style={{ width: '100%', maxHeight: 180, borderRadius: 6, border: `1px solid ${T.border}` }} />
+                          </div>
+                        )}
+                        {completedRecord.afterVideo && completedRecord.afterVideo !== 'null' && (
+                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: T.textLight }}>After Video:</span>
+                            <video src={completedRecord.afterVideo} controls style={{ width: '100%', maxHeight: 180, borderRadius: 6, border: `1px solid ${T.border}` }} />
+                          </div>
+                        )}
+                        {completedRecord.voiceRecord && completedRecord.voiceRecord !== 'null' && (
+                          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: T.textLight }}>Voice Recording:</span>
+                            <audio src={completedRecord.voiceRecord} controls style={{ width: '100%' }} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Therapist Notes */}
+                  {isValid(completedRecord.therapistNotes || completedRecord.comments) && (
+                    <div style={{ background: T.orangeLight, padding: 14, borderRadius: 10, border: `1.5px solid ${T.orangeMid}` }}>
+                      <div style={{ fontSize: '0.75rem', color: T.bgcolor, fontWeight: 700, marginBottom: 4 }}>THERAPIST NOTES</div>
+                      <div style={{ fontSize: '0.82rem', color: '#374151', fontStyle: 'italic', lineHeight: 1.4 }}>
+                        "{completedRecord.therapistNotes || completedRecord.comments}"
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: T.textLight }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Record details empty</div>
+                  <div style={{ fontSize: '0.78rem', marginTop: 4 }}>This session's record details could not be retrieved.</div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '16px 24px', borderTop: `1px solid ${T.borderLight}`, display: 'flex', justifyContent: 'flex-end', background: T.bgLight }}>
+              <button
+                onClick={() => setShowCompletedModal(false)}
                 style={{
                   background: T.bgcolor, color: T.white, border: 'none',
                   borderRadius: 8, padding: '8px 20px', fontSize: '0.85rem',

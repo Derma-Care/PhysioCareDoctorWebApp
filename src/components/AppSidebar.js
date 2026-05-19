@@ -121,7 +121,7 @@ const AppSidebar = () => {
     name: patientData?.name || '—',
     age: patientData?.age || '—',
     gender: patientData?.gender || '—',
-    mobile: patientData?.patientMobileNumber || '—',
+    mobile: patientData?.mobileNumber || '—',
     visitType: patientData?.visitType === null
       ? 0
       : patientData?.visitType ?? '—',
@@ -246,7 +246,7 @@ const AppSidebar = () => {
                     </span>
                   </h6>
                   <h6 style={{ color: COLORS.white, fontSize: SIZES.small, marginBottom: "6px" }}>
-                    <strong>Mobile:</strong> <span>{display.mobile}</span>
+                    <strong>Mobile:</strong> <span>{display.mobile || display.patientMobileNumber || "-"}</span>
                   </h6>
                   <h6 style={{ color: COLORS.white, fontSize: SIZES.small, marginBottom: "6px" }}>
                     <strong>Visit Type:</strong> <span>{capitalizeFirst(display.visitType)}</span>

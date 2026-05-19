@@ -6,7 +6,7 @@ import {
   CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
   CForm, CFormInput, CFormLabel, CInputGroup, CInputGroupText
 } from '@coreui/react'
-import { averageRatings, getAvailableSlots, updateAvailability, updateLogin } from '../../Auth/Auth'
+import { averageRatings, getAvailableSlots, updateAvailability, updateLogin, getDoctorDetails } from '../../Auth/Auth'
 import { COLORS } from '../../Themes'
 import { capitalizeEachWord } from '../../utils/CaptalZeWord'
 
@@ -469,22 +469,28 @@ const DoctorProfile = () => {
   }, [])
 
   useEffect(() => {
-    const stored = localStorage.getItem('doctorDetails')
-    if (stored) {
+    const fetchDoctor = async () => {
+      setLoading(true)
       try {
-        const parsed = JSON.parse(stored)
-        const clinicStored = localStorage.getItem('clinicDetails')
-        const clinicParsed = clinicStored ? JSON.parse(clinicStored) : null
-
-        const rawPic = parsed.doctorPicture || parsed.profilePicture || clinicParsed?.hospitalLogo || clinicParsed?.clinicLogo
-        if (rawPic) {
-          setDoctorImage(rawPic.startsWith('data:image')
-            ? rawPic
-            : `data:image/jpeg;base64,${rawPic}`)
+        const data = await getDoctorDetails()
+        if (data) {
+          setDoctorDetails(data)
+          const clinicStored = localStorage.getItem('clinicDetails')
+          const clinicParsed = clinicStored ? JSON.parse(clinicStored) : null
+          const rawPic = data.doctorPicture || data.profilePicture || clinicParsed?.hospitalLogo || clinicParsed?.clinicLogo
+          if (rawPic) {
+            setDoctorImage(rawPic.startsWith('data:image') || rawPic.startsWith('http')
+              ? rawPic
+              : `data:image/jpeg;base64,${rawPic}`)
+          }
         }
-        setDoctorDetails(parsed)
-      } catch (e) { console.error(e) }
+      } catch (e) {
+        console.error('Failed to fetch doctor details:', e)
+      } finally {
+        setLoading(false)
+      }
     }
+    fetchDoctor()
   }, [])
 
   useEffect(() => {
@@ -589,31 +595,53 @@ const DoctorProfile = () => {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                     <div className="dp-hero-badge">
-                      <div className="dp-hero-badge-dot" style={{ background: doctorDetails?.isAvailable ? COLORS.green : COLORS.rose }} />
-                      <span className="dp-hero-badge-txt">{doctorDetails?.isAvailable ? 'Active Doctor' : 'Inactive'}</span>
+                      <div className="dp-hero-badge-dot" style={{ background: doctorDetails?.doctorAvailabilityStatus ? COLORS.green : COLORS.rose }} />
+                      <span className="dp-hero-badge-txt">{doctorDetails?.doctorAvailabilityStatus ? 'Active Doctor' : 'Inactive'}</span>
                     </div>
 
                     {/* Availability Toggle */}
                     <button
                       onClick={async () => {
-                        const newStatus = !doctorDetails?.isAvailable;
+                        const newStatus = !doctorDetails?.doctorAvailabilityStatus;
+
                         try {
                           const doctorId = localStorage.getItem('doctorId');
-                          await updateAvailability(doctorId, { isAvailable: newStatus });
-                          const updated = { ...doctorDetails, isAvailable: newStatus };
+
+                          console.log("doctorId =>", doctorId);
+                          console.log("payload =>", {
+                            doctorAvailabilityStatus: newStatus
+                          });
+
+                          const response = await updateAvailability(doctorId, {
+                            doctorAvailabilityStatus: newStatus
+                          });
+
+                          console.log("API RESPONSE =>", response);
+
+                          const updated = {
+                            ...doctorDetails,
+                            doctorAvailabilityStatus: newStatus
+                          };
+
                           setDoctorDetails(updated);
-                          localStorage.setItem('doctorDetails', JSON.stringify(updated));
+
+                          localStorage.setItem(
+                            'doctorDetails',
+                            JSON.stringify(updated)
+                          );
+
                         } catch (err) {
                           console.error("Failed to update availability:", err);
+                          console.log("ERROR RESPONSE =>", err?.response);
                         }
                       }}
                       style={{
-                        background: doctorDetails?.isAvailable ? COLORS.rose : COLORS.green,
-                        color: 'var(--text-color)', border: 'none', borderRadius: 8, padding: '4px 12px',
+                        background: doctorDetails?.doctorAvailabilityStatus ? COLORS.rose : COLORS.green,
+                        color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px',
                         fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
                       }}
                     >
-                      {doctorDetails?.isAvailable ? '⭕ Set Inactive' : '🟢 Set Active'}
+                      {doctorDetails?.doctorAvailabilityStatus ? '⭕ Set Inactive' : '🟢 Set Active'}
                     </button>
 
                     {/* <button 
@@ -671,10 +699,16 @@ const DoctorProfile = () => {
                 <div className="dp-info-grid">
                   <InfoItem label="Email" value={doctorDetails?.doctorEmail} />
                   <InfoItem label="Phone" value={doctorDetails?.doctorMobileNumber} />
+                  <InfoItem label="Hospital Name" value={doctorDetails?.hospitalName} />
+                  <InfoItem label="Specialization" value={doctorDetails?.specialization} />
                   <InfoItem label="Gender" value={doctorDetails?.gender} />
+                  <InfoItem label="DOB" value={doctorDetails?.dateofBirth ? new Date(doctorDetails.dateofBirth).toLocaleDateString() : '—'} />
+                  <InfoItem label="Date of Joining" value={doctorDetails?.dateofJoining ? new Date(doctorDetails.dateofJoining).toLocaleDateString() : '—'} />
                   <InfoItem label="Languages" value={doctorDetails?.languages?.join(', ')} />
                   <InfoItem label="Available Days" value={doctorDetails?.availableDays} />
                   <InfoItem label="Available Times" value={doctorDetails?.availableTimes} />
+                  <InfoItem label="Associations" value={doctorDetails?.associationsOrMemberships} />
+                  <InfoItem label="IADVC Associated" value={doctorDetails?.associatedWithIADVC ? 'Yes' : 'No'} />
                 </div>
 
                 {/* Signature */}
@@ -715,6 +749,13 @@ const DoctorProfile = () => {
                     <ListItems items={doctorDetails?.focusAreas} fallback="No focus areas listed" />
                   </CCol>
                 </CRow>
+
+                <div style={{ marginTop: 20 }}>
+                  <div className="dp-section-label">🛤️ Career Path</div>
+                  <p style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.7, margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                    {doctorDetails?.careerPath || 'No career path listed'}
+                  </p>
+                </div>
               </div>
             </div>
 
