@@ -116,7 +116,7 @@ const TabContent = ({
       break
 
     case 'Assessment':
-      content = <Assessment seed={formData.assessment || {}} onNext={handleNext} sidebarWidth={260} formData={formData} />
+      content = <Assessment seed={formData.assessment || {}} onNext={handleNext} sidebarWidth={260} formData={formData} setFormData={setFormData} />
       break
 
     case 'Diagnosis':

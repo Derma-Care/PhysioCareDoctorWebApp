@@ -1075,7 +1075,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   }
 
   const doSave = async ({ downloadAfter = false } = {}) => {
-    if (!complaintDetails?.trim()) { warning('"Complaint Details" is required to save.', { title: 'Warning' }); return false }
     setSaving(true)
     try {
       const safeName = (patientName || 'Record').replace(/[^\w\-]+/g, '_')

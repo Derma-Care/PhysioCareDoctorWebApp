@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import FileUploader from './FileUploader'
 import { CSpinner } from '@coreui/react'
-import { getVisitHistoryByPatientIdAndBookingId, getExerciseSessionsWithRecords, getCompletedTherapyRecord } from '../Auth/Auth'
+import { getVisitHistoryByPatientIdAndBookingId, getExerciseSessionsWithRecords, getCompletedTherapyRecord, getExerciseSessionsByExerciseId } from '../Auth/Auth'
 import ReportDetails from '../components/Reports/Reports'
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────────
@@ -1089,26 +1089,84 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
 
   const handleViewSessions = async (sess, v) => {
     setActiveVisit(v)
-    const cId = v.clinicId || localStorage.getItem('hospitalId')
-    const bId = v.branchId
-    const bookId = v.bookingId
-    const pId = v.patientId
-    const trId = v.therapistRecordId
-
-    if (!cId || !bId || !bookId || !pId || !trId) {
-      console.warn('Missing IDs for session fetch:', { cId, bId, bookId, pId, trId })
-    }
+    const cId = v.clinicId || localStorage.getItem('hospitalId') || localStorage.getItem('clinicId') || ''
+    const bId = v.branchId || ''
+    const bookId = v.bookingId || ''
+    const pId = v.patientId || ''
+    const trId = v.therapistRecordId || 'TR001'
 
     setSessionLoading(true)
     setShowSessionModal(true)
     setSessionRecords(null)
 
     try {
-      const res = await getExerciseSessionsWithRecords(cId, bId, bookId, pId, trId)
-      if (res?.success && res.data) {
-        setSessionRecords(res.data)
+      if (sess && (sess.id || sess.exerciseId)) {
+        const exId = sess.id || sess.exerciseId
+        const res = await getExerciseSessionsByExerciseId(cId, bId, exId)
+        let sessions = []
+        if (Array.isArray(res)) {
+          sessions = res
+        } else if (Array.isArray(res?.data)) {
+          sessions = res.data
+        } else if (res?.data?.sessions) {
+          sessions = res.data.sessions
+        } else if (res?.sessions) {
+          sessions = res.sessions
+        }
+
+        const mappedRecord = {
+          exerciseName: sess.name || sess.exerciseName || 'Exercise Sessions',
+          sessions: sessions.map((s, idx) => ({
+            sessionNo: s.sessionNo || s.sessionNumber || (idx + 1),
+            sessionId: s.sessionId || s.id || '—',
+            date: s.date || s.sessionDate || '—',
+            paymentStatus: s.paymentStatus || s.payment || 'Unpaid',
+            status: s.status || s.sessionStatus || 'Scheduled'
+          }))
+        }
+        setSessionRecords([mappedRecord])
+      } else if (!sess && v.homeExercises && v.homeExercises.length > 0) {
+        const fetchPromises = v.homeExercises.map(async (ex) => {
+          const exId = ex.id || ex.exerciseId
+          if (!exId) return null
+          try {
+            const res = await getExerciseSessionsByExerciseId(cId, bId, exId)
+            let sessions = []
+            if (Array.isArray(res)) {
+              sessions = res
+            } else if (Array.isArray(res?.data)) {
+              sessions = res.data
+            } else if (res?.data?.sessions) {
+              sessions = res.data.sessions
+            } else if (res?.sessions) {
+              sessions = res.sessions
+            }
+
+            return {
+              exerciseName: ex.name || ex.exerciseName || 'Exercise',
+              sessions: sessions.map((s, idx) => ({
+                sessionNo: s.sessionNo || s.sessionNumber || (idx + 1),
+                sessionId: s.sessionId || s.id || '—',
+                date: s.date || s.sessionDate || '—',
+                paymentStatus: s.paymentStatus || s.payment || 'Unpaid',
+                status: s.status || s.sessionStatus || 'Scheduled'
+              }))
+            }
+          } catch (e) {
+            console.error('Error fetching sessions for exercise:', ex.name, e)
+            return null
+          }
+        })
+
+        const results = await Promise.all(fetchPromises)
+        setSessionRecords(results.filter(Boolean))
       } else {
-        setSessionRecords([])
+        const res = await getExerciseSessionsWithRecords(cId, bId, bookId, pId, trId)
+        if (res?.success && res.data) {
+          setSessionRecords(res.data)
+        } else {
+          setSessionRecords([])
+        }
       }
     } catch (err) {
       console.error('Error fetching sessions:', err)
@@ -1633,6 +1691,22 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                 {/* 12. Home Plan */}
                 {(v.homeExercises?.length > 0 || isValid(v.homeAdvice)) && (
                   <AccordionItem title="🏋️ Home Plan" badge={v.homeExercises?.length ? `${v.homeExercises.length} exercise(s)` : null}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                      <button
+                        onClick={() => handleViewSessions(null, v)}
+                        style={{
+                          background: T.orange, color: T.bgcolor, border: 'none',
+                          borderRadius: 6, padding: '6px 14px', fontSize: '0.72rem',
+                          fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          display: 'flex', alignItems: 'center', gap: 6
+                        }}
+                        onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                        onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                      >
+                        📊 Sessions
+                      </button>
+                    </div>
                     {v.homeExercises?.length > 0 && (
                       <div style={{ overflowX: 'auto', marginBottom: isValid(v.homeAdvice) ? 12 : 0 }}>
                         <table style={tableStyle}>
@@ -1646,7 +1720,19 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                                 <td style={{ ...tdStyle(i), fontWeight: 600 }}>{ex.name || '—'}</td>
                                 <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.sets ? <Chip label={`🔁 ${ex.sets}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
                                 <td style={{ ...tdStyle(i), textAlign: 'center' }}>{ex.reps ? <Chip label={`🔄 ${ex.reps}`} color={T.teal} bg={T.tealLight} /> : '—'}</td>
-                                <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.sessions || ex.session) ? <Chip label={`🗓 ${ex.sessions || ex.session}`} color={T.navy} bg={T.bgLight} /> : '—'}</td>
+                                <td style={{ ...tdStyle(i), textAlign: 'center' }}>
+                                  {(ex.sessions || ex.session) ? (
+                                    <span
+                                      onClick={() => handleViewSessions(ex, v)}
+                                      style={{ cursor: 'pointer', display: 'inline-block', transition: 'transform 0.15s' }}
+                                      onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                                      onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                                      title="Click to view sessions for this exercise"
+                                    >
+                                      <Chip label={`🗓 ${ex.sessions || ex.session}`} color={T.navy} bg={T.bgLight} />
+                                    </span>
+                                  ) : '—'}
+                                </td>
                                 <td style={{ ...tdStyle(i), textAlign: 'center' }}>{(ex.activityDuration || ex.duration) ? <Chip label={`⏱ ${ex.activityDuration || ex.duration}`} color={T.bgcolor} bg={T.bgLight} /> : '—'}</td>
                                 <td style={tdStyle(i)}>{ex.frequency ? <span style={{ fontSize: '0.72rem', fontWeight: 600 }}>📆 {ex.frequency}</span> : '—'}</td>
                                 <td style={{ ...tdStyle(i), maxWidth: 220 }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.instructions}>{ex.instructions || '—'}</div></td>

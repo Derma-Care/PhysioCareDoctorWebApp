@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import Button from '../components/CustomButton/CustomButton'
 import './Tests.css'
 import { COLORS } from '../Themes'
@@ -22,19 +22,19 @@ const ONSET_OPTIONS = [
 ]
 const PATIENT_PAIN_OPTIONS = [
   { label: 'Select patient pain type...', value: '' },
-  { label: 'Acute Pain',      value: 'acutePain' },
-  { label: 'Chronic Pain',    value: 'chronicPain' },
+  { label: 'Acute Pain', value: 'acutePain' },
+  { label: 'Chronic Pain', value: 'chronicPain' },
   { label: 'Mechanical Pain', value: 'mechanicalPain' },
   { label: 'Neuropathic Pain', value: 'neuropathicPain' },
   { label: 'Inflammatory Pain', value: 'inflammatoryPain' },
   { label: 'Myofascial Pain', value: 'myofascialPain' },
-  { label: 'Postural Pain',   value: 'posturalPain' },
-  { label: 'Sports Rehab',    value: 'sportsRehab' },
-  { label: 'Neuro Rehab',     value: 'neuroRehab' },
+  { label: 'Postural Pain', value: 'posturalPain' },
+  { label: 'Sports Rehab', value: 'sportsRehab' },
+  { label: 'Neuro Rehab', value: 'neuroRehab' },
   { label: 'Orthopedic Rehab', value: 'orthopedicRehab' },
   { label: 'Pediatric Rehab', value: 'pediatricRehab' },
   { label: 'Geriatric Rehab', value: 'geriatricRehab' },
-  { label: 'Cardiac Rehab',   value: 'cardiacRehab' },
+  { label: 'Cardiac Rehab', value: 'cardiacRehab' },
 ]
 const FUNCTIONAL_DIFFICULTIES = [
   'Walking', 'Climbing stairs', 'Sitting/Standing', 'Lifting/Carrying', 'Sports/Training',
@@ -156,7 +156,7 @@ const UnderlineInput = ({ value, onChange, placeholder = '' }) => (
 /* ═══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ═══════════════════════════════════════════════════════════════════════════ */
-const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
+const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFormData }) => {
 
   /* ── tab state ── */
   const [activeTab, setActiveTab] = useState(0)
@@ -302,16 +302,11 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
     if (val === '' || Number(val) >= 0) setDurationValue(val)
   }
 
-  const handleNext = () => {
-    if (activeTab < TABS.length - 1) {
-      setActiveTab(activeTab + 1)
-      return
-    }
-    // Last tab → submit
+  const getPayload = () => {
     const finalDuration = durationValue && durationUnit
       ? `${durationValue} ${durationUnit}${Number(durationValue) > 1 ? 's' : ''}`
       : ''
-    const payload = {
+    return {
       painScale, painType,
       duration: finalDuration,
       onset, aggravatingFactors, relievingFactors,
@@ -322,9 +317,9 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
       muscleStrength, muscleWeakness, neurologicalSigns,
       patientPain: effectivePain,
       ...(effectivePain === 'chronicPain' && { painTriggers, chronicRelieving }),
-      ...(effectivePain === 'sportsRehab'  && { typeOfSport, recurringInjuries, returnToSportGoals }),
-      ...(effectivePain === 'neuroRehab'   && { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }),
-      ...(effectivePain === 'acutePain'    && { acuteMechanism, acuteInflammation }),
+      ...(effectivePain === 'sportsRehab' && { typeOfSport, recurringInjuries, returnToSportGoals }),
+      ...(effectivePain === 'neuroRehab' && { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }),
+      ...(effectivePain === 'acutePain' && { acuteMechanism, acuteInflammation }),
       ...(effectivePain === 'mechanicalPain' && { mechanicalTriggers, posturalTolerance }),
       ...(effectivePain === 'neuropathicPain' && { neuropathicNature, neuroDiagnosis }),
       ...(effectivePain === 'inflammatoryPain' && { inflammatoryMorning, relievingFactors }),
@@ -340,7 +335,72 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
       psychosocial,
       specialSymptoms
     }
+  }
+
+  const getPayloadRef = useRef(null)
+  getPayloadRef.current = getPayload
+
+  useEffect(() => {
+    return () => {
+      if (setFormData && getPayloadRef.current) {
+        const payload = getPayloadRef.current()
+        setFormData(prev => ({
+          ...prev,
+          assessment: {
+            ...(prev.assessment || {}),
+            ...payload
+          }
+        }))
+      }
+    }
+  }, [setFormData])
+
+  const handleNext = () => {
+    const payload = getPayload()
+    if (activeTab < TABS.length - 1) {
+      if (setFormData) {
+        setFormData(prev => ({
+          ...prev,
+          assessment: {
+            ...(prev.assessment || {}),
+            ...payload
+          }
+        }))
+      }
+      setActiveTab(activeTab + 1)
+      return
+    }
     onNext?.(payload)
+  }
+
+  const handleBack = () => {
+    if (activeTab > 0) {
+      const payload = getPayload()
+      if (setFormData) {
+        setFormData(prev => ({
+          ...prev,
+          assessment: {
+            ...(prev.assessment || {}),
+            ...payload
+          }
+        }))
+      }
+      setActiveTab(activeTab - 1)
+    }
+  }
+
+  const handleTabClick = (idx) => {
+    const payload = getPayload()
+    if (setFormData) {
+      setFormData(prev => ({
+        ...prev,
+        assessment: {
+          ...(prev.assessment || {}),
+          ...payload
+        }
+      }))
+    }
+    setActiveTab(idx)
   }
 
   /* ─── Tab content ────────────────────────────────────────────────────── */
@@ -849,7 +909,6 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
           {snackbar.message}
         </CAlert>
       )}
-
       <CContainer fluid className="p-0">
         <CRow className="g-3">
           <CCol xs={12}>
@@ -879,6 +938,10 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
                   display: 'flex', gap: 4, marginBottom: 24,
                   borderBottom: '2px solid #dceeff',
                   paddingBottom: 0,
+                  overflowX: 'auto',
+                  whiteSpace: 'nowrap',
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none',
                 }}>
                   {TABS.map((tab, idx) => {
                     const isActive = idx === activeTab
@@ -886,7 +949,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(idx)}
+                        onClick={() => handleTabClick(idx)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 6,
                           padding: '8px 16px',
@@ -901,6 +964,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
                           transition: 'all 0.15s',
                           letterSpacing: '0.04em',
                           marginBottom: -2,
+                          flexShrink: 0,
                         }}
                       >
                         <span>{tab.icon}</span>
@@ -957,7 +1021,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {} }) => {
         {/* Back button */}
         <Button
           customColor={activeTab === 0 ? '#e2e8f0' : '#e8f0fb'}
-          onClick={() => activeTab > 0 && setActiveTab(activeTab - 1)}
+          onClick={handleBack}
           disabled={activeTab === 0}
           style={{
             color: activeTab === 0 ? '#94a3b8' : '#1B4F8A',
