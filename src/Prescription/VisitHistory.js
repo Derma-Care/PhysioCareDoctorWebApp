@@ -17,6 +17,8 @@ const T = {
   text: '#1B4F8A',
   textMid: '#4a6fa5',
   textLight: '#7a9ec2',
+  textSecondary: '#4a6fa5',
+  navy: '#1B4F8A',
   teal: '#0d9488',
   tealLight: '#ccfbf1',
   purple: '#7c3aed',
@@ -45,6 +47,34 @@ const toImageSrc = (raw) => {
   if (raw.startsWith('iVBOR')) return `data:image/png;base64,${raw}`
   if (raw.startsWith('R0lGO')) return `data:image/gif;base64,${raw}`
   return `data:image/jpeg;base64,${raw}`
+}
+
+const mapRecordData = (raw) => {
+  if (!raw) return null
+  let rec = Array.isArray(raw) ? raw[0] : raw
+  if (Array.isArray(rec?.therapyrecord)) rec = rec.therapyrecord[0]
+  else if (Array.isArray(rec?.therapyRecord)) rec = rec.therapyRecord[0]
+  if (!rec) return null
+  return {
+    setsDone: rec.setsDone ?? rec.setsdone ?? rec.sets ?? '',
+    repetationDone: rec.repetationDone ?? rec.repitationdone ?? rec.repitationDone ?? rec.reps ?? '',
+    duration: rec.duration ?? '',
+    painBefore: rec.painBefore ?? rec.painbefore ?? '',
+    painAfter: rec.painAfter ?? rec.painafter ?? '',
+    patientResponse: rec.patientResponse ?? rec.patientfeedback ?? rec.patientFeedback ?? '',
+    nextPlan: rec.nextPlan ?? rec.nextplan ?? '',
+    serviceType: rec.serviceType ?? rec.servicetype ?? '',
+    location: rec.location ?? '',
+    therapistId: rec.therapistId ?? rec.doctorid ?? rec.clincinid ?? '',
+    completedDate: rec.completedDate ?? rec.date ?? rec.completeddate ?? '',
+    completedTime: rec.completedTime ?? rec.time ?? '',
+    beforeImage: rec.beforeImage ?? rec.beforeimage ?? null,
+    afterImage: rec.afterImage ?? rec.afterimage ?? null,
+    beforeVideo: rec.beforeVideo ?? rec.beforevideo ?? null,
+    afterVideo: rec.afterVideo ?? rec.aftervideo ?? null,
+    voiceRecord: rec.voiceRecord ?? rec.voicerecord ?? rec.voiceNote ?? rec.voicenote ?? null,
+    therapistNotes: rec.therapistNotes ?? rec.notes ?? rec.comments ?? rec.therapistnotes ?? '',
+  }
 }
 
 const PAIN_LABEL_MAP = {
@@ -85,6 +115,67 @@ const tdStyle = (i) => ({
   background: i % 2 === 0 ? T.bgLight : T.white,
   fontSize: '0.8rem', color: T.text,
 })
+
+const labelStyle = {
+  fontWeight: 700,
+  fontSize: '0.72rem',
+  color: T.textLight,
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+}
+
+const cardStyle = {
+  border: `1.5px solid ${T.border}`,
+  borderRadius: 8,
+  overflow: 'hidden',
+  marginBottom: 12,
+  background: T.white,
+}
+
+const cardHeader = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '8px 12px',
+  background: T.bgLight,
+  borderBottom: `1px solid ${T.border}`,
+  fontWeight: 700,
+  color: T.bgcolor,
+  fontSize: '0.8rem',
+}
+
+const cardBody = {
+  padding: '10px 12px',
+}
+
+const badgeStyle = {
+  background: T.orange,
+  color: T.bgcolor,
+  borderRadius: 20,
+  padding: '2px 8px',
+  fontSize: '0.7rem',
+  fontWeight: 700,
+}
+
+const reasonStyle = {
+  marginTop: 8,
+  padding: '6px 10px',
+  background: T.orangeLight,
+  borderLeft: `3px solid ${T.orange}`,
+  borderRadius: 4,
+  fontSize: '0.75rem',
+  color: T.text,
+}
+
+const statusBadge = {
+  background: T.orangeLight,
+  color: T.bgcolor,
+  border: `1px solid ${T.orange}`,
+  borderRadius: 20,
+  padding: '2px 10px',
+  fontSize: '0.72rem',
+  fontWeight: 700,
+}
 
 // ─── Section ───────────────────────────────────────────────────────────────────
 const Section = ({ icon, title, children, badge = null }) => (
@@ -972,8 +1063,13 @@ const transformVisit = (visit) => {
   // ── Exercise Plan ───────────────────────────────────────────────────────────
   const exercisePlanObj = record.exercisePlan ?? visit.exercisePlan ?? {}
   const homeExercises = Array.isArray(exercisePlanObj.homeExercises) ? exercisePlanObj.homeExercises
-    : Array.isArray(exercisePlanObj.exercises) ? exercisePlanObj.exercises : []
-  const homeAdvice = exercisePlanObj.homeAdvice ?? ''
+    : Array.isArray(exercisePlanObj.exercises) ? exercisePlanObj.exercises
+    : Array.isArray(record.homeExercises) ? record.homeExercises
+    : Array.isArray(visit.homeExercises) ? visit.homeExercises
+    : Array.isArray(record.exercises) ? record.exercises
+    : Array.isArray(visit.exercises) ? visit.exercises
+    : []
+  const homeAdvice = exercisePlanObj.homeAdvice ?? record.homeAdvice ?? visit.homeAdvice ?? ''
 
   // ── Follow Up ───────────────────────────────────────────────────────────────
   const followUpRaw = record.followUp ?? visit.followUp ?? {}
@@ -1102,27 +1198,52 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
     try {
       if (sess && (sess.id || sess.exerciseId)) {
         const exId = sess.id || sess.exerciseId
-        const res = await getExerciseSessionsByExerciseId(cId, bId, exId)
-        let sessions = []
+        const res = await getExerciseSessionsByExerciseId(cId, bId, trId, pId, exId)
+        let rawSessions = []
         if (Array.isArray(res)) {
-          sessions = res
+          rawSessions = res
         } else if (Array.isArray(res?.data)) {
-          sessions = res.data
+          rawSessions = res.data
         } else if (res?.data?.sessions) {
-          sessions = res.data.sessions
+          rawSessions = res.data.sessions
         } else if (res?.sessions) {
-          sessions = res.sessions
+          rawSessions = res.sessions
+        }
+
+        let flatSessions = []
+        if (Array.isArray(rawSessions)) {
+          rawSessions.forEach((item) => {
+            const nestedList = item?.therapyrecord || item?.therapyRecord
+            if (Array.isArray(nestedList) && nestedList.length > 0) {
+              nestedList.forEach((nestedItem) => {
+                flatSessions.push({
+                  ...nestedItem,
+                  parentId: item.id || item.therapyrecordid || '',
+                  rawRecord: { ...nestedItem, doctorid: item.doctorid || item.doctorId, clincinid: item.clincinid || item.clinicId || item.clinicinid }
+                })
+              })
+            } else {
+              flatSessions.push({
+                ...item,
+                rawRecord: item
+              })
+            }
+          })
         }
 
         const mappedRecord = {
           exerciseName: sess.name || sess.exerciseName || 'Exercise Sessions',
-          sessions: sessions.map((s, idx) => ({
-            sessionNo: s.sessionNo || s.sessionNumber || (idx + 1),
-            sessionId: s.sessionId || s.id || '—',
-            date: s.date || s.sessionDate || '—',
-            paymentStatus: s.paymentStatus || s.payment || 'Unpaid',
-            status: s.status || s.sessionStatus || 'Scheduled'
-          }))
+          sessions: flatSessions.map((s, idx) => {
+            const isCompleted = s.sessioncompleted === true || s.sessionCompleted === true || s.status === 'completed' || s.status === 'Completed' || (s.setsdone && s.repitationdone)
+            return {
+              sessionNo: s.session || s.sessioncount || s.sessionNo || s.sessionNumber || (idx + 1),
+              sessionId: s.id || s.parentId || '—',
+              date: s.date || s.sessionDate || '—',
+              paymentStatus: s.paymentStatus || s.payment || 'Paid',
+              status: isCompleted ? 'Completed' : (s.status || 'Scheduled'),
+              rawRecord: s.rawRecord || s
+            }
+          })
         }
         setSessionRecords([mappedRecord])
       } else if (!sess && v.homeExercises && v.homeExercises.length > 0) {
@@ -1130,27 +1251,52 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
           const exId = ex.id || ex.exerciseId
           if (!exId) return null
           try {
-            const res = await getExerciseSessionsByExerciseId(cId, bId, exId)
-            let sessions = []
+            const res = await getExerciseSessionsByExerciseId(cId, bId, trId, pId, exId)
+            let rawSessions = []
             if (Array.isArray(res)) {
-              sessions = res
+              rawSessions = res
             } else if (Array.isArray(res?.data)) {
-              sessions = res.data
+              rawSessions = res.data
             } else if (res?.data?.sessions) {
-              sessions = res.data.sessions
+              rawSessions = res.data.sessions
             } else if (res?.sessions) {
-              sessions = res.sessions
+              rawSessions = res.sessions
+            }
+
+            let flatSessions = []
+            if (Array.isArray(rawSessions)) {
+              rawSessions.forEach((item) => {
+                const nestedList = item?.therapyrecord || item?.therapyRecord
+                if (Array.isArray(nestedList) && nestedList.length > 0) {
+                  nestedList.forEach((nestedItem) => {
+                    flatSessions.push({
+                      ...nestedItem,
+                      parentId: item.id || item.therapyrecordid || '',
+                      rawRecord: { ...nestedItem, doctorid: item.doctorid || item.doctorId, clincinid: item.clincinid || item.clinicId || item.clinicinid }
+                    })
+                  })
+                } else {
+                  flatSessions.push({
+                    ...item,
+                    rawRecord: item
+                  })
+                }
+              })
             }
 
             return {
               exerciseName: ex.name || ex.exerciseName || 'Exercise',
-              sessions: sessions.map((s, idx) => ({
-                sessionNo: s.sessionNo || s.sessionNumber || (idx + 1),
-                sessionId: s.sessionId || s.id || '—',
-                date: s.date || s.sessionDate || '—',
-                paymentStatus: s.paymentStatus || s.payment || 'Unpaid',
-                status: s.status || s.sessionStatus || 'Scheduled'
-              }))
+              sessions: flatSessions.map((s, idx) => {
+                const isCompleted = s.sessioncompleted === true || s.sessionCompleted === true || s.status === 'completed' || s.status === 'Completed' || (s.setsdone && s.repitationdone)
+                return {
+                  sessionNo: s.session || s.sessioncount || s.sessionNo || s.sessionNumber || (idx + 1),
+                  sessionId: s.id || s.parentId || '—',
+                  date: s.date || s.sessionDate || '—',
+                  paymentStatus: s.paymentStatus || s.payment || 'Paid',
+                  status: isCompleted ? 'Completed' : (s.status || 'Scheduled'),
+                  rawRecord: s.rawRecord || s
+                }
+              })
             }
           } catch (e) {
             console.error('Error fetching sessions for exercise:', ex.name, e)
@@ -1177,6 +1323,18 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
   }
 
   const handleViewCompletedRecord = async (visit, session, exerciseName) => {
+    setCompletedLoading(true)
+    setCompletedExerciseName(exerciseName)
+    setShowCompletedModal(true)
+    setCompletedRecord(null)
+
+    if (session.rawRecord) {
+      const mapped = mapRecordData(session.rawRecord)
+      setCompletedRecord(mapped)
+      setCompletedLoading(false)
+      return
+    }
+
     const cId = visit.clinicId || localStorage.getItem('hospitalId')
     const bId = visit.branchId
     const trId = visit.therapistRecordId
@@ -1186,17 +1344,17 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
       console.warn('Missing IDs for completed record fetch:', { cId, bId, trId, sId })
     }
 
-    setCompletedLoading(true)
-    setCompletedExerciseName(exerciseName)
-    setShowCompletedModal(true)
-    setCompletedRecord(null)
-
     try {
       const res = await getCompletedTherapyRecord(cId, bId, trId, sId)
       if (res?.success && res.data) {
-        setCompletedRecord(res.data)
+        setCompletedRecord(mapRecordData(res.data))
       } else {
-        setCompletedRecord(null)
+        const possibleData = res?.data || res
+        if (possibleData) {
+          setCompletedRecord(mapRecordData(possibleData))
+        } else {
+          setCompletedRecord(null)
+        }
       }
     } catch (err) {
       console.error('Error fetching completed therapy record:', err)
@@ -2074,26 +2232,13 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                   </div>
 
                   {/* Media Attachments Section */}
-                  {((completedRecord.beforeImage && completedRecord.beforeImage !== 'null') ||
-                    (completedRecord.afterImage && completedRecord.afterImage !== 'null') ||
+                  {((completedRecord.afterImage && completedRecord.afterImage !== 'null') ||
                     (completedRecord.beforeVideo && completedRecord.beforeVideo !== 'null') ||
                     (completedRecord.afterVideo && completedRecord.afterVideo !== 'null') ||
                     (completedRecord.voiceRecord && completedRecord.voiceRecord !== 'null')) ? (
                     <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, padding: 14, background: '#fff' }}>
                       <div style={{ fontSize: '0.75rem', color: T.bgcolor, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Media Attachments</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                        {completedRecord.beforeImage && completedRecord.beforeImage !== 'null' && (
-                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: T.textLight }}>Before Image:</span>
-                            <a href={completedRecord.beforeImage} target="_blank" rel="noopener noreferrer">
-                              <img
-                                src={toImageSrc(completedRecord.beforeImage)}
-                                style={{ width: '100%', height: '180px', objectFit: 'contain', display: 'block', borderRadius: 6, border: `1px solid ${T.border}`, background: '#f8fafc' }}
-                                alt="Before Session"
-                              />
-                            </a>
-                          </div>
-                        )}
                         {completedRecord.afterImage && completedRecord.afterImage !== 'null' && (
                           <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                             <span style={{ fontSize: '0.7rem', fontWeight: 600, color: T.textLight }}>After Image:</span>

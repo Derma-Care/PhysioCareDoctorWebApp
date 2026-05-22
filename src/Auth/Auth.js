@@ -711,9 +711,9 @@ export const getInProgressDetails = async (patientId, bookingId) => {
   }
 };
 
-export const getExerciseSessionsByExerciseId = async (clinicId, branchId, exerciseId) => {
+export const getExerciseSessionsByExerciseId = async (clinicId, branchId, therapistRecordId, patientId, exerciseId) => {
   try {
-    const url = `${ipUrl}/api/customer/therapy-records/getByClinicBranchExercise/${clinicId}/${branchId}/${exerciseId}`
+    const url = `${ipUrl}/api/customer/therapy-records/getByClinicBranchExercise/${clinicId}/${branchId}/${therapistRecordId}/${patientId}/${exerciseId}`
     console.log('📡 getExerciseSessionsByExerciseId requesting remote URL:', url)
     const response = await api.get(url)
     console.log('✅ getExerciseSessionsByExerciseId response:', response.data)

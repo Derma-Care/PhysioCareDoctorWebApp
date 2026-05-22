@@ -10,7 +10,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CContainer, CSpinner } from '@coreui/react'
+import { CContainer, CSpinner, CFormInput } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 import Snackbar from '../components/Snackbar'
 import { COLORS } from '../Themes'
@@ -568,6 +568,33 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
   const [clickedSaveTemplate, setClickedSaveTemplate] = useState(false)
+  
+  const record = formData?.physiotherapyRecord ?? formData ?? {}
+  const patientInfo = record.patientInfo ?? {}
+
+  const [manualMobile, setManualMobile] = useState(
+    patientInfo?.mobileNumber ?? 
+    patientData?.patientMobileNumber ?? 
+    patientData?.mobileNumber ?? 
+    patientData?.contactNumber ?? 
+    patientData?.phone ?? 
+    patientData?.phoneNumber ?? 
+    ''
+  )
+
+  useEffect(() => {
+    const fallbackMobile = patientInfo?.mobileNumber ?? 
+      patientData?.patientMobileNumber ?? 
+      patientData?.mobileNumber ?? 
+      patientData?.contactNumber ?? 
+      patientData?.phone ?? 
+      patientData?.phoneNumber ?? 
+      '';
+    if (fallbackMobile && !manualMobile) {
+      setManualMobile(fallbackMobile);
+    }
+  }, [patientInfo, patientData])
+
   const navigate = useNavigate()
   const { success, error, info, warning } = useToast()
   const ACTIONS = { SAVE: 'save', SAVE_PRINT: 'savePrint' }
@@ -576,7 +603,6 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   // The API response has a flat shape: { bookingId, complaints, assessment, ... }
   // The internal formData has: { symptoms, assessment, diagnosis, ... }
   // We need to handle BOTH so the summary and payload always work correctly.
-  const record = formData?.physiotherapyRecord ?? formData ?? {}
 
   // Top-level IDs — same in both shapes
   const bookingId = record.bookingId ?? patientData?.bookingId ?? ''
@@ -587,11 +613,9 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const doctorName = doctorDetails?.name ?? doctorDetails?.fullName ?? patientData?.doctorName ?? ''
 
   // ─── patientInfo ──────────────────────────────────────────────────────────
-  // API shape: record.patientInfo   Internal shape: also record.patientInfo
-  const patientInfo = record.patientInfo ?? {}
   const patientId = patientInfo.patientId ?? patientData?.patientId ?? ''
   const patientName = patientInfo.patientName ?? patientData?.patientName ?? patientData?.name ?? patientData?.fullName ?? ''
-  const patientMobile = patientInfo.mobileNumber ?? patientData?.patientMobileNumber ?? patientData?.patientMobileNumber ?? ''
+  const patientMobile = manualMobile
   const patientAge = patientInfo.age ?? patientData?.age ?? ''
   const patientSex = patientInfo.sex ?? patientData?.sex ?? patientData?.gender ?? ''
 
@@ -1154,7 +1178,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             {isValid(bookingId) && <Row label="Booking ID" value={bookingId} />}
             {isValid(patientName) && <Row label="Name" value={capitalizeEachWord(patientName)} />}
             {isValid(patientAge) && <Row label="Age / Gender" value={`${patientAge} yrs / ${patientSex}`} />}
-            {isValid(patientMobile) && <Row label="Mobile" value={patientMobile} />}
+            {isValid(manualMobile) && <Row label="Mobile" value={manualMobile} />}
             {isValid(clinicId) && <Row label="Clinic ID" value={clinicId} />}
             {isValid(clinicName) && <Row label="Clinic" value={clinicName} />}
             {isValid(branchId) && <Row label="Branch ID" value={branchId} />}
