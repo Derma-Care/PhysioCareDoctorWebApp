@@ -143,14 +143,13 @@ const AppHeader = () => {
             }}
           />
 
-          {/* Clinic name */}
+          {/* Clinic name & address */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               justifyContent: 'center',
-              textAlign: 'center',
               padding: '0 8px',
             }}
           >
@@ -167,6 +166,19 @@ const AppHeader = () => {
                 >
                   {capitalizeWords(clinicDetails.name) || 'Clinic Name'}
                 </h5>
+                {clinicDetails.address && (
+                  <span
+                    style={{
+                      fontSize: '10.5px',
+                      color: 'rgba(255, 255, 255, 0.75)',
+                      marginTop: '2px',
+                      fontWeight: '500',
+                      letterSpacing: '0.1px',
+                    }}
+                  >
+                    📍 {clinicDetails.address}
+                  </span>
+                )}
               </>
             ) : (
               <span style={{ color: COLORS.gray, fontSize: '13px' }}>Loading...</span>

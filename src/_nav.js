@@ -6,6 +6,7 @@ import {
   cilUser,
   cilCalendar,
   cilBell,
+  cilClock,
 } from '@coreui/icons'
 import { CNavItem } from '@coreui/react'
 import { COLORS } from './Themes'
@@ -23,6 +24,13 @@ const _nav = [
     name: 'Appointments',
     to: '/appointments',
     icon: <CIcon icon={cilCalendar} customClassName="nav-icon" style={{ color: COLORS.white }} />,
+    style: { color: COLORS.white },
+  },
+  {
+    component: CNavItem,
+    name: 'Attendance',
+    to: '/attendance',
+    icon: <CIcon icon={cilClock} customClassName="nav-icon" style={{ color: COLORS.white }} />,
     style: { color: COLORS.white },
   },
   {
