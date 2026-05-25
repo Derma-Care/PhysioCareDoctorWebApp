@@ -348,7 +348,7 @@ const AttendanceTracker = () => {
             background: 'none', 
             border: 'none', 
             color: '#ffffff', 
-            fontSize: '18px', 
+            fontSize: '15px', 
             cursor: 'pointer',
             padding: '0 8px',
             display: 'flex',
@@ -358,11 +358,11 @@ const AttendanceTracker = () => {
         >
           ❮
         </button>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>
           Previous Page
         </div>
-        <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.3)', margin: '0 8px' }} />
-        <div style={{ fontSize: '14px', fontWeight: '700', letterSpacing: '0.2px' }}>
+        <div style={{ width: '1px', height: '14px', backgroundColor: 'rgba(255,255,255,0.3)', margin: '0 8px' }} />
+        <div style={{ fontSize: '12.5px', fontWeight: '700', letterSpacing: '0.2px' }}>
           Attendance Tracker
         </div>
       </div>
@@ -414,7 +414,7 @@ const AttendanceTracker = () => {
         <CRow className="g-3 mb-4">
           
           {/* Card 1: LOGIN */}
-          <CCol xs={12} sm={6} md={3}>
+          <CCol xs={3}>
             <CCard 
               className="border-0 shadow-sm h-100" 
               style={{ 
@@ -423,16 +423,16 @@ const AttendanceTracker = () => {
                 overflow: 'hidden'
               }}
             >
-              <CCardBody className="p-3 d-flex justify-content-between align-items-center">
+              <CCardBody className="p-2 p-md-3 d-flex justify-content-between align-items-center">
                 <div>
-                  <div style={{ color: '#8a94a6', fontSize: '11.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '8px' }}>
+                  <div style={{ color: '#8a94a6', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '4px' }}>
                     Login
                   </div>
-                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '20px', margin: 0 }}>
+                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '14px', margin: 0 }}>
                     {loginTime}
                   </h4>
                 </div>
-                <div style={{ fontSize: '20px', color: '#1B4F8A', opacity: 0.85 }}>
+                <div className="d-none d-sm-block" style={{ fontSize: '16px', color: '#1B4F8A', opacity: 0.85 }}>
                   🚪➜
                 </div>
               </CCardBody>
@@ -440,7 +440,7 @@ const AttendanceTracker = () => {
           </CCol>
 
           {/* Card 2: LOGOUT */}
-          <CCol xs={12} sm={6} md={3}>
+          <CCol xs={3}>
             <CCard 
               className="border-0 shadow-sm h-100" 
               style={{ 
@@ -449,16 +449,16 @@ const AttendanceTracker = () => {
                 overflow: 'hidden'
               }}
             >
-              <CCardBody className="p-3 d-flex justify-content-between align-items-center">
+              <CCardBody className="p-2 p-md-3 d-flex justify-content-between align-items-center">
                 <div>
-                  <div style={{ color: '#8a94a6', fontSize: '11.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '8px' }}>
+                  <div style={{ color: '#8a94a6', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '4px' }}>
                     Logout
                   </div>
-                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '20px', margin: 0 }}>
+                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '14px', margin: 0 }}>
                     {logoutTime}
                   </h4>
                 </div>
-                <div style={{ fontSize: '20px', color: '#1B4F8A', opacity: 0.85 }}>
+                <div className="d-none d-sm-block" style={{ fontSize: '16px', color: '#1B4F8A', opacity: 0.85 }}>
                   🚪⬅
                 </div>
               </CCardBody>
@@ -466,7 +466,7 @@ const AttendanceTracker = () => {
           </CCol>
 
           {/* Card 3: ACTIVITIES */}
-          <CCol xs={12} sm={6} md={3}>
+          <CCol xs={3}>
             <CCard 
               className="border-0 shadow-sm h-100" 
               style={{ 
@@ -475,16 +475,16 @@ const AttendanceTracker = () => {
                 overflow: 'hidden'
               }}
             >
-              <CCardBody className="p-3 d-flex justify-content-between align-items-center">
+              <CCardBody className="p-2 p-md-3 d-flex justify-content-between align-items-center">
                 <div>
-                  <div style={{ color: '#8a94a6', fontSize: '11.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '8px' }}>
+                  <div style={{ color: '#8a94a6', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '4px' }}>
                     Activities
                   </div>
-                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '20px', margin: 0 }}>
+                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '14px', margin: 0 }}>
                     {activities.length}
                   </h4>
                 </div>
-                <div style={{ fontSize: '22px', color: '#1B4F8A', opacity: 0.85 }}>
+                <div className="d-none d-sm-block" style={{ fontSize: '18px', color: '#1B4F8A', opacity: 0.85 }}>
                   📈
                 </div>
               </CCardBody>
@@ -492,7 +492,7 @@ const AttendanceTracker = () => {
           </CCol>
 
           {/* Card 4: STATUS */}
-          <CCol xs={12} sm={6} md={3}>
+          <CCol xs={3}>
             <CCard 
               className="border-0 shadow-sm h-100" 
               style={{ 
@@ -501,16 +501,16 @@ const AttendanceTracker = () => {
                 overflow: 'hidden'
               }}
             >
-              <CCardBody className="p-3 d-flex justify-content-between align-items-center">
+              <CCardBody className="p-2 p-md-3 d-flex justify-content-between align-items-center">
                 <div>
-                  <div style={{ color: '#8a94a6', fontSize: '11.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '8px' }}>
+                  <div style={{ color: '#8a94a6', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '4px' }}>
                     Status
                   </div>
-                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '18px', margin: 0 }}>
+                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '14px', margin: 0 }}>
                     {status}
                   </h4>
                 </div>
-                <div style={{ fontSize: '20px', color: '#1B4F8A', opacity: 0.85 }}>
+                <div className="d-none d-sm-block" style={{ fontSize: '16px', color: '#1B4F8A', opacity: 0.85 }}>
                   🛡️
                 </div>
               </CCardBody>
@@ -527,7 +527,7 @@ const AttendanceTracker = () => {
               background: 'none',
               border: 'none',
               fontWeight: '700',
-              fontSize: '14.5px',
+              fontSize: '13px',
               color: activeSubTab === 'daily' ? '#1B4F8A' : '#8a94a6',
               paddingBottom: '8px',
               borderBottom: activeSubTab === 'daily' ? '3px solid #1B4F8A' : 'none',
@@ -543,7 +543,7 @@ const AttendanceTracker = () => {
               background: 'none',
               border: 'none',
               fontWeight: '700',
-              fontSize: '14.5px',
+              fontSize: '13px',
               color: activeSubTab === 'monthly' ? '#1B4F8A' : '#8a94a6',
               paddingBottom: '8px',
               borderBottom: activeSubTab === 'monthly' ? '3px solid #1B4F8A' : 'none',
@@ -559,7 +559,7 @@ const AttendanceTracker = () => {
         {activeSubTab === 'daily' && (
           <CCard className="border-0 shadow-sm" style={{ borderRadius: '10px', overflow: 'hidden' }}>
             <div className="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
-              <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '15px' }}>
+              <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '13px' }}>
                 Today's activities
               </h5>
               
@@ -569,7 +569,7 @@ const AttendanceTracker = () => {
                   className="btn btn-outline-primary btn-sm"
                   onClick={() => setShowAddActivityModal(true)}
                   style={{
-                    fontSize: '12px',
+                    fontSize: '11px',
                     borderRadius: '8px',
                     borderColor: '#1B4F8A',
                     color: '#1B4F8A',
@@ -622,15 +622,15 @@ const AttendanceTracker = () => {
         {activeSubTab === 'monthly' && (
           <CCard className="border-0 shadow-sm" style={{ borderRadius: '10px', overflow: 'hidden' }}>
             <div className="card-header bg-white py-3 border-bottom-0">
-              <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '15px' }}>
+              <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '13px' }}>
                 Monthly summary
               </h5>
             </div>
             <CCardBody className="p-0 pb-4">
               <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0" style={{ fontSize: '13px' }}>
+                <table className="table table-hover align-middle mb-0" style={{ fontSize: '12px' }}>
                   <thead>
-                    <tr style={{ color: '#8a94a6', fontSize: '12px', letterSpacing: '0.3px' }}>
+                    <tr style={{ color: '#8a94a6', fontSize: '11px', letterSpacing: '0.3px' }}>
                       <th className="ps-4 fw-bold">Date</th>
                       <th className="fw-bold">Login</th>
                       <th className="fw-bold">Logout</th>
@@ -653,7 +653,7 @@ const AttendanceTracker = () => {
                           <button
                             onClick={() => handleViewDetails(hist.date)}
                             className="btn btn-link btn-sm p-0 fw-bold"
-                            style={{ color: '#1B4F8A', textDecoration: 'none', fontSize: '13px' }}
+                            style={{ color: '#1B4F8A', textDecoration: 'none', fontSize: '11.5px' }}
                           >
                             View
                           </button>
