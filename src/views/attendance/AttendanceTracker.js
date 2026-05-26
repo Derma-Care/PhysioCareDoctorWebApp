@@ -16,6 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { COLORS } from '../../Themes';
 import axios from 'axios';
+import { ipUrl } from '../../Auth/BaseUrl';
 
 const AttendanceTracker = () => {
   const navigate = useNavigate();
@@ -129,27 +130,27 @@ const AttendanceTracker = () => {
     try {
       const todayStr = new Date().toISOString().split('T')[0];
       const userId = localStorage.getItem('doctorId') || '0001';
-      const apiUrl = `http://3.7.165.97:9090/clinic-admin/getUserDailyAttendence/${userId}/${todayStr}`;
+      const apiUrl = `${ipUrl}/clinic-admin/getUserDailyAttendence/${userId}/${todayStr}`;
       
       const res = await axios.get(apiUrl);
       if (res.data && res.data.success && res.data.data) {
         const dailyData = res.data.data;
         setActivities(dailyData.activities || dailyData.sessions || []);
-        if (dailyData.login?.time) {
-          setLoginTime(dailyData.login.time);
-          setIsLoggedIn(dailyData.status === 'LOGGED_IN' || dailyData.status === 'Active');
-          setStatus(dailyData.status || 'Active');
+        
+        const fetchedLoginTime = dailyData.inTime || dailyData.loginTime || dailyData.login?.time || '—';
+        const fetchedLogoutTime = dailyData.outTime || dailyData.logoutTime || dailyData.logout?.time || '—';
+        
+        setLoginTime(fetchedLoginTime);
+        setLogoutTime(fetchedLogoutTime);
+        
+        if (fetchedLoginTime !== '—') {
+          // If there's a login time and no logout time (or logout is '—'), they are logged in
+          const currentlyLoggedIn = fetchedLogoutTime === '—';
+          setIsLoggedIn(currentlyLoggedIn);
+          setStatus(dailyData.status || (currentlyLoggedIn ? 'Active' : 'Present'));
         } else {
-          setLoginTime('—');
           setIsLoggedIn(false);
           setStatus('—');
-        }
-        if (dailyData.logout?.time) {
-          setLogoutTime(dailyData.logout.time);
-          setIsLoggedIn(false);
-          setStatus(dailyData.status || 'Present');
-        } else {
-          setLogoutTime('—');
         }
       } else {
         // Fallback to localStorage if no remote database record yet
@@ -190,7 +191,7 @@ const AttendanceTracker = () => {
       const todayStr = new Date().toISOString().split('T')[0];
       const monthStr = todayStr.substring(0, 7); // yyyy-MM
       const userId = localStorage.getItem('doctorId') || '0001';
-      const apiUrl = `http://3.7.165.97:9090/clinic-admin/getUserMonthlyAttendence/${userId}/${monthStr}`;
+      const apiUrl = `${ipUrl}/clinic-admin/getUserMonthlyAttendence/${userId}/${monthStr}`;
       
       const res = await axios.get(apiUrl);
       if (res.data && res.data.success && res.data.data) {
@@ -280,7 +281,7 @@ const AttendanceTracker = () => {
             longitude: "78.407807"
           }
         };
-        const res = await axios.post('http://3.7.165.97:9090/clinic-admin/saveUserAttendence', payload);
+        const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
         if (res.data && res.data.success) {
           setIsLoggedIn(true);
           setLoginTime(nowStr);
@@ -315,7 +316,7 @@ const AttendanceTracker = () => {
           logoutLatitude: "17.433071",
           logoutLongtitude: "78.407807"
         };
-        const res = await axios.put('http://3.7.165.97:9090/clinic-admin/updateUserAttendence', payload);
+        const res = await axios.put(`${ipUrl}/clinic-admin/updateUserAttendence`, payload);
         if (res.data && res.data.success) {
           setIsLoggedIn(false);
           setLogoutTime(nowStr);
@@ -368,7 +369,7 @@ const AttendanceTracker = () => {
           }
         ]
       };
-      const res = await axios.post('http://3.7.165.97:9090/clinic-admin/saveUserAttendence', payload);
+      const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
       if (res.data && res.data.success) {
         // Reset fields
         setNewActivity('');
@@ -391,6 +392,34 @@ const AttendanceTracker = () => {
         const updated = [...activities, newEntry];
         setActivities(updated);
         saveState(isLoggedIn, loginTime, logoutTime, status, updated);
+
+        // Update local monthly history working & idle time
+        if (!isLoggedIn && loginTime !== '—' && logoutTime !== '—') {
+          const durationResult = calculateDuration(loginTime, logoutTime);
+          let totalWorkMins = 0;
+          updated.forEach(act => {
+            totalWorkMins += parseDurationStr(act.duration);
+          });
+          const workH = Math.floor(totalWorkMins / 60);
+          const workM = totalWorkMins % 60;
+          const workingStr = `${workH}h ${workM}m`;
+          const idleMins = Math.max(0, durationResult.totalMins - totalWorkMins);
+          const idleH = Math.floor(idleMins / 60);
+          const idleM = idleMins % 60;
+          const idleStr = `${idleH}h ${idleM}m`;
+          const existIndex = monthlyHistory.findIndex(h => h.date === todayStr);
+          let updatedHistory = [...monthlyHistory];
+          if (existIndex > -1) {
+            updatedHistory[existIndex] = { 
+              ...updatedHistory[existIndex],
+              working: workingStr,
+              idle: idleStr
+            };
+            setMonthlyHistory(updatedHistory);
+            localStorage.setItem('doctor_monthly_attendance', JSON.stringify(updatedHistory));
+          }
+        }
+
         setNewActivity('');
         setNewDescription('');
         setDurationHrs(0);
@@ -411,50 +440,40 @@ const AttendanceTracker = () => {
       const updated = [...activities, newEntry];
       setActivities(updated);
       saveState(isLoggedIn, loginTime, logoutTime, status, updated);
+
+      // Update local monthly history working & idle time
+      if (!isLoggedIn && loginTime !== '—' && logoutTime !== '—') {
+        const durationResult = calculateDuration(loginTime, logoutTime);
+        let totalWorkMins = 0;
+        updated.forEach(act => {
+          totalWorkMins += parseDurationStr(act.duration);
+        });
+        const workH = Math.floor(totalWorkMins / 60);
+        const workM = totalWorkMins % 60;
+        const workingStr = `${workH}h ${workM}m`;
+        const idleMins = Math.max(0, durationResult.totalMins - totalWorkMins);
+        const idleH = Math.floor(idleMins / 60);
+        const idleM = idleMins % 60;
+        const idleStr = `${idleH}h ${idleM}m`;
+        const existIndex = monthlyHistory.findIndex(h => h.date === todayStr);
+        let updatedHistory = [...monthlyHistory];
+        if (existIndex > -1) {
+          updatedHistory[existIndex] = { 
+            ...updatedHistory[existIndex],
+            working: workingStr,
+            idle: idleStr
+          };
+          setMonthlyHistory(updatedHistory);
+          localStorage.setItem('doctor_monthly_attendance', JSON.stringify(updatedHistory));
+        }
+      }
+
       setNewActivity('');
       setNewDescription('');
       setDurationHrs(0);
       setDurationMins(0);
       setShowAddActivityModal(false);
     }
-  };
-
-    // If already clocked out, dynamically update working and idle time in monthly list
-    if (!isLoggedIn && loginTime !== '—' && logoutTime !== '—') {
-      const durationResult = calculateDuration(loginTime, logoutTime);
-      let totalWorkMins = 0;
-      updated.forEach(act => {
-        totalWorkMins += parseDurationStr(act.duration);
-      });
-      
-      const workH = Math.floor(totalWorkMins / 60);
-      const workM = totalWorkMins % 60;
-      const workingStr = `${workH}h ${workM}m`;
-      
-      const idleMins = Math.max(0, durationResult.totalMins - totalWorkMins);
-      const idleH = Math.floor(idleMins / 60);
-      const idleM = idleMins % 60;
-      const idleStr = `${idleH}h ${idleM}m`;
-
-      const existIndex = monthlyHistory.findIndex(h => h.date === todayStr);
-      let updatedHistory = [...monthlyHistory];
-      if (existIndex > -1) {
-        updatedHistory[existIndex] = { 
-          ...updatedHistory[existIndex],
-          working: workingStr,
-          idle: idleStr
-        };
-        setMonthlyHistory(updatedHistory);
-        localStorage.setItem('doctor_monthly_attendance', JSON.stringify(updatedHistory));
-      }
-    }
-
-    // Reset fields
-    setNewActivity('');
-    setNewDescription('');
-    setDurationHrs(0);
-    setDurationMins(0);
-    setShowAddActivityModal(false);
   };
 
   // View historical daily log activities details
@@ -465,7 +484,7 @@ const AttendanceTracker = () => {
     
     try {
       const userId = localStorage.getItem('doctorId') || '0001';
-      const apiUrl = `http://3.7.165.97:9090/clinic-admin/getUserDailyAttendence/${userId}/${dateStr}`;
+      const apiUrl = `${ipUrl}/clinic-admin/getUserDailyAttendence/${userId}/${dateStr}`;
       
       const res = await axios.get(apiUrl);
       if (res.data && res.data.success && res.data.data) {
