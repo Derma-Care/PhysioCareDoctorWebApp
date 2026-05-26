@@ -15,6 +15,7 @@ import {
 } from '@coreui/react';
 import { useNavigate } from 'react-router-dom';
 import { COLORS } from '../../Themes';
+import axios from 'axios';
 
 const AttendanceTracker = () => {
   const navigate = useNavigate();
@@ -32,6 +33,42 @@ const AttendanceTracker = () => {
   const [newActivity, setNewActivity] = useState('');
   const [newDuration, setNewDuration] = useState('30 mins');
   const [newLocation, setNewLocation] = useState('Therapy Room A');
+  const [newDescription, setNewDescription] = useState('');
+  const [durationHrs, setDurationHrs] = useState(0);
+  const [durationMins, setDurationMins] = useState(0);
+  const [currentLocationText, setCurrentLocationText] = useState('Location unavailable');
+
+  // Geolocation for Add Activity Modal
+  useEffect(() => {
+    if (showAddActivityModal) {
+      setCurrentLocationText('Fetching location...');
+      if (window.isSecureContext && navigator.geolocation) {
+        try {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              const locText = `Kinetix Wellness Care (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+              setCurrentLocationText(locText);
+              setNewLocation(locText);
+            },
+            (error) => {
+              console.error('Error fetching location:', error);
+              setCurrentLocationText('Location unavailable');
+              setNewLocation('Location unavailable');
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+          );
+        } catch (err) {
+          console.error('Geolocation failed:', err);
+          setCurrentLocationText('Location unavailable');
+          setNewLocation('Location unavailable');
+        }
+      } else {
+        setCurrentLocationText('Location unavailable');
+        setNewLocation('Location unavailable');
+      }
+    }
+  }, [showAddActivityModal]);
 
   // Month-wise History States
   const [monthlyHistory, setMonthlyHistory] = useState([]);
@@ -88,36 +125,110 @@ const AttendanceTracker = () => {
     };
   };
 
-  // Load state from localStorage on mount
-  useEffect(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const storedState = localStorage.getItem(`doctor_duty_log_${todayStr}`);
-    const storedHistory = localStorage.getItem('doctor_monthly_attendance');
-
-    if (storedState) {
-      const parsed = JSON.parse(storedState);
-      setIsLoggedIn(parsed.isLoggedIn);
-      setLoginTime(parsed.loginTime);
-      setLogoutTime(parsed.logoutTime);
-      setStatus(parsed.status);
-      setActivities(parsed.activities || []);
-    }
-
-    // Determine if stored history is in the old format or new format
-    let needsReseed = false;
-    if (storedHistory) {
-      try {
-        const parsed = JSON.parse(storedHistory);
-        if (parsed.length > 0 && parsed[0].hasOwnProperty('hours')) {
-          needsReseed = true;
+  const fetchDailyData = async () => {
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const userId = localStorage.getItem('doctorId') || '0001';
+      const apiUrl = `http://3.7.165.97:9090/clinic-admin/getUserDailyAttendence/${userId}/${todayStr}`;
+      
+      const res = await axios.get(apiUrl);
+      if (res.data && res.data.success && res.data.data) {
+        const dailyData = res.data.data;
+        setActivities(dailyData.activities || dailyData.sessions || []);
+        if (dailyData.login?.time) {
+          setLoginTime(dailyData.login.time);
+          setIsLoggedIn(dailyData.status === 'LOGGED_IN' || dailyData.status === 'Active');
+          setStatus(dailyData.status || 'Active');
+        } else {
+          setLoginTime('—');
+          setIsLoggedIn(false);
+          setStatus('—');
         }
-      } catch (e) {
-        needsReseed = true;
+        if (dailyData.logout?.time) {
+          setLogoutTime(dailyData.logout.time);
+          setIsLoggedIn(false);
+          setStatus(dailyData.status || 'Present');
+        } else {
+          setLogoutTime('—');
+        }
+      } else {
+        // Fallback to localStorage if no remote database record yet
+        const storedState = localStorage.getItem(`doctor_duty_log_${todayStr}`);
+        if (storedState) {
+          const parsed = JSON.parse(storedState);
+          setIsLoggedIn(parsed.isLoggedIn);
+          setLoginTime(parsed.loginTime);
+          setLogoutTime(parsed.logoutTime);
+          setStatus(parsed.status);
+          setActivities(parsed.activities || []);
+        } else {
+          setActivities([]);
+          setLoginTime('—');
+          setLogoutTime('—');
+          setIsLoggedIn(false);
+          setStatus('—');
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching daily attendance:', err);
+      // Fallback
+      const todayStr = new Date().toISOString().split('T')[0];
+      const storedState = localStorage.getItem(`doctor_duty_log_${todayStr}`);
+      if (storedState) {
+        const parsed = JSON.parse(storedState);
+        setIsLoggedIn(parsed.isLoggedIn);
+        setLoginTime(parsed.loginTime);
+        setLogoutTime(parsed.logoutTime);
+        setStatus(parsed.status);
+        setActivities(parsed.activities || []);
       }
     }
+  };
 
-    if (!storedHistory || needsReseed) {
-      // Seed the exact monthly history requested by the user
+  const fetchMonthlyData = async () => {
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const monthStr = todayStr.substring(0, 7); // yyyy-MM
+      const userId = localStorage.getItem('doctorId') || '0001';
+      const apiUrl = `http://3.7.165.97:9090/clinic-admin/getUserMonthlyAttendence/${userId}/${monthStr}`;
+      
+      const res = await axios.get(apiUrl);
+      if (res.data && res.data.success && res.data.data) {
+        const historyList = res.data.data.map(item => ({
+          date: item.date,
+          login: item.inTime || item.login?.time || '—',
+          logout: item.outTime || item.logout?.time || '—',
+          total: item.logTime || item.totalTime || '—',
+          working: item.workingHours || item.workingTime || '—',
+          idle: item.idleTime || '—'
+        }));
+        setMonthlyHistory(historyList);
+        localStorage.setItem('doctor_monthly_attendance', JSON.stringify(historyList));
+      } else {
+        // Fallback
+        const storedHistory = localStorage.getItem('doctor_monthly_attendance');
+        if (storedHistory) {
+          setMonthlyHistory(JSON.parse(storedHistory));
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching monthly attendance:', err);
+      // Fallback
+      const storedHistory = localStorage.getItem('doctor_monthly_attendance');
+      if (storedHistory) {
+        setMonthlyHistory(JSON.parse(storedHistory));
+      }
+    }
+  };
+
+  // Load state on mount
+  useEffect(() => {
+    fetchDailyData();
+    fetchMonthlyData();
+
+    // Seed mock monthly history if first time or storage is empty
+    const storedHistory = localStorage.getItem('doctor_monthly_attendance');
+    if (!storedHistory) {
       const seedHistory = [
         { date: '2026-05-24', login: '20:06', logout: '20:06', total: '0h 0m', working: '0h 0m', idle: '0h 0m' },
         { date: '2026-05-23', login: '12:27', logout: '', total: '0h 1m', working: '0h 0m', idle: '0h 1m' },
@@ -127,30 +238,6 @@ const AttendanceTracker = () => {
       ];
       setMonthlyHistory(seedHistory);
       localStorage.setItem('doctor_monthly_attendance', JSON.stringify(seedHistory));
-
-      // Seed dynamic activities for historical details
-      const seedActivities24 = [];
-      const seedActivities23 = [
-        { id: 1, activity: 'Initial assessment for client Rohan', duration: '1 min', location: 'Cabin 2', date: '2026-05-23' }
-      ];
-
-      localStorage.setItem('doctor_duty_log_2026-05-24', JSON.stringify({
-        isLoggedIn: false,
-        loginTime: '20:06',
-        logoutTime: '20:06',
-        status: 'Present',
-        activities: seedActivities24
-      }));
-
-      localStorage.setItem('doctor_duty_log_2026-05-23', JSON.stringify({
-        isLoggedIn: false,
-        loginTime: '12:27',
-        logoutTime: '',
-        status: 'Active',
-        activities: seedActivities23
-      }));
-    } else {
-      setMonthlyHistory(JSON.parse(storedHistory));
     }
   }, []);
 
@@ -168,7 +255,7 @@ const AttendanceTracker = () => {
   };
 
   // Toggle Login / Logout Action
-  const handleToggleLogin = () => {
+  const handleToggleLogin = async () => {
     const format24h = (date) => {
       let hours = date.getHours();
       let minutes = date.getMinutes();
@@ -178,102 +265,159 @@ const AttendanceTracker = () => {
     };
 
     const nowStr = format24h(new Date());
+    const todayStr = new Date().toISOString().split('T')[0];
+    const userId = localStorage.getItem('doctorId') || '0001';
 
     if (!isLoggedIn) {
-      // Clock In
-      setIsLoggedIn(true);
-      setLoginTime(nowStr);
-      setLogoutTime('—');
-      setStatus('Active');
-      saveState(true, nowStr, '—', 'Active', activities);
-
-      // Update monthly database list
-      const todayStr = new Date().toISOString().split('T')[0];
-      const existIndex = monthlyHistory.findIndex(h => h.date === todayStr);
-      let updatedHistory = [...monthlyHistory];
-      if (existIndex > -1) {
-        updatedHistory[existIndex] = { 
-          date: todayStr, 
-          login: nowStr, 
-          logout: '', 
-          total: '', 
-          working: '', 
-          idle: '' 
+      // Clock In (Login)
+      try {
+        const payload = {
+          userId,
+          date: todayStr,
+          login: {
+            time: nowStr,
+            latitude: "17.433071",
+            longitude: "78.407807"
+          }
         };
-      } else {
-        updatedHistory = [
-          { 
-            date: todayStr, 
-            login: nowStr, 
-            logout: '', 
-            total: '', 
-            working: '', 
-            idle: '' 
-          }, 
-          ...updatedHistory
-        ];
+        const res = await axios.post('http://3.7.165.97:9090/clinic-admin/saveUserAttendence', payload);
+        if (res.data && res.data.success) {
+          setIsLoggedIn(true);
+          setLoginTime(nowStr);
+          setLogoutTime('—');
+          setStatus('Active');
+          fetchDailyData();
+          fetchMonthlyData();
+        } else {
+          // Local fallback in case server returns error
+          setIsLoggedIn(true);
+          setLoginTime(nowStr);
+          setLogoutTime('—');
+          setStatus('Active');
+          saveState(true, nowStr, '—', 'Active', activities);
+        }
+      } catch (err) {
+        console.error('Failed to log in on server:', err);
+        // Local fallback
+        setIsLoggedIn(true);
+        setLoginTime(nowStr);
+        setLogoutTime('—');
+        setStatus('Active');
+        saveState(true, nowStr, '—', 'Active', activities);
       }
-      setMonthlyHistory(updatedHistory);
-      localStorage.setItem('doctor_monthly_attendance', JSON.stringify(updatedHistory));
     } else {
-      // Clock Out
-      setIsLoggedIn(false);
-      setLogoutTime(nowStr);
-      setStatus('Present');
-
-      // Calculate durations
-      const durationResult = calculateDuration(loginTime, nowStr);
-      
-      // Calculate working time from activities
-      let totalWorkMins = 0;
-      activities.forEach(act => {
-        totalWorkMins += parseDurationStr(act.duration);
-      });
-      
-      const workH = Math.floor(totalWorkMins / 60);
-      const workM = totalWorkMins % 60;
-      const workingStr = `${workH}h ${workM}m`;
-      
-      const idleMins = Math.max(0, durationResult.totalMins - totalWorkMins);
-      const idleH = Math.floor(idleMins / 60);
-      const idleM = idleMins % 60;
-      const idleStr = `${idleH}h ${idleM}m`;
-
-      saveState(false, loginTime, nowStr, 'Present', activities);
-
-      const todayStr = new Date().toISOString().split('T')[0];
-      const existIndex = monthlyHistory.findIndex(h => h.date === todayStr);
-      let updatedHistory = [...monthlyHistory];
-      if (existIndex > -1) {
-        updatedHistory[existIndex] = { 
-          date: todayStr, 
-          login: loginTime, 
-          logout: nowStr, 
-          total: durationResult.totalStr, 
-          working: workingStr, 
-          idle: idleStr 
+      // Clock Out (Logout)
+      try {
+        const payload = {
+          userId,
+          date: todayStr,
+          logoutTime: nowStr,
+          logoutLatitude: "17.433071",
+          logoutLongtitude: "78.407807"
         };
+        const res = await axios.put('http://3.7.165.97:9090/clinic-admin/updateUserAttendence', payload);
+        if (res.data && res.data.success) {
+          setIsLoggedIn(false);
+          setLogoutTime(nowStr);
+          setStatus('Present');
+          fetchDailyData();
+          fetchMonthlyData();
+        } else {
+          // Local fallback in case server returns error
+          setIsLoggedIn(false);
+          setLogoutTime(nowStr);
+          setStatus('Present');
+          saveState(false, loginTime, nowStr, 'Present', activities);
+        }
+      } catch (err) {
+        console.error('Failed to log out on server:', err);
+        // Local fallback
+        setIsLoggedIn(false);
+        setLogoutTime(nowStr);
+        setStatus('Present');
+        saveState(false, loginTime, nowStr, 'Present', activities);
       }
-      setMonthlyHistory(updatedHistory);
-      localStorage.setItem('doctor_monthly_attendance', JSON.stringify(updatedHistory));
     }
   };
 
   // Add Custom Roster Activity
-  const handleAddActivity = () => {
-    if (!newActivity.trim()) return;
+  const handleAddActivity = async () => {
+    if (!newActivity || !newActivity.trim()) return;
     const todayStr = new Date().toISOString().split('T')[0];
-    const newEntry = {
-      id: activities.length + 1,
-      activity: newActivity,
-      duration: newDuration,
-      location: newLocation,
-      date: todayStr
-    };
+    const durationStr = `${durationHrs}h ${durationMins}m`;
+    const userId = localStorage.getItem('doctorId') || '0001';
+    const clinicId = localStorage.getItem('hospitalId') || 'C001';
+    const branchId = localStorage.getItem('branchId') || 'B001';
+    const role = localStorage.getItem('role') || 'DOCTOR';
 
-    const updated = [...activities, newEntry];
-    setActivities(updated);
-    saveState(isLoggedIn, loginTime, logoutTime, status, updated);
+    try {
+      const payload = {
+        userId,
+        role,
+        clinicId,
+        branchId,
+        date: todayStr,
+        activities: [
+          {
+            activity: newActivity,
+            description: newDescription,
+            duration: durationStr,
+            location: newLocation || 'Location unavailable',
+            latitude: "17.433071",
+            longtitude: "78.407807"
+          }
+        ]
+      };
+      const res = await axios.post('http://3.7.165.97:9090/clinic-admin/saveUserAttendence', payload);
+      if (res.data && res.data.success) {
+        // Reset fields
+        setNewActivity('');
+        setNewDescription('');
+        setDurationHrs(0);
+        setDurationMins(0);
+        setShowAddActivityModal(false);
+        fetchDailyData();
+        fetchMonthlyData();
+      } else {
+        // Local fallback
+        const newEntry = {
+          id: activities.length + 1,
+          activity: newActivity,
+          duration: durationStr,
+          location: newLocation,
+          date: todayStr,
+          description: newDescription
+        };
+        const updated = [...activities, newEntry];
+        setActivities(updated);
+        saveState(isLoggedIn, loginTime, logoutTime, status, updated);
+        setNewActivity('');
+        setNewDescription('');
+        setDurationHrs(0);
+        setDurationMins(0);
+        setShowAddActivityModal(false);
+      }
+    } catch (err) {
+      console.error('Failed to save activity to server:', err);
+      // Local fallback
+      const newEntry = {
+        id: activities.length + 1,
+        activity: newActivity,
+        duration: durationStr,
+        location: newLocation,
+        date: todayStr,
+        description: newDescription
+      };
+      const updated = [...activities, newEntry];
+      setActivities(updated);
+      saveState(isLoggedIn, loginTime, logoutTime, status, updated);
+      setNewActivity('');
+      setNewDescription('');
+      setDurationHrs(0);
+      setDurationMins(0);
+      setShowAddActivityModal(false);
+    }
+  };
 
     // If already clocked out, dynamically update working and idle time in monthly list
     if (!isLoggedIn && loginTime !== '—' && logoutTime !== '—') {
@@ -307,24 +451,42 @@ const AttendanceTracker = () => {
 
     // Reset fields
     setNewActivity('');
+    setNewDescription('');
+    setDurationHrs(0);
+    setDurationMins(0);
     setShowAddActivityModal(false);
   };
 
   // View historical daily log activities details
-  const handleViewDetails = (dateStr) => {
+  const handleViewDetails = async (dateStr) => {
     setSelectedHistoryDate(dateStr);
-    const storedState = localStorage.getItem(`doctor_duty_log_${dateStr}`);
-    if (storedState) {
-      try {
+    setShowDetailsModal(true);
+    setSelectedDateActivities([]);
+    
+    try {
+      const userId = localStorage.getItem('doctorId') || '0001';
+      const apiUrl = `http://3.7.165.97:9090/clinic-admin/getUserDailyAttendence/${userId}/${dateStr}`;
+      
+      const res = await axios.get(apiUrl);
+      if (res.data && res.data.success && res.data.data) {
+        setSelectedDateActivities(res.data.data.activities || res.data.data.sessions || []);
+      } else {
+        // Fallback
+        const storedState = localStorage.getItem(`doctor_duty_log_${dateStr}`);
+        if (storedState) {
+          const parsed = JSON.parse(storedState);
+          setSelectedDateActivities(parsed.activities || []);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching historical daily details:', err);
+      // Fallback
+      const storedState = localStorage.getItem(`doctor_duty_log_${dateStr}`);
+      if (storedState) {
         const parsed = JSON.parse(storedState);
         setSelectedDateActivities(parsed.activities || []);
-      } catch (e) {
-        setSelectedDateActivities([]);
       }
-    } else {
-      setSelectedDateActivities([]);
     }
-    setShowDetailsModal(true);
   };
 
   return (
@@ -563,19 +725,20 @@ const AttendanceTracker = () => {
                 Today's activities
               </h5>
               
-              {/* Button to log custom activity */}
+              {/* Button to add custom activity */}
               <button
                 className="btn btn-outline-primary btn-sm"
                 onClick={() => setShowAddActivityModal(true)}
                 style={{
-                  fontSize: '11px',
+                  fontSize: '13px',
                   borderRadius: '8px',
                   borderColor: '#1B4F8A',
                   color: '#1B4F8A',
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  padding: '5px 14px'
                 }}
               >
-                + Log Activity
+                + Add activity
               </button>
             </div>
 
@@ -596,7 +759,10 @@ const AttendanceTracker = () => {
                       activities.map((act, idx) => (
                         <tr key={act.id}>
                           <td className="ps-4 text-muted fw-semibold">{idx + 1}</td>
-                          <td className="fw-bold text-dark">{act.activity}</td>
+                          <td className="text-dark">
+                            <div className="fw-bold">{act.activity}</div>
+                            {act.description && <div className="text-muted small fw-normal" style={{ fontSize: '11px', marginTop: '2px' }}>{act.description}</div>}
+                          </td>
                           <td>{act.duration}</td>
                           <td style={{ color: '#1B4F8A', fontWeight: '500' }}>{act.location ? `📍 ${act.location}` : '—'}</td>
                           <td className="pe-4 text-muted">{act.date}</td>
@@ -668,47 +834,101 @@ const AttendanceTracker = () => {
       </CContainer>
 
       {/* ─── MODAL: ADD CUSTOM ACTIVITY ───────────────────────────────────── */}
-      <CModal visible={showAddActivityModal} onClose={() => setShowAddActivityModal(false)}>
-        <CModalHeader style={{ backgroundColor: '#1B4F8A' }}>
-          <CModalTitle className="text-white fw-bold">Log Clinical Activity</CModalTitle>
+      <CModal visible={showAddActivityModal} onClose={() => setShowAddActivityModal(false)} alignment="center">
+        <CModalHeader style={{ borderBottom: 'none', padding: '24px 24px 8px', fontFamily: "'Outfit', sans-serif" }}>
+          <CModalTitle style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '20px' }}>Add Activity</CModalTitle>
         </CModalHeader>
-        <CModalBody>
+        <CModalBody style={{ padding: '8px 24px 24px', fontFamily: "'Outfit', sans-serif" }}>
           <div className="d-flex flex-column gap-3">
             <div>
-              <CFormLabel className="fw-semibold small">Activity Title</CFormLabel>
-              <CFormInput 
-                type="text" 
-                placeholder="e.g. Completed physical therapy session for Patient Prashanth" 
-                value={newActivity} 
-                onChange={(e) => setNewActivity(e.target.value)} 
+              <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>Activity Name</CFormLabel>
+              <select
+                className="form-select"
+                value={newActivity}
+                onChange={(e) => setNewActivity(e.target.value)}
+                style={{ borderRadius: '8px', border: '1px solid #ced4da', padding: '10px 12px', fontSize: '14px', color: newActivity ? '#212529' : '#6c757d' }}
+              >
+                <option value="">Select Activity</option>
+                <option value="Followup Calls">Followup Calls</option>
+                <option value="Consulations">Consulations</option>
+                <option value="Other Activity">Other Activity</option>
+                <option value="Paid Leave">Paid Leave</option>
+                <option value="Loss of Pay">Loss of Pay</option>
+              </select>
+            </div>
+
+            <div>
+              <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>Description</CFormLabel>
+              <textarea
+                className="form-control"
+                rows={3}
+                placeholder="Enter Description (Optional)"
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                style={{ borderRadius: '8px', border: '1px solid #ced4da', padding: '10px 12px', fontSize: '14px' }}
               />
             </div>
 
-            <div className="row g-2">
-              <div className="col-6">
-                <CFormLabel className="fw-semibold small">Duration</CFormLabel>
-                <CFormInput 
-                  type="text" 
-                  placeholder="e.g. 45 mins" 
-                  value={newDuration} 
-                  onChange={(e) => setNewDuration(e.target.value)} 
-                />
+            <div>
+              <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>Duration</CFormLabel>
+              <div className="d-flex align-items-center justify-content-center gap-3 p-3 rounded" style={{ backgroundColor: '#F8FBFF', border: '1px solid #EBF3FC' }}>
+                <div className="d-flex align-items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="23"
+                    className="form-control text-center fw-bold"
+                    value={durationHrs}
+                    onChange={(e) => setDurationHrs(Math.max(0, parseInt(e.target.value) || 0))}
+                    style={{ width: '70px', borderRadius: '8px', border: '1px solid #ced4da', padding: '8px' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#1B4F8A', fontWeight: '600' }}>Hrs</span>
+                </div>
+                <span className="fw-bold" style={{ color: '#1B4F8A' }}>:</span>
+                <div className="d-flex align-items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    className="form-control text-center fw-bold"
+                    value={durationMins}
+                    onChange={(e) => setDurationMins(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                    style={{ width: '70px', borderRadius: '8px', border: '1px solid #ced4da', padding: '8px' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#1B4F8A', fontWeight: '600' }}>Min</span>
+                </div>
               </div>
-              <div className="col-6">
-                <CFormLabel className="fw-semibold small">Cabin / Location</CFormLabel>
-                <CFormInput 
-                  type="text" 
-                  placeholder="e.g. Cabin 2" 
-                  value={newLocation} 
-                  onChange={(e) => setNewLocation(e.target.value)} 
-                />
+            </div>
+
+            {/* Styled Info Section */}
+            <div className="p-3 rounded" style={{ backgroundColor: '#EBF5FF', border: '1px solid #D6E9FF', fontSize: '12.5px' }}>
+              <div className="d-flex justify-content-between fw-bold" style={{ color: '#1B4F8A' }}>
+                <span>Date: {new Date().toISOString().split('T')[0]}</span>
+                <span>Duration: {durationHrs}h {durationMins}m</span>
+              </div>
+              <div style={{ height: '1px', backgroundColor: '#D6E9FF', margin: '8px 0' }} />
+              <div>
+                <div className="fw-bold" style={{ color: '#1B4F8A', marginBottom: '2px' }}>Location:</div>
+                <div style={{ color: '#2C5E9E', fontWeight: '500' }}>{currentLocationText}</div>
               </div>
             </div>
           </div>
         </CModalBody>
-        <CModalFooter>
-          <button className="btn btn-light btn-sm" onClick={() => setShowAddActivityModal(false)}>Cancel</button>
-          <button className="btn btn-primary btn-sm" style={{ backgroundColor: '#1B4F8A', borderColor: '#1B4F8A' }} onClick={handleAddActivity}>Log Activity</button>
+        <CModalFooter style={{ borderTop: 'none', padding: '16px 24px 24px', display: 'flex', gap: '12px', justifyContent: 'flex-end', fontFamily: "'Outfit', sans-serif" }}>
+          <button
+            className="btn"
+            onClick={() => setShowAddActivityModal(false)}
+            style={{ backgroundColor: '#6C757D', color: '#FFFFFF', borderRadius: '8px', padding: '8px 20px', fontWeight: '600', border: 'none', fontSize: '13.5px' }}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn"
+            onClick={handleAddActivity}
+            style={{ backgroundColor: '#1B4F8A', color: '#FFFFFF', borderRadius: '8px', padding: '8px 24px', fontWeight: '600', border: 'none', fontSize: '13.5px' }}
+          >
+            Save Activity
+          </button>
         </CModalFooter>
       </CModal>
 
@@ -734,7 +954,10 @@ const AttendanceTracker = () => {
                   selectedDateActivities.map((act, idx) => (
                     <tr key={act.id}>
                       <td className="ps-4 text-muted fw-semibold">{idx + 1}</td>
-                      <td className="fw-bold text-dark">{act.activity}</td>
+                      <td className="text-dark">
+                        <div className="fw-bold">{act.activity}</div>
+                        {act.description && <div className="text-muted small fw-normal" style={{ fontSize: '11px', marginTop: '2px' }}>{act.description}</div>}
+                      </td>
                       <td>{act.duration}</td>
                       <td style={{ color: '#1B4F8A', fontWeight: '500' }}>{act.location ? `📍 ${act.location}` : '—'}</td>
                       <td className="pe-4 text-muted">{act.date}</td>
