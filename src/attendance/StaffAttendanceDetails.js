@@ -367,7 +367,9 @@ export default function StaffAttendanceDetails() {
                 <div className="text-muted small text-uppercase fw-bold mb-1">Login Details</div>
                 <div className="d-flex flex-column">
                   <span className="fw-bold" style={{ color: "#1B4F8A" }}>{trackerData?.login?.time || "-"}</span>
-                  <span className="text-muted small" style={{ fontSize: "10px", lineHeight: "1.2" }}>{trackerData?.login?.location || "Location N/A"}</span>
+                  <span className="text-muted small" style={{ fontSize: "10px", lineHeight: "1.2" }}>
+                    {trackerData?.login?.location || trackerData?.loginLocation || selectedAttRecord?.loginLocation || "Location N/A"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -376,7 +378,9 @@ export default function StaffAttendanceDetails() {
                 <div className="text-muted small text-uppercase fw-bold mb-1">Logout Details</div>
                 <div className="d-flex flex-column">
                   <span className="fw-bold" style={{ color: "#1B4F8A" }}>{trackerData?.logout?.time || "-"}</span>
-                  <span className="text-muted small" style={{ fontSize: "10px", lineHeight: "1.2" }}>{trackerData?.logout?.location || "Location N/A"}</span>
+                  <span className="text-muted small" style={{ fontSize: "10px", lineHeight: "1.2" }}>
+                    {trackerData?.logout?.location || trackerData?.logoutLocation || selectedAttRecord?.logoutLocation || "Location N/A"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -397,6 +401,7 @@ export default function StaffAttendanceDetails() {
                       <th className="py-2">#</th>
                       <th className="py-2">Activity</th>
                       <th className="py-2">Duration</th>
+                      <th className="py-2">Location</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -406,9 +411,11 @@ export default function StaffAttendanceDetails() {
                         <td className="py-2 text-dark">
                           <div className="fw-bold">{act.activity}</div>
                           {act.description && <div className="text-muted small mb-1" style={{ fontSize: "11px", fontStyle: "italic" }}>{act.description}</div>}
-                          <div className="text-muted" style={{ fontSize: "10px" }}>{act.location}</div>
                         </td>
                         <td className="py-2"><span className="badge bg-light text-dark border">{act.duration}</span></td>
+                        <td className="py-2" style={{ color: "#1B4F8A", fontWeight: "500" }}>
+                          {act.location ? `📍 ${act.location}` : "—"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

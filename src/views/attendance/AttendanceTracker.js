@@ -564,21 +564,19 @@ const AttendanceTracker = () => {
               </h5>
               
               {/* Button to log custom activity */}
-              {isLoggedIn && (
-                <button
-                  className="btn btn-outline-primary btn-sm"
-                  onClick={() => setShowAddActivityModal(true)}
-                  style={{
-                    fontSize: '11px',
-                    borderRadius: '8px',
-                    borderColor: '#1B4F8A',
-                    color: '#1B4F8A',
-                    fontWeight: '600'
-                  }}
-                >
-                  + Log Activity
-                </button>
-              )}
+              <button
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => setShowAddActivityModal(true)}
+                style={{
+                  fontSize: '11px',
+                  borderRadius: '8px',
+                  borderColor: '#1B4F8A',
+                  color: '#1B4F8A',
+                  fontWeight: '600'
+                }}
+              >
+                + Log Activity
+              </button>
             </div>
 
             <CCardBody className="p-0 pb-4">
@@ -600,7 +598,7 @@ const AttendanceTracker = () => {
                           <td className="ps-4 text-muted fw-semibold">{idx + 1}</td>
                           <td className="fw-bold text-dark">{act.activity}</td>
                           <td>{act.duration}</td>
-                          <td style={{ color: '#1B4F8A', fontWeight: '500' }}>📍 {act.location}</td>
+                          <td style={{ color: '#1B4F8A', fontWeight: '500' }}>{act.location ? `📍 ${act.location}` : '—'}</td>
                           <td className="pe-4 text-muted">{act.date}</td>
                         </tr>
                       ))
@@ -738,7 +736,7 @@ const AttendanceTracker = () => {
                       <td className="ps-4 text-muted fw-semibold">{idx + 1}</td>
                       <td className="fw-bold text-dark">{act.activity}</td>
                       <td>{act.duration}</td>
-                      <td style={{ color: '#1B4F8A', fontWeight: '500' }}>📍 {act.location}</td>
+                      <td style={{ color: '#1B4F8A', fontWeight: '500' }}>{act.location ? `📍 ${act.location}` : '—'}</td>
                       <td className="pe-4 text-muted">{act.date}</td>
                     </tr>
                   ))
