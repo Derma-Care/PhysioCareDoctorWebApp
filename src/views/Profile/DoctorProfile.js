@@ -43,7 +43,7 @@ const STYLES = `
   }
 
   .dp-wrapper {
-    font-family: 'Outfit', sans-serif;
+  
     padding: 0 0 60px;
   }
 
@@ -66,7 +66,7 @@ const STYLES = `
     border-radius: 10px;
     background: transparent;
     color: #6b7280;
-    font-family: 'Outfit', sans-serif;
+    
     font-size: 13.5px;
     font-weight: 500;
     cursor: pointer;
@@ -295,7 +295,7 @@ const STYLES = `
     cursor: pointer;
     transition: all .2s;
     min-width: 70px; text-align: center;
-    font-family: 'Outfit', sans-serif;
+   
   }
   .dp-date-btn:hover { border-color: #1B4F8A; background: rgba(27,79,138,0.04); }
   .dp-date-btn.selected {
@@ -314,7 +314,7 @@ const STYLES = `
     font-size: 13px; font-weight: 600; color: #1B4F8A;
     cursor: pointer;
     transition: all .18s;
-    font-family: 'Outfit', sans-serif;
+ 
   }
   .dp-slot:hover:not(:disabled) {
     background: #1B4F8A; color: #fff;
@@ -636,13 +636,17 @@ const DoctorProfile = () => {
                         }
                       }}
                       style={{
-                        background: doctorDetails?.doctorAvailabilityStatus ? COLORS.rose : COLORS.green,
+                        background: doctorDetails?.doctorAvailabilityStatus ? COLORS.primary : COLORS.primary,
                         color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px',
                         fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
                       }}
                     >
                       {doctorDetails?.doctorAvailabilityStatus ? '⭕ Set Inactive' : '🟢 Set Active'}
                     </button>
+                    <div className="dp-hero-stat">
+                      <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.inClinicFee || 0}</div>
+                      <div className="dp-hero-stat-lbl">In-clinic fee</div>
+                    </div>
 
                     {/* <button 
                       onClick={() => setShowPassModal(true)}
@@ -676,11 +680,8 @@ const DoctorProfile = () => {
                 </div>
 
                 {/* Stat tiles */}
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignSelf: 'center' }}>
-                  <div className="dp-hero-stat">
-                    <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.inClinicFee || 0}</div>
-                    <div className="dp-hero-stat-lbl">In-clinic fee</div>
-                  </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignSelf: 'center' }}>
+
                   {/* <div className="dp-hero-stat">
                     <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.vedioConsultationFee || 0}</div>
                     <div className="dp-hero-stat-lbl">Video fee</div>
@@ -760,7 +761,7 @@ const DoctorProfile = () => {
             </div>
 
             {/* Fees */}
-            <div className="dp-card" style={{ animationDelay: '.2s' }}>
+            {/* <div className="dp-card" style={{ animationDelay: '.2s' }}>
               <div className="dp-card-header">
                 <div className="dp-card-header-icon">💼</div>
                 <div className="dp-card-title">Consultation Fees</div>
@@ -783,7 +784,7 @@ const DoctorProfile = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </>
         )}
 

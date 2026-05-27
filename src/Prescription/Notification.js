@@ -36,26 +36,36 @@ if (!document.getElementById('notif-styles')) {
 /* ─── Sample Data ─── */
 const NOTIF_DATA = [
   { id: 1, type: 'appointment', read: false, date: 'Today', title: 'New Appointment Booked', patient: 'Ravi Kumar', detail: 'In-Clinic Consultation · Today at 11:00 AM', time: '2 min ago' },
-  { id: 2, type: 'cancel',      read: false, date: 'Today', title: 'Appointment Cancelled',   patient: 'Priya Sharma', detail: 'Online Consultation · 2:30 PM slot released', time: '15 min ago' },
-  { id: 3, type: 'message',     read: false, date: 'Today', title: 'Patient Message',          patient: 'Ananya Reddy', detail: '"Doctor, when is my next physiotherapy session?"', time: '1 hr ago' },
-  { id: 4, type: 'completed',   read: true,  date: 'Today', title: 'Session Completed',        patient: 'Mohammed Ali', detail: 'Follow-up visit marked complete · 45 min', time: '3 hr ago' },
-  { id: 5, type: 'appointment', read: true,  date: 'Yesterday', title: 'New Appointment Booked', patient: 'Sneha Patel', detail: 'Online Consultation · Tomorrow at 9:00 AM', time: 'Yesterday, 5:45 PM' },
-  { id: 6, type: 'reminder',    read: true,  date: 'Yesterday', title: 'Schedule Reminder',    patient: 'System', detail: '5 appointments scheduled for tomorrow. Review calendar.', time: 'Yesterday, 3:00 PM' },
-  { id: 7, type: 'cancel',      read: true,  date: 'Yesterday', title: 'Appointment Cancelled', patient: 'Arjun Nair', detail: 'In-Clinic session · Rescheduling requested', time: 'Yesterday, 11:20 AM' },
-  { id: 8, type: 'message',     read: true,  date: 'Earlier', title: 'Patient Message',        patient: 'Divya Menon', detail: '"Thank you doctor, feeling much better after the session!"', time: '2 days ago' },
+  { id: 2, type: 'cancel', read: false, date: 'Today', title: 'Appointment Cancelled', patient: 'Priya Sharma', detail: 'Online Consultation · 2:30 PM slot released', time: '15 min ago' },
+  { id: 3, type: 'message', read: false, date: 'Today', title: 'Patient Message', patient: 'Ananya Reddy', detail: '"Doctor, when is my next physiotherapy session?"', time: '1 hr ago' },
+  { id: 4, type: 'completed', read: true, date: 'Today', title: 'Session Completed', patient: 'Mohammed Ali', detail: 'Follow-up visit marked complete · 45 min', time: '3 hr ago' },
+  { id: 5, type: 'appointment', read: true, date: 'Yesterday', title: 'New Appointment Booked', patient: 'Sneha Patel', detail: 'Online Consultation · Tomorrow at 9:00 AM', time: 'Yesterday, 5:45 PM' },
+  { id: 6, type: 'reminder', read: true, date: 'Yesterday', title: 'Schedule Reminder', patient: 'System', detail: '5 appointments scheduled for tomorrow. Review calendar.', time: 'Yesterday, 3:00 PM' },
+  { id: 7, type: 'cancel', read: true, date: 'Yesterday', title: 'Appointment Cancelled', patient: 'Arjun Nair', detail: 'In-Clinic session · Rescheduling requested', time: 'Yesterday, 11:20 AM' },
+  { id: 8, type: 'message', read: true, date: 'Earlier', title: 'Patient Message', patient: 'Divya Menon', detail: '"Thank you doctor, feeling much better after the session!"', time: '2 days ago' },
 ]
 
 const TYPE_CONFIG = {
-  appointment: { label: 'Appointment', accent: '#1B4F8A', bg: '#EAF1FB', labelBg: '#d4e5f7', labelColor: '#1B4F8A',
-    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> },
-  cancel:      { label: 'Cancelled',   accent: '#b91c1c', bg: '#fef2f2', labelBg: '#fecaca', labelColor: '#b91c1c',
-    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg> },
-  message:     { label: 'Message',     accent: '#0f6e56', bg: '#ecfdf5', labelBg: '#a7f3d0', labelColor: '#065f46',
-    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
-  completed:   { label: 'Completed',   accent: '#0f6e56', bg: '#ecfdf5', labelBg: '#a7f3d0', labelColor: '#065f46',
-    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> },
-  reminder:    { label: 'Reminder',    accent: '#92400e', bg: '#fffbeb', labelBg: '#fde68a', labelColor: '#78350f',
-    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> },
+  appointment: {
+    label: 'Appointment', accent: '#1B4F8A', bg: '#EAF1FB', labelBg: '#d4e5f7', labelColor: '#1B4F8A',
+    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+  },
+  cancel: {
+    label: 'Cancelled', accent: '#b91c1c', bg: '#fef2f2', labelBg: '#fecaca', labelColor: '#b91c1c',
+    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M15 9l-6 6M9 9l6 6" /></svg>
+  },
+  message: {
+    label: 'Message', accent: '#0f6e56', bg: '#ecfdf5', labelBg: '#a7f3d0', labelColor: '#065f46',
+    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+  },
+  completed: {
+    label: 'Completed', accent: '#0f6e56', bg: '#ecfdf5', labelBg: '#a7f3d0', labelColor: '#065f46',
+    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" /></svg>
+  },
+  reminder: {
+    label: 'Reminder', accent: '#92400e', bg: '#fffbeb', labelBg: '#fde68a', labelColor: '#78350f',
+    icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+  },
 }
 
 const FILTERS = ['All', 'Unread', 'Appointment', 'Message', 'Cancelled', 'Reminder']
@@ -76,7 +86,7 @@ function Avatar({ name, bg, color }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: name === 'System' ? 15 : 12, fontWeight: 700,
       flexShrink: 0, letterSpacing: '0.5px',
-      fontFamily: "'DM Sans', sans-serif",
+      ily: "'DM Sans', sans-serif",
       border: `1.5px solid ${color}22`,
     }}>
       {initials}
@@ -92,14 +102,14 @@ function StatCard({ label, value, accent, bg }) {
     }}>
       <div style={{
         fontSize: 24, fontWeight: 600, color: accent, lineHeight: 1,
-        fontFamily: "'DM Mono', monospace",
+        ily: "'DM Mono', monospace",
       }}>
         {String(value).padStart(2, '0')}
       </div>
       <div style={{
         fontSize: 10, color: accent, opacity: 0.7, marginTop: 5,
         fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase',
-        fontFamily: "'DM Sans', sans-serif",
+        ily: "'DM Sans', sans-serif",
       }}>
         {label}
       </div>
@@ -135,7 +145,7 @@ const Notifications = () => {
   return (
     <div style={{
       padding: '28px 30px', maxWidth: 820, margin: '0 auto',
-      fontFamily: "'DM Sans', sans-serif",
+      ily: "'DM Sans', sans-serif",
       opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease',
     }}>
 
@@ -154,8 +164,8 @@ const Notifications = () => {
               flexShrink: 0,
             }}>
               <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </div>
             <h5 style={{ fontSize: 19, fontWeight: 600, color: COLORS.bgcolor, margin: 0, letterSpacing: '-0.3px' }}>
@@ -180,11 +190,11 @@ const Notifications = () => {
             background: 'none', border: `1.5px solid ${COLORS.bgcolor}`,
             color: COLORS.bgcolor, borderRadius: 8, padding: '6px 14px',
             fontSize: 12, fontWeight: 500, cursor: 'pointer',
-            fontFamily: "'DM Sans', sans-serif",
+            ily: "'DM Sans', sans-serif",
             display: 'flex', alignItems: 'center', gap: 5,
           }}>
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-              <path d="M20 6L9 17l-5-5"/>
+              <path d="M20 6L9 17l-5-5" />
             </svg>
             Mark all read
           </button>
@@ -210,7 +220,7 @@ const Notifications = () => {
               border: `1.5px solid ${active ? COLORS.bgcolor : '#d0dff0'}`,
               borderRadius: 20, padding: '5px 15px',
               fontSize: 12, fontWeight: 500, cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
+              ily: "'DM Sans', sans-serif",
             }}>
               {f}
             </button>
@@ -226,8 +236,8 @@ const Notifications = () => {
         }}>
           <svg width="40" height="40" fill="none" stroke={COLORS.bgcolor} strokeWidth="1.5" viewBox="0 0 24 24"
             style={{ opacity: 0.25, marginBottom: 10 }}>
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
           <p style={{ color: COLORS.gray, fontSize: 14, margin: '0 0 4px', fontWeight: 500 }}>No notifications found</p>
           <p style={{ color: '#adb5bd', fontSize: 12, margin: 0 }}>Try switching filters above</p>
@@ -241,12 +251,12 @@ const Notifications = () => {
               <span style={{
                 fontSize: 10, fontWeight: 600, color: COLORS.gray,
                 textTransform: 'uppercase', letterSpacing: '1.2px',
-                fontFamily: "'DM Mono', monospace",
+                ily: "'DM Mono', monospace",
               }}>
                 {date}
               </span>
               <div style={{ flex: 1, height: 1, background: '#EAF1FB' }} />
-              <span style={{ fontSize: 10, color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
+              <span style={{ fontSize: 10, color: '#adb5bd', ily: "'DM Mono', monospace" }}>
                 {items.length} item{items.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -294,7 +304,7 @@ const Notifications = () => {
                             backgroundColor: cfg.labelBg, color: cfg.labelColor,
                             borderRadius: 20, padding: '2px 8px',
                             textTransform: 'uppercase', letterSpacing: '0.5px',
-                            fontFamily: "'DM Mono', monospace",
+                            ily: "'DM Mono', monospace",
                             display: 'flex', alignItems: 'center', gap: 4,
                           }}>
                             {cfg.icon}
@@ -334,9 +344,9 @@ const Notifications = () => {
                         {/* Time */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <svg width="9" height="9" fill="none" stroke="#adb5bd" strokeWidth="2" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+                            <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" />
                           </svg>
-                          <span style={{ fontSize: 10, color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
+                          <span style={{ fontSize: 10, color: '#adb5bd', ily: "'DM Mono', monospace" }}>
                             {notif.time}
                           </span>
                         </div>
@@ -355,7 +365,7 @@ const Notifications = () => {
                         }}
                       >
                         <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                          <path d="M18 6L6 18M6 6l12 12"/>
+                          <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
                       </button>
                     </div>
@@ -370,7 +380,7 @@ const Notifications = () => {
       {/* ── Footer ── */}
       {notifications.length > 0 && (
         <div style={{ textAlign: 'center', paddingTop: 18, borderTop: '1px solid #EAF1FB', marginTop: 4 }}>
-          <p style={{ fontSize: 10, color: '#adb5bd', margin: 0, fontFamily: "'DM Mono', monospace", letterSpacing: '0.5px' }}>
+          <p style={{ fontSize: 10, color: '#adb5bd', margin: 0, ily: "'DM Mono', monospace", letterSpacing: '0.5px' }}>
             SHOWING {filtered.length} OF {notifications.length} NOTIFICATIONS
           </p>
         </div>

@@ -11,8 +11,8 @@ const EMPTY_EXERCISE = {
 
 /* ─── Frequency unit options ─────────────────────────────────────────────── */
 const FREQ_UNITS = [
-  { label: 'per day',   value: 'day' },
-  { label: 'per week',  value: 'week' },
+  { label: 'per day', value: 'day' },
+  { label: 'per week', value: 'week' },
   { label: 'per month', value: 'month' },
 ]
 
@@ -83,7 +83,7 @@ const inputStyle = {
   boxSizing: 'border-box',
   height: 38,
   outline: 'none',
-  fontFamily: 'inherit',
+
   transition: 'border-color 0.18s ease',
 }
 
@@ -132,7 +132,7 @@ const Textarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
     rows={rows}
     style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+    onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
   />
 )
 
@@ -177,7 +177,7 @@ const StepperInput = ({ value, onChange, min = 1, max, placeholder, hasError }) 
       appearance: 'auto',
     }}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = hasError ? '#e53e3e' : '#b6cfe8')}
+    onBlur={e => (e.target.style.borderColor = hasError ? '#e53e3e' : '#b6cfe8')}
   />
 )
 
@@ -204,7 +204,7 @@ const FrequencyInput = ({ value, unit, onValueChange, onUnitChange, hasError }) 
         backgroundColor: hasError ? '#fff5f5' : '#FFFFFF',
       }}
       onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-      onBlur={e  => (e.target.style.borderColor = hasError ? '#e53e3e' : '#b6cfe8')}
+      onBlur={e => (e.target.style.borderColor = hasError ? '#e53e3e' : '#b6cfe8')}
     />
     <select
       value={unit}
@@ -219,7 +219,7 @@ const FrequencyInput = ({ value, unit, onValueChange, onUnitChange, hasError }) 
         backgroundColor: '#f0f6ff',
       }}
       onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-      onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+      onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
     >
       {FREQ_UNITS.map(u => (
         <option key={u.value} value={u.value}>{u.label}</option>
@@ -283,7 +283,7 @@ const DeleteModal = ({ exerciseName, onConfirm, onCancel }) => (
             flex: 1, padding: '10px 0', borderRadius: 9,
             border: '1.5px solid #b6cfe8', background: '#FFFFFF',
             color: '#1B4F8A', fontWeight: 700, fontSize: '0.875rem',
-            cursor: 'pointer', fontFamily: 'inherit',
+            cursor: 'pointer',
             transition: 'all 0.15s ease',
           }}
           onMouseEnter={e => { e.currentTarget.style.background = '#f0f6ff' }}
@@ -298,7 +298,7 @@ const DeleteModal = ({ exerciseName, onConfirm, onCancel }) => (
             border: 'none',
             background: 'linear-gradient(135deg, #c0392b, #e53e3e)',
             color: '#FFFFFF', fontWeight: 700, fontSize: '0.875rem',
-            cursor: 'pointer', fontFamily: 'inherit',
+            cursor: 'pointer',
             boxShadow: '0 2px 10px rgba(229,62,62,0.30)',
             transition: 'all 0.15s ease',
           }}
@@ -344,9 +344,9 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
   const [fieldErrors, setFieldErrors] = useState({})
 
   const [exerciseLibrary, setExerciseLibrary] = useState([])
-  const [loadingLibrary, setLoadingLibrary]   = useState(false)
-  const [search, setSearch]                   = useState('')
-  const [showDropdown, setShowDropdown]       = useState(false)
+  const [loadingLibrary, setLoadingLibrary] = useState(false)
+  const [search, setSearch] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
 
   const [bulkSelected, setBulkSelected] = useState(new Set())
   const [showBulkPanel, setShowBulkPanel] = useState(false)
@@ -360,7 +360,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
       if (!clinicId) return
       try {
         let branchId = patientData?.branchId || ''
-        
+
         // Fallback: only fetch today's appointments if branchId is missing from patientData
         if (!branchId) {
           const res = await getTodayAppointments()
@@ -368,7 +368,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
         }
 
         if (!branchId) return
-        
+
         setLoadingLibrary(true)
         const data = await getTherapyExercises(clinicId, branchId)
         const exercisesOnly = (Array.isArray(data) ? data : []).filter(
@@ -534,7 +534,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
   return (
     <div
       className="pb-5"
-      style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", backgroundColor: '#FFFFFF', minHeight: '100vh' }}
+      style={{ backgroundColor: '#FFFFFF', minHeight: '100vh' }}
     >
       {/* Delete Confirmation Modal */}
       {deleteModal.open && (
@@ -574,7 +574,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                     type="button"
                     onClick={() => { setShowBulkPanel(v => !v); setSearch(''); setBulkSelected(new Set()) }}
                     style={{
-                      padding: '7px 18px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                      padding: '7px 18px', borderRadius: 8, cursor: 'pointer',
                       border: '1.5px solid #1B4F8A',
                       background: showBulkPanel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
                       color: showBulkPanel ? '#fff' : '#1B4F8A',
@@ -599,12 +599,12 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                     placeholder="Search exercises..."
                     style={{ ...inputStyle, width: 220, height: 34 }}
                     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-                    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+                    onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
                   />
                   <button
                     type="button"
                     onClick={toggleSelectAll}
-                    style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', }}
                   >
                     {bulkSelected.size === bulkLibrary.length && bulkLibrary.length > 0 ? '☑ Deselect All' : '☐ Select All'}
                   </button>
@@ -619,7 +619,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                       marginLeft: 'auto', padding: '6px 20px', borderRadius: 8, border: 'none',
                       background: bulkSelected.size > 0 ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#b6cfe8',
                       color: '#fff', fontWeight: 700, fontSize: '0.85rem',
-                      cursor: bulkSelected.size > 0 ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
+                      cursor: bulkSelected.size > 0 ? 'pointer' : 'not-allowed',
                     }}
                   >
                     ➕ Add {bulkSelected.size > 0 ? `${bulkSelected.size} ` : ''}Exercise{bulkSelected.size !== 1 ? 's' : ''}
@@ -703,7 +703,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                       onFocus={() => setShowDropdown(true)}
                       onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                       onFocusCapture={e => (e.target.style.borderColor = '#1B4F8A')}
-                      onBlurCapture={e  => (e.target.style.borderColor = fieldErrors.name ? '#e53e3e' : '#b6cfe8')}
+                      onBlurCapture={e => (e.target.style.borderColor = fieldErrors.name ? '#e53e3e' : '#b6cfe8')}
                       placeholder={
                         loadingLibrary
                           ? 'Loading exercises...'
@@ -727,15 +727,15 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                         boxShadow: '0 4px 16px rgba(27,79,138,0.12)',
                       }}>
                         {filteredLibrary.map((ex, i) => {
-                          const exId   = ex.therapyExercisesId
+                          const exId = ex.therapyExercisesId
                           const exName = ex.name || ''
                           const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
                           const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
                           const exSession = ex.session ? String(ex.session) : ''
-                          const exFreq    = ex.frequency || ''
-                          const exNotes   = ex.notes || ''
-                          const exVideo   = ex.video || ''
-                          const exImage   = ex.image || ''
+                          const exFreq = ex.frequency || ''
+                          const exNotes = ex.notes || ''
+                          const exVideo = ex.video || ''
+                          const exImage = ex.image || ''
                           const isSelected = form.name === exName
                           const fvMatch = String(exFreq).match(/^(\d+)\s*(day|week|month)?/i)
                           const fv = fvMatch ? fvMatch[1] : ''
@@ -847,7 +847,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                       placeholder="e.g. 50 mins"
                       style={inputStyle}
                       onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-                      onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+                      onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
                     />
                   </div>
                   <div style={{ gridColumn: 'span 1' }}>
@@ -888,7 +888,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                       backgroundColor: fieldErrors.videoUrl ? '#fff5f5' : '#FFFFFF',
                     }}
                     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-                    onBlur={e  => (e.target.style.borderColor = fieldErrors.videoUrl ? '#e53e3e' : '#b6cfe8')}
+                    onBlur={e => (e.target.style.borderColor = fieldErrors.videoUrl ? '#e53e3e' : '#b6cfe8')}
                   />
                 </div>
 
@@ -907,7 +907,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                       style={{
                         padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
                         border: '1.5px solid #b6cfe8', background: '#FFFFFF',
-                        color: '#1B4F8A', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                        color: '#1B4F8A', fontWeight: 600, fontSize: '0.875rem',
                       }}>
                       Cancel
                     </button>
@@ -916,7 +916,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                     style={{
                       padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
                       background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
-                      color: '#fff', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit',
+                      color: '#fff', fontWeight: 700, fontSize: '0.875rem',
                       boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
                     }}>
                     {editingIdx !== null ? '✅ Update Exercise' : '➕ Add Exercise'}
@@ -984,11 +984,11 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                           </td>
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                             <button onClick={() => handleEdit(idx)}
-                              style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                              style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', }}>
                               ✏️ Edit
                             </button>
                             <button onClick={() => handleDeleteClick(idx)}
-                              style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                              style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', }}>
                               🗑️ Delete
                             </button>
                           </td>

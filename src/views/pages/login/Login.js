@@ -209,7 +209,7 @@ const Pill = ({ icon, label, value, delay }) => (
       fontSize: 16,
     }}>{icon}</div>
     <div>
-      <div style={{ color: '#F5A623', fontWeight: 800, fontSize: 17, lineHeight: 1.1, fontFamily: "'Outfit',sans-serif" }}>{value}</div>
+      <div style={{ color: '#F5A623', fontWeight: 800, fontSize: 17, lineHeight: 1.1, ily: "'Outfit',sans-serif" }}>{value}</div>
       <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5, marginTop: 1 }}>{label}</div>
     </div>
   </div>
@@ -317,7 +317,7 @@ const Login = () => {
       <div style={{
         width: '100vw', height: '100vh', overflow: 'hidden',
         display: 'flex', position: 'relative',
-        fontFamily: "'DM Sans',sans-serif",
+        ily: "'DM Sans',sans-serif",
         backgroundImage: 'linear-gradient(135deg, #060e1a 0%, #0d1e36 40%, #0a1628 70%, #111827 100%)',
       }}>
 
@@ -427,7 +427,7 @@ const Login = () => {
               width: 6, height: 6, borderRadius: '50%', backgroundColor: '#F5A623',
               boxShadow: '0 0 6px rgba(245,166,35,0.8)',
             }} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#F5A623', letterSpacing: '.1em', textTransform: 'uppercase', fontFamily: "'Outfit',sans-serif" }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#F5A623', letterSpacing: '.1em', textTransform: 'uppercase', ily: "'Outfit',sans-serif" }}>
               Healthcare Platform
             </span>
           </div>
@@ -442,7 +442,7 @@ const Login = () => {
           {/* Title block */}
           <div style={{ textAlign: 'center', maxWidth: 460, ...A(.15) }}>
             <h1 style={{
-              fontFamily: "'Outfit',sans-serif",
+              ily: "'Outfit',sans-serif",
               fontSize: 'clamp(26px,3.2vw,40px)', fontWeight: 800,
               lineHeight: 1.18, color: '#fff',
               marginBottom: 8, letterSpacing: '-0.028em',
@@ -471,7 +471,7 @@ const Login = () => {
             <p style={{
               color: 'rgba(255,255,255,0.42)', fontSize: 13,
               marginBottom: 32, letterSpacing: '.04em',
-              fontFamily: "'Outfit',sans-serif", fontWeight: 300,
+              ily: "'Outfit',sans-serif", fontWeight: 300,
             }}>
               Powered by Chiselon Technologies
             </p>
@@ -547,7 +547,7 @@ const Login = () => {
                   </svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: "'Outfit',sans-serif", lineHeight: 1 }}>Chiselon</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', ily: "'Outfit',sans-serif", lineHeight: 1 }}>Chiselon</div>
                   <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.38)', marginTop: 1 }}>Doctor Portal</div>
                 </div>
               </div>
@@ -560,7 +560,7 @@ const Login = () => {
                   opacity: 0.9,
                 }} />
                 <h3 style={{
-                  fontFamily: "'Outfit',sans-serif",
+                  ily: "'Outfit',sans-serif",
                   fontSize: 22, fontWeight: 800,
                   color: '#fff', marginBottom: 3, letterSpacing: '-0.015em',
                 }}>
@@ -591,7 +591,7 @@ const Login = () => {
                     color: 'rgba(245,166,35,0.85)',
                     letterSpacing: '.1em', textTransform: 'uppercase',
                     display: 'block', marginBottom: 6,
-                    fontFamily: "'Outfit',sans-serif",
+                    ily: "'Outfit',sans-serif",
                   }}>Username</label>
                   <div style={{ position: 'relative' }}>
                     <CFormInput
@@ -622,7 +622,7 @@ const Login = () => {
                     color: 'rgba(245,166,35,0.85)',
                     letterSpacing: '.1em', textTransform: 'uppercase',
                     display: 'block', marginBottom: 6,
-                    fontFamily: "'Outfit',sans-serif",
+                    ily: "'Outfit',sans-serif",
                   }}>Password</label>
                   <div style={{ position: 'relative' }}>
                     <CFormInput
@@ -656,7 +656,7 @@ const Login = () => {
                   <a href="#" style={{
                     fontSize: 11.5, color: 'rgba(245,166,35,0.7)',
                     textDecoration: 'none', fontWeight: 600,
-                    fontFamily: "'Outfit',sans-serif",
+                    ily: "'Outfit',sans-serif",
                     letterSpacing: '.02em',
                   }}>Forgot password?</a>
                 </div>
@@ -683,7 +683,7 @@ const Login = () => {
                     transition: 'all .22s ease',
                     boxShadow: loading ? 'none' : '0 4px 24px rgba(27,79,138,0.4)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
-                    fontFamily: "'Outfit',sans-serif",
+                    ily: "'Outfit',sans-serif",
                   }}
                 >
                   {loading ? (

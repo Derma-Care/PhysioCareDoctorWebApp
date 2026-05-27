@@ -40,14 +40,14 @@ const _nav = [
     icon: <CIcon icon={cilUser} customClassName="nav-icon" style={{ color: COLORS.white }} />,
     style: { color: COLORS.white },
   },
-  {
-    component: CNavItem,
-    name: 'Notifications',
-    to: '/notifications',
-    icon: <CIcon icon={cilBell} customClassName="nav-icon" style={{ color: COLORS.white }} />,
-    style: { color: COLORS.white },
-   
-  },
+  // {
+  //   component: CNavItem,
+  //   name: 'Notifications',
+  //   to: '/notifications',
+  //   icon: <CIcon icon={cilBell} customClassName="nav-icon" style={{ color: COLORS.white }} />,
+  //   style: { color: COLORS.white },
+
+  // },
   {
     component: CNavItem,
     name: 'Help Center',

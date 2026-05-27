@@ -346,14 +346,14 @@ const AppSidebar = () => {
                       {clinicDetails.name}
                     </h6>
                   )}
-                  {clinicDetails?.address && (
+                  {/* {clinicDetails?.address && (
                     <span
                       className="text-center mt-1"
                       style={{ color: COLORS.white, fontSize: '11px', opacity: 0.7, padding: '0 10px', display: 'block' }}
                     >
                       📍 {clinicDetails.address}
                     </span>
-                  )}
+                  )} */}
                 </div>
               </>
             )}

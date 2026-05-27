@@ -60,7 +60,7 @@ const inputStyle = {
   border: '1.5px solid #b6cfe8', borderRadius: 7, fontSize: '0.875rem',
   color: '#1a3a5c', backgroundColor: '#FFFFFF', padding: '7px 11px',
   width: '100%', boxSizing: 'border-box', height: 38,
-  outline: 'none', fontFamily: 'inherit',
+  outline: 'none', ily: 'inherit',
 }
 const labelStyle = {
   fontWeight: 700, fontSize: '0.82rem', color: '#1B4F8A',
@@ -149,7 +149,7 @@ const UnderlineInput = ({ value, onChange, placeholder = '' }) => (
       border: 'none', borderBottom: '1.5px solid #b6cfe8',
       background: 'transparent', outline: 'none',
       fontSize: '0.875rem', color: '#1a3a5c',
-      padding: '2px 4px', width: 220, fontFamily: 'inherit',
+      padding: '2px 4px', width: 220, ily: 'inherit',
     }} />
 )
 

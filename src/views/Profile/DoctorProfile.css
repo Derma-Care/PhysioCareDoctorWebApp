@@ -2,7 +2,7 @@
   max-width: 1000px;
   margin: auto;
   padding: 20px;
-  font-family: Arial, sans-serif;
+
 }
 
 /* Tabs */
@@ -36,7 +36,7 @@
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Info Tab */
@@ -98,9 +98,6 @@ li {
 
 
 
-.doctor-services {
-  font-family: Arial, sans-serif;
-}
 
 .category-section,
 .subservice-section,
@@ -113,24 +110,28 @@ li {
   color: blue;
 }
 
-.service-section strong{
+.service-section strong {
   color: green;
 }
 
-.subservice-section strong{
+.subservice-section strong {
   color: #d2691e;
 }
 
-.focusarea-section strong{
-  color: #d2691e; /* Chocolate color for difference */
+.focusarea-section strong {
+  color: #d2691e;
+  /* Chocolate color for difference */
 }
 
 .doctor-services ul {
-  padding-left: 20px; /* proper indentation */
-  list-style-type: disc; /* ensure unordered list */
+  padding-left: 20px;
+  /* proper indentation */
+  list-style-type: disc;
+  /* ensure unordered list */
 }
-ul li{
-  color:black;
+
+ul li {
+  color: black;
 }
 
 
@@ -196,13 +197,13 @@ ul li{
 
 
 .doctor-info-container {
-  font-family: Arial, sans-serif;
+
   max-width: 100%;
   padding: 20px;
   background: #fff;
   border: 2px solid #ddd;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .doctor-profile-pic {
@@ -261,10 +262,10 @@ ul li{
   margin-top: 5px;
 } */
 
-.overall-rating{
-  display:flex;
+.overall-rating {
+  display: flex;
   justify-content: space-between;
-  margin-bottom:30px;
+  margin-bottom: 30px;
 }
 
 
@@ -275,15 +276,18 @@ ul li{
   border-radius: 4px;
   cursor: pointer;
 }
+
 .slot-btn.available {
   background-color: #4caf50;
   color: white;
 }
+
 .slot-btn.booked {
   background-color: #ccc;
   color: #666;
   cursor: not-allowed;
 }
+
 .slots-grid {
   display: flex;
   flex-wrap: wrap;

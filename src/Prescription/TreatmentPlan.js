@@ -24,7 +24,7 @@ const ToastContainer = ({ toasts }) => (
     {toasts.map(t => (
       <div key={t.id} style={{
         padding: '12px 18px', borderRadius: 10, fontSize: '0.875rem', fontWeight: 600,
-        fontFamily: 'inherit', maxWidth: 360, pointerEvents: 'auto',
+        ily: 'inherit', maxWidth: 360, pointerEvents: 'auto',
         boxShadow: '0 4px 20px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 10,
         background: t.type === 'error' ? '#fff5f5' : t.type === 'success' ? '#f0fff4' : '#fffbeb',
         border: `1.5px solid ${t.type === 'error' ? '#fecaca' : t.type === 'success' ? '#6ee7b7' : '#fcd34d'}`,
@@ -80,7 +80,7 @@ const inputStyle = {
   boxSizing: 'border-box',
   height: 38,
   outline: 'none',
-  fontFamily: 'inherit',
+  ily: 'inherit',
   transition: 'border-color 0.18s ease',
 }
 
@@ -139,7 +139,7 @@ const SectionHeader = ({ emoji, title, subtitle }) => (
 const RadioBtn = ({ label, emoji, value, active, onClick }) => (
   <button type="button" onClick={() => onClick(value)} style={{
     display: 'flex', alignItems: 'center', gap: 10, padding: '10px 24px', borderRadius: 10,
-    cursor: 'pointer', fontFamily: 'inherit',
+    cursor: 'pointer', ily: 'inherit',
     border: `2px solid ${active ? '#1B4F8A' : '#b6cfe8'}`,
     background: active ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
     color: active ? '#fff' : '#4a6a8a', fontWeight: active ? 700 : 500, fontSize: '0.95rem',
@@ -273,14 +273,14 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
                 }}>
                   {sel && <span style={{ color: '#fff', fontSize: '0.6rem', fontWeight: 700 }}>✓</span>}
                 </div>
-                <span 
+                <span
                   style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}
                   onMouseLeave={() => setHoveredTherapist(null)}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <strong style={{ color: '#1B4F8A', fontSize: '0.9rem' }}>{t.therapistId}</strong>
                     <span style={{ color: '#1a3a5c', fontWeight: 600 }}>— {t.fullName}</span>
-                    
+
                     {/* Service Type Badge */}
                     {Array.isArray(t.services) && t.services.length > 0 && (
                       <span style={{ background: '#e6fffa', border: '1px solid #81e6d9', padding: '2px 8px', borderRadius: 12, fontSize: '0.65rem', color: '#234e52', fontWeight: 700, textTransform: 'capitalize' }}>
@@ -289,7 +289,7 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
                     )}
 
                     {/* View Button placed at the end */}
-                    <div 
+                    <div
                       style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}
                       onMouseEnter={() => setHoveredTherapist(t.therapistId)}
                       onMouseDown={(e) => e.stopPropagation()}
@@ -297,7 +297,7 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
                       <span style={{ cursor: 'pointer', color: '#319795', fontSize: '0.7rem', padding: '2px 8px', background: '#e6fffa', borderRadius: 12, border: '1px solid #81e6d9', fontWeight: 700 }}>👁️ View Details</span>
                     </div>
                   </div>
-                  
+
                   {/* Expandable Line: Specialization and Expertise */}
                   {hoveredTherapist === t.therapistId && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: '0.72rem', color: '#4a5568', background: '#f8fafc', padding: '6px 10px', borderRadius: 6, marginTop: 4 }}>
@@ -377,7 +377,7 @@ const getModeEmoji = (mode) => {
 const NumCell = ({ value, onChange }) => (
   <input type="number" min="0" value={value ?? ''}
     onChange={e => onChange(e.target.value)}
-    style={{ width: 64, textAlign: 'center', fontFamily: 'inherit', border: '1.5px solid #1B4F8A', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none' }}
+    style={{ width: 64, textAlign: 'center', ily: 'inherit', border: '1.5px solid #1B4F8A', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none' }}
     onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(27,79,138,0.15)' }}
     onBlur={e => { e.target.style.boxShadow = 'none' }}
   />
@@ -388,12 +388,12 @@ const FreqCell = ({ count, unit, onCountChange, onUnitChange }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
     <input type="number" min="0" value={count ?? ''} placeholder="0"
       onChange={e => onCountChange(e.target.value)}
-      style={{ width: 50, textAlign: 'center', border: '1.5px solid #1B4F8A', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit' }}
+      style={{ width: 50, textAlign: 'center', border: '1.5px solid #1B4F8A', borderRadius: 6, padding: '4px 2px', fontSize: '0.82rem', color: '#1a3a5c', background: '#fff', outline: 'none', ily: 'inherit' }}
       onFocus={e => { e.target.style.boxShadow = '0 0 0 3px rgba(27,79,138,0.15)' }}
       onBlur={e => { e.target.style.boxShadow = 'none' }}
     />
     <select value={unit ?? 'Day'} onChange={e => onUnitChange(e.target.value)}
-      style={{ border: '1.5px solid #1B4F8A', borderRadius: 6, padding: '4px 6px', fontSize: '0.78rem', color: '#1a3a5c', background: '#fff', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
+      style={{ border: '1.5px solid #1B4F8A', borderRadius: 6, padding: '4px 6px', fontSize: '0.78rem', color: '#1a3a5c', background: '#fff', outline: 'none', ily: 'inherit', cursor: 'pointer' }}>
       {FREQ_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
     </select>
   </div>
@@ -475,7 +475,7 @@ const NoteModal = ({ value, onSave, onClose }) => {
             style={{
               width: '100%', minHeight: 180, border: '1.5px solid #b6cfe8', borderRadius: 10, padding: 14,
               outline: 'none', fontSize: '0.9rem', color: '#1a3a5c', lineHeight: 1.5,
-              transition: 'border-color 0.2s', fontFamily: 'inherit'
+              transition: 'border-color 0.2s', ily: 'inherit'
             }}
             onFocus={e => e.target.style.borderColor = '#1B4F8A'}
             onBlur={e => e.target.style.borderColor = '#b6cfe8'}
@@ -512,7 +512,7 @@ const ParamModal = ({ label, value, onSave, onClose }) => {
             style={{
               width: '100%', minHeight: 100, border: '1.5px solid #b6cfe8', borderRadius: 10, padding: 12,
               outline: 'none', fontSize: '0.88rem', color: '#1a3a5c', lineHeight: 1.4,
-              transition: 'border-color 0.2s', fontFamily: 'inherit'
+              transition: 'border-color 0.2s', ily: 'inherit'
             }}
             onFocus={e => e.target.style.borderColor = '#1B4F8A'}
             onBlur={e => e.target.style.borderColor = '#b6cfe8'}
@@ -800,7 +800,7 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
         <span style={{ fontSize: '0.78rem', color: '#1B4F8A', fontWeight: 600 }}>
           {checkedCount} of {exercises.length} exercise{exercises.length !== 1 ? 's' : ''} selected
         </span>
-        <button type="button" onClick={toggleAll} style={{ padding: '3px 12px', borderRadius: 5, border: '1.5px solid #1B4F8A', background: allChecked ? '#1B4F8A' : '#FFFFFF', color: allChecked ? '#fff' : '#1B4F8A', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button type="button" onClick={toggleAll} style={{ padding: '3px 12px', borderRadius: 5, border: '1.5px solid #1B4F8A', background: allChecked ? '#1B4F8A' : '#FFFFFF', color: allChecked ? '#fff' : '#1B4F8A', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', ily: 'inherit' }}>
           {allChecked ? '☑ Deselect All' : '☐ Select All'}
         </button>
       </div>
@@ -840,7 +840,7 @@ const ExerciseTable = ({ exercises, onUpdate }) => {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
             {exercises.map((ex, idx) => ex._checked === false ? (
               <button key={idx} type="button" onClick={() => toggleExercise(idx)}
-                style={{ padding: '3px 10px', borderRadius: 12, border: '1.5px solid #f5c6c6', background: '#fff0f0', color: '#9b5555', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ padding: '3px 10px', borderRadius: 12, border: '1.5px solid #f5c6c6', background: '#fff0f0', color: '#9b5555', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', ily: 'inherit' }}>
                 ＋ {ex.exerciseName || ex.name || `Exercise ${idx + 1}`}
               </button>
             ) : null)}
@@ -1058,7 +1058,7 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
         <button
           type="button"
           onClick={toggleAll}
-          style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', ily: 'inherit' }}
         >
           {allSelected ? '☑ Deselect All' : '☐ Select All'}
         </button>
@@ -1073,7 +1073,7 @@ const BrowsePanel = ({ mode, programs, loading, selectedIds, onToggle, onConfirm
             marginLeft: 'auto', padding: '6px 20px', borderRadius: 8, border: 'none',
             background: selectedIds.size > 0 ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#b6cfe8',
             color: '#fff', fontWeight: 700, fontSize: '0.85rem',
-            cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
+            cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed', ily: 'inherit',
           }}
         >
           ➕ Add {selectedIds.size > 0 ? `${selectedIds.size} ` : ''}{mode}{selectedIds.size !== 1 ? 's' : ''}
@@ -1851,7 +1851,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
   return (
     <div
       className="pb-5"
-      style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", backgroundColor: '#FFFFFF', minHeight: '100vh' }}
+      style={{ ily: "'Segoe UI', system-ui, sans-serif", backgroundColor: '#FFFFFF', minHeight: '100vh' }}
     >
       <style>{`@keyframes toastSlide { from { opacity:0; transform:translateX(40px) } to { opacity:1; transform:translateX(0) } }`}</style>
       <ToastContainer toasts={toasts} />
@@ -1910,7 +1910,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                     }
                   }}
                   style={{
-                    padding: '7px 18px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                    padding: '7px 18px', borderRadius: 8, cursor: 'pointer', ily: 'inherit',
                     border: '1.5px solid #1B4F8A',
                     background: showBrowsePanel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
                     color: showBrowsePanel ? '#fff' : '#1B4F8A',
@@ -2009,7 +2009,7 @@ const TherapySession = ({ seed = {}, onNext, patientData }) => {
                       <span style={{ marginLeft: 6, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 700 }}>(select at least 1)</span>
                     )}
                   </span>
-                  <button type="button" onClick={toggleAll} style={{ padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: allChecked ? '#1B4F8A' : '#FFFFFF', color: allChecked ? '#fff' : '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button type="button" onClick={toggleAll} style={{ padding: '4px 14px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: allChecked ? '#1B4F8A' : '#FFFFFF', color: allChecked ? '#fff' : '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', ily: 'inherit' }}>
                     {allChecked ? '☑ Deselect All' : '☐ Select All'}
                   </button>
                 </div>

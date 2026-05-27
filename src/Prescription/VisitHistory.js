@@ -1064,11 +1064,11 @@ const transformVisit = (visit) => {
   const exercisePlanObj = record.exercisePlan ?? visit.exercisePlan ?? {}
   const homeExercises = Array.isArray(exercisePlanObj.homeExercises) ? exercisePlanObj.homeExercises
     : Array.isArray(exercisePlanObj.exercises) ? exercisePlanObj.exercises
-    : Array.isArray(record.homeExercises) ? record.homeExercises
-    : Array.isArray(visit.homeExercises) ? visit.homeExercises
-    : Array.isArray(record.exercises) ? record.exercises
-    : Array.isArray(visit.exercises) ? visit.exercises
-    : []
+      : Array.isArray(record.homeExercises) ? record.homeExercises
+        : Array.isArray(visit.homeExercises) ? visit.homeExercises
+          : Array.isArray(record.exercises) ? record.exercises
+            : Array.isArray(visit.exercises) ? visit.exercises
+              : []
   const homeAdvice = exercisePlanObj.homeAdvice ?? record.homeAdvice ?? visit.homeAdvice ?? ''
 
   // ── Follow Up ───────────────────────────────────────────────────────────────
@@ -1413,7 +1413,7 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
   )
 
   return (
-    <div style={{ background: T.bgLight, minHeight: '100%', fontFamily: "'Segoe UI', system-ui, sans-serif", padding: '4px 0' }}>
+    <div style={{ background: T.bgLight, minHeight: '100%', ily: "'Segoe UI', system-ui, sans-serif", padding: '4px 0' }}>
 
       {/* Header */}
       <div style={{
@@ -2057,7 +2057,7 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                               ex.sessions.map((sess, si) => (
                                 <tr key={si} style={{ borderBottom: si < ex.sessions.length - 1 ? `1px solid ${T.borderLight}` : 'none' }}>
                                   <td style={{ padding: '10px 16px', fontSize: '0.8rem', fontWeight: 700, color: T.bgcolor }}>#{sess.sessionNo}</td>
-                                  <td style={{ padding: '10px 16px', fontSize: '0.75rem', color: T.textMid, fontFamily: 'monospace' }}>{sess.sessionId || '—'}</td>
+                                  <td style={{ padding: '10px 16px', fontSize: '0.75rem', color: T.textMid, ily: 'monospace' }}>{sess.sessionId || '—'}</td>
                                   <td style={{ padding: '10px 16px', fontSize: '0.8rem', color: T.text, whiteSpace: 'nowrap' }}>{sess.date || '—'}</td>
                                   <td style={{ padding: '10px 16px' }}>
                                     <span style={{

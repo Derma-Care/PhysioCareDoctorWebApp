@@ -95,9 +95,9 @@ const Appointments = ({ searchTerm = '' }) => {
       const status = tabToStatusMap[activeTab]
       const response = await getAppointments(status, selectedBranch?.branchId || 'all')
       setAppointments(response.data || [])
-      if (response.success && response.message) {
-        toast.info(response.message)
-      }
+      // if (response.success && response.message) {
+      //   toast.info(response.message)
+      // }
     } catch (err) {
       console.error('Error fetching appointments:', err)
     } finally {

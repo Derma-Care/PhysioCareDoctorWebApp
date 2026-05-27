@@ -50,13 +50,13 @@ const AppFooter = () => {
           background: 'linear-gradient(90deg,#1B4F8A 0%,#F5A623 40%,#ffd17a 60%,#1B4F8A 100%)',
           backgroundSize: '200% auto',
           animation: 'stripFlow 3s linear infinite',
-        }}/>
+        }} />
 
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: 7,
-          fontFamily: "'Outfit', sans-serif",
+
           fontSize: 12.5,
           color: '#8a94a6',
         }}>
@@ -66,7 +66,7 @@ const AppFooter = () => {
             background: '#F5A623',
             animation: 'dotPulse 2.5s ease-in-out infinite',
             flexShrink: 0,
-          }}/>
+          }} />
 
           <span>Powered by</span>
 

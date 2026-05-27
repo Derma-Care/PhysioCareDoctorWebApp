@@ -153,7 +153,7 @@ const tdStyle = (i) => ({ padding: '5px 10px', borderBottom: `1px solid ${T.bord
 
 const renderAvailableDetails = (ex) => {
   const details = []
-  
+
   if (ex.sets !== undefined && ex.sets !== null && String(ex.sets).trim() !== '' && String(ex.sets).trim() !== '0') {
     details.push(
       <div key="sets" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -162,7 +162,7 @@ const renderAvailableDetails = (ex) => {
       </div>
     )
   }
-  
+
   const repsVal = ex.repetitions ?? ex.reps
   if (repsVal !== undefined && repsVal !== null && String(repsVal).trim() !== '' && String(repsVal).trim() !== '0') {
     details.push(
@@ -370,7 +370,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
   const allExercises = []
   sessionsList.forEach((sess) => {
     const serviceType = (sess.serviceType || '').toLowerCase()
-    
+
     const addExercises = (exercisesList, typeName) => {
       if (Array.isArray(exercisesList)) {
         exercisesList.forEach(ex => {
@@ -449,7 +449,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
           )}
         </div>
       )}
-      
+
       <div style={{ overflowX: 'auto' }}>
         <table style={tableStyle}>
           <thead>
@@ -568,27 +568,27 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
   const [clickedSaveTemplate, setClickedSaveTemplate] = useState(false)
-  
+
   const record = formData?.physiotherapyRecord ?? formData ?? {}
   const patientInfo = record.patientInfo ?? {}
 
   const [manualMobile, setManualMobile] = useState(
-    patientInfo?.mobileNumber ?? 
-    patientData?.patientMobileNumber ?? 
-    patientData?.mobileNumber ?? 
-    patientData?.contactNumber ?? 
-    patientData?.phone ?? 
-    patientData?.phoneNumber ?? 
+    patientInfo?.mobileNumber ??
+    patientData?.patientMobileNumber ??
+    patientData?.mobileNumber ??
+    patientData?.contactNumber ??
+    patientData?.phone ??
+    patientData?.phoneNumber ??
     ''
   )
 
   useEffect(() => {
-    const fallbackMobile = patientInfo?.mobileNumber ?? 
-      patientData?.patientMobileNumber ?? 
-      patientData?.mobileNumber ?? 
-      patientData?.contactNumber ?? 
-      patientData?.phone ?? 
-      patientData?.phoneNumber ?? 
+    const fallbackMobile = patientInfo?.mobileNumber ??
+      patientData?.patientMobileNumber ??
+      patientData?.mobileNumber ??
+      patientData?.contactNumber ??
+      patientData?.phone ??
+      patientData?.phoneNumber ??
       '';
     if (fallbackMobile && !manualMobile) {
       setManualMobile(fallbackMobile);
@@ -1147,7 +1147,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const patientTag = [displayName, [displayAge, displaySex].filter(Boolean).join(' ')].filter(Boolean).join(' · ')
 
   return (
-    <div style={{ background: T.bgLight, minHeight: '100vh', paddingBottom: 100, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ background: T.bgLight, minHeight: '100vh', paddingBottom: 100, ily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* ── Page Header ── */}
       <div style={{ background: T.bgcolor, padding: '8px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 12px rgba(27,79,138,0.18)', marginBottom: 16, borderBottom: `2px solid ${T.orange}`, minHeight: 48 }}>
@@ -1594,8 +1594,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
             <h6 style={{ margin: '0 0 6px', color: T.bgcolor, fontWeight: 800, textAlign: 'center', fontSize: 16 }}>Save as Template?</h6>
             <p style={{ color: T.textMid, fontSize: '0.82rem', textAlign: 'center', marginBottom: 20, lineHeight: 1.5 }}>Reuse this layout for faster entry next time.</p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-              <button onClick={skipTemplate} style={{ padding: '8px 20px', borderRadius: 8, cursor: 'pointer', border: `1.5px solid ${T.border}`, background: T.bgLight, color: T.text, fontWeight: 600, fontSize: '0.82rem', fontFamily: 'inherit' }}>No, just save</button>
-              <button onClick={confirmSaveAsTemplate} style={{ padding: '8px 20px', borderRadius: 8, cursor: 'pointer', border: 'none', background: T.bgcolor, color: T.white, fontWeight: 700, fontSize: '0.82rem', fontFamily: 'inherit', boxShadow: `0 2px 8px rgba(249,197,113,0.3)`, outline: `2px solid ${T.orange}`, outlineOffset: 2 }}>Yes, save template</button>
+              <button onClick={skipTemplate} style={{ padding: '8px 20px', borderRadius: 8, cursor: 'pointer', border: `1.5px solid ${T.border}`, background: T.bgLight, color: T.text, fontWeight: 600, fontSize: '0.82rem', ily: 'inherit' }}>No, just save</button>
+              <button onClick={confirmSaveAsTemplate} style={{ padding: '8px 20px', borderRadius: 8, cursor: 'pointer', border: 'none', background: T.bgcolor, color: T.white, fontWeight: 700, fontSize: '0.82rem', ily: 'inherit', boxShadow: `0 2px 8px rgba(249,197,113,0.3)`, outline: `2px solid ${T.orange}`, outlineOffset: 2 }}>Yes, save template</button>
             </div>
           </div>
         </div>

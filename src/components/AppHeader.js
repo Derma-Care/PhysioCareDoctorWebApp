@@ -29,7 +29,7 @@ import './AppHeader.css'
 
 const AppHeader = () => {
   const { patientData, setTodayAppointments, todayAppointments, clinicDetails } = useDoctorContext()
-
+  const branchName = localStorage.getItem('clinicDetails')
   useEffect(() => {
     appointmentDetails()
   }, [])
@@ -176,7 +176,7 @@ const AppHeader = () => {
                       letterSpacing: '0.1px',
                     }}
                   >
-                    📍 {clinicDetails.address}
+                    📍 {clinicDetails.branch}
                   </span>
                 )}
               </>
