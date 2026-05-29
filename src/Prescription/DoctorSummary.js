@@ -313,6 +313,7 @@ const DoctorSummary = ({
       // ✅ Call API after saving template
       const payload = {
         bookingId: patientData.bookingId,
+        status: formData.overallStatus || patientData?.status || 'Completed',
         // doctorName: doctorDetails.doctorName,
         customerId: patientData?.customerId,
         clinicName: clinicDetails.name,
@@ -350,6 +351,7 @@ const DoctorSummary = ({
     // ✅ Call API after saving template
     const payload = {
       bookingId: patientData.bookingId,
+      status: formData.overallStatus || patientData?.status || 'Completed',
       doctorName: doctorDetails.doctorName,
       customerId: patientData?.customerId,
       clinicName: clinicDetails.name,

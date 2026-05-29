@@ -272,9 +272,15 @@ const FileUploader = ({ label, attachments = [] }) => {
           const blob = dataUrlToBlob(file.path)
           openBlobInNewTab(blob)
         } else if (isHttpUrl(file.path)) {
-          // protected URL -> fetch with auth -> blob
-          const blob = await fetchToBlobWithAuth(file.path)
-          openBlobInNewTab(blob)
+          if (file.path.includes('X-Amz-Signature=') || file.path.includes('amazonaws.com')) {
+            setOpening(false);
+            setPreviewFile(file);
+            return;
+          } else {
+            // protected URL -> fetch with auth -> blob
+            const blob = await fetchToBlobWithAuth(file.path)
+            openBlobInNewTab(blob)
+          }
         } else {
           // local/relative path – try just opening
           const win = window.open(file.path, '_blank')
@@ -334,7 +340,24 @@ const FileUploader = ({ label, attachments = [] }) => {
             {previewFile.type.startsWith('image/') ? (
               <img src={previewFile.path} alt="Preview" className="modal-image" />
             ) : previewFile.type === 'application/pdf' ? (
-              <iframe src={previewFile.path} title="PDF Preview" className="modal-iframe" />
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', background: '#f8f9fa', borderRadius: '8px', minWidth: '300px' }}>
+                <div style={{ fontSize: '48px', marginBottom: '1rem' }}>📄</div>
+                <h5 style={{ color: '#1B4F8A', fontWeight: 'bold' }}>PDF Document</h5>
+                <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '1.5rem' }}>
+                  The server is enforcing a secure download for this file, so it cannot be previewed inline.
+                </p>
+                <a 
+                  href={previewFile.path} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ 
+                    padding: '10px 24px', borderRadius: '20px', background: '#1B4F8A', 
+                    color: 'white', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' 
+                  }}
+                >
+                  Download PDF
+                </a>
+              </div>
             ) : (
               <p>{previewFile.name}</p>
             )}

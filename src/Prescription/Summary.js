@@ -1121,11 +1121,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     const followUpPayload = Array.isArray(followUpRaw) ? (followUpRaw[0] ?? {}) : (followUpRaw ?? {})
 
     return {
-      // ── Top-level IDs ──────────────────────────────────────────────────
+      // 🏥 Top-level IDs 🏥
       therapistRecordId: record.therapistRecordId || "TR001",
       bookingId,
       clinicId,
       branchId,
+      status: overallStatus || patientData?.status || 'Completed',
 
       // ── Patient Info ───────────────────────────────────────────────────
       patientInfo: {
