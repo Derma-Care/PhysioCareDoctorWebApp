@@ -39,7 +39,7 @@ api.interceptors.response.use(
         case 401:
           localStorage.removeItem('token')
           showInfo('Session expired. Please log in again.', { title: 'Unauthorized' })
-          window.location.href = '/login'
+          window.location.href = '#/login'
           break
 
         case 403:

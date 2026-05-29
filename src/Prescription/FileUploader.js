@@ -127,7 +127,8 @@ function detectMimeFromBytes(bytes) {
 }
 
 function guessMimeFromExtension(path) {
-  const m = (path.match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase()
+  const urlWithoutQuery = typeof path === 'string' ? path.split('?')[0] : '';
+  const m = (urlWithoutQuery.match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase()
   switch (m) {
     case 'png':
       return 'image/png'

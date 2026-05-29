@@ -48,3 +48,5 @@ function toDataUrl(input) {
 
   return `data:${mime};base64,${b64}`;
 }
+
+export default toDataUrl;

@@ -260,17 +260,21 @@ const Login = () => {
     if (!validate()) return
     setLoading(true); setErrors({})
     try {
-      ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey']
+      ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey', 'token']
         .forEach(k => localStorage.removeItem(k))
       const res = await postLogin({ username: userName, password, fcmToken: 'fcmToken' }, loginUrl)
       if (res.success) {
         const doctorId = res.data.staffId || res.data.id || res.data.doctorId
         const hospitalId = res.data.hospitalId || res.data.clinicId
+        const token = res.data.token || res.token || ''
 
         localStorage.setItem('sessionKey', Date.now())
         localStorage.setItem('doctorId', doctorId)
         localStorage.setItem('hospitalId', hospitalId)
         localStorage.setItem('doctorMobileNumber', userName)
+        if (token) {
+          localStorage.setItem('token', token)
+        }
 
         // Fetch full details
         const [dd, cd] = await Promise.all([

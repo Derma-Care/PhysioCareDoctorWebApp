@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { CCard, CCardBody, CContainer, CAlert } from '@coreui/react'
 import Button from '../components/CustomButton/CustomButton'
 import CreatableSelect from 'react-select/creatable'
-import { addLabTest, getLabTests, updateAppointmentBasedOnBookingId } from '../../src/Auth/Auth'
+import { addLabTest, getLabTests, updateAppointmentBasedOnBookingId, SavePatientPrescription } from '../../src/Auth/Auth'
 import { COLORS } from '../Themes'
 import { useDoctorContext } from '../Context/DoctorContext'
 
@@ -135,6 +135,233 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
     setSelectedTestOption(null)
   }
 
+  const buildPhysioRecordPayload = () => {
+    const record = formData ?? {}
+    
+    // Top-level IDs
+    const bookingId = record.bookingId || patientData?.bookingId || ''
+    const clinicId = record.clinicId || patientData?.clinicId || clinicDetails?.hospitalId || ''
+    const branchId = record.branchId || patientData?.branchId || ''
+    const doctorId = doctorDetails?.doctorId || patientData?.doctorId || ''
+    const doctorName = doctorDetails?.name || doctorDetails?.fullName || patientData?.doctorName || ''
+
+    // Patient Info
+    const patientId = record.patientInfo?.patientId || patientData?.patientId || ''
+    const patientName = record.patientInfo?.patientName || patientData?.patientName || patientData?.name || patientData?.fullName || ''
+    const patientMobile = record.patientInfo?.mobileNumber || 
+                         patientData?.patientMobileNumber || 
+                         patientData?.mobileNumber || 
+                         patientData?.contactNumber || 
+                         patientData?.phone || 
+                         patientData?.phoneNumber || ''
+    const patientAge = record.patientInfo?.age || patientData?.age || ''
+    const patientSex = record.patientInfo?.sex || patientData?.sex || patientData?.gender || ''
+
+    // Complaints / Symptoms
+    const comp = record.complaints || record.symptoms || {}
+    
+    const complaintDetails = comp.complaintDetails || comp.symptomDetails || patientData?.problem || ''
+    const complaintDuration = comp.duration || patientData?.symptomsDuration || ''
+    const selectedTherapy = comp.selectedTherapy || patientData?.subServiceName || ''
+    const selectedTherapyID = comp.selectedTherapyId || comp.selectedTherapyID || patientData?.subServiceId || ''
+    const partImage = comp.painAssessmentImage || comp.partImage || ''
+    
+    const reportImages = (() => {
+      const apiImgs = comp.reportImages
+      const intImgs = comp.attachmentImages
+      if (Array.isArray(apiImgs) && apiImgs.length) return apiImgs
+      if (Array.isArray(intImgs) && intImgs.length) return intImgs
+      return []
+    })()
+
+    const previousInjuries = comp.previousInjuries || record.previousInjuries || patientData?.previousInjuries || ''
+    const currentMedications = comp.currentMedications || record.currentMedications || patientData?.currentMedications || ''
+    const allergies = comp.allergies || record.allergies || patientData?.allergies || ''
+    const occupation = comp.occupation || record.occupation || patientData?.occupation || ''
+    const insuranceProvider = comp.insuranceProvider || record.insuranceProvider || patientData?.insuranceProvider || ''
+    
+    const activityLevels = Array.isArray(comp.activityLevels) ? comp.activityLevels : (Array.isArray(record.activityLevels) ? record.activityLevels : [])
+    
+    const effectivePain = comp.patientPain || comp.reasonforVisit || record.patientPain || patientData?.patientPain || ''
+
+    // Flat therapyAnswers
+    let flatTherapyAnswers = []
+    const rawApiAnswers = comp.therapyAnswers
+    const rawInternalAnswers = comp.theraphyAnswers ?? comp.therapyAnswers
+    if (Array.isArray(rawApiAnswers)) {
+      flatTherapyAnswers = rawApiAnswers.map(q => ({
+        questionKey: q.questionKey ?? '',
+        questionId: String(q.questionId ?? ''),
+        question: q.question ?? '',
+        answer: q.answer ?? '',
+      }))
+    } else if (rawInternalAnswers && typeof rawInternalAnswers === 'object') {
+      flatTherapyAnswers = Object.values(rawInternalAnswers)
+        .flat()
+        .map(q => ({
+          questionKey: q.questionKey ?? '',
+          questionId: String(q.questionId ?? ''),
+          question: q.question ?? '',
+          answer: q.answer ?? '',
+        }))
+    }
+
+    // Assessment
+    const assRaw = record.assessment || {}
+    const subjective = assRaw.subjectiveAssessment || assRaw
+    const functional = assRaw.functionalAssessment || assRaw
+    const physical = assRaw.physicalExamination || assRaw
+
+    const assessment = {
+      chiefComplaint: subjective.chiefComplaint ?? assRaw.chiefComplaint ?? '',
+      painScale: Number(subjective.painScale ?? assRaw.painScale) || 0,
+      painType: subjective.painType ?? assRaw.painType ?? '',
+      duration: subjective.duration ?? assRaw.duration ?? '',
+      onset: subjective.onset ?? assRaw.onset ?? '',
+      aggravatingFactors: subjective.aggravatingFactors ?? assRaw.aggravatingFactors ?? '',
+      relievingFactors: subjective.relievingFactors ?? assRaw.relievingFactors ?? '',
+      observations: subjective.observations ?? assRaw.observations ?? '',
+      difficultiesIn: Array.isArray(functional.difficultiesIn) ? functional.difficultiesIn : (Array.isArray(assRaw.difficultiesIn) ? assRaw.difficultiesIn : []),
+      postureAssessment: Array.isArray(physical.postureAssessment) ? physical.postureAssessment : (Array.isArray(assRaw.postureAssessment) ? assRaw.postureAssessment : []),
+      rangeOfMotion: Array.isArray(physical.rangeOfMotion) ? physical.rangeOfMotion : (Array.isArray(physical.romStatus) ? physical.romStatus : (Array.isArray(assRaw.romStatus) ? assRaw.romStatus : [])),
+      muscleStrength: Array.isArray(physical.muscleStrength) ? physical.muscleStrength : (Array.isArray(assRaw.muscleStrength) ? assRaw.muscleStrength : []),
+      neurologicalSigns: Array.isArray(physical.neurologicalSigns) ? physical.neurologicalSigns : (Array.isArray(assRaw.neurologicalSigns) ? assRaw.neurologicalSigns : []),
+      painTriggers: assRaw.chronicPainPatients?.painDuration || assRaw.painTriggers || '',
+      chronicRelieving: assRaw.chronicRelieving || '',
+      typeOfSport: assRaw.sportsRehabPatients?.sportName || assRaw.typeOfSport || '',
+      recurringInjuries: assRaw.sportsRehabPatients?.injuryType || assRaw.recurringInjuries || '',
+      neuroDiagnosis: assRaw.neuroRehabPatients?.balanceIssue ? 'Balance Issues' : (assRaw.neuroDiagnosis || ''),
+      mobilityStatus: assRaw.neuroRehabPatients?.walkingSupport || assRaw.mobilityStatus || '',
+    }
+
+    // Diagnosis
+    const diag = record.diagnosis || {}
+    let firstDiag = {}
+    if (Array.isArray(diag.diagnosisRows) && diag.diagnosisRows.length) {
+      firstDiag = diag.diagnosisRows[0] || {}
+    } else {
+      firstDiag = diag
+    }
+
+    return {
+      therapistRecordId: record.therapistRecordId || "TR001",
+      bookingId,
+      clinicId,
+      branchId,
+      patientInfo: {
+        patientId,
+        patientName,
+        mobileNumber: patientMobile,
+        age: Number(patientAge) || 0,
+        sex: patientSex,
+      },
+      complaints: {
+        complaintDetails: complaintDetails || '',
+        painAssessmentImage: partImage || '',
+        reportImages: reportImages || [],
+        selectedTherapy: selectedTherapy || '',
+        selectedTherapyId: selectedTherapyID || '',
+        duration: complaintDuration || '',
+        previousInjuries: previousInjuries || '',
+        currentMedications: currentMedications || '',
+        allergies: allergies || '',
+        occupation: occupation || '',
+        activityLevels: activityLevels || [],
+        patientPain: effectivePain || '',
+        therapyAnswers: flatTherapyAnswers,
+      },
+      investigation: {
+        tests: selectedTests,
+        reason: notes || '',
+      },
+      assessment: {
+        subjectiveAssessment: {
+          chiefComplaint: assessment.chiefComplaint,
+          painScale: assessment.painScale,
+          painType: assessment.painType,
+          duration: assessment.duration,
+          onset: assessment.onset,
+          aggravatingFactors: assessment.aggravatingFactors,
+          relievingFactors: assessment.relievingFactors,
+          observations: assessment.observations,
+        },
+        functionalAssessment: {
+          difficultiesIn: assessment.difficultiesIn
+        },
+        physicalExamination: {
+          postureAssessment: assessment.postureAssessment,
+          rangeOfMotion: assessment.rangeOfMotion,
+          muscleStrength: assessment.muscleStrength,
+          neurologicalSigns: assessment.neurologicalSigns
+        },
+        chronicPainPatients: effectivePain === 'chronicPain' ? {
+          painDuration: assessment.painTriggers,
+          sleepDisturbance: !!(assessment.chronicRelieving && assessment.chronicRelieving.toLowerCase().includes('yes'))
+        } : null,
+        sportsRehabPatients: effectivePain === 'sportsRehab' ? {
+          sportName: assessment.typeOfSport,
+          injuryType: assessment.recurringInjuries
+        } : null,
+        neuroRehabPatients: effectivePain === 'neuroRehab' ? {
+          balanceIssue: !!(assessment.neuroDiagnosis && assessment.neuroDiagnosis.toLowerCase().includes('balance')),
+          walkingSupport: assessment.mobilityStatus
+        } : null,
+        redFlags: {
+          trauma: (assRaw.redFlags || record.redFlags)?.trauma ?? false,
+          weightLoss: (assRaw.redFlags || record.redFlags)?.weightLoss ?? false,
+          fever: (assRaw.redFlags || record.redFlags)?.fever ?? false,
+          cancer: (assRaw.redFlags || record.redFlags)?.cancer ?? false,
+          nightPain: (assRaw.redFlags || record.redFlags)?.nightPain ?? false,
+          swallowing: (assRaw.redFlags || record.redFlags)?.swallowing ?? false,
+        },
+        radiationNeuro: {
+          radiating: (assRaw.radiationNeuro || record.radiationNeuro)?.radiating ?? false,
+          numbness: (assRaw.radiationNeuro || record.radiationNeuro)?.numbness ?? false,
+          weakness: (assRaw.radiationNeuro || record.radiationNeuro)?.weakness ?? false,
+          gripDifficulty: (assRaw.radiationNeuro || record.radiationNeuro)?.gripDifficulty ?? false,
+        },
+        psychosocial: {
+          stressLevel: (assRaw.psychosocial || record.psychosocial)?.stressLevel ?? 'Low',
+          workSatisfaction: (assRaw.psychosocial || record.psychosocial)?.workSatisfaction ?? false,
+          fearOfMovement: (assRaw.psychosocial || record.psychosocial)?.fearOfMovement ?? false,
+        },
+        specialSymptoms: {
+          headache: (assRaw.specialSymptoms || record.specialSymptoms)?.headache ?? false,
+          dizziness: (assRaw.specialSymptoms || record.specialSymptoms)?.dizziness ?? false,
+        },
+      },
+      diagnosis: {
+        physioDiagnosis: firstDiag.physioDiagnosis ?? '',
+        differentialDiagnosis: firstDiag.differentialDiagnosis ?? '',
+        affectedArea: firstDiag.affectedArea ?? '',
+        severity: firstDiag.severity ?? '',
+        stage: firstDiag.stage ?? '',
+        notes: firstDiag.notes ?? '',
+      },
+      treatmentPlan: {
+        doctorId,
+        doctorName,
+        therapistId: '',
+        therapistName: '',
+        manualTherapy: '',
+        modalitiesUsed: [],
+        patientResponse: '',
+        precautions: [],
+      },
+      therapySessions: [],
+      exercisePlan: {
+        homeAdvice: '',
+        homeExercises: [],
+      },
+      followUp: {
+        nextVisitDate: '',
+        reviewNotes: '',
+        modifications: '',
+      },
+      prescriptionPdf: '',
+    }
+  }
+
   // ── updateStatus helper ────────────────────────────────────────────────
   const updateStatus = (status) => {
     const bookingId = patientData?.bookingId
@@ -145,7 +372,8 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
   const handleNext = () => {
     const payload = { investigation: { selectedTests, notes } }
     setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
-    updateStatus('On-Going')
+    const nextStatus = selectedTests.length > 0 ? 'Due for Investigation' : 'On-Going'
+    updateStatus(nextStatus)
       .then(() => onNext?.(payload))
       .catch(err => {
         console.error('Failed to update appointment status:', err)
@@ -162,24 +390,10 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
 
     setSending(true)
     try {
-      // ── TODO: Replace mock with real API call when endpoint is ready ──
-      //
-      // Suggested payload:
-      // {
-      //   patientId:   patientData?.id,
-      //   bookingId:   patientData?.bookingId,
-      //   patientName: patientData?.name,
-      //   tests:       selectedTests,
-      //   notes:       notes,
-      //   doctorName:  doctorDetails?.doctorName,
-      //   clinicName:  clinicDetails?.name,
-      // }
-      //
-      // Example call (uncomment when API is ready):
-      // await sendInvestigationToLabTechnician(payload)
-      //   → POST /api/investigations/send-to-lab
-      //   → Backend looks up Lab Technician email from clinic admin settings
-      //   → Sends email with investigation details
+      // ── API call to SavePatientPrescription ──
+      const payloadRecord = buildPhysioRecordPayload()
+      console.log('Sending investigation payload to create record:', payloadRecord)
+      await SavePatientPrescription(payloadRecord)
 
       // MOCK: simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 900))
@@ -198,7 +412,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
   }
 
   // ── handlePrint ────────────────────────────────────────────────────────
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const today = new Date()
     const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 
@@ -280,6 +494,15 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
     win.document.write(html)
     win.document.close()
     win.onload = () => { win.focus(); win.print() }
+
+    try {
+      const payloadRecord = buildPhysioRecordPayload()
+      console.log('Printing investigation payload to create record:', payloadRecord)
+      await SavePatientPrescription(payloadRecord)
+    } catch (e) {
+      console.error('Failed to save record during print:', e)
+    }
+
     const payload = { investigation: { selectedTests, notes } }
     setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
     updateStatus('Due for Investigation')

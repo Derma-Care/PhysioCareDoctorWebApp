@@ -40,20 +40,198 @@ const isValid = (v) =>
 const dash = (v) => (v !== undefined && v !== null && String(v).trim() !== '' && v !== 'NA' ? v : '—')
 
 const toImageSrc = (raw) => {
-  if (!raw || typeof raw !== 'string') return null
-  if (raw.startsWith('http') || raw.startsWith('blob:') || raw.startsWith('/')) return raw
-  if (raw.startsWith('data:')) return raw
-  if (raw.startsWith('/9j/')) return `data:image/jpeg;base64,${raw}`
-  if (raw.startsWith('iVBOR')) return `data:image/png;base64,${raw}`
-  if (raw.startsWith('R0lGO')) return `data:image/gif;base64,${raw}`
-  return `data:image/jpeg;base64,${raw}`
+  if (!raw) return null
+
+  const toDataUrl = (input) => {
+    let bytes
+    if (input instanceof Uint8Array) {
+      bytes = input
+    } else if (input instanceof ArrayBuffer) {
+      bytes = new Uint8Array(input)
+    } else if (typeof input === 'string') {
+      const s = input.trim().replace(/^'+|'+$/g, '')
+      try {
+        const decoded = atob(s)
+        if (btoa(decoded).replace(/=+$/, '') === s.replace(/=+$/, '')) {
+          bytes = new Uint8Array(decoded.length)
+          for (let i = 0; i < decoded.length; i++) bytes[i] = decoded.charCodeAt(i)
+        }
+      } catch (e) {}
+      if (!bytes) {
+        bytes = new Uint8Array(s.length)
+        for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i) & 0xff
+      }
+    } else {
+      return null
+    }
+
+    let mime = 'image/*'
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) mime = 'image/png'
+    else if (bytes[0] === 0xff && bytes[1] === 0xd8) mime = 'image/jpeg'
+    else if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) mime = 'image/gif'
+    else if (bytes[0] === 0x42 && bytes[1] === 0x4d) mime = 'image/bmp'
+    else if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+             bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) mime = 'image/webp'
+
+    let bin = ''
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
+    return `data:${mime};base64,${btoa(bin)}`
+  }
+
+  if (typeof raw !== 'string') {
+    try {
+      return toDataUrl(raw)
+    } catch (e) {
+      return null
+    }
+  }
+
+  const trimmed = raw.trim()
+  if (trimmed.startsWith('data:')) return trimmed
+  if (trimmed.startsWith('blob:')) return trimmed
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    let urlWithoutQuery = trimmed
+    const queryIdx = trimmed.indexOf('?')
+    if (queryIdx !== -1) {
+      urlWithoutQuery = trimmed.substring(0, queryIdx)
+    }
+
+    let base64Part = ''
+    const awsIndex = urlWithoutQuery.lastIndexOf('amazonaws.com')
+    if (awsIndex !== -1) {
+      const remaining = urlWithoutQuery.substring(awsIndex + 'amazonaws.com'.length)
+      let extracted = ''
+      if (remaining.startsWith('/')) {
+        extracted = remaining.substring(1)
+      } else if (remaining.startsWith('%2F') || remaining.startsWith('%2f')) {
+        extracted = remaining.substring(3)
+      } else {
+        const slashIdx = remaining.indexOf('/')
+        const pctSlashIdx = remaining.toLowerCase().indexOf('%2f')
+        if (slashIdx !== -1 && (pctSlashIdx === -1 || slashIdx < pctSlashIdx)) {
+          extracted = remaining.substring(slashIdx + 1)
+        } else if (pctSlashIdx !== -1) {
+          extracted = remaining.substring(pctSlashIdx + 3)
+        } else {
+          extracted = remaining
+        }
+      }
+
+      const upperExtracted = extracted.toUpperCase()
+      const signatures = ['IVBOR', '/9J/', '9J/', 'R0LGO', 'JVBER', '%2F9J%2F']
+      let signatureIndex = -1
+      for (const sig of signatures) {
+        const idx = upperExtracted.indexOf(sig)
+        if (idx !== -1) {
+          signatureIndex = idx
+          break
+        }
+      }
+
+      if (signatureIndex !== -1) {
+        base64Part = extracted.substring(signatureIndex)
+      } else if (extracted.length > 500) {
+        base64Part = extracted
+      } else {
+        return trimmed // Normal short S3 URL
+      }
+    } else {
+      return trimmed // Not an amazonaws URL
+    }
+
+    if (base64Part) {
+      let decodedPart = base64Part
+      // Multi-pass percent decoding to handle single or double percent-encoding
+      for (let pass = 0; pass < 3; pass++) {
+        if (!decodedPart.includes('%')) break;
+        try {
+          decodedPart = decodeURIComponent(decodedPart)
+        } catch (e) {
+          const prev = decodedPart
+          decodedPart = decodedPart
+            .replace(/%2[bB]/g, '+')
+            .replace(/%2[fF]/g, '/')
+            .replace(/%3[dD]/g, '=')
+            .replace(/%25/g, '%')
+          if (decodedPart === prev) break
+        }
+      }
+
+      // Final cleanup of base64 characters
+      const cleanDecoded = decodedPart.trim()
+        .replace(/%2[bB]/g, '+')
+        .replace(/%2[fF]/g, '/')
+        .replace(/%3[dD]/g, '=')
+
+      const upperDecoded = cleanDecoded.toUpperCase()
+
+      // Direct base64 data URL assembly for known signatures
+      if (upperDecoded.startsWith('IVBOR')) {
+        return `data:image/png;base64,${cleanDecoded}`
+      }
+      if (upperDecoded.startsWith('/9J/') || upperDecoded.startsWith('9J/')) {
+        const fullBase64 = cleanDecoded.startsWith('9J') ? '/' + cleanDecoded : cleanDecoded
+        return `data:image/jpeg;base64,${fullBase64}`
+      }
+      if (upperDecoded.startsWith('R0LGO')) {
+        return `data:image/gif;base64,${cleanDecoded}`
+      }
+      if (upperDecoded.startsWith('JVBER')) {
+        return `data:application/pdf;base64,${cleanDecoded}`
+      }
+
+      if (cleanDecoded.length > 500 && !/\s/.test(cleanDecoded)) {
+        try {
+          return toDataUrl(cleanDecoded)
+        } catch (e) {
+          return `data:image/jpeg;base64,${cleanDecoded}`
+        }
+      }
+    }
+    return trimmed
+  }
+
+  if (trimmed.startsWith('/')) {
+    const upperTrimmed = trimmed.toUpperCase()
+    if (upperTrimmed.startsWith('/9J/')) {
+      return `data:image/jpeg;base64,${trimmed}`
+    }
+    return trimmed
+  }
+
+  // Pure Base64 strings: check signatures directly to prevent double-encoding bugs in toDataUrl
+  const upperTrimmed = trimmed.toUpperCase()
+  if (upperTrimmed.startsWith('IVBOR')) {
+    return `data:image/png;base64,${trimmed}`
+  }
+  if (upperTrimmed.startsWith('/9J/') || upperTrimmed.startsWith('9J/')) {
+    const fullBase64 = trimmed.startsWith('9J') ? '/' + trimmed : trimmed
+    return `data:image/jpeg;base64,${fullBase64}`
+  }
+  if (upperTrimmed.startsWith('R0LGO')) {
+    return `data:image/gif;base64,${trimmed}`
+  }
+  if (upperTrimmed.startsWith('JVBER')) {
+    return `data:application/pdf;base64,${trimmed}`
+  }
+
+  try {
+    return toDataUrl(trimmed)
+  } catch (e) {
+    if (trimmed.length > 100 && !/\s/.test(trimmed)) {
+      return `data:image/jpeg;base64,${trimmed}`
+    }
+    return trimmed
+  }
 }
 
 const mapRecordData = (raw) => {
   if (!raw) return null
-  let rec = Array.isArray(raw) ? raw[0] : raw
-  if (Array.isArray(rec?.therapyrecord)) rec = rec.therapyrecord[0]
-  else if (Array.isArray(rec?.therapyRecord)) rec = rec.therapyRecord[0]
+  let baseRec = Array.isArray(raw) ? raw[0] : raw
+  let rec = baseRec
+  if (Array.isArray(rec?.therapyrecord) && rec.therapyrecord.length > 0) rec = rec.therapyrecord[0]
+  else if (Array.isArray(rec?.therapyRecord) && rec.therapyRecord.length > 0) rec = rec.therapyRecord[0]
   if (!rec) return null
   return {
     setsDone: rec.setsDone ?? rec.setsdone ?? rec.sets ?? '',
@@ -68,7 +246,7 @@ const mapRecordData = (raw) => {
     therapistId: rec.therapistId ?? rec.doctorid ?? rec.clincinid ?? '',
     completedDate: rec.completedDate ?? rec.date ?? rec.completeddate ?? '',
     completedTime: rec.completedTime ?? rec.time ?? '',
-    beforeImage: rec.beforeImage ?? rec.beforeimage ?? null,
+    beforeImage: rec.beforeImage ?? rec.beforeimage ?? rec.painAssessmentImage ?? rec.painassessmentimage ?? rec.stillImage ?? rec.stillimage ?? rec.still_image ?? rec.image ?? baseRec?.complaints?.painAssessmentImage ?? baseRec?.complaints?.partImage ?? baseRec.painAssessmentImage ?? baseRec.painassessmentimage ?? baseRec.beforeImage ?? baseRec.beforeimage ?? null,
     afterImage: rec.afterImage ?? rec.afterimage ?? null,
     beforeVideo: rec.beforeVideo ?? rec.beforevideo ?? null,
     afterVideo: rec.afterVideo ?? rec.aftervideo ?? null,
@@ -2232,13 +2410,26 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                   </div>
 
                   {/* Media Attachments Section */}
-                  {((completedRecord.afterImage && completedRecord.afterImage !== 'null') ||
+                  {((completedRecord.beforeImage && completedRecord.beforeImage !== 'null') ||
+                    (completedRecord.afterImage && completedRecord.afterImage !== 'null') ||
                     (completedRecord.beforeVideo && completedRecord.beforeVideo !== 'null') ||
                     (completedRecord.afterVideo && completedRecord.afterVideo !== 'null') ||
                     (completedRecord.voiceRecord && completedRecord.voiceRecord !== 'null')) ? (
                     <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, padding: 14, background: '#fff' }}>
                       <div style={{ fontSize: '0.75rem', color: T.bgcolor, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Media Attachments</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {completedRecord.beforeImage && completedRecord.beforeImage !== 'null' && (
+                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: T.textLight }}>Before Image (Still):</span>
+                            <a href={completedRecord.beforeImage} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={toImageSrc(completedRecord.beforeImage)}
+                                style={{ width: '100%', height: '180px', objectFit: 'contain', display: 'block', borderRadius: 6, border: `1px solid ${T.border}`, background: '#f8fafc' }}
+                                alt="Before Session / Still"
+                              />
+                            </a>
+                          </div>
+                        )}
                         {completedRecord.afterImage && completedRecord.afterImage !== 'null' && (
                           <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                             <span style={{ fontSize: '0.7rem', fontWeight: 600, color: T.textLight }}>After Image:</span>
