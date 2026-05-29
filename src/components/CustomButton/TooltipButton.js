@@ -113,7 +113,7 @@ const TooltipButton = ({ patient, onSelect, tab, disabled }) => {
       const vType = patient?.visitType?.toLowerCase()?.replace(/[\s_-]+/g, '') || ''
       const isFollowUp = vType === 'followup' || vType === 'follow_up'
       const tabLower = tab?.toLowerCase()?.replace(/[\s_-]+/g, '') || ''
-      const isTargetStatus = ['inprogress', 'inprograss', 'completed'].includes(tabLower)
+      const isTargetStatus = ['inprogress', 'inprograss', 'completed', 'investigationdone', 'dueforinvestigation'].includes(tabLower)
 
       console.log('🧐 [TooltipButton] Clicked View. Raw Status:', tab, '| Raw VisitType:', patient?.visitType)
       console.log('🧐 [TooltipButton] Evaluated isTargetStatus:', isTargetStatus, '| isFollowUp:', isFollowUp)

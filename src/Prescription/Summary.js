@@ -102,6 +102,8 @@ const toImageSrc = (raw) => {
   const trimmed = raw.trim()
   if (trimmed.startsWith('data:')) return trimmed
   if (trimmed.startsWith('blob:')) return trimmed
+  if (trimmed.includes('X-Amz-Signature=') || trimmed.includes('X-Amz-Algorithm=') || trimmed.includes('amazonaws.com')) return trimmed
+
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     let urlWithoutQuery = trimmed
     const queryIdx = trimmed.indexOf('?')

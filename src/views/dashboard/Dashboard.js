@@ -73,7 +73,12 @@ const Dashboard = () => {
     if (!doctorDetails) return;
     setPatientData(null);
     fetchAppointments();
-  }, [doctorDetails?.id]);
+
+    const intervalId = setInterval(() => {
+      fetchAppointments();
+    }, 30000);
+    return () => clearInterval(intervalId);
+  }, [doctorDetails?.id, fetchAppointments]);
 
   useEffect(() => {
     setCurrentPage(1);

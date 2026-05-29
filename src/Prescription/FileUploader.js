@@ -338,28 +338,76 @@ const FileUploader = ({ label, attachments = [] }) => {
               ×
             </button>
             {previewFile.type.startsWith('image/') ? (
-              <img src={previewFile.path} alt="Preview" className="modal-image" />
-            ) : previewFile.type === 'application/pdf' ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', background: '#f8f9fa', borderRadius: '8px', minWidth: '300px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '1rem' }}>📄</div>
-                <h5 style={{ color: '#1B4F8A', fontWeight: 'bold' }}>PDF Document</h5>
-                <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '1.5rem' }}>
-                  The server is enforcing a secure download for this file, so it cannot be previewed inline.
-                </p>
-                <a 
-                  href={previewFile.path} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  style={{ 
-                    padding: '10px 24px', borderRadius: '20px', background: '#1B4F8A', 
-                    color: 'white', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' 
+              <div style={{ textAlign: 'center' }}>
+                <img 
+                  src={previewFile.path} 
+                  alt="Preview" 
+                  className="modal-image" 
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const fallback = document.getElementById('image-error-fallback');
+                    if (fallback) fallback.style.display = 'block';
                   }}
-                >
-                  Download PDF
-                </a>
+                />
+                <div id="image-error-fallback" style={{ display: 'none', padding: '3rem 1rem', background: '#f8f9fa', borderRadius: '8px', minWidth: '300px' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '1rem' }}>🖼️</div>
+                  <h5 style={{ color: '#1B4F8A', fontWeight: 'bold' }}>Image Preview Unavailable</h5>
+                  <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '1.5rem' }}>
+                    The server is enforcing a secure download for this image, or the image format is not supported inline.
+                  </p>
+                  <a 
+                    href={previewFile.path} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    style={{ 
+                      padding: '10px 24px', borderRadius: '20px', background: '#1B4F8A', 
+                      color: 'white', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' 
+                    }}
+                  >
+                    Download Image
+                  </a>
+                </div>
+                <div style={{ marginTop: '15px' }}>
+                  <a 
+                    href={previewFile.path} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    style={{ color: '#1B4F8A', fontWeight: '600', textDecoration: 'underline', fontSize: '14px' }}
+                  >
+                    Open / Download Image
+                  </a>
+                </div>
+              </div>
+            ) : previewFile.type === 'application/pdf' ? (
+              <div style={{ textAlign: 'center', background: '#f8f9fa', borderRadius: '8px', overflow: 'hidden' }}>
+                <iframe 
+                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.path)}&embedded=true`} 
+                  className="modal-iframe"
+                  style={{ width: '85vw', height: '75vh', border: 'none', display: 'block' }}
+                  title="PDF Preview"
+                />
+                <div style={{ padding: '12px', borderTop: '1px solid #e5e7eb' }}>
+                  <a 
+                    href={previewFile.path} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    style={{ 
+                      padding: '8px 24px', borderRadius: '20px', background: '#1B4F8A', 
+                      color: 'white', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Download Original PDF
+                  </a>
+                </div>
               </div>
             ) : (
-              <p>{previewFile.name}</p>
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <p style={{ fontSize: '16px', fontWeight: 'bold' }}>{previewFile.name}</p>
+                <a href={previewFile.path} target="_blank" rel="noopener noreferrer" style={{ color: '#1B4F8A', fontWeight: '600', textDecoration: 'underline' }}>
+                  Download File
+                </a>
+              </div>
             )}
           </div>
         </div>
