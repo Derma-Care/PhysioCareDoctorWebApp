@@ -563,19 +563,21 @@ const AttendanceTracker = () => {
           {/* Toggle Login/Logout Button */}
           <button
             onClick={handleToggleLogin}
+            disabled={logoutTime !== '—'}
             style={{
-              backgroundColor: isLoggedIn ? '#FEE2E2' : '#EAF7F0',
-              color: isLoggedIn ? '#D32F2F' : '#1B8A56',
-              border: `1.5px solid ${isLoggedIn ? '#FCA5A5' : '#A7F3D0'}`,
+              backgroundColor: logoutTime !== '—' ? '#f3f4f6' : (isLoggedIn ? '#FEE2E2' : '#EAF7F0'),
+              color: logoutTime !== '—' ? '#9ca3af' : (isLoggedIn ? '#D32F2F' : '#1B8A56'),
+              border: `1.5px solid ${logoutTime !== '—' ? '#e5e7eb' : (isLoggedIn ? '#FCA5A5' : '#A7F3D0')}`,
               borderRadius: '24px',
               padding: '6px 20px',
               fontSize: '13.5px',
               fontWeight: '700',
-              cursor: 'pointer',
+              cursor: logoutTime !== '—' ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              transition: 'all 0.15s ease-in-out'
+              transition: 'all 0.15s ease-in-out',
+              opacity: logoutTime !== '—' ? 0.7 : 1
             }}
           >
             <span 
@@ -583,11 +585,11 @@ const AttendanceTracker = () => {
                 width: '7px', 
                 height: '7px', 
                 borderRadius: '50%', 
-                backgroundColor: isLoggedIn ? '#D32F2F' : '#1B8A56',
+                backgroundColor: logoutTime !== '—' ? '#9ca3af' : (isLoggedIn ? '#D32F2F' : '#1B8A56'),
                 display: 'inline-block'
               }} 
             />
-            {isLoggedIn ? 'Logout' : 'Login'}
+            {logoutTime !== '—' ? 'Logged Out' : (isLoggedIn ? 'Logout' : 'Login')}
           </button>
         </div>
 
@@ -748,13 +750,17 @@ const AttendanceTracker = () => {
               <button
                 className="btn btn-outline-primary btn-sm"
                 onClick={() => setShowAddActivityModal(true)}
+                disabled={!isLoggedIn}
                 style={{
                   fontSize: '13px',
                   borderRadius: '8px',
-                  borderColor: '#1B4F8A',
-                  color: '#1B4F8A',
+                  borderColor: !isLoggedIn ? '#d1d5db' : '#1B4F8A',
+                  color: !isLoggedIn ? '#9ca3af' : '#1B4F8A',
+                  backgroundColor: !isLoggedIn ? '#f3f4f6' : 'transparent',
                   fontWeight: '600',
-                  padding: '5px 14px'
+                  padding: '5px 14px',
+                  cursor: !isLoggedIn ? 'not-allowed' : 'pointer',
+                  opacity: !isLoggedIn ? 0.7 : 1
                 }}
               >
                 + Add activity
