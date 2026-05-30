@@ -158,7 +158,7 @@ const AppSidebar = () => {
 
   const rawImg = doctorDetails?.doctorPicture || doctorDetails?.profilePicture || clinicDetails?.hospitalLogo || clinicDetails?.clinicLogo;
   const doctorImage = rawImg
-    ? (rawImg.startsWith('data:image')
+    ? (rawImg.startsWith('data:image') || rawImg.startsWith('http://') || rawImg.startsWith('https://')
       ? rawImg
       : `data:image/jpeg;base64,${rawImg}`)
     : null;

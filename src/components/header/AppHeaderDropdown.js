@@ -50,7 +50,9 @@ const AppHeaderDropdown = () => {
         <CAvatar
           src={
             clinic?.hospitalLogo
-              ? `data:image/png;base64,${clinic.hospitalLogo}`
+              ? (clinic.hospitalLogo.startsWith('http://') || clinic.hospitalLogo.startsWith('https://') || clinic.hospitalLogo.startsWith('data:image')
+                  ? clinic.hospitalLogo
+                  : `data:image/png;base64,${clinic.hospitalLogo}`)
               : avatar8
           }
           className="profile-image"
