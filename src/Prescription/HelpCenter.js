@@ -195,7 +195,7 @@ export default function DoctorHelpCenter() {
   }
 
   return (
-    <div style={{ padding: "1.25rem", maxWidth: 900, margin: "0 auto", fontFamily: "'Segoe UI', system-ui, sans-serif", background: C.surface, borderRadius: 16 }}>
+    <div style={{ padding: "1.25rem", maxWidth: 900, margin: "0 auto", background: C.surface, borderRadius: 16 }}>
 
       {/* ── Hero ── */}
    <div style={{ background: `linear-gradient(135deg, #1B4F8A 0%, #2A6DB5 100%)`, borderRadius: 14, padding: "16px 20px", marginBottom: 20, boxShadow: '0 4px 20px rgba(27,79,138,0.2)' }}>

@@ -83,7 +83,6 @@ const inputStyle = {
   boxSizing: 'border-box',
   height: 38,
   outline: 'none',
-  fontFamily: 'inherit',
   transition: 'border-color 0.18s ease',
 }
 
@@ -283,7 +282,7 @@ const DeleteModal = ({ exerciseName, onConfirm, onCancel }) => (
             flex: 1, padding: '10px 0', borderRadius: 9,
             border: '1.5px solid #b6cfe8', background: '#FFFFFF',
             color: '#1B4F8A', fontWeight: 700, fontSize: '0.875rem',
-            cursor: 'pointer', fontFamily: 'inherit',
+            cursor: 'pointer',
             transition: 'all 0.15s ease',
           }}
           onMouseEnter={e => { e.currentTarget.style.background = '#f0f6ff' }}
@@ -298,7 +297,7 @@ const DeleteModal = ({ exerciseName, onConfirm, onCancel }) => (
             border: 'none',
             background: 'linear-gradient(135deg, #c0392b, #e53e3e)',
             color: '#FFFFFF', fontWeight: 700, fontSize: '0.875rem',
-            cursor: 'pointer', fontFamily: 'inherit',
+            cursor: 'pointer',
             boxShadow: '0 2px 10px rgba(229,62,62,0.30)',
             transition: 'all 0.15s ease',
           }}
@@ -534,7 +533,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
   return (
     <div
       className="pb-5"
-      style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", backgroundColor: '#FFFFFF', minHeight: '100vh' }}
+      style={{  backgroundColor: '#FFFFFF', minHeight: '100vh' }}
     >
       {/* Delete Confirmation Modal */}
       {deleteModal.open && (
@@ -574,7 +573,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                     type="button"
                     onClick={() => { setShowBulkPanel(v => !v); setSearch(''); setBulkSelected(new Set()) }}
                     style={{
-                      padding: '7px 18px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                      padding: '7px 18px', borderRadius: 8, cursor: 'pointer',
                       border: '1.5px solid #1B4F8A',
                       background: showBulkPanel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
                       color: showBulkPanel ? '#fff' : '#1B4F8A',
@@ -604,7 +603,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                   <button
                     type="button"
                     onClick={toggleSelectAll}
-                    style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
                   >
                     {bulkSelected.size === bulkLibrary.length && bulkLibrary.length > 0 ? '☑ Deselect All' : '☐ Select All'}
                   </button>
@@ -619,7 +618,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                       marginLeft: 'auto', padding: '6px 20px', borderRadius: 8, border: 'none',
                       background: bulkSelected.size > 0 ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#b6cfe8',
                       color: '#fff', fontWeight: 700, fontSize: '0.85rem',
-                      cursor: bulkSelected.size > 0 ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
+                      cursor: bulkSelected.size > 0 ? 'pointer' : 'not-allowed',
                     }}
                   >
                     ➕ Add {bulkSelected.size > 0 ? `${bulkSelected.size} ` : ''}Exercise{bulkSelected.size !== 1 ? 's' : ''}
@@ -907,7 +906,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                       style={{
                         padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
                         border: '1.5px solid #b6cfe8', background: '#FFFFFF',
-                        color: '#1B4F8A', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                        color: '#1B4F8A', fontWeight: 600, fontSize: '0.875rem',
                       }}>
                       Cancel
                     </button>
@@ -916,7 +915,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                     style={{
                       padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
                       background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
-                      color: '#fff', fontWeight: 700, fontSize: '0.875rem', fontFamily: 'inherit',
+                      color: '#fff', fontWeight: 700, fontSize: '0.875rem',
                       boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
                     }}>
                     {editingIdx !== null ? '✅ Update Exercise' : '➕ Add Exercise'}
@@ -984,11 +983,11 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                           </td>
                           <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                             <button onClick={() => handleEdit(idx)}
-                              style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                              style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
                               ✏️ Edit
                             </button>
                             <button onClick={() => handleDeleteClick(idx)}
-                              style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                              style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
                               🗑️ Delete
                             </button>
                           </td>

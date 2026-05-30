@@ -56,7 +56,6 @@ const AppFooter = () => {
           display: 'flex',
           alignItems: 'center',
           gap: 7,
-          fontFamily: "'Outfit', sans-serif",
           fontSize: 12.5,
           color: '#8a94a6',
         }}>

@@ -23,7 +23,6 @@ const inputStyle = {
   width: '100%',
   height: 38,
   outline: 'none',
-  fontFamily: 'inherit',
   boxSizing: 'border-box',
 }
 
@@ -163,7 +162,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
 
   /* ─── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="pb-5" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div className="pb-5" style={{ }}>
       <CContainer fluid className="p-1">
 
         {/* ══ FORM CARD ═══════════════════════════════════════════════ */}
@@ -249,7 +248,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                   style={{
                     padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
                     border: `1.5px solid ${T.border}`, background: T.bgLight,
-                    color: T.textDark, fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                    color: T.textDark, fontWeight: 600, fontSize: '0.875rem',
                   }}
                 >
                   Cancel
@@ -260,7 +259,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                 style={{
                   padding: '8px 24px', borderRadius: 8, border: 'none',
                   background: T.bgcolor, color: T.white,
-                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit',
+                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer',
                   boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
                 }}
               >
@@ -313,7 +312,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                               style={{
                                 marginRight: 6, padding: '4px 12px', borderRadius: 6,
                                 border: `1.5px solid ${T.bgcolor}`, background: T.bgLight,
-                                color: T.bgcolor, fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit',
+                                color: T.bgcolor, fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
                               }}
                             >✏️ Edit</button>
                             <button
@@ -321,7 +320,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                               style={{
                                 padding: '4px 12px', borderRadius: 6,
                                 border: '1.5px solid #e53e3e', background: '#fff5f5',
-                                color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'inherit',
+                                color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
                               }}
                             >🗑️ Delete</button>
                           </td>
@@ -363,7 +362,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                 style={{
                   padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
                   border: `1.5px solid ${T.border}`, background: T.bgLight,
-                  color: T.textDark, fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit',
+                  color: T.textDark, fontWeight: 600, fontSize: '0.875rem',
                 }}
               >
                 Cancel
@@ -373,7 +372,7 @@ const FollowUpnew = ({ seed = [], onNext }) => {
                 style={{
                   padding: '8px 24px', borderRadius: 8, border: 'none',
                   background: '#e53e3e', color: '#fff',
-                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit',
+                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer',
                   boxShadow: '0 2px 8px rgba(229,62,62,0.30)',
                 }}
               >

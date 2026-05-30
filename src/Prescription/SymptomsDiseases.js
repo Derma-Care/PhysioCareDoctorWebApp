@@ -225,7 +225,6 @@ export const SLabel = ({ text }) => (
       letterSpacing: '0.08em',
       textTransform: 'uppercase',
       color: '#1B4F8A',
-      fontFamily: 'inherit',
     }}>{text}</span>
     <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,#b6cfe8,transparent)' }} />
   </div>
@@ -289,7 +288,6 @@ export const card = {
 export const inputBase = {
   width: '100%', borderRadius: 10, border: '1.5px solid #b6cfe8',
   padding: '10px 13px', fontSize: '0.875rem',
-  fontFamily: 'inherit',
   outline: 'none', background: '#FFFFFF', color: '#1a3a5c',
   boxSizing: 'border-box', resize: 'vertical',
 }

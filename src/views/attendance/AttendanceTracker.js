@@ -509,7 +509,7 @@ const AttendanceTracker = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#F0F6FF', minHeight: '100vh', paddingBottom: '40px', fontFamily: "'Outfit', sans-serif" }}>
+    <div style={{ backgroundColor: '#F0F6FF', minHeight: '100vh', paddingBottom: '40px' }}>
       
       {/* ─── BLUE BAR HEADER ────────────────────────────────────────────────── */}
       <div 
@@ -860,10 +860,10 @@ const AttendanceTracker = () => {
 
       {/* ─── MODAL: ADD CUSTOM ACTIVITY ───────────────────────────────────── */}
       <CModal visible={showAddActivityModal} onClose={() => setShowAddActivityModal(false)} alignment="center">
-        <CModalHeader style={{ borderBottom: 'none', padding: '24px 24px 8px', fontFamily: "'Outfit', sans-serif" }}>
+        <CModalHeader style={{ borderBottom: 'none', padding: '24px 24px 8px' }}>
           <CModalTitle style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '20px' }}>Add Activity</CModalTitle>
         </CModalHeader>
-        <CModalBody style={{ padding: '8px 24px 24px', fontFamily: "'Outfit', sans-serif" }}>
+        <CModalBody style={{ padding: '8px 24px 24px' }}>
           <div className="d-flex flex-column gap-3">
             <div>
               <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>Activity Name</CFormLabel>
@@ -939,7 +939,7 @@ const AttendanceTracker = () => {
             </div>
           </div>
         </CModalBody>
-        <CModalFooter style={{ borderTop: 'none', padding: '16px 24px 24px', display: 'flex', gap: '12px', justifyContent: 'flex-end', fontFamily: "'Outfit', sans-serif" }}>
+        <CModalFooter style={{ borderTop: 'none', padding: '16px 24px 24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
           <button
             className="btn"
             onClick={() => setShowAddActivityModal(false)}

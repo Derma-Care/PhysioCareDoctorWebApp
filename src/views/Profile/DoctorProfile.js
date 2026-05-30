@@ -43,7 +43,7 @@ const STYLES = `
   }
 
   .dp-wrapper {
-    font-family: 'Outfit', sans-serif;
+    
     padding: 0 0 60px;
   }
 
@@ -66,7 +66,7 @@ const STYLES = `
     border-radius: 10px;
     background: transparent;
     color: #6b7280;
-    font-family: 'Outfit', sans-serif;
+    
     font-size: 13.5px;
     font-weight: 500;
     cursor: pointer;
@@ -295,7 +295,7 @@ const STYLES = `
     cursor: pointer;
     transition: all .2s;
     min-width: 70px; text-align: center;
-    font-family: 'Outfit', sans-serif;
+    
   }
   .dp-date-btn:hover { border-color: #1B4F8A; background: rgba(27,79,138,0.04); }
   .dp-date-btn.selected {
@@ -314,7 +314,7 @@ const STYLES = `
     font-size: 13px; font-weight: 600; color: #1B4F8A;
     cursor: pointer;
     transition: all .18s;
-    font-family: 'Outfit', sans-serif;
+    
   }
   .dp-slot:hover:not(:disabled) {
     background: #1B4F8A; color: #fff;

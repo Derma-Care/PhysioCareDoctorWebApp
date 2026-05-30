@@ -76,7 +76,6 @@ function Avatar({ name, bg, color }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: name === 'System' ? 15 : 12, fontWeight: 700,
       flexShrink: 0, letterSpacing: '0.5px',
-      fontFamily: "'DM Sans', sans-serif",
       border: `1.5px solid ${color}22`,
     }}>
       {initials}
@@ -92,14 +91,12 @@ function StatCard({ label, value, accent, bg }) {
     }}>
       <div style={{
         fontSize: 24, fontWeight: 600, color: accent, lineHeight: 1,
-        fontFamily: "'DM Mono', monospace",
       }}>
         {String(value).padStart(2, '0')}
       </div>
       <div style={{
         fontSize: 10, color: accent, opacity: 0.7, marginTop: 5,
         fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase',
-        fontFamily: "'DM Sans', sans-serif",
       }}>
         {label}
       </div>
@@ -135,7 +132,6 @@ const Notifications = () => {
   return (
     <div style={{
       padding: '28px 30px', maxWidth: 820, margin: '0 auto',
-      fontFamily: "'DM Sans', sans-serif",
       opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease',
     }}>
 
@@ -180,7 +176,6 @@ const Notifications = () => {
             background: 'none', border: `1.5px solid ${COLORS.bgcolor}`,
             color: COLORS.bgcolor, borderRadius: 8, padding: '6px 14px',
             fontSize: 12, fontWeight: 500, cursor: 'pointer',
-            fontFamily: "'DM Sans', sans-serif",
             display: 'flex', alignItems: 'center', gap: 5,
           }}>
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -210,7 +205,6 @@ const Notifications = () => {
               border: `1.5px solid ${active ? COLORS.bgcolor : '#d0dff0'}`,
               borderRadius: 20, padding: '5px 15px',
               fontSize: 12, fontWeight: 500, cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
             }}>
               {f}
             </button>
@@ -241,12 +235,11 @@ const Notifications = () => {
               <span style={{
                 fontSize: 10, fontWeight: 600, color: COLORS.gray,
                 textTransform: 'uppercase', letterSpacing: '1.2px',
-                fontFamily: "'DM Mono', monospace",
               }}>
                 {date}
               </span>
               <div style={{ flex: 1, height: 1, background: '#EAF1FB' }} />
-              <span style={{ fontSize: 10, color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
+              <span style={{ fontSize: 10, color: '#adb5bd' }}>
                 {items.length} item{items.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -294,7 +287,6 @@ const Notifications = () => {
                             backgroundColor: cfg.labelBg, color: cfg.labelColor,
                             borderRadius: 20, padding: '2px 8px',
                             textTransform: 'uppercase', letterSpacing: '0.5px',
-                            fontFamily: "'DM Mono', monospace",
                             display: 'flex', alignItems: 'center', gap: 4,
                           }}>
                             {cfg.icon}
@@ -336,7 +328,7 @@ const Notifications = () => {
                           <svg width="9" height="9" fill="none" stroke="#adb5bd" strokeWidth="2" viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
                           </svg>
-                          <span style={{ fontSize: 10, color: '#adb5bd', fontFamily: "'DM Mono', monospace" }}>
+                          <span style={{ fontSize: 10, color: '#adb5bd' }}>
                             {notif.time}
                           </span>
                         </div>
@@ -370,7 +362,7 @@ const Notifications = () => {
       {/* ── Footer ── */}
       {notifications.length > 0 && (
         <div style={{ textAlign: 'center', paddingTop: 18, borderTop: '1px solid #EAF1FB', marginTop: 4 }}>
-          <p style={{ fontSize: 10, color: '#adb5bd', margin: 0, fontFamily: "'DM Mono', monospace", letterSpacing: '0.5px' }}>
+          <p style={{ fontSize: 10, color: '#adb5bd', margin: 0, letterSpacing: '0.5px' }}>
             SHOWING {filtered.length} OF {notifications.length} NOTIFICATIONS
           </p>
         </div>

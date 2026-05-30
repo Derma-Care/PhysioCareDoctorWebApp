@@ -1592,7 +1592,7 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
   )
 
   return (
-    <div style={{ background: T.bgLight, minHeight: '100%', fontFamily: "'Segoe UI', system-ui, sans-serif", padding: '4px 0' }}>
+    <div style={{ background: T.bgLight, minHeight: '100%', padding: '4px 0' }}>
 
       {/* Header */}
       <div style={{
@@ -2236,7 +2236,7 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                               ex.sessions.map((sess, si) => (
                                 <tr key={si} style={{ borderBottom: si < ex.sessions.length - 1 ? `1px solid ${T.borderLight}` : 'none' }}>
                                   <td style={{ padding: '10px 16px', fontSize: '0.8rem', fontWeight: 700, color: T.bgcolor }}>#{sess.sessionNo}</td>
-                                  <td style={{ padding: '10px 16px', fontSize: '0.75rem', color: T.textMid, fontFamily: 'monospace' }}>{sess.sessionId || '—'}</td>
+                                  <td style={{ padding: '10px 16px', fontSize: '0.75rem', color: T.textMid }}>{sess.sessionId || '—'}</td>
                                   <td style={{ padding: '10px 16px', fontSize: '0.8rem', color: T.text, whiteSpace: 'nowrap' }}>{sess.date || '—'}</td>
                                   <td style={{ padding: '10px 16px' }}>
                                     <span style={{

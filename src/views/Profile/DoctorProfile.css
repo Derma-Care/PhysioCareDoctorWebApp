@@ -2,7 +2,7 @@
   max-width: 1000px;
   margin: auto;
   padding: 20px;
-  font-family: Arial, sans-serif;
+  
 }
 
 /* Tabs */
@@ -99,7 +99,7 @@ li {
 
 
 .doctor-services {
-  font-family: Arial, sans-serif;
+  
 }
 
 .category-section,
@@ -196,7 +196,7 @@ ul li{
 
 
 .doctor-info-container {
-  font-family: Arial, sans-serif;
+  
   max-width: 100%;
   padding: 20px;
   background: #fff;

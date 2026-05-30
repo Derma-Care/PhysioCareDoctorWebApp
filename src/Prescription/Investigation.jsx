@@ -18,7 +18,6 @@ const inputStyle = {
   boxSizing: 'border-box',
   height: 38,
   outline: 'none',
-  fontFamily: 'inherit',
   transition: 'border-color 0.18s ease',
 }
 
@@ -429,7 +428,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
 <style>
 :root{--ink:#0f172a;--muted:#6b7280;--line:#e5e7eb;--accent:#1B4F8A;--bg:#fff;}
 *{box-sizing:border-box;}html,body{margin:0;padding:0;}
-body{font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;color:var(--ink);background:var(--bg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body{color:var(--ink);background:var(--bg);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 @page{size:A4;margin:12mm;}
 .page{padding:20px 24px;border:1px solid var(--line);border-radius:10px;}
 header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-bottom:18px;border-bottom:2px solid var(--line);}
@@ -518,7 +517,7 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
     <div
       className="container pb-5"
       style={{
-        fontFamily: "'Segoe UI', system-ui, sans-serif",
+        
         backgroundColor: '#FFFFFF',
         minHeight: '100vh',
       }}
@@ -610,7 +609,6 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
                       fontSize: '0.75rem',
                       padding: '2px 10px',
                       cursor: 'pointer',
-                      fontFamily: 'inherit',
                       fontWeight: 600,
                     }}
                   >
@@ -654,7 +652,7 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer',
                           color: '#1B4F8A', fontWeight: 700, fontSize: 14,
-                          padding: 0, lineHeight: 1, fontFamily: 'inherit',
+                          padding: 0, lineHeight: 1,
                         }}
                       >×</button>
                     </div>
