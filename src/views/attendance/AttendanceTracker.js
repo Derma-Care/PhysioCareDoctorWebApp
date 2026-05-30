@@ -271,41 +271,17 @@ const AttendanceTracker = () => {
 
     if (!isLoggedIn) {
       // Clock In (Login)
-      try {
-        const payload = {
-          userId,
-          date: todayStr,
-          login: {
-            time: nowStr,
-            latitude: "17.433071",
-            longitude: "78.407807"
-          }
-        };
-        const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
-        if (res.data && res.data.success) {
-          setIsLoggedIn(true);
-          setLoginTime(nowStr);
-          setLogoutTime('—');
-          setStatus('Active');
-          fetchDailyData();
-          fetchMonthlyData();
-        } else {
-          // Local fallback in case server returns error
-          setIsLoggedIn(true);
-          setLoginTime(nowStr);
-          setLogoutTime('—');
-          setStatus('Active');
-          saveState(true, nowStr, '—', 'Active', activities);
-        }
-      } catch (err) {
-        console.error('Failed to log in on server:', err);
-        // Local fallback
-        setIsLoggedIn(true);
-        setLoginTime(nowStr);
-        setLogoutTime('—');
-        setStatus('Active');
-        saveState(true, nowStr, '—', 'Active', activities);
-      }
+     try {
+      const payload = {
+        userId, role, clinicId, branchId, date: todayStr,
+        activities: [{ activity: newActivity, description: newDescription, duration: durationStr, location: newLocation || 'Location unavailable', latitude: "17.433071", longtitude: "78.407807" }]
+      };
+      const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
+      if (res.data && res.data.success) {
+        setNewActivity(''); setNewDescription(''); setDurationHrs(0); setDurationMins(0); setShowAddActivityModal(false);
+        fetchDailyData(); fetchMonthlyData();
+      } else { localFallback(); }
+    }   catch (err) { console.error('Failed to save activity to server:', err); localFallback(); }
     } else {
       // Clock Out (Logout)
       try {
@@ -501,302 +477,208 @@ const AttendanceTracker = () => {
       console.error('Error fetching historical daily details:', err);
       // Fallback
       const storedState = localStorage.getItem(`doctor_duty_log_${dateStr}`);
-      if (storedState) {
-        const parsed = JSON.parse(storedState);
-        setSelectedDateActivities(parsed.activities || []);
-      }
+      if (storedState) setSelectedDateActivities(JSON.parse(storedState).activities || []);
     }
   };
 
   return (
-    <div style={{ backgroundColor: '#F0F6FF', minHeight: '100vh', paddingBottom: '40px' }}>
+    <div style={{ backgroundColor: '#fafbfe', minHeight: '100vh', paddingBottom: '40px' }}>
       
-      {/* ─── BLUE BAR HEADER ────────────────────────────────────────────────── */}
-      <div 
-        style={{ 
-          backgroundColor: '#1B4F8A', 
-          color: '#ffffff', 
-          padding: '16px 28px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}
-      >
-        <button 
-          onClick={() => navigate('/dashboard')}
-          style={{ 
-            background: 'none', 
-            border: 'none', 
-            color: '#ffffff', 
-            fontSize: '15px', 
-            cursor: 'pointer',
-            padding: '0 8px',
-            display: 'flex',
-            alignItems: 'center'
-          }}
-          title="Previous Page"
-        >
-          ❮
-        </button>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>
-          Previous Page
-        </div>
-        <div style={{ width: '1px', height: '14px', backgroundColor: 'rgba(255,255,255,0.3)', margin: '0 8px' }} />
-        <div style={{ fontSize: '12.5px', fontWeight: '700', letterSpacing: '0.2px' }}>
-          Attendance Tracker
-        </div>
-      </div>
-
-      <CContainer fluid className="px-4 mt-4">
+      <CContainer fluid className="px-5 pt-4">
         {/* ─── LOG HEADER BLOCK ─────────────────────────────────────────────── */}
-        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div className="d-flex justify-content-between align-items-start mb-4">
           <div>
-            <h2 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '26px', margin: '0 0 4px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: '#eef2f6', color: '#1B4F8A', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600', marginBottom: '12px' }}>
+              <span style={{ marginRight: '6px', fontSize: '14px' }}>📅</span> {getFormattedDate()}
+            </div>
+            <h2 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '18px', margin: '0 0 4px' }}>
               Daily Duty Log
             </h2>
-            <div style={{ color: '#6b7280', fontSize: '14px', fontWeight: '500' }}>
-              {getFormattedDate()}
+            <div style={{ color: '#64748b', fontSize: '12px', fontWeight: '500' }}>
+              Track your work hours and activities
             </div>
           </div>
 
-          {/* Toggle Login/Logout Button */}
           <button
             onClick={handleToggleLogin}
             disabled={logoutTime !== '—'}
             style={{
-              backgroundColor: logoutTime !== '—' ? '#f3f4f6' : (isLoggedIn ? '#FEE2E2' : '#EAF7F0'),
-              color: logoutTime !== '—' ? '#9ca3af' : (isLoggedIn ? '#D32F2F' : '#1B8A56'),
-              border: `1.5px solid ${logoutTime !== '—' ? '#e5e7eb' : (isLoggedIn ? '#FCA5A5' : '#A7F3D0')}`,
+              backgroundColor: logoutTime !== '—' ? '#f3f4f6' : (isLoggedIn ? '#ef4444' : '#10b981'),
+              color: logoutTime !== '—' ? '#9ca3af' : '#ffffff',
+              border: 'none',
               borderRadius: '24px',
-              padding: '6px 20px',
-              fontSize: '13.5px',
+              padding: '6px 16px',
+              fontSize: '13px',
               fontWeight: '700',
               cursor: logoutTime !== '—' ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.15s ease-in-out',
-              opacity: logoutTime !== '—' ? 0.7 : 1
+              gap: '6px',
+              boxShadow: logoutTime !== '—' ? 'none' : (isLoggedIn ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px rgba(16, 185, 129, 0.25)'),
+              transition: 'all 0.2s ease-in-out',
             }}
           >
             <span 
               style={{ 
-                width: '7px', 
-                height: '7px', 
+                width: '6px', 
+                height: '6px', 
                 borderRadius: '50%', 
-                backgroundColor: logoutTime !== '—' ? '#9ca3af' : (isLoggedIn ? '#D32F2F' : '#1B8A56'),
+                backgroundColor: '#ffffff',
                 display: 'inline-block'
               }} 
             />
-            {logoutTime !== '—' ? 'Logged Out' : (isLoggedIn ? 'Logout' : 'Login')}
+            {logoutTime !== '—' ? 'Logged Out' : (isLoggedIn ? 'Clock Out' : 'Clock In')}
           </button>
         </div>
 
         {/* ─── FOUR METRIC CARDS ROW ────────────────────────────────────────── */}
-        <CRow className="g-3 mb-4">
-          
+        <div className="d-flex flex-wrap mb-5" style={{ gap: '56px' }}>
           {/* Card 1: LOGIN */}
-          <CCol xs={3}>
-            <CCard 
-              className="border-0 shadow-sm h-100" 
-              style={{ 
-                borderRadius: '10px', 
-                borderLeft: '4px solid #1B4F8A',
-                overflow: 'hidden'
-              }}
-            >
-              <CCardBody className="p-2 p-md-3 d-flex justify-content-between align-items-center">
-                <div>
-                  <div style={{ color: '#8a94a6', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '4px' }}>
-                    Login
-                  </div>
-                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '14px', margin: 0 }}>
-                    {loginTime}
-                  </h4>
-                </div>
-                <div className="d-none d-sm-block" style={{ fontSize: '16px', color: '#1B4F8A', opacity: 0.85 }}>
-                  🚪➜
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
+          <CCard className="border-0" style={{ width: '180px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <CCardBody className="p-3 d-flex justify-content-between align-items-center">
+              <div>
+                <div style={{ color: '#8a94a6', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>Login</div>
+                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>{loginTime}</h4>
+              </div>
+              <div style={{ color: '#d88665', fontSize: '18px', fontWeight: '700' }}>🚪➜</div>
+            </CCardBody>
+          </CCard>
 
           {/* Card 2: LOGOUT */}
-          <CCol xs={3}>
-            <CCard 
-              className="border-0 shadow-sm h-100" 
-              style={{ 
-                borderRadius: '10px', 
-                borderLeft: '4px solid #1B4F8A',
-                overflow: 'hidden'
-              }}
-            >
-              <CCardBody className="p-2 p-md-3 d-flex justify-content-between align-items-center">
-                <div>
-                  <div style={{ color: '#8a94a6', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '4px' }}>
-                    Logout
-                  </div>
-                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '14px', margin: 0 }}>
-                    {logoutTime}
-                  </h4>
-                </div>
-                <div className="d-none d-sm-block" style={{ fontSize: '16px', color: '#1B4F8A', opacity: 0.85 }}>
-                  🚪⬅
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
+          <CCard className="border-0" style={{ width: '180px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <CCardBody className="p-3 d-flex justify-content-between align-items-center">
+              <div>
+                <div style={{ color: '#8a94a6', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>Logout</div>
+                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>{logoutTime}</h4>
+              </div>
+              <div style={{ color: '#d88665', fontSize: '18px', fontWeight: '700' }}>🚪⬅</div>
+            </CCardBody>
+          </CCard>
 
           {/* Card 3: ACTIVITIES */}
-          <CCol xs={3}>
-            <CCard 
-              className="border-0 shadow-sm h-100" 
-              style={{ 
-                borderRadius: '10px', 
-                borderLeft: '4px solid #1B4F8A',
-                overflow: 'hidden'
-              }}
-            >
-              <CCardBody className="p-2 p-md-3 d-flex justify-content-between align-items-center">
-                <div>
-                  <div style={{ color: '#8a94a6', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '4px' }}>
-                    Activities
-                  </div>
-                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '14px', margin: 0 }}>
-                    {activities.length}
-                  </h4>
-                </div>
-                <div className="d-none d-sm-block" style={{ fontSize: '18px', color: '#1B4F8A', opacity: 0.85 }}>
-                  📈
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
+          <CCard className="border-0" style={{ width: '150px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <CCardBody className="p-3 d-flex justify-content-between align-items-center">
+              <div>
+                <div style={{ color: '#8a94a6', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>Activities</div>
+                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>{activities.length}</h4>
+              </div>
+              <div style={{ fontSize: '18px' }}>📈</div>
+            </CCardBody>
+          </CCard>
 
           {/* Card 4: STATUS */}
-          <CCol xs={3}>
-            <CCard 
-              className="border-0 shadow-sm h-100" 
-              style={{ 
-                borderRadius: '10px', 
-                borderLeft: '4px solid #1B4F8A',
-                overflow: 'hidden'
-              }}
-            >
-              <CCardBody className="p-2 p-md-3 d-flex justify-content-between align-items-center">
-                <div>
-                  <div style={{ color: '#8a94a6', fontSize: '10.5px', fontWeight: '700', letterSpacing: '0.3px', marginBottom: '4px' }}>
-                    Status
-                  </div>
-                  <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '14px', margin: 0 }}>
-                    {status}
-                  </h4>
-                </div>
-                <div className="d-none d-sm-block" style={{ fontSize: '16px', color: '#1B4F8A', opacity: 0.85 }}>
-                  🛡️
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-
-        </CRow>
+          <CCard className="border-0" style={{ width: '160px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <CCardBody className="p-3 d-flex justify-content-between align-items-center">
+              <div>
+                <div style={{ color: '#8a94a6', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>Status</div>
+                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>{status}</h4>
+              </div>
+              <div style={{ fontSize: '18px' }}>🛡️</div>
+            </CCardBody>
+          </CCard>
+        </div>
 
         {/* ─── SUB TABS NAVIGATION ─────────────────────────────────────────── */}
-        <div className="d-flex gap-4 border-bottom pb-2 mb-4">
-          <button
-            onClick={() => setActiveSubTab('daily')}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontWeight: '700',
-              fontSize: '13px',
-              color: activeSubTab === 'daily' ? '#1B4F8A' : '#8a94a6',
-              paddingBottom: '8px',
-              borderBottom: activeSubTab === 'daily' ? '3px solid #1B4F8A' : 'none',
-              cursor: 'pointer',
-              transition: 'all 0.15s'
-            }}
-          >
-            Daily log
-          </button>
-          <button
-            onClick={() => setActiveSubTab('monthly')}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontWeight: '700',
-              fontSize: '13px',
-              color: activeSubTab === 'monthly' ? '#1B4F8A' : '#8a94a6',
-              paddingBottom: '8px',
-              borderBottom: activeSubTab === 'monthly' ? '3px solid #1B4F8A' : 'none',
-              cursor: 'pointer',
-              transition: 'all 0.15s'
-            }}
-          >
-            Monthly
-          </button>
+        <div className="mb-4">
+          <div style={{ display: 'inline-flex', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
+            <button
+              onClick={() => setActiveSubTab('daily')}
+              style={{
+                background: activeSubTab === 'daily' ? '#ffffff' : 'transparent',
+                border: 'none',
+                fontWeight: '600',
+                fontSize: '13px',
+                color: activeSubTab === 'daily' ? '#1e293b' : '#64748b',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                boxShadow: activeSubTab === 'daily' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              Daily Log
+            </button>
+            <button
+              onClick={() => setActiveSubTab('monthly')}
+              style={{
+                background: activeSubTab === 'monthly' ? '#ffffff' : 'transparent',
+                border: 'none',
+                fontWeight: '600',
+                fontSize: '13px',
+                color: activeSubTab === 'monthly' ? '#1e293b' : '#64748b',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                boxShadow: activeSubTab === 'monthly' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              Monthly
+            </button>
+          </div>
         </div>
 
         {/* ─── TAB CONTENT 1: DAILY LOG ────────────────────────────────────── */}
         {activeSubTab === 'daily' && (
-          <CCard className="border-0 shadow-sm" style={{ borderRadius: '10px', overflow: 'hidden' }}>
-            <div className="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
-              <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '13px' }}>
-                Today's activities
-              </h5>
+          <CCard className="border-0" style={{ borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+            <div className="card-header bg-white py-4 px-4 border-bottom d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="fw-bold mb-1" style={{ fontSize: '15px', color: '#1B4F8A' }}>
+                  Today's Activities
+                </h5>
+                <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                  {activities.length} activities logged
+                </div>
+              </div>
               
-              {/* Button to add custom activity */}
               <button
-                className="btn btn-outline-primary btn-sm"
                 onClick={() => setShowAddActivityModal(true)}
                 disabled={!isLoggedIn}
                 style={{
+                  backgroundColor: !isLoggedIn ? '#e2e8f0' : '#1e3a8a',
+                  color: !isLoggedIn ? '#94a3b8' : '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
                   fontSize: '13px',
-                  borderRadius: '8px',
-                  borderColor: !isLoggedIn ? '#d1d5db' : '#1B4F8A',
-                  color: !isLoggedIn ? '#9ca3af' : '#1B4F8A',
-                  backgroundColor: !isLoggedIn ? '#f3f4f6' : 'transparent',
                   fontWeight: '600',
-                  padding: '5px 14px',
+                  padding: '8px 16px',
                   cursor: !isLoggedIn ? 'not-allowed' : 'pointer',
-                  opacity: !isLoggedIn ? 0.7 : 1
                 }}
               >
-                + Add activity
+                + Add Activity
               </button>
             </div>
 
-            <CCardBody className="p-0 pb-4">
+            <CCardBody className="p-0">
               <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0" style={{ fontSize: '13px' }}>
-                  <thead>
-                    <tr style={{ color: '#8a94a6', fontSize: '11.5px', letterSpacing: '0.3px' }}>
-                      <th className="ps-4 fw-bold">#</th>
-                      <th className="fw-bold">Activity</th>
-                      <th className="fw-bold">Duration</th>
-                      <th className="fw-bold">Location</th>
-                      <th className="fw-bold pe-4">Date</th>
+                <table className="table align-middle mb-0" style={{ fontSize: '13px' }}>
+                  <thead style={{ backgroundColor: '#f8fafc' }}>
+                    <tr style={{ color: '#94a3b8', fontSize: '11px', letterSpacing: '0.5px' }}>
+                      <th className="ps-4 py-3 fw-bold border-bottom-0 text-uppercase">#</th>
+                      <th className="py-3 fw-bold border-bottom-0 text-uppercase">Activity</th>
+                      <th className="py-3 fw-bold border-bottom-0 text-uppercase">Duration</th>
+                      <th className="py-3 fw-bold border-bottom-0 text-uppercase">Location</th>
+                      <th className="pe-4 py-3 fw-bold border-bottom-0 text-uppercase">Description</th>
                     </tr>
                   </thead>
                   <tbody>
                     {activities.length > 0 ? (
                       activities.map((act, idx) => (
-                        <tr key={act.id}>
-                          <td className="ps-4 text-muted fw-semibold">{idx + 1}</td>
-                          <td className="text-dark">
-                            <div className="fw-bold">{act.activity}</div>
-                            {act.description && <div className="text-muted small fw-normal" style={{ fontSize: '11px', marginTop: '2px' }}>{act.description}</div>}
-                          </td>
-                          <td>{act.duration}</td>
-                          <td style={{ color: '#1B4F8A', fontWeight: '500' }}>{act.location ? `📍 ${act.location}` : '—'}</td>
-                          <td className="pe-4 text-muted">{act.date}</td>
+                        <tr key={act.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td className="ps-4 text-muted fw-semibold py-3">{idx + 1}</td>
+                          <td className="text-dark py-3 fw-bold">{act.activity}</td>
+                          <td className="text-muted py-3">{act.duration}</td>
+                          <td className="text-muted py-3">{act.location ? act.location : '—'}</td>
+                          <td className="pe-4 text-muted py-3">{act.description ? act.description : '—'}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="5" className="text-center py-5 text-muted" style={{ fontSize: '13.5px' }}>
-                          No activities logged today.
+                        <td colSpan="5" className="text-center" style={{ padding: '80px 0' }}>
+                          <div style={{ fontSize: '32px', marginBottom: '16px' }}>📭</div>
+                          <div style={{ fontSize: '14px', color: '#94a3b8' }}>
+                            No activities logged today. Start by adding one.
+                          </div>
                         </td>
                       </tr>
                     )}

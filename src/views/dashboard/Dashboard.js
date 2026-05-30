@@ -393,7 +393,14 @@ const Dashboard = () => {
                     </span>
                   </CTableDataCell>
                   <CTableDataCell className="text-center" style={{ padding: '10px 12px' }}>
-                    <TooltipButton patient={item} tab={item.status} />
+                    {item.status?.toLowerCase() === 'drop' || 
+                     item.status?.toLowerCase() === 'cancelled' || 
+                     item.followupStatus?.toLowerCase() === 'drop' || 
+                     item.followupStatus?.toLowerCase() === 'cancelled' ? (
+                      <span style={{ color: '#9ca3af', fontSize: '13px' }}>—</span>
+                    ) : (
+                      <TooltipButton patient={item} tab={item.status} />
+                    )}
                   </CTableDataCell>
                 </CTableRow>
               ))

@@ -661,13 +661,17 @@ const DoctorProfile = () => {
                         }
                       }}
                       style={{
-                        background: doctorDetails?.doctorAvailabilityStatus ? COLORS.rose : COLORS.green,
+                        background: doctorDetails?.doctorAvailabilityStatus ? COLORS.primary : COLORS.primary,
                         color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px',
                         fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
                       }}
                     >
                       {doctorDetails?.doctorAvailabilityStatus ? '⭕ Set Inactive' : '🟢 Set Active'}
                     </button>
+                      <div className="dp-hero-stat">
+                      <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.inClinicFee || 0}</div>
+                      <div className="dp-hero-stat-lbl">In-clinic fee</div>
+                    </div>
 
                     {/* <button 
                       onClick={() => setShowPassModal(true)}
@@ -702,9 +706,9 @@ const DoctorProfile = () => {
 
                 {/* Stat tiles */}
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignSelf: 'center' }}>
-                  <div className="dp-hero-stat">
+                  {/* <div className="dp-hero-stat">
                     <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.inClinicFee || 0}</div>
-                    <div className="dp-hero-stat-lbl">In-clinic fee</div>
+                    <div className="dp-hero-stat-lbl">In-clinic fee</div> */}
                   </div>
                   {/* <div className="dp-hero-stat">
                     <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.vedioConsultationFee || 0}</div>
@@ -712,7 +716,7 @@ const DoctorProfile = () => {
                   </div> */}
                 </div>
               </div>
-            </div>
+            {/* </div> */}
 
             {/* Contact & Availability */}
             <div className="dp-card" style={{ animationDelay: '.08s' }}>

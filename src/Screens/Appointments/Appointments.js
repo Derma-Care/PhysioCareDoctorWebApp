@@ -95,9 +95,9 @@ const Appointments = ({ searchTerm = '' }) => {
       const status = tabToStatusMap[activeTab]
       const response = await getAppointments(status, selectedBranch?.branchId || 'all')
       setAppointments(response.data || [])
-      if (response.success && response.message) {
-        toast.info(response.message)
-      }
+      // if (response.success && response.message) {
+      //   toast.info(response.message)
+      // }
     } catch (err) {
       console.error('Error fetching appointments:', err)
     } finally {
@@ -542,7 +542,14 @@ const Appointments = ({ searchTerm = '' }) => {
                           </span>
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px' }}>
-                          <TooltipButton patient={p} tab={p.status} />
+                          {p.status?.toLowerCase() === 'drop' || 
+                           p.status?.toLowerCase() === 'cancelled' || 
+                           p.followupStatus?.toLowerCase() === 'drop' || 
+                           p.followupStatus?.toLowerCase() === 'cancelled' ? (
+                            <span style={{ color: '#9ca3af', fontSize: '13px' }}>—</span>
+                          ) : (
+                            <TooltipButton patient={p} tab={p.status} />
+                          )}
                         </CTableDataCell>
                       </CTableRow>
                     ))
