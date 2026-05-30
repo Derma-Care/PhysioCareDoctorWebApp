@@ -311,6 +311,10 @@ const AppSidebar = () => {
                       objectFit: 'cover',
                       backgroundColor: 'rgba(255,255,255,0.1)'
                     }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = doctor;
+                    }}
                   />
 
                   {/*                  

@@ -589,7 +589,21 @@ const DoctorProfile = () => {
               <div className="dp-hero-strip" />
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
                 {doctorImage
-                  ? <img src={doctorImage} alt="Doctor" className="dp-avatar-ring" />
+                  ? (
+                      <>
+                        <img 
+                          src={doctorImage} 
+                          alt="Doctor" 
+                          className="dp-avatar-ring" 
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            const fallback = document.getElementById('doctor-profile-fallback');
+                            if (fallback) fallback.style.display = 'flex';
+                          }} 
+                        />
+                        <div id="doctor-profile-fallback" className="dp-avatar-placeholder" style={{ display: 'none' }}>No Image</div>
+                      </>
+                    )
                   : <div className="dp-avatar-placeholder">No Image</div>
                 }
                 <div style={{ flex: 1, minWidth: 0 }}>

@@ -56,6 +56,10 @@ const AppHeaderDropdown = () => {
               : avatar8
           }
           className="profile-image"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = avatar8;
+          }}
         />
       </CDropdownToggle>
 
