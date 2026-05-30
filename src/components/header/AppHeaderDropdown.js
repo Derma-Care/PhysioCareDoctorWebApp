@@ -49,7 +49,7 @@ const AppHeaderDropdown = () => {
       >
         <CAvatar
           src={
-            clinic?.hospitalLogo
+            clinic?.hospitalLogo && typeof clinic.hospitalLogo === 'string' && clinic.hospitalLogo !== 'null' && clinic.hospitalLogo !== 'undefined' && clinic.hospitalLogo.trim() !== ''
               ? (clinic.hospitalLogo.startsWith('http://') || clinic.hospitalLogo.startsWith('https://') || clinic.hospitalLogo.startsWith('data:image')
                   ? clinic.hospitalLogo
                   : `data:image/png;base64,${clinic.hospitalLogo}`)

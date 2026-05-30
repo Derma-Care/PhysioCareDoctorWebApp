@@ -478,7 +478,7 @@ const DoctorProfile = () => {
           const clinicStored = localStorage.getItem('clinicDetails')
           const clinicParsed = clinicStored ? JSON.parse(clinicStored) : null
           const rawPic = data.doctorPicture || data.profilePicture || clinicParsed?.hospitalLogo || clinicParsed?.clinicLogo
-          if (rawPic) {
+          if (rawPic && typeof rawPic === 'string' && rawPic !== 'null' && rawPic !== 'undefined' && rawPic.trim() !== '') {
             setDoctorImage(rawPic.startsWith('data:image') || rawPic.startsWith('http')
               ? rawPic
               : `data:image/jpeg;base64,${rawPic}`)

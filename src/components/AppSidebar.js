@@ -156,7 +156,10 @@ const AppSidebar = () => {
   //   setPatientData(null)
   // }, [setPatientData])
 
-  const rawImg = doctorDetails?.doctorPicture || doctorDetails?.profilePicture || clinicDetails?.hospitalLogo || clinicDetails?.clinicLogo;
+  let rawImg = doctorDetails?.doctorPicture || doctorDetails?.profilePicture || clinicDetails?.hospitalLogo || clinicDetails?.clinicLogo;
+  if (typeof rawImg === 'string' && (rawImg === 'null' || rawImg === 'undefined' || rawImg.trim() === '')) {
+    rawImg = null;
+  }
   const doctorImage = rawImg
     ? (rawImg.startsWith('data:image') || rawImg.startsWith('http://') || rawImg.startsWith('https://')
       ? rawImg
