@@ -739,13 +739,31 @@ const DoctorProfile = () => {
                 {/* Signature */}
                 <div style={{ marginTop: 20 }}>
                   <div className="dp-section-label">Doctor Signature</div>
-                  {doctorDetails?.doctorSignature
-                    ? <div className="dp-sig-box">
-                      <img src={doctorDetails.doctorSignature} alt="Signature"
-                        style={{ height: 56, display: 'block' }} />
-                    </div>
-                    : <span style={{ fontSize: 13, color: '#9ca3af' }}>No signature uploaded</span>
-                  }
+                  {(() => {
+                    let sig = doctorDetails?.doctorSignature;
+                    if (!sig || typeof sig !== 'string' || sig === 'null' || sig === 'undefined' || sig.trim() === '') {
+                      return <span style={{ fontSize: 13, color: '#9ca3af' }}>No signature uploaded</span>;
+                    }
+                    if (sig.includes('amazonaws.com/data%3Aimage')) {
+                      try {
+                        const decoded = decodeURIComponent(sig);
+                        const dataIdx = decoded.indexOf('data:image');
+                        if (dataIdx !== -1) {
+                          sig = decoded.substring(dataIdx).split('?')[0];
+                        }
+                      } catch (e) {
+                        console.error('Error decoding signature URL', e);
+                      }
+                    }
+                    const finalSrc = (sig.startsWith('data:image') || sig.startsWith('http://') || sig.startsWith('https://'))
+                      ? sig : `data:image/png;base64,${sig}`;
+                    return (
+                      <div className="dp-sig-box">
+                        <img src={finalSrc} alt="Signature" style={{ height: 56, display: 'block' }} 
+                          onError={(e) => { e.target.style.display = 'none'; }} />
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
