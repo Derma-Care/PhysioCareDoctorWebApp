@@ -477,8 +477,19 @@ const DoctorProfile = () => {
           setDoctorDetails(data)
           const clinicStored = localStorage.getItem('clinicDetails')
           const clinicParsed = clinicStored ? JSON.parse(clinicStored) : null
-          const rawPic = data.doctorPicture || data.profilePicture || clinicParsed?.hospitalLogo || clinicParsed?.clinicLogo
+          let rawPic = data.doctorPicture || data.profilePicture || clinicParsed?.hospitalLogo || clinicParsed?.clinicLogo
           if (rawPic && typeof rawPic === 'string' && rawPic !== 'null' && rawPic !== 'undefined' && rawPic.trim() !== '') {
+            if (rawPic.includes('amazonaws.com/data%3Aimage')) {
+              try {
+                const decoded = decodeURIComponent(rawPic);
+                const dataIdx = decoded.indexOf('data:image');
+                if (dataIdx !== -1) {
+                  rawPic = decoded.substring(dataIdx).split('?')[0];
+                }
+              } catch (e) {
+                console.error('Error decoding image URL', e);
+              }
+            }
             setDoctorImage(rawPic.startsWith('data:image') || rawPic.startsWith('http')
               ? rawPic
               : `data:image/jpeg;base64,${rawPic}`)

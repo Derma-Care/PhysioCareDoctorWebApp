@@ -160,6 +160,19 @@ const AppSidebar = () => {
   if (typeof rawImg === 'string' && (rawImg === 'null' || rawImg === 'undefined' || rawImg.trim() === '')) {
     rawImg = null;
   }
+  
+  if (rawImg && rawImg.includes('amazonaws.com/data%3Aimage')) {
+    try {
+      const decoded = decodeURIComponent(rawImg);
+      const dataIdx = decoded.indexOf('data:image');
+      if (dataIdx !== -1) {
+        rawImg = decoded.substring(dataIdx).split('?')[0];
+      }
+    } catch (e) {
+      console.error('Error decoding image URL', e);
+    }
+  }
+
   const doctorImage = rawImg
     ? (rawImg.startsWith('data:image') || rawImg.startsWith('http://') || rawImg.startsWith('https://')
       ? rawImg
