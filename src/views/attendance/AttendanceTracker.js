@@ -267,18 +267,38 @@ const AttendanceTracker = () => {
 
     const nowStr = format24h(new Date());
     const todayStr = new Date().toISOString().split('T')[0];
-    const userId = localStorage.getItem('doctorId') || '0001';
+    const userId = localStorage.getItem('doctorId');
 
     if (!isLoggedIn) {
       // Clock In (Login)
       try {
-        const role = localStorage.getItem('role') || 'DOCTOR';
-        const clinicId = localStorage.getItem('hospitalId') || 'C001';
-        const branchId = localStorage.getItem('branchId') || 'B001';
+        const getStorageVal = (keys, defaultVal) => {
+          for (let k of keys) {
+            const val = localStorage.getItem(k);
+            if (val && val !== 'null' && val !== 'undefined') return val;
+          }
+          return defaultVal;
+        };
+        
+        let branchId = getStorageVal(['branchId', 'BranchId'], '');
+        if (!branchId) {
+           const ddStr = localStorage.getItem('doctorDetails');
+           if (ddStr) {
+             try {
+               const dd = JSON.parse(ddStr);
+               branchId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
+             } catch(e) {}
+           }
+        }
+        if (!branchId) branchId = 'B001';
+        
+        const role = getStorageVal(['role', 'Role'], 'DOCTOR');
+        const clinicId = getStorageVal(['hospitalId', 'HospitalId', 'clinicId'], 'C001');
+        const safeUserId = getStorageVal(['doctorId', 'DoctorId', 'userId'], userId || '0001');
         
         const payload = {
           date: todayStr,
-          userId: userId,
+          userId: safeUserId,
           role,
           clinicId,
           branchId,

@@ -266,11 +266,13 @@ const Login = () => {
       if (res.success) {
         const doctorId = res.data.staffId || res.data.id || res.data.doctorId
         const hospitalId = res.data.hospitalId || res.data.clinicId
+        const branchId = res.data.branchId || (res.data.branches && res.data.branches[0] ? res.data.branches[0].branchId : '')
         const token = res.data.token || res.token || ''
 
         localStorage.setItem('sessionKey', Date.now())
         localStorage.setItem('doctorId', doctorId)
         localStorage.setItem('hospitalId', hospitalId)
+        if (branchId) localStorage.setItem('branchId', branchId)
         localStorage.setItem('doctorMobileNumber', userName)
         if (token) {
           localStorage.setItem('token', token)
@@ -285,6 +287,10 @@ const Login = () => {
         if (dd) {
           setDoctorDetails(dd)
           localStorage.setItem('doctorDetails', JSON.stringify(dd))
+          if (!branchId) {
+             const bId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
+             if (bId) localStorage.setItem('branchId', bId);
+          }
         }
         if (cd) {
           // If login response has branches but cd doesn't, merge them
@@ -294,6 +300,10 @@ const Login = () => {
           }
           setClinicDetails(mergedCd)
           localStorage.setItem('clinicDetails', JSON.stringify(mergedCd))
+          if (!localStorage.getItem('branchId')) {
+             const bId = mergedCd.branchId || (mergedCd.branches && mergedCd.branches[0] ? mergedCd.branches[0].branchId : '');
+             if (bId) localStorage.setItem('branchId', bId);
+          }
         } else if (res.data.branches) {
           // If cd fetch failed but we have branches in login response
           const mockCd = { branches: res.data.branches }
