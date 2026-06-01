@@ -271,17 +271,41 @@ const AttendanceTracker = () => {
 
     if (!isLoggedIn) {
       // Clock In (Login)
-     try {
-      const payload = {
-        userId, role, clinicId, branchId, date: todayStr,
-        activities: [{ activity: newActivity, description: newDescription, duration: durationStr, location: newLocation || 'Location unavailable', latitude: "17.433071", longtitude: "78.407807" }]
-      };
-      const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
-      if (res.data && res.data.success) {
-        setNewActivity(''); setNewDescription(''); setDurationHrs(0); setDurationMins(0); setShowAddActivityModal(false);
-        fetchDailyData(); fetchMonthlyData();
-      } else { localFallback(); }
-    }   catch (err) { console.error('Failed to save activity to server:', err); localFallback(); }
+      try {
+        const role = localStorage.getItem('role') || 'DOCTOR';
+        const clinicId = localStorage.getItem('hospitalId') || 'C001';
+        const branchId = localStorage.getItem('branchId') || 'B001';
+        
+        const payload = {
+          date: todayStr,
+          userId: userId,
+          role,
+          clinicId,
+          branchId,
+          login: {
+            time: nowStr,
+            latitude: "17.433071",
+            longitude: "78.407807"
+          },
+          time: nowStr,
+          latitude: "17.433071",
+          longitude: "78.407807"
+        };
+        
+        const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
+        
+        setIsLoggedIn(true);
+        setLoginTime(nowStr);
+        setStatus('Active');
+        saveState(true, nowStr, '—', 'Active', activities);
+      } catch (err) {
+        console.error('Failed to log in on server:', err);
+        // Local fallback
+        setIsLoggedIn(true);
+        setLoginTime(nowStr);
+        setStatus('Active');
+        saveState(true, nowStr, '—', 'Active', activities);
+      }
     } else {
       // Clock Out (Logout)
       try {
@@ -293,19 +317,11 @@ const AttendanceTracker = () => {
           logoutLongtitude: "78.407807"
         };
         const res = await axios.put(`${ipUrl}/clinic-admin/updateUserAttendence`, payload);
-        if (res.data && res.data.success) {
-          setIsLoggedIn(false);
-          setLogoutTime(nowStr);
-          setStatus('Present');
-          fetchDailyData();
-          fetchMonthlyData();
-        } else {
-          // Local fallback in case server returns error
-          setIsLoggedIn(false);
-          setLogoutTime(nowStr);
-          setStatus('Present');
-          saveState(false, loginTime, nowStr, 'Present', activities);
-        }
+        
+        setIsLoggedIn(false);
+        setLogoutTime(nowStr);
+        setStatus('Present');
+        saveState(false, loginTime, nowStr, 'Present', activities);
       } catch (err) {
         console.error('Failed to log out on server:', err);
         // Local fallback
