@@ -7,7 +7,7 @@ import './scss/examples.scss'
 import { COLORS } from './Themes'
 import { ToastContainer } from 'react-toastify'
 import { LogoLoader } from './utils/LogoLoder'
-
+import { AppSkeleton } from './components/index'
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 
 // pages
@@ -76,7 +76,11 @@ const App = () => {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/*" element={<DefaultLayout />} />
+            <Route path="/*" element={
+              <Suspense fallback={<AppSkeleton />}>
+                <DefaultLayout />
+              </Suspense>
+            } />
             <Route path="/404" element={<Page404 />} />
             <Route path="/500" element={<Page500 />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
