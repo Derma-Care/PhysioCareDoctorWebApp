@@ -1,39 +1,40 @@
 import React from 'react';
-import { CCard, CCardBody, CPlaceholder, CRow, CCol } from '@coreui/react';
+import { CCard, CCardBody, CRow, CCol } from '@coreui/react';
 import PropTypes from 'prop-types';
+import './Skeleton.css';
 
 const SkeletonLoader = ({ type = 'card', count = 1 }) => {
   const renderCardSkeleton = (key) => (
     <CCard className="mb-4" key={key}>
       <CCardBody>
-        <CPlaceholder component="p" animation="glow">
-          <CPlaceholder xs={7} />
-          <CPlaceholder xs={4} />
-          <CPlaceholder xs={4} />
-          <CPlaceholder xs={6} />
-          <CPlaceholder xs={8} />
-        </CPlaceholder>
+        <div>
+          <div className="insta-shimmer mb-2" style={{ width: '70%', height: 16, borderRadius: 6 }} />
+          <div className="insta-shimmer mb-2" style={{ width: '40%', height: 16, borderRadius: 6 }} />
+          <div className="insta-shimmer mb-2" style={{ width: '40%', height: 16, borderRadius: 6 }} />
+          <div className="insta-shimmer mb-2" style={{ width: '60%', height: 16, borderRadius: 6 }} />
+          <div className="insta-shimmer" style={{ width: '80%', height: 16, borderRadius: 6 }} />
+        </div>
       </CCardBody>
     </CCard>
   );
 
   const renderTableSkeleton = (key) => (
     <div key={key} className="mb-4">
-      <CPlaceholder component="p" animation="glow">
-        <CPlaceholder xs={12} size="lg" className="mb-2" />
-        <CPlaceholder xs={12} className="mb-1" />
-        <CPlaceholder xs={12} className="mb-1" />
-        <CPlaceholder xs={12} className="mb-1" />
-        <CPlaceholder xs={12} className="mb-1" />
-      </CPlaceholder>
+      <div>
+        <div className="insta-shimmer mb-3" style={{ width: '100%', height: 24, borderRadius: 8 }} />
+        <div className="insta-shimmer mb-2" style={{ width: '100%', height: 16, borderRadius: 6 }} />
+        <div className="insta-shimmer mb-2" style={{ width: '100%', height: 16, borderRadius: 6 }} />
+        <div className="insta-shimmer mb-2" style={{ width: '100%', height: 16, borderRadius: 6 }} />
+        <div className="insta-shimmer mb-2" style={{ width: '100%', height: 16, borderRadius: 6 }} />
+      </div>
     </div>
   );
 
   const renderTextSkeleton = (key) => (
-    <CPlaceholder key={key} component="p" animation="glow">
-      <CPlaceholder xs={12} />
-      <CPlaceholder xs={8} />
-    </CPlaceholder>
+    <div key={key} className="mb-4">
+      <div className="insta-shimmer mb-2" style={{ width: '100%', height: 16, borderRadius: 6 }} />
+      <div className="insta-shimmer" style={{ width: '80%', height: 16, borderRadius: 6 }} />
+    </div>
   );
 
   const renderGridSkeleton = (key) => (
@@ -42,10 +43,10 @@ const SkeletonLoader = ({ type = 'card', count = 1 }) => {
         <CCol xs={12} sm={6} md={3} key={idx} className="mb-4">
           <CCard>
             <CCardBody>
-              <CPlaceholder component="p" animation="glow">
-                <CPlaceholder xs={12} size="lg" className="mb-2" />
-                <CPlaceholder xs={8} />
-              </CPlaceholder>
+              <div>
+                <div className="insta-shimmer mb-3" style={{ width: '100%', height: 24, borderRadius: 8 }} />
+                <div className="insta-shimmer" style={{ width: '80%', height: 16, borderRadius: 6 }} />
+              </div>
             </CCardBody>
           </CCard>
         </CCol>
