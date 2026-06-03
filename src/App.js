@@ -8,6 +8,7 @@ import { COLORS } from './Themes'
 import { ToastContainer } from 'react-toastify'
 import { LogoLoader } from './utils/LogoLoder'
 import { AppSkeleton } from './components/index'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 
 // pages
@@ -68,26 +69,29 @@ const App = () => {
   }
 
   return (
-    <HashRouter>
-      <ToastContainer position="top-right" autoClose={3500} />
-      <Suspense fallback={<LogoLoader />}>
-        <div style={{ minHeight: '100vh', backgroundColor: COLORS.theme, padding: 20 }}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/*" element={
-              <Suspense fallback={<AppSkeleton />}>
-                <DefaultLayout />
-              </Suspense>
-            } />
-            <Route path="/404" element={<Page404 />} />
-            <Route path="/500" element={<Page500 />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
-        </div>
-      </Suspense>
-    </HashRouter>
+    <>
+      <HashRouter>
+        <ToastContainer position="top-right" autoClose={3500} />
+        <Suspense fallback={<LogoLoader />}>
+          <div style={{ minHeight: '100vh', backgroundColor: COLORS.theme, padding: 20 }}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/*" element={
+                <Suspense fallback={<AppSkeleton />}>
+                  <DefaultLayout />
+                </Suspense>
+              } />
+              <Route path="/404" element={<Page404 />} />
+              <Route path="/500" element={<Page500 />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
+            </Routes>
+          </div>
+        </Suspense>
+      </HashRouter>
+      {/* <PWAInstallPrompt /> */}
+    </>
   )
 }
 

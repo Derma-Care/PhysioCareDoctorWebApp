@@ -16,6 +16,7 @@ import Snackbar from '../components/Snackbar'
 import { COLORS } from '../Themes'
 import { useToast } from '../utils/Toaster'
 import FileUploader from './FileUploader'
+import { uploadPrescriptionPdf } from '../utils/S3UploadServices'
 import { createDoctorSaveDetails, getClinicDetails, getDoctorDetails, SavePatientPrescription } from '../Auth/Auth'
 import { useDoctorContext } from '../Context/DoctorContext'
 import PrescriptionPDF from '../utils/PdfGenerator'
@@ -69,7 +70,7 @@ const toImageSrc = (raw) => {
           bytes = new Uint8Array(decoded.length)
           for (let i = 0; i < decoded.length; i++) bytes[i] = decoded.charCodeAt(i)
         }
-      } catch (e) {}
+      } catch (e) { }
       if (!bytes) {
         bytes = new Uint8Array(s.length)
         for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i) & 0xff
@@ -84,7 +85,7 @@ const toImageSrc = (raw) => {
     else if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) mime = 'image/gif'
     else if (bytes[0] === 0x42 && bytes[1] === 0x4d) mime = 'image/bmp'
     else if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
-             bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) mime = 'image/webp'
+      bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) mime = 'image/webp'
 
     let bin = ''
     for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
@@ -330,7 +331,7 @@ const tdStyle = (i) => ({ padding: '5px 10px', borderBottom: `1px solid ${T.bord
 
 const renderAvailableDetails = (ex) => {
   const details = []
-  
+
   if (ex.sets !== undefined && ex.sets !== null && String(ex.sets).trim() !== '' && String(ex.sets).trim() !== '0') {
     details.push(
       <div key="sets" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -339,7 +340,7 @@ const renderAvailableDetails = (ex) => {
       </div>
     )
   }
-  
+
   const repsVal = ex.repetitions ?? ex.reps
   if (repsVal !== undefined && repsVal !== null && String(repsVal).trim() !== '' && String(repsVal).trim() !== '0') {
     details.push(
@@ -547,7 +548,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
   const allExercises = []
   sessionsList.forEach((sess) => {
     const serviceType = (sess.serviceType || '').toLowerCase()
-    
+
     const addExercises = (exercisesList, typeName) => {
       if (Array.isArray(exercisesList)) {
         exercisesList.forEach(ex => {
@@ -626,7 +627,7 @@ const TherapySessionsDisplay = ({ sessionsList, therapistId, therapistName }) =>
           )}
         </div>
       )}
-      
+
       <div style={{ overflowX: 'auto' }}>
         <table style={tableStyle}>
           <thead>
@@ -745,27 +746,27 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
   const [clickedSaveTemplate, setClickedSaveTemplate] = useState(false)
-  
+
   const record = formData?.physiotherapyRecord ?? formData ?? {}
   const patientInfo = record.patientInfo ?? {}
 
   const [manualMobile, setManualMobile] = useState(
-    patientInfo?.mobileNumber ?? 
-    patientData?.patientMobileNumber ?? 
-    patientData?.mobileNumber ?? 
-    patientData?.contactNumber ?? 
-    patientData?.phone ?? 
-    patientData?.phoneNumber ?? 
+    patientInfo?.mobileNumber ??
+    patientData?.patientMobileNumber ??
+    patientData?.mobileNumber ??
+    patientData?.contactNumber ??
+    patientData?.phone ??
+    patientData?.phoneNumber ??
     ''
   )
 
   useEffect(() => {
-    const fallbackMobile = patientInfo?.mobileNumber ?? 
-      patientData?.patientMobileNumber ?? 
-      patientData?.mobileNumber ?? 
-      patientData?.contactNumber ?? 
-      patientData?.phone ?? 
-      patientData?.phoneNumber ?? 
+    const fallbackMobile = patientInfo?.mobileNumber ??
+      patientData?.patientMobileNumber ??
+      patientData?.mobileNumber ??
+      patientData?.contactNumber ??
+      patientData?.phone ??
+      patientData?.phoneNumber ??
       '';
     if (fallbackMobile && !manualMobile) {
       setManualMobile(fallbackMobile);
@@ -1281,12 +1282,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     try {
       const safeName = (patientName || 'Record').replace(/[^\w\-]+/g, '_')
       const blob = await renderPdfBlob()
-      const pdfBase64 = await blobToBase64(blob)
-      const payload = buildPayload(pdfBase64)
 
-      console.group('📤 FINAL SAVE PAYLOAD')
-      console.log(JSON.stringify(payload, null, 2))
-      console.groupEnd()
+      // ── Upload PDF to S3 and get fileKey ──────────────────────────────────
+      const pdfFile = new File([blob], `${safeName}.pdf`, { type: 'application/pdf' })
+      const prescriptionPdfKey = await uploadPrescriptionPdf(pdfFile)
+
+      const payload = buildPayload(prescriptionPdfKey)
 
       const resp = await SavePatientPrescription(payload)
       if (resp) {
@@ -1296,7 +1297,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         return true
       } else { warning('Saved, but got an unexpected response.'); return false }
     } catch (e) {
-      console.error('Save error:', e); error('Failed to save record.', { title: 'Error' }); return false
+      error('Failed to save record.', { title: 'Error' }); return false
     } finally { setSaving(false) }
   }
 
@@ -1748,10 +1749,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
       {/* ── Sticky Bottom Bar ── */}
       <div style={{ position: 'fixed', bottom: 0, left: sidebarWidth ? `${sidebarWidth}px` : 0, width: sidebarWidth ? `calc(100vw - ${sidebarWidth}px)` : '100vw', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 24px', zIndex: 999, boxShadow: '0 -2px 10px rgba(27,79,138,0.12)', borderTop: '2px solid #1B4F8A' }}>
-        <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
+        {/* <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
           onClick={() => { setClickedSaveTemplate(true); onSaveTemplate?.(); info('Template saved!', { title: 'Template' }) }}>
           {!updateTemplate ? '💾 Save as Template' : '🔄 Update Template'}
-        </Button>
+        </Button> */}
         {saving && <CSpinner size="sm" style={{ color: '#1B4F8A' }} />}
         <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
           onClick={() => { setPendingAction(ACTIONS.SAVE); clickedSaveTemplate ? doSave() : setShowTemplateModal(true) }} disabled={saving}>
