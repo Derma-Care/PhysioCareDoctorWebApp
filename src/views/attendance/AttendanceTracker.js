@@ -137,8 +137,22 @@ const AttendanceTracker = () => {
         const dailyData = res.data.data;
         setActivities(dailyData.activities || dailyData.sessions || []);
         
-        const fetchedLoginTime = dailyData.inTime || dailyData.loginTime || dailyData.login?.time || '—';
-        const fetchedLogoutTime = dailyData.outTime || dailyData.logoutTime || dailyData.logout?.time || '—';
+        const parseTime = (val) => {
+          if (!val) return '—';
+          if (typeof val === 'string' && (val.trim() === '' || val.trim().toLowerCase() === 'null' || val === '—' || val === '-')) return '—';
+          return val;
+        };
+
+        const fetchedLoginTime = parseTime(dailyData.inTime || dailyData.loginTime || dailyData.login?.time);
+        let fetchedLogoutTime = parseTime(dailyData.outTime || dailyData.logoutTime || dailyData.logout?.time || dailyData.logoutTime);
+        
+        // If they clocked in AGAIN after clocking out, the backend still returns the old outTime.
+        // We must ignore the old outTime so they are properly marked as logged in.
+        if (fetchedLoginTime !== '—' && fetchedLogoutTime !== '—') {
+          if (fetchedLoginTime > fetchedLogoutTime) {
+            fetchedLogoutTime = '—';
+          }
+        }
         
         setLoginTime(fetchedLoginTime);
         setLogoutTime(fetchedLogoutTime);
@@ -316,6 +330,7 @@ const AttendanceTracker = () => {
         
         setIsLoggedIn(true);
         setLoginTime(nowStr);
+        setLogoutTime('—');
         setStatus('Active');
         saveState(true, nowStr, '—', 'Active', activities);
       } catch (err) {
@@ -323,6 +338,7 @@ const AttendanceTracker = () => {
         // Local fallback
         setIsLoggedIn(true);
         setLoginTime(nowStr);
+        setLogoutTime('—');
         setStatus('Active');
         saveState(true, nowStr, '—', 'Active', activities);
       }
