@@ -34,11 +34,11 @@ const validateForm = (form) => {
   const errors = {}
   const nameTrimmed = form.name.trim()
 
-  if (!nameTrimmed) {
-    errors.name = 'Exercise name is required'
-  } else if (!VALID_NAME_REGEX.test(nameTrimmed)) {
-    errors.name = 'Name contains invalid characters'
-  }
+  // if (!nameTrimmed) {
+  //   errors.name = 'Exercise name is required'
+  // } else if (!VALID_NAME_REGEX.test(nameTrimmed)) {
+  //   errors.name = 'Name contains invalid characters'
+  // }
 
   if (form.sets !== '' && form.sets !== null) {
     const n = Number(form.sets)

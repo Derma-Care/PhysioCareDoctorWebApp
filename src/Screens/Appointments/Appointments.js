@@ -22,6 +22,7 @@ import Button from '../../components/CustomButton/CustomButton'
 import { getAppointments } from '../../Auth/Auth'
 import { useDoctorContext } from '../../Context/DoctorContext'
 import { useToast } from '../../utils/Toaster'
+import SkeletonLoader from '../../components/SkeletonLoader'
 
 const tabLabels = {
   pending: 'Pending',
@@ -445,10 +446,9 @@ const Appointments = ({ searchTerm = '' }) => {
                     <CTableRow>
                       <CTableDataCell
                         colSpan={10}
-                        className="text-center py-4"
-                        style={{ color: COLORS.black, fontSize: '14px' }}
+                        className="p-0 border-0"
                       >
-                        Loading...
+                        <SkeletonLoader type="table" count={1} />
                       </CTableDataCell>
                     </CTableRow>
                   ) : currentPatients.length === 0 ? (

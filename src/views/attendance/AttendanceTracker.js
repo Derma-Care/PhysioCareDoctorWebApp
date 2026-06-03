@@ -18,15 +18,31 @@ import { COLORS } from '../../Themes';
 import axios from 'axios';
 import { ipUrl } from '../../Auth/BaseUrl';
 
+const Skeleton = ({ width, height, borderRadius = '4px', className = '' }) => (
+  <div
+    className={`skeleton-loader ${className}`}
+    style={{
+      width,
+      height,
+      borderRadius,
+      backgroundColor: '#e2e8f0',
+      display: 'inline-block',
+      verticalAlign: 'middle'
+    }}
+  />
+);
+
 const AttendanceTracker = () => {
   const navigate = useNavigate();
   
   // State for Personal Attendance
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [loginTime, setLoginTime] = useState('—');
   const [logoutTime, setLogoutTime] = useState('—');
   const [status, setStatus] = useState('—');
   const [activeSubTab, setActiveSubTab] = useState('daily'); // 'daily' or 'monthly'
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Activities Roster State
   const [activities, setActivities] = useState([]);
@@ -238,8 +254,13 @@ const AttendanceTracker = () => {
 
   // Load state on mount
   useEffect(() => {
-    fetchDailyData();
-    fetchMonthlyData();
+    const initializeData = async () => {
+      setIsLoading(true);
+      await Promise.all([fetchDailyData(), fetchMonthlyData()]);
+      setIsLoading(false);
+    };
+
+    initializeData();
 
     // Seed mock monthly history if first time or storage is empty
     const storedHistory = localStorage.getItem('doctor_monthly_attendance');
@@ -343,29 +364,46 @@ const AttendanceTracker = () => {
         saveState(true, nowStr, '—', 'Active', activities);
       }
     } else {
-      // Clock Out (Logout)
-      try {
-        const payload = {
-          userId,
-          date: todayStr,
-          logoutTime: nowStr,
-          logoutLatitude: "17.433071",
-          logoutLongtitude: "78.407807"
-        };
-        const res = await axios.put(`${ipUrl}/clinic-admin/updateUserAttendence`, payload);
-        
-        setIsLoggedIn(false);
-        setLogoutTime(nowStr);
-        setStatus('Present');
-        saveState(false, loginTime, nowStr, 'Present', activities);
-      } catch (err) {
-        console.error('Failed to log out on server:', err);
-        // Local fallback
-        setIsLoggedIn(false);
-        setLogoutTime(nowStr);
-        setStatus('Present');
-        saveState(false, loginTime, nowStr, 'Present', activities);
-      }
+      setShowLogoutModal(true);
+    }
+  };
+
+  const confirmLogout = async () => {
+    setShowLogoutModal(false);
+    
+    const format24h = (date) => {
+      let hours = date.getHours();
+      let minutes = date.getMinutes();
+      hours = hours < 10 ? '0' + hours : hours;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      return `${hours}:${minutes}`;
+    };
+
+    const nowStr = format24h(new Date());
+    const todayStr = new Date().toISOString().split('T')[0];
+    const userId = localStorage.getItem('doctorId') || '0001';
+
+    try {
+      const payload = {
+        userId,
+        date: todayStr,
+        logoutTime: nowStr,
+        logoutLatitude: "17.433071",
+        logoutLongtitude: "78.407807"
+      };
+      const res = await axios.put(`${ipUrl}/clinic-admin/updateUserAttendence`, payload);
+      
+      setIsLoggedIn(false);
+      setLogoutTime(nowStr);
+      setStatus('Present');
+      saveState(false, loginTime, nowStr, 'Present', activities);
+    } catch (err) {
+      console.error('Failed to log out on server:', err);
+      // Local fallback
+      setIsLoggedIn(false);
+      setLogoutTime(nowStr);
+      setStatus('Present');
+      saveState(false, loginTime, nowStr, 'Present', activities);
     }
   };
 
@@ -535,6 +573,17 @@ const AttendanceTracker = () => {
 
   return (
     <div style={{ backgroundColor: '#fafbfe', minHeight: '100vh', paddingBottom: '40px' }}>
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -1000px 0; }
+          100% { background-position: 1000px 0; }
+        }
+        .skeleton-loader {
+          animation: shimmer 2s infinite linear;
+          background: linear-gradient(to right, #f1f5f9 4%, #e2e8f0 25%, #f1f5f9 36%);
+          background-size: 1000px 100%;
+        }
+      `}</style>
       
       <CContainer fluid className="px-5 pt-4">
         {/* ─── LOG HEADER BLOCK ─────────────────────────────────────────────── */}
@@ -590,7 +639,9 @@ const AttendanceTracker = () => {
             <CCardBody className="p-3 d-flex justify-content-between align-items-center">
               <div>
                 <div style={{ color: '#8a94a6', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>Login</div>
-                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>{loginTime}</h4>
+                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>
+                  {isLoading ? <Skeleton width="50px" height="15px" /> : loginTime}
+                </h4>
               </div>
               <div style={{ color: '#d88665', fontSize: '18px', fontWeight: '700' }}>🚪➜</div>
             </CCardBody>
@@ -601,7 +652,9 @@ const AttendanceTracker = () => {
             <CCardBody className="p-3 d-flex justify-content-between align-items-center">
               <div>
                 <div style={{ color: '#8a94a6', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>Logout</div>
-                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>{logoutTime}</h4>
+                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>
+                  {isLoading ? <Skeleton width="50px" height="15px" /> : logoutTime}
+                </h4>
               </div>
               <div style={{ color: '#d88665', fontSize: '18px', fontWeight: '700' }}>🚪⬅</div>
             </CCardBody>
@@ -612,7 +665,9 @@ const AttendanceTracker = () => {
             <CCardBody className="p-3 d-flex justify-content-between align-items-center">
               <div>
                 <div style={{ color: '#8a94a6', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>Activities</div>
-                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>{activities.length}</h4>
+                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>
+                  {isLoading ? <Skeleton width="30px" height="15px" /> : activities.length}
+                </h4>
               </div>
               <div style={{ fontSize: '18px' }}>📈</div>
             </CCardBody>
@@ -623,7 +678,9 @@ const AttendanceTracker = () => {
             <CCardBody className="p-3 d-flex justify-content-between align-items-center">
               <div>
                 <div style={{ color: '#8a94a6', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>Status</div>
-                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>{status}</h4>
+                <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>
+                  {isLoading ? <Skeleton width="50px" height="15px" /> : status}
+                </h4>
               </div>
               <div style={{ fontSize: '18px' }}>🛡️</div>
             </CCardBody>
@@ -714,7 +771,17 @@ const AttendanceTracker = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {activities.length > 0 ? (
+                    {isLoading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td className="ps-4 py-3"><Skeleton width="20px" height="15px" /></td>
+                          <td className="py-3"><Skeleton width="120px" height="15px" /></td>
+                          <td className="py-3"><Skeleton width="60px" height="15px" /></td>
+                          <td className="py-3"><Skeleton width="80px" height="15px" /></td>
+                          <td className="pe-4 py-3"><Skeleton width="150px" height="15px" /></td>
+                        </tr>
+                      ))
+                    ) : activities.length > 0 ? (
                       activities.map((act, idx) => (
                         <tr key={act.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                           <td className="ps-4 text-muted fw-semibold py-3">{idx + 1}</td>
@@ -764,25 +831,39 @@ const AttendanceTracker = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {monthlyHistory.map((hist, idx) => (
-                      <tr key={idx}>
-                        <td className="ps-4 text-dark fw-bold">{hist.date}</td>
-                        <td>{hist.login || '—'}</td>
-                        <td>{hist.logout || '—'}</td>
-                        <td className="fw-semibold">{hist.total || '—'}</td>
-                        <td className="text-success fw-semibold">{hist.working || '—'}</td>
-                        <td className="text-warning fw-semibold">{hist.idle || '—'}</td>
-                        <td className="pe-4">
-                          <button
-                            onClick={() => handleViewDetails(hist.date)}
-                            className="btn btn-link btn-sm p-0 fw-bold"
-                            style={{ color: '#1B4F8A', textDecoration: 'none', fontSize: '11.5px' }}
-                          >
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {isLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <tr key={i}>
+                          <td className="ps-4 py-3"><Skeleton width="80px" height="15px" /></td>
+                          <td className="py-3"><Skeleton width="40px" height="15px" /></td>
+                          <td className="py-3"><Skeleton width="40px" height="15px" /></td>
+                          <td className="py-3"><Skeleton width="50px" height="15px" /></td>
+                          <td className="py-3"><Skeleton width="50px" height="15px" /></td>
+                          <td className="py-3"><Skeleton width="50px" height="15px" /></td>
+                          <td className="pe-4 py-3"><Skeleton width="30px" height="15px" /></td>
+                        </tr>
+                      ))
+                    ) : (
+                      monthlyHistory.map((hist, idx) => (
+                        <tr key={idx}>
+                          <td className="ps-4 text-dark fw-bold">{hist.date}</td>
+                          <td>{hist.login || '—'}</td>
+                          <td>{hist.logout || '—'}</td>
+                          <td className="fw-semibold">{hist.total || '—'}</td>
+                          <td className="text-success fw-semibold">{hist.working || '—'}</td>
+                          <td className="text-warning fw-semibold">{hist.idle || '—'}</td>
+                          <td className="pe-4">
+                            <button
+                              onClick={() => handleViewDetails(hist.date)}
+                              className="btn btn-link btn-sm p-0 fw-bold"
+                              style={{ color: '#1B4F8A', textDecoration: 'none', fontSize: '11.5px' }}
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -935,6 +1016,48 @@ const AttendanceTracker = () => {
         </CModalBody>
         <CModalFooter>
           <button className="btn btn-primary btn-sm" style={{ backgroundColor: '#1B4F8A', borderColor: '#1B4F8A' }} onClick={() => setShowDetailsModal(false)}>Close</button>
+        </CModalFooter>
+      </CModal>
+
+      {/* LOGOUT CONFIRMATION MODAL */}
+      <CModal visible={showLogoutModal} onClose={() => setShowLogoutModal(false)} alignment="center">
+        <CModalHeader style={{ borderBottom: '1px solid #e2e8f0', padding: '16px 24px' }}>
+          <CModalTitle style={{ fontSize: '18px', fontWeight: '500', color: '#1B4F8A' }}>
+            Logout Confirmation
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody style={{ padding: '24px', color: '#1e293b', fontSize: '15px' }}>
+          Are you sure you want to logout and end your session for today?
+        </CModalBody>
+        <CModalFooter style={{ borderTop: '1px solid #e2e8f0', padding: '16px 24px', gap: '8px' }}>
+          <button
+            onClick={() => setShowLogoutModal(false)}
+            style={{
+              backgroundColor: '#6c757d',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '8px 16px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmLogout}
+            style={{
+              backgroundColor: '#dc3545',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '8px 16px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            Yes, Logout
+          </button>
         </CModalFooter>
       </CModal>
 
