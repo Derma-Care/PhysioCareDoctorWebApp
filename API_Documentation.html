@@ -1,0 +1,122 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta charset="utf-8">
+    <title>API Documentation</title>
+    <style>
+        body { font-family: Calibri, sans-serif; }
+        h1 { color: #2F5496; }
+        h2 { color: #4472C4; border-bottom: 1px solid #4472C4; padding-bottom: 5px; }
+        ul { margin-bottom: 20px; }
+        li { margin-bottom: 10px; }
+        code { background-color: #f4f4f4; padding: 2px 4px; font-family: Consolas, monospace; font-size: 0.9em; }
+        .method { font-weight: bold; color: #C00000; }
+    </style>
+</head>
+<body>
+    <h1>API Usage Documentation</h1>
+    <p>This document separates the APIs based on whether they are routed through the central API service (<code>Auth.js</code> and Axios Interceptor) or called directly from individual components/utilities (separately).</p>
+
+    <h2>1. APIs Coming From Central Service (Auth.js)</h2>
+    <p>These APIs are managed centrally using the Axios instance (<code>api</code>) which likely includes authorization headers and base URL configurations.</p>
+    <ul>
+        <li><strong>Authentication & Doctor Details</strong>
+            <ul>
+                <li><code>postLogin</code> - <span class="method">POST</span> <code>/PhysioDoctorlogin</code></li>
+                <li><code>getDoctorDetails</code> - <span class="method">GET</span> <code>/getDoctorById/{doctorId}</code> (fallback to <code>/api/doctors/getDoctorById/{doctorId}</code>)</li>
+                <li><code>updateLogin</code> - <span class="method">PUT</span> <code>/update-PhysioDoctorpassword/{userName}</code></li>
+                <li><code>updateAvailability</code> - <span class="method">PUT</span> <code>/update-PhysioDoctorAvailability/{doctorId}</code></li>
+            </ul>
+        </li>
+        <li><strong>Appointments</strong>
+            <ul>
+                <li><code>getTodayAppointments</code> - <span class="method">GET</span> <code>/getTodaysAppointmentsByUsingClinicIdAndDoctorId/{hospitalId}/{doctorId}</code></li>
+                <li><code>getTodayFutureAppointments</code> - <span class="method">GET</span> <code>/getFutureDoctorappointmentsByDoctorId/{doctorId}</code></li>
+                <li><code>getAppointments</code> - <span class="method">GET</span> <code>/getDoctorAppointmentsonStatus/{hospitalId}/{branchId}/{doctorId}/{status}</code></li>
+                <li><code>getAppointmentsCount</code> - <span class="method">GET</span> <code>/appointments/completed/{hospitalId}/{doctorId}</code></li>
+                <li><code>updateAppointmentBasedOnBookingId</code> - <span class="method">PUT</span> <code>/clinic-admin/updateAppointmentBasedOnBookingId</code></li>
+            </ul>
+        </li>
+        <li><strong>Prescriptions & Medicines</strong>
+            <ul>
+                <li><code>SavePrescription</code> - <span class="method">POST</span> <code>/physiotherapy-record/createPrescription</code></li>
+                <li><code>SearchPrescription</code> - <span class="method">GET</span> <code>/physiotherapy-record/searchMedicines</code></li>
+                <li><code>SavePatientPrescription</code> - <span class="method">POST</span> <code>/physiotherapy-record/create</code> (Uses direct axios)</li>
+                <li><code>getDoctorSaveDetails</code> - <span class="method">GET</span> <code>/physiotherapy-record/getTemplatesByClinicIdAndTitle/{hospitalId}/{disease}</code></li>
+                <li><code>medicineTemplate</code> - <span class="method">GET</span> <code>/physiotherapy-record/getPrescriptionsByClinicId/{clinicId}</code></li>
+                <li><code>getMedicineTypes</code> - <span class="method">GET</span> <code>/getMedicineTypes/{clinicId}</code></li>
+                <li><code>addMedicineType</code> - <span class="method">POST</span> <code>/search-or-add</code></li>
+            </ul>
+        </li>
+        <li><strong>Lab Tests & Diseases & Treatments</strong>
+            <ul>
+                <li><code>getAllLabTests</code> - <span class="method">GET</span> <code>/clinic-admin/labtest/getAllLabTests</code></li>
+                <li><code>getLabTests</code> - <span class="method">GET</span> <code>/clinic-admin/labtests/{hospitalId}</code></li>
+                <li><code>addLabTest</code> - <span class="method">POST</span> <code>/clinic-admin/addOrGetTest</code></li>
+                <li><code>getAllDiseases</code> - <span class="method">GET</span> <code>/clinic-admin/diseases/{hospitalId}</code></li>
+                <li><code>addDisease</code> - <span class="method">POST</span> <code>/clinic-admin/addDiseases</code></li>
+                <li><code>getAllTreatments</code> - <span class="method">GET</span> <code>/clinic-admin/treatment/getAllTreatments</code></li>
+                <li><code>getAllTreatmentsByHospital</code> - <span class="method">GET</span> <code>/clinic-admin/treatments/{hospitalId}</code></li>
+                <li><code>addTreatmentByHospital</code> - <span class="method">POST</span> <code>/clinic-admin/addOrGetTreatment</code></li>
+                <li><code>getTreatmentStatusByVisitId</code> - <span class="method">GET</span> <code>/visitHistoryBypatientIdAndBookingId/{patientId}/{bookingId}</code> (Uses direct fetch in Auth.js)</li>
+            </ul>
+        </li>
+        <li><strong>Clinic, Ratings & Vitals</strong>
+            <ul>
+                <li><code>getClinicDetails</code> - <span class="method">GET</span> <code>/admin/getClinicById/{hospitalId}</code></li>
+                <li><code>averageRatings</code> - <span class="method">GET</span> <code>/clinic-admin/getAverageRatingsByDoctorId/{doctorId}</code></li>
+                <li><code>getPatientVitals</code> - <span class="method">GET</span> <code>/clinic-admin/getVitals/{bookingId}/{patientId}</code></li>
+            </ul>
+        </li>
+        <li><strong>Reports</strong>
+            <ul>
+                <li><code>ReportsData</code> - <span class="method">GET</span> <code>/clinic-admin/getallreports</code></li>
+                <li><code>Get_ReportsByBookingIdData</code> - <span class="method">GET</span> <code>/clinic-admin/getReportByBookingId/{bookingId}</code></li>
+            </ul>
+        </li>
+        <li><strong>Ads & Media Images</strong>
+            <ul>
+                <li><code>getAdImages</code> - <span class="method">GET</span> <code>/admin/categoryAdvertisement/getAll</code></li>
+                <li><code>getAdImagesView</code> - <span class="method">GET</span> <code>/admin/doctorWebAds/getAll</code></li>
+                <li><code>saveImagesToServer</code> - <span class="method">POST</span> <code>/admin/images/save</code></li>
+                <li><code>loadImagesFromServer</code> - <span class="method">GET</span> <code>/admin/images/getAll</code></li>
+                <li><code>clearImagesOnServer</code> - <span class="method">DELETE</span> <code>/admin/images/clearAll</code></li>
+            </ul>
+        </li>
+        <li><strong>Therapy & Progress</strong>
+            <ul>
+                <li><code>getInProgressDetails</code> - <span class="method">GET</span> <code>/getIn-progressByUsingPatientIdAndBookingId/{patientId}/{bookingId}</code></li>
+                <li><code>getExerciseSessionsByExerciseId</code> - <span class="method">GET</span> <code>/api/customer/therapy-records/getByClinicBranchExercise/...</code></li>
+                <li><code>getExerciseSessionsWithRecords</code> - <span class="method">GET</span> <code>/payment/getExerciseSessionsWithRecords/...</code></li>
+                <li><code>getCompletedTherapyRecord</code> - <span class="method">GET</span> <code>/getCompletedTherapyRecord/...</code></li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>2. APIs Using Separate/Direct Calls (Not using Central Service)</h2>
+    <p>These APIs are invoked directly from within components or utility files, using native <code>fetch</code> or a separate <code>axios</code> call without the central interceptor.</p>
+    <ul>
+        <li><strong>Attendance Tracker (<code>views/attendance/AttendanceTracker.js</code>)</strong>
+            <ul>
+                <li><span class="method">POST</span> <code>/clinic-admin/saveUserAttendence</code> (Direct Axios)</li>
+                <li><span class="method">PUT</span> <code>/clinic-admin/updateUserAttendence</code> (Direct Axios)</li>
+                <li><span class="method">GET</span> External/Dynamic API URLs for IP address fetching (Direct Axios)</li>
+            </ul>
+        </li>
+        <li><strong>Completed Appointment View (<code>components/ComplatedAppointmnetView.js</code>)</strong>
+            <ul>
+                <li><span class="method">GET</span> <code>/api/patients/{id}</code> (Direct Fetch)</li>
+            </ul>
+        </li>
+        <li><strong>S3 Upload Services (<code>utils/S3UploadServices.js</code>)</strong>
+            <ul>
+                <li><span class="method">PUT/GET</span> Direct AWS S3 bucket endpoints for media uploads (Direct Fetch)</li>
+            </ul>
+        </li>
+        <li><strong>File Uploader (<code>Prescription/FileUploader.js</code>)</strong>
+            <ul>
+                <li><span class="method">GET/POST</span> Dynamically passed URLs for fetching/uploading files (Direct Fetch)</li>
+            </ul>
+        </li>
+    </ul>
+</body>
+</html>

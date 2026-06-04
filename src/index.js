@@ -37,7 +37,6 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import 'core-js'
-import { registerSW } from 'virtual:pwa-register'
 
 import App from './App'
 import store from './store'
@@ -45,17 +44,6 @@ import { DoctorProvider } from './Context/DoctorContext'
 import { ToastProvider } from './utils/Toaster'
 
 import logo from './assets/images/ic_launcher.png'
-
-// Register PWA service worker — auto-updates in background
-registerSW({
-  onNeedRefresh() {
-    // A new version is available — auto reload silently
-    window.location.reload()
-  },
-  onOfflineReady() {
-    // App is ready to work offline
-  },
-})
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
