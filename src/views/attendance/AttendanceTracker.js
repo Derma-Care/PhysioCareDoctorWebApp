@@ -34,7 +34,7 @@ const Skeleton = ({ width, height, borderRadius = '4px', className = '' }) => (
 
 const AttendanceTracker = () => {
   const navigate = useNavigate();
-  
+
   // State for Personal Attendance
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,10 +147,10 @@ const AttendanceTracker = () => {
     }
     const [startH, startM] = startTimeStr.split(':').map(Number);
     const [endH, endM] = endTimeStr.split(':').map(Number);
-    
+
     let diffMins = (endH * 60 + endM) - (startH * 60 + startM);
     if (diffMins < 0) diffMins += 24 * 60; // handle overnight shifts
-    
+
     const h = Math.floor(diffMins / 60);
     const m = diffMins % 60;
     return {
@@ -166,12 +166,12 @@ const AttendanceTracker = () => {
       const todayStr = new Date().toISOString().split('T')[0];
       const userId = localStorage.getItem('doctorId') || '0001';
       const apiUrl = `${ipUrl}/clinic-admin/getUserDailyAttendence/${userId}/${todayStr}`;
-      
+
       const res = await axios.get(apiUrl);
       if (res.data && res.data.success && res.data.data) {
         const dailyData = res.data.data;
         setActivities(dailyData.activities || dailyData.sessions || []);
-        
+
         const parseTime = (val) => {
           if (!val) return '—';
           if (typeof val === 'string' && (val.trim() === '' || val.trim().toLowerCase() === 'null' || val === '—' || val === '-')) return '—';
@@ -180,7 +180,7 @@ const AttendanceTracker = () => {
 
         const fetchedLoginTime = parseTime(dailyData.inTime || dailyData.loginTime || dailyData.login?.time);
         let fetchedLogoutTime = parseTime(dailyData.outTime || dailyData.logoutTime || dailyData.logout?.time || dailyData.logoutTime);
-        
+
         // If they clocked in AGAIN after clocking out, the backend still returns the old outTime.
         // We must ignore the old outTime so they are properly marked as logged in.
         if (fetchedLoginTime !== '—' && fetchedLogoutTime !== '—') {
@@ -188,10 +188,10 @@ const AttendanceTracker = () => {
             fetchedLogoutTime = '—';
           }
         }
-        
+
         setLoginTime(fetchedLoginTime);
         setLogoutTime(fetchedLogoutTime);
-        
+
         if (fetchedLoginTime !== '—') {
           // If there's a login time and no logout time (or logout is '—'), they are logged in
           const currentlyLoggedIn = fetchedLogoutTime === '—';
@@ -241,7 +241,7 @@ const AttendanceTracker = () => {
       const monthStr = todayStr.substring(0, 7); // yyyy-MM
       const userId = localStorage.getItem('doctorId') || '0001';
       const apiUrl = `${ipUrl}/clinic-admin/getUserMonthlyAttendence/${userId}/${monthStr}`;
-      
+
       const res = await axios.get(apiUrl);
       if (res.data && res.data.success && res.data.data) {
         const historyList = res.data.data.map(item => ({
@@ -344,23 +344,23 @@ const AttendanceTracker = () => {
           }
           return defaultVal;
         };
-        
+
         let branchId = getStorageVal(['branchId', 'BranchId'], '');
         if (!branchId) {
-           const ddStr = localStorage.getItem('doctorDetails');
-           if (ddStr) {
-             try {
-               const dd = JSON.parse(ddStr);
-               branchId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
-             } catch(e) {}
-           }
+          const ddStr = localStorage.getItem('doctorDetails');
+          if (ddStr) {
+            try {
+              const dd = JSON.parse(ddStr);
+              branchId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
+            } catch (e) { }
+          }
         }
         if (!branchId) branchId = 'B001';
-        
+
         const role = getStorageVal(['role', 'Role'], 'DOCTOR');
         const clinicId = getStorageVal(['hospitalId', 'HospitalId', 'clinicId'], 'C001');
         const safeUserId = getStorageVal(['doctorId', 'DoctorId', 'userId'], userId || '0001');
-        
+
         const coords = await getCurrentLocationCoords();
         const payload = {
           date: todayStr,
@@ -377,9 +377,9 @@ const AttendanceTracker = () => {
           latitude: coords.lat,
           longitude: coords.lon
         };
-        
+
         const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
-        
+
         setIsLoggedIn(true);
         setLoginTime(nowStr);
         setLogoutTime('—');
@@ -401,7 +401,7 @@ const AttendanceTracker = () => {
 
   const confirmLogout = async () => {
     setShowLogoutModal(false);
-    
+
     const format24h = (date) => {
       let hours = date.getHours();
       let minutes = date.getMinutes();
@@ -440,10 +440,10 @@ const AttendanceTracker = () => {
         date: todayStr,
         logoutTime: nowStr,
         logoutLatitude: coords.lat,
-        logoutLongtitude: coords.lon
+        logoutLongitude: coords.lon
       };
       const res = await axios.put(`${ipUrl}/clinic-admin/updateUserAttendence`, payload);
-      
+
       setIsLoggedIn(false);
       setLogoutTime(nowStr);
       setStatus('Present');
@@ -501,7 +501,7 @@ const AttendanceTracker = () => {
             duration: durationStr,
             location: newLocation || 'Location unavailable',
             latitude: currentLat,
-            longtitude: currentLon
+            longitude: currentLon
           }
         ]
       };
@@ -547,7 +547,7 @@ const AttendanceTracker = () => {
           const existIndex = monthlyHistory.findIndex(h => h.date === todayStr);
           let updatedHistory = [...monthlyHistory];
           if (existIndex > -1) {
-            updatedHistory[existIndex] = { 
+            updatedHistory[existIndex] = {
               ...updatedHistory[existIndex],
               working: workingStr,
               idle: idleStr
@@ -596,7 +596,7 @@ const AttendanceTracker = () => {
         const existIndex = monthlyHistory.findIndex(h => h.date === todayStr);
         let updatedHistory = [...monthlyHistory];
         if (existIndex > -1) {
-          updatedHistory[existIndex] = { 
+          updatedHistory[existIndex] = {
             ...updatedHistory[existIndex],
             working: workingStr,
             idle: idleStr
@@ -620,11 +620,11 @@ const AttendanceTracker = () => {
     setSelectedHistoryDate(dateStr);
     setShowDetailsModal(true);
     setSelectedDateActivities([]);
-    
+
     try {
       const userId = localStorage.getItem('doctorId') || '0001';
       const apiUrl = `${ipUrl}/clinic-admin/getUserDailyAttendence/${userId}/${dateStr}`;
-      
+
       const res = await axios.get(apiUrl);
       if (res.data && res.data.success && res.data.data) {
         setSelectedDateActivities(res.data.data.activities || res.data.data.sessions || []);
@@ -657,7 +657,7 @@ const AttendanceTracker = () => {
           background-size: 1000px 100%;
         }
       `}</style>
-      
+
       <CContainer fluid className="px-5 pt-4">
         {/* ─── LOG HEADER BLOCK ─────────────────────────────────────────────── */}
         <div className="d-flex justify-content-between align-items-start mb-4">
@@ -692,14 +692,14 @@ const AttendanceTracker = () => {
               transition: 'all 0.2s ease-in-out',
             }}
           >
-            <span 
-              style={{ 
-                width: '6px', 
-                height: '6px', 
-                borderRadius: '50%', 
+            <span
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
                 backgroundColor: '#ffffff',
                 display: 'inline-block'
-              }} 
+              }}
             />
             {logoutTime !== '—' ? 'Logged Out' : (isLoggedIn ? 'Clock Out' : 'Clock In')}
           </button>
@@ -812,7 +812,7 @@ const AttendanceTracker = () => {
                   {activities.length} activities logged
                 </div>
               </div>
-              
+
               <button
                 onClick={() => setShowAddActivityModal(true)}
                 disabled={!isLoggedIn}

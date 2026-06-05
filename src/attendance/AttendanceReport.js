@@ -72,14 +72,15 @@ export default function AttendanceReport() {
       const coords = await getCurrentLocationCoords();
       const payload = {
         date: selectedDate,
+        role: "doctor",
         login: {
           time: time,
           latitude: coords.lat,
           longitude: coords.lon
         },
-        latitude: coords.lat,
-        longitude: coords.lon,
-        time: time,
+        // latitude: coords.lat,
+        // longitude: coords.lon,
+        // time: time,
         userId: userId
       };
       const res = await http.post(`${BASE_URL}/${SaveUserAttendence}`, payload);
@@ -98,7 +99,7 @@ export default function AttendanceReport() {
       const payload = {
         date: selectedDate,
         logoutLatitude: coords.lat,
-        logoutLongtitude: coords.lon,
+        logoutLongitude: coords.lon,
         logoutTime: time,
         userId: userId
       };
