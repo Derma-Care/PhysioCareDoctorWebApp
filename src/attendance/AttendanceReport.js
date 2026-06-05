@@ -47,18 +47,38 @@ export default function AttendanceReport() {
     setCurrentPage(1);
   }, [filterRole, searchQuery]);
 
+  const getCurrentLocationCoords = () => {
+    return new Promise((resolve) => {
+      if (window.isSecureContext && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              lat: position.coords.latitude.toString(),
+              lon: position.coords.longitude.toString()
+            });
+          },
+          () => resolve({ lat: "", lon: "" }),
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      } else {
+        resolve({ lat: "", lon: "" });
+      }
+    });
+  };
+
   const handleManualLogin = async (userId) => {
     try {
       const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const coords = await getCurrentLocationCoords();
       const payload = {
         date: selectedDate,
         login: {
           time: time,
-          latitude: "17.433071",
-          longitude: "78.407807"
+          latitude: coords.lat,
+          longitude: coords.lon
         },
-        latitude: "17.433071",
-        longitude: "78.407807",
+        latitude: coords.lat,
+        longitude: coords.lon,
         time: time,
         userId: userId
       };
@@ -74,10 +94,11 @@ export default function AttendanceReport() {
   const handleManualLogout = async (userId) => {
     try {
       const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const coords = await getCurrentLocationCoords();
       const payload = {
         date: selectedDate,
-        logoutLatitude: "17.433071",
-        logoutLongtitude: "78.407807",
+        logoutLatitude: coords.lat,
+        logoutLongtitude: coords.lon,
         logoutTime: time,
         userId: userId
       };

@@ -54,6 +54,9 @@ const AttendanceTracker = () => {
   const [durationHrs, setDurationHrs] = useState(0);
   const [durationMins, setDurationMins] = useState(0);
   const [currentLocationText, setCurrentLocationText] = useState('Location unavailable');
+  const [currentLat, setCurrentLat] = useState("");
+  const [currentLon, setCurrentLon] = useState("");
+  const [activityErrors, setActivityErrors] = useState({});
 
   // Geolocation for Add Activity Modal
   useEffect(() => {
@@ -62,11 +65,27 @@ const AttendanceTracker = () => {
       if (window.isSecureContext && navigator.geolocation) {
         try {
           navigator.geolocation.getCurrentPosition(
-            (position) => {
+            async (position) => {
               const { latitude, longitude } = position.coords;
-              const locText = `Kinetix Wellness Care (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
-              setCurrentLocationText(locText);
-              setNewLocation(locText);
+              setCurrentLat(latitude.toString());
+              setCurrentLon(longitude.toString());
+              try {
+                const res = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                if (res.data && res.data.display_name) {
+                  // Format the display name to be shorter if needed, or use the full address
+                  const address = res.data.display_name;
+                  setCurrentLocationText(address);
+                  setNewLocation(address);
+                } else {
+                  const locText = `Kinetix Wellness Care (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+                  setCurrentLocationText(locText);
+                  setNewLocation(locText);
+                }
+              } catch (geoErr) {
+                const locText = `Kinetix Wellness Care (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+                setCurrentLocationText(locText);
+                setNewLocation(locText);
+              }
             },
             (error) => {
               console.error('Error fetching location:', error);
@@ -226,7 +245,7 @@ const AttendanceTracker = () => {
       const res = await axios.get(apiUrl);
       if (res.data && res.data.success && res.data.data) {
         const historyList = res.data.data.map(item => ({
-          date: item.date,
+          date: item.date || item.createdDate || item.attendenceDate || '—',
           login: item.inTime || item.login?.time || '—',
           logout: item.outTime || item.logout?.time || '—',
           total: item.logTime || item.totalTime || '—',
@@ -262,18 +281,10 @@ const AttendanceTracker = () => {
 
     initializeData();
 
-    // Seed mock monthly history if first time or storage is empty
+    // Load actual data instead of seeding mock data
     const storedHistory = localStorage.getItem('doctor_monthly_attendance');
-    if (!storedHistory) {
-      const seedHistory = [
-        { date: '2026-05-24', login: '20:06', logout: '20:06', total: '0h 0m', working: '0h 0m', idle: '0h 0m' },
-        { date: '2026-05-23', login: '12:27', logout: '', total: '0h 1m', working: '0h 0m', idle: '0h 1m' },
-        { date: '2026-05-22', login: '12:41', logout: '', total: '', working: '', idle: '' },
-        { date: '2026-05-20', login: '10:53', logout: '', total: '', working: '', idle: '' },
-        { date: '2026-05-14', login: '16:42', logout: '', total: '', working: '', idle: '' },
-      ];
-      setMonthlyHistory(seedHistory);
-      localStorage.setItem('doctor_monthly_attendance', JSON.stringify(seedHistory));
+    if (storedHistory) {
+      setMonthlyHistory(JSON.parse(storedHistory));
     }
   }, []);
 
@@ -304,6 +315,25 @@ const AttendanceTracker = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     const userId = localStorage.getItem('doctorId');
 
+    const getCurrentLocationCoords = () => {
+      return new Promise((resolve) => {
+        if (window.isSecureContext && navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              resolve({
+                lat: position.coords.latitude.toString(),
+                lon: position.coords.longitude.toString()
+              });
+            },
+            () => resolve({ lat: "", lon: "" }),
+            { enableHighAccuracy: true, timeout: 5000 }
+          );
+        } else {
+          resolve({ lat: "", lon: "" });
+        }
+      });
+    };
+
     if (!isLoggedIn) {
       // Clock In (Login)
       try {
@@ -331,6 +361,7 @@ const AttendanceTracker = () => {
         const clinicId = getStorageVal(['hospitalId', 'HospitalId', 'clinicId'], 'C001');
         const safeUserId = getStorageVal(['doctorId', 'DoctorId', 'userId'], userId || '0001');
         
+        const coords = await getCurrentLocationCoords();
         const payload = {
           date: todayStr,
           userId: safeUserId,
@@ -339,12 +370,12 @@ const AttendanceTracker = () => {
           branchId,
           login: {
             time: nowStr,
-            latitude: "17.433071",
-            longitude: "78.407807"
+            latitude: coords.lat,
+            longitude: coords.lon
           },
           time: nowStr,
-          latitude: "17.433071",
-          longitude: "78.407807"
+          latitude: coords.lat,
+          longitude: coords.lon
         };
         
         const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
@@ -383,13 +414,33 @@ const AttendanceTracker = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     const userId = localStorage.getItem('doctorId') || '0001';
 
+    const getCurrentLocationCoords = () => {
+      return new Promise((resolve) => {
+        if (window.isSecureContext && navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              resolve({
+                lat: position.coords.latitude.toString(),
+                lon: position.coords.longitude.toString()
+              });
+            },
+            () => resolve({ lat: "", lon: "" }),
+            { enableHighAccuracy: true, timeout: 5000 }
+          );
+        } else {
+          resolve({ lat: "", lon: "" });
+        }
+      });
+    };
+
     try {
+      const coords = await getCurrentLocationCoords();
       const payload = {
         userId,
         date: todayStr,
         logoutTime: nowStr,
-        logoutLatitude: "17.433071",
-        logoutLongtitude: "78.407807"
+        logoutLatitude: coords.lat,
+        logoutLongtitude: coords.lon
       };
       const res = await axios.put(`${ipUrl}/clinic-admin/updateUserAttendence`, payload);
       
@@ -409,7 +460,26 @@ const AttendanceTracker = () => {
 
   // Add Custom Roster Activity
   const handleAddActivity = async () => {
-    if (!newActivity || !newActivity.trim()) return;
+    const newErrors = {};
+    if (!newActivity || !newActivity.trim()) {
+      newErrors.activity = "Please select an activity.";
+    }
+
+    const requiresDescription = ["Other Activity", "Paid Leave", "Loss of Pay"].includes(newActivity);
+    if (requiresDescription && (!newDescription || !newDescription.trim())) {
+      newErrors.description = "Description is mandatory for this activity.";
+    }
+
+    if (durationHrs === 0 && durationMins === 0) {
+      newErrors.duration = "Please specify a duration greater than 0.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setActivityErrors(newErrors);
+      return;
+    }
+    setActivityErrors({});
+
     const todayStr = new Date().toISOString().split('T')[0];
     const durationStr = `${durationHrs}h ${durationMins}m`;
     const userId = localStorage.getItem('doctorId') || '0001';
@@ -430,8 +500,8 @@ const AttendanceTracker = () => {
             description: newDescription,
             duration: durationStr,
             location: newLocation || 'Location unavailable',
-            latitude: "17.433071",
-            longtitude: "78.407807"
+            latitude: currentLat,
+            longtitude: currentLon
           }
         ]
       };
@@ -442,6 +512,7 @@ const AttendanceTracker = () => {
         setNewDescription('');
         setDurationHrs(0);
         setDurationMins(0);
+        setActivityErrors({});
         setShowAddActivityModal(false);
         fetchDailyData();
         fetchMonthlyData();
@@ -490,6 +561,7 @@ const AttendanceTracker = () => {
         setNewDescription('');
         setDurationHrs(0);
         setDurationMins(0);
+        setActivityErrors({});
         setShowAddActivityModal(false);
       }
     } catch (err) {
@@ -538,6 +610,7 @@ const AttendanceTracker = () => {
       setNewDescription('');
       setDurationHrs(0);
       setDurationMins(0);
+      setActivityErrors({});
       setShowAddActivityModal(false);
     }
   };
@@ -874,19 +947,22 @@ const AttendanceTracker = () => {
       </CContainer>
 
       {/* ─── MODAL: ADD CUSTOM ACTIVITY ───────────────────────────────────── */}
-      <CModal visible={showAddActivityModal} onClose={() => setShowAddActivityModal(false)} alignment="center">
+      <CModal visible={showAddActivityModal} onClose={() => { setShowAddActivityModal(false); setActivityErrors({}); }} alignment="center">
         <CModalHeader style={{ borderBottom: 'none', padding: '24px 24px 8px' }}>
           <CModalTitle style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '20px' }}>Add Activity</CModalTitle>
         </CModalHeader>
         <CModalBody style={{ padding: '8px 24px 24px' }}>
           <div className="d-flex flex-column gap-3">
             <div>
-              <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>Activity Name</CFormLabel>
+              <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>Activity Name <span className="text-danger">*</span></CFormLabel>
               <select
-                className="form-select"
+                className={`form-select ${activityErrors.activity ? 'is-invalid' : ''}`}
                 value={newActivity}
-                onChange={(e) => setNewActivity(e.target.value)}
-                style={{ borderRadius: '8px', border: '1px solid #ced4da', padding: '10px 12px', fontSize: '14px', color: newActivity ? '#212529' : '#6c757d' }}
+                onChange={(e) => {
+                  setNewActivity(e.target.value);
+                  if (activityErrors.activity) setActivityErrors({ ...activityErrors, activity: null });
+                }}
+                style={{ borderRadius: '8px', border: activityErrors.activity ? '1px solid #dc3545' : '1px solid #ced4da', padding: '10px 12px', fontSize: '14px', color: newActivity ? '#212529' : '#6c757d' }}
               >
                 <option value="">Select Activity</option>
                 <option value="Followup Calls">Followup Calls</option>
@@ -895,23 +971,30 @@ const AttendanceTracker = () => {
                 <option value="Paid Leave">Paid Leave</option>
                 <option value="Loss of Pay">Loss of Pay</option>
               </select>
+              {activityErrors.activity && <div className="text-danger small mt-1">{activityErrors.activity}</div>}
             </div>
 
             <div>
-              <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>Description</CFormLabel>
+              <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>
+                Description {["Other Activity", "Paid Leave", "Loss of Pay"].includes(newActivity) ? <span className="text-danger">*</span> : <span className="text-muted fw-normal">(Optional)</span>}
+              </CFormLabel>
               <textarea
-                className="form-control"
+                className={`form-control ${activityErrors.description ? 'is-invalid' : ''}`}
                 rows={3}
-                placeholder="Enter Description (Optional)"
+                placeholder={["Other Activity", "Paid Leave", "Loss of Pay"].includes(newActivity) ? "Enter Description (Mandatory)" : "Enter Description (Optional)"}
                 value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                style={{ borderRadius: '8px', border: '1px solid #ced4da', padding: '10px 12px', fontSize: '14px' }}
+                onChange={(e) => {
+                  setNewDescription(e.target.value);
+                  if (activityErrors.description) setActivityErrors({ ...activityErrors, description: null });
+                }}
+                style={{ borderRadius: '8px', border: activityErrors.description ? '1px solid #dc3545' : '1px solid #ced4da', padding: '10px 12px', fontSize: '14px' }}
               />
+              {activityErrors.description && <div className="text-danger small mt-1">{activityErrors.description}</div>}
             </div>
 
             <div>
-              <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>Duration</CFormLabel>
-              <div className="d-flex align-items-center justify-content-center gap-3 p-3 rounded" style={{ backgroundColor: '#F8FBFF', border: '1px solid #EBF3FC' }}>
+              <CFormLabel className="fw-bold small" style={{ color: '#1B4F8A', fontSize: '13px' }}>Duration <span className="text-danger">*</span></CFormLabel>
+              <div className="d-flex align-items-center justify-content-center gap-3 p-3 rounded" style={{ backgroundColor: '#F8FBFF', border: activityErrors.duration ? '1px solid #dc3545' : '1px solid #EBF3FC' }}>
                 <div className="d-flex align-items-center gap-2">
                   <input
                     type="number"
@@ -919,7 +1002,10 @@ const AttendanceTracker = () => {
                     max="23"
                     className="form-control text-center fw-bold"
                     value={durationHrs}
-                    onChange={(e) => setDurationHrs(Math.max(0, parseInt(e.target.value) || 0))}
+                    onChange={(e) => {
+                      setDurationHrs(Math.max(0, parseInt(e.target.value) || 0));
+                      if (activityErrors.duration) setActivityErrors({ ...activityErrors, duration: null });
+                    }}
                     style={{ width: '70px', borderRadius: '8px', border: '1px solid #ced4da', padding: '8px' }}
                   />
                   <span style={{ fontSize: '13px', color: '#1B4F8A', fontWeight: '600' }}>Hrs</span>
@@ -932,12 +1018,16 @@ const AttendanceTracker = () => {
                     max="59"
                     className="form-control text-center fw-bold"
                     value={durationMins}
-                    onChange={(e) => setDurationMins(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                    onChange={(e) => {
+                      setDurationMins(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)));
+                      if (activityErrors.duration) setActivityErrors({ ...activityErrors, duration: null });
+                    }}
                     style={{ width: '70px', borderRadius: '8px', border: '1px solid #ced4da', padding: '8px' }}
                   />
                   <span style={{ fontSize: '13px', color: '#1B4F8A', fontWeight: '600' }}>Min</span>
                 </div>
               </div>
+              {activityErrors.duration && <div className="text-danger small mt-1">{activityErrors.duration}</div>}
             </div>
 
             {/* Styled Info Section */}
@@ -957,7 +1047,7 @@ const AttendanceTracker = () => {
         <CModalFooter style={{ borderTop: 'none', padding: '16px 24px 24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
           <button
             className="btn"
-            onClick={() => setShowAddActivityModal(false)}
+            onClick={() => { setShowAddActivityModal(false); setActivityErrors({}); }}
             style={{ backgroundColor: '#6C757D', color: '#FFFFFF', borderRadius: '8px', padding: '8px 20px', fontWeight: '600', border: 'none', fontSize: '13.5px' }}
           >
             Cancel
@@ -986,7 +1076,7 @@ const AttendanceTracker = () => {
                   <th className="fw-bold">Activity</th>
                   <th className="fw-bold">Duration</th>
                   <th className="fw-bold">Location</th>
-                  <th className="fw-bold pe-4">Date</th>
+                  {/* <th className="fw-bold pe-4">Date</th> */}
                 </tr>
               </thead>
               <tbody>
