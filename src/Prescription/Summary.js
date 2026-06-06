@@ -1749,10 +1749,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
       {/* ── Sticky Bottom Bar ── */}
       <div style={{ position: 'fixed', bottom: 0, left: sidebarWidth ? `${sidebarWidth}px` : 0, width: sidebarWidth ? `calc(100vw - ${sidebarWidth}px)` : '100vw', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 24px', zIndex: 999, boxShadow: '0 -2px 10px rgba(27,79,138,0.12)', borderTop: '2px solid #1B4F8A' }}>
-        {/* <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
+        <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
           onClick={() => { setClickedSaveTemplate(true); onSaveTemplate?.(); info('Template saved!', { title: 'Template' }) }}>
           {!updateTemplate ? '💾 Save as Template' : '🔄 Update Template'}
-        </Button> */}
+        </Button>
         {saving && <CSpinner size="sm" style={{ color: '#1B4F8A' }} />}
         <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
           onClick={() => { setPendingAction(ACTIONS.SAVE); clickedSaveTemplate ? doSave() : setShowTemplateModal(true) }} disabled={saving}>

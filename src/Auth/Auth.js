@@ -12,6 +12,7 @@ import {
   diseasesbaseUrl,
   treatmentsbaseUrl,
   ratingsbaseUrl,
+  getDoctorFeedbackSummaryUrl,
   savePrescriptionbaseUrl,
   todayappointmentsbaseUrl,
   addDiseaseUrl,
@@ -429,6 +430,33 @@ export const averageRatings = async (doctorId) => {
       comments: [],
       ratingStats: [],
       message: "No patient ratings available",
+    }
+  }
+}
+
+export const getDoctorFeedbackSummary = async (clinicId, doctorId) => {
+  try {
+    const response = await api.get(`${getDoctorFeedbackSummaryUrl}/${clinicId}/${doctorId}`)
+    
+    if (response.data?.success && response.data?.data) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data?.message || "Success"
+      }
+    } else {
+      return {
+        success: false,
+        data: null,
+        message: response.data?.message || "No feedback found",
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching feedback summary:", error)
+    return {
+      success: false,
+      data: null,
+      message: "No feedback found",
     }
   }
 }

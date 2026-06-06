@@ -40,6 +40,13 @@ const _nav = [
     icon: <CIcon icon={cilUser} customClassName="nav-icon" style={{ color: COLORS.white }} />,
     style: { color: COLORS.white },
   },
+  {
+    component: CNavItem,
+    name: 'Patient Feedback',
+    to: '/feedback',
+    icon: <CIcon icon={cilCommentSquare} customClassName="nav-icon" style={{ color: COLORS.white }} />,
+    style: { color: COLORS.white },
+  },
   // {
   //   component: CNavItem,
   //   name: 'Notifications',

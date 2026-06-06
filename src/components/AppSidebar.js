@@ -32,7 +32,6 @@ const AppSidebar = () => {
   const [clinicDetails, setClinicDetails] = useState(null)
   const { patientData, isPatientLoading, setPatientData } = useDoctorContext()
   const hasPatient = !!patientData
-  const [ratings, setRatings] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [vitals, setVitals] = useState({
     height: null,
@@ -60,17 +59,6 @@ const AppSidebar = () => {
       if (clinic) {
         setClinicDetails(clinic)
         localStorage.setItem('clinicDetails', JSON.stringify(clinic))
-      }
-
-      if ((doctor || JSON.parse(storedDoctor))?.doctorId) {
-        const docId = (doctor || JSON.parse(storedDoctor)).doctorId
-        const ratingData = await averageRatings(docId)
-
-        if (ratingData?.ratingStats?.length > 0) {
-          setRatings(ratingData.ratingStats)
-        } else {
-          setRatings([{ category: ratingData.message || 'No reviews found', percentage: 0 }])
-        }
       }
     }
     fetchData()
@@ -388,60 +376,6 @@ const AppSidebar = () => {
 
         {/* Show navigation only when NOT loading and no patient selected */}
         {!isPatientLoading && !hasPatient && <AppSidebarNav items={navigation} />}
-
-        {/* Show Patient Ratings only if ratings exist */}
-        {!isPatientLoading && !hasPatient && ratings.length > 0 && (
-          <CSidebarFooter className="border-top d-none d-lg-flex flex-column mt-2" style={{ paddingLeft: 10, paddingRight: 10 }}>
-            <h6 style={{ color: COLORS.white, fontWeight: 'bold', marginBottom: '0.5rem' }}>
-              Patient Ratings
-            </h6>
-
-            {ratings.map((item, index) => (
-              <div
-                key={index}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginBottom: 8,
-                  width: '100%',
-                }}
-              >
-                {/* Label */}
-                <div style={{ minWidth: 100 }}>
-                  <small style={{ color: COLORS.white, fontSize: SIZES.small, fontWeight: 'bold' }}>
-                    {item.category}
-                  </small>
-                </div>
-
-                {/* Progress bar */}
-                {item.percentage > 0 && (
-                  <div style={{ flex: 1 }}>
-                    <div
-                      className="progress"
-                      style={{ height: 8, borderRadius: 4, backgroundColor: '#e9ecef' }}
-                    >
-                      <div
-                        className={`progress-bar ${item.category.toLowerCase().includes('excellent')
-                          ? 'bg-success'
-                          : item.category.toLowerCase().includes('good')
-                            ? 'bg-primary'
-                            : item.category.toLowerCase().includes('average')
-                              ? 'bg-warning'
-                              : 'bg-secondary'
-                          }`}
-                        role="progressbar"
-                        style={{ width: `${item.percentage}%`, borderRadius: 4 }}
-                        aria-valuenow={item.percentage}
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </CSidebarFooter>
-        )}
       </CSidebar>
       <CModal
         visible={showModal}

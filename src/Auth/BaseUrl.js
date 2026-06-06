@@ -45,8 +45,9 @@ export const treatmentsbaseUrl = `${ipUrl}/clinic-admin/treatment/getAllTreatmen
 export const treatmentUrl = `${ipUrl}/clinic-admin/treatments`
 export const addtreatmentUrl = `${ipUrl}/clinic-admin/addOrGetTreatment`
 
-// Ratings
+// Ratings & Feedback
 export const ratingsbaseUrl = `${ipUrl}/clinic-admin/getAverageRatingsByDoctorId`
+export const getDoctorFeedbackSummaryUrl = `${ipUrl}/clinic-admin/getDoctorFeedbackSummaryByCinicIdAndDoctorId`
 
 // Reports
 export const reportbaseUrl = `${ipUrl}/clinic-admin`

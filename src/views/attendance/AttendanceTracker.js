@@ -178,8 +178,20 @@ const AttendanceTracker = () => {
           return val;
         };
 
-        const fetchedLoginTime = parseTime(dailyData.inTime || dailyData.loginTime || dailyData.login?.time);
+        let fetchedLoginTime = parseTime(dailyData.inTime || dailyData.loginTime || dailyData.login?.time);
         let fetchedLogoutTime = parseTime(dailyData.outTime || dailyData.logoutTime || dailyData.logout?.time || dailyData.logoutTime);
+
+        // Fallback to local storage if API returns empty times (prevents login time from clearing on refresh)
+        if (fetchedLoginTime === '—') {
+          const storedState = localStorage.getItem(`doctor_duty_log_${todayStr}`);
+          if (storedState) {
+            try {
+              const parsed = JSON.parse(storedState);
+              if (parsed.loginTime && parsed.loginTime !== '—') fetchedLoginTime = parsed.loginTime;
+              if (parsed.logoutTime && parsed.logoutTime !== '—') fetchedLogoutTime = parsed.logoutTime;
+            } catch(e) {}
+          }
+        }
 
         // If they clocked in AGAIN after clocking out, the backend still returns the old outTime.
         // We must ignore the old outTime so they are properly marked as logged in.
@@ -346,7 +358,7 @@ const AttendanceTracker = () => {
         };
 
         let branchId = getStorageVal(['branchId', 'BranchId'], '');
-        if (!branchId) {
+        // if (!branchId) {
           const ddStr = localStorage.getItem('doctorDetails');
           if (ddStr) {
             try {
@@ -354,10 +366,10 @@ const AttendanceTracker = () => {
               branchId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
             } catch (e) { }
           }
-        }
-        if (!branchId) branchId = 'B001';
+        // }
+        // if (!branchId) branchId = 'B001';
 
-        const role = getStorageVal(['role', 'Role'], 'DOCTOR');
+        const role = getStorageVal(['role', 'Role'], 'doctor');
         const clinicId = getStorageVal(['hospitalId', 'HospitalId', 'clinicId'], 'C001');
         const safeUserId = getStorageVal(['doctorId', 'DoctorId', 'userId'], userId || '0001');
 
@@ -367,15 +379,15 @@ const AttendanceTracker = () => {
           userId: safeUserId,
           role,
           clinicId,
-          branchId,
+          // branchId,
           login: {
             time: nowStr,
             latitude: coords.lat,
             longitude: coords.lon
           },
-          time: nowStr,
-          latitude: coords.lat,
-          longitude: coords.lon
+          // time: nowStr,
+          // latitude: coords.lat,
+          // longitude: coords.lon
         };
 
         const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
