@@ -1047,12 +1047,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   // API shape  : record.treatmentPlan → { doctorId, doctorName, therapistId, therapistName, manualTherapy, modalitiesUsed[], patientResponse, precautions[] }
   const treatmentPlanObj = record.treatmentPlan ?? {}
 
-  const topTherapistId = treatmentPlanObj.therapistId ?? formData?.therapySessions?.therapistId ?? ''
-  const topTherapistName = treatmentPlanObj.therapistName ?? formData?.therapySessions?.therapistName ?? ''
-  const manualTherapy = treatmentPlanObj.manualTherapy ?? formData?.therapySessions?.manualTherapy ?? ''
-  const precautionsArr = Array.isArray(treatmentPlanObj.precautions) ? treatmentPlanObj.precautions : Array.isArray(formData?.therapySessions?.precautions) ? formData.therapySessions.precautions : []
-  const modalitiesArr = Array.isArray(treatmentPlanObj.modalitiesUsed) ? treatmentPlanObj.modalitiesUsed : Array.isArray(formData?.therapySessions?.modalitiesUsed) ? formData.therapySessions.modalitiesUsed : []
-  const patientResponse = treatmentPlanObj.patientResponse ?? formData?.therapySessions?.patientResponse ?? ''
+  const topTherapistId = formData?.therapySessions?.therapistId || treatmentPlanObj.therapistId || ''
+  const topTherapistName = formData?.therapySessions?.therapistName || treatmentPlanObj.therapistName || ''
+  const manualTherapy = formData?.therapySessions?.manualTherapy || treatmentPlanObj.manualTherapy || ''
+  const precautionsArr = Array.isArray(formData?.therapySessions?.precautions) && formData.therapySessions.precautions.length > 0 ? formData.therapySessions.precautions : Array.isArray(treatmentPlanObj.precautions) ? treatmentPlanObj.precautions : []
+  const modalitiesArr = Array.isArray(formData?.therapySessions?.modalitiesUsed) && formData.therapySessions.modalitiesUsed.length > 0 ? formData.therapySessions.modalitiesUsed : Array.isArray(treatmentPlanObj.modalitiesUsed) ? treatmentPlanObj.modalitiesUsed : []
+  const patientResponse = formData?.therapySessions?.patientResponse || treatmentPlanObj.patientResponse || ''
 
   const treatmentPlanDisplay = {
     doctorId, doctorName,

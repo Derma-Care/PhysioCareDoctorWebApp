@@ -33,8 +33,35 @@ const PatientFeedback = () => {
         if (feedbackRes?.success && feedbackRes?.data) {
           const payload = feedbackRes.data;
           
-          const stats = Array.isArray(payload) ? payload : (payload.ratingStats || payload.feedbackSummary || payload.feedbackStats || payload.categories || []);
-          const textComments = payload.comments || [];
+          // The API returns an array of patients with their ratings and feedback
+          const patientsList = payload.patients || [];
+          
+          // Map the patients to comments for the UI
+          const textComments = patientsList
+            .filter(p => p.whatWentWell && p.whatWentWell.trim() !== '')
+            .map(p => ({
+              patientName: p.patientName,
+              text: p.whatWentWell,
+              rating: p.rating
+            }));
+            
+          // Compute percentages for the progress bars
+          let excellent = 0, good = 0, average = 0, poor = 0;
+          patientsList.forEach(p => {
+            const r = Number(p.rating);
+            if (r >= 4.5) excellent++;
+            else if (r >= 3.5) good++;
+            else if (r >= 2.5) average++;
+            else poor++;
+          });
+          
+          const total = patientsList.length > 0 ? patientsList.length : 1;
+          const stats = [
+            { category: 'Excellent (5)', percentage: Math.round((excellent / total) * 100) },
+            { category: 'Good (4)', percentage: Math.round((good / total) * 100) },
+            { category: 'Average (3)', percentage: Math.round((average / total) * 100) },
+            { category: 'Poor (1-2)', percentage: Math.round((poor / total) * 100) },
+          ];
           
           setRatings(stats);
           setComments(textComments);

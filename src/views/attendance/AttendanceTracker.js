@@ -12,6 +12,7 @@ import {
   CModalFooter,
   CFormInput,
   CFormLabel,
+  CSpinner,
 } from '@coreui/react';
 import { useNavigate } from 'react-router-dom';
 import { COLORS } from '../../Themes';
@@ -43,6 +44,46 @@ const AttendanceTracker = () => {
   const [status, setStatus] = useState('—');
   const [activeSubTab, setActiveSubTab] = useState('daily'); // 'daily' or 'monthly'
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [loginLoc, setLoginLoc] = useState(null);
+  const [logoutLoc, setLogoutLoc] = useState(null);
+  const [loginAddress, setLoginAddress] = useState('');
+  const [logoutAddress, setLogoutAddress] = useState('');
+
+  // Reverse Geocoding Effects
+  useEffect(() => {
+    const fetchAddress = async (locStr, setter) => {
+      if (!locStr) return;
+      const [lat, lon] = locStr.split(',');
+      try {
+        const res = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        if (res.data && res.data.display_name) {
+          setter(res.data.display_name);
+        }
+      } catch (e) {
+        console.error('Reverse geocode error:', e);
+      }
+    };
+
+    if (loginLoc && !loginAddress) fetchAddress(loginLoc, setLoginAddress);
+  }, [loginLoc, loginAddress]);
+
+  useEffect(() => {
+    const fetchAddress = async (locStr, setter) => {
+      if (!locStr) return;
+      const [lat, lon] = locStr.split(',');
+      try {
+        const res = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        if (res.data && res.data.display_name) {
+          setter(res.data.display_name);
+        }
+      } catch (e) {
+        console.error('Reverse geocode error:', e);
+      }
+    };
+
+    if (logoutLoc && !logoutAddress) fetchAddress(logoutLoc, setLogoutAddress);
+  }, [logoutLoc, logoutAddress]);
 
   // Activities Roster State
   const [activities, setActivities] = useState([]);
@@ -110,8 +151,12 @@ const AttendanceTracker = () => {
   const [monthlyHistory, setMonthlyHistory] = useState([]);
 
   // Detail View Modal States
-  const [selectedHistoryDate, setSelectedHistoryDate] = useState(null);
+  const [selectedHistoryDate, setSelectedHistoryDate] = useState('');
   const [selectedDateActivities, setSelectedDateActivities] = useState([]);
+  const [selectedDateLogin, setSelectedDateLogin] = useState('—');
+  const [selectedDateLogout, setSelectedDateLogout] = useState('—');
+  const [selectedDateLoginAddress, setSelectedDateLoginAddress] = useState('');
+  const [selectedDateLogoutAddress, setSelectedDateLogoutAddress] = useState('');
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Dynamic Current Date Formatter
@@ -181,14 +226,33 @@ const AttendanceTracker = () => {
         let fetchedLoginTime = parseTime(dailyData.inTime || dailyData.loginTime || dailyData.login?.time);
         let fetchedLogoutTime = parseTime(dailyData.outTime || dailyData.logoutTime || dailyData.logout?.time || dailyData.logoutTime);
 
+        let fetchedLoginLoc = null;
+        if (dailyData.login?.latitude && dailyData.login?.longitude) fetchedLoginLoc = `${dailyData.login.latitude},${dailyData.login.longitude}`;
+        else if (dailyData.inLatitude && dailyData.inLongitude) fetchedLoginLoc = `${dailyData.inLatitude},${dailyData.inLongitude}`;
+
+        let fetchedLogoutLoc = null;
+        if (dailyData.logout?.latitude && dailyData.logout?.longitude) fetchedLogoutLoc = `${dailyData.logout.latitude},${dailyData.logout.longitude}`;
+        else if (dailyData.logoutLatitude && dailyData.logoutLongitude) fetchedLogoutLoc = `${dailyData.logoutLatitude},${dailyData.logoutLongitude}`;
+        else if (dailyData.outLatitude && dailyData.outLongitude) fetchedLogoutLoc = `${dailyData.outLatitude},${dailyData.outLongitude}`;
+
         // Fallback to local storage if API returns empty times (prevents login time from clearing on refresh)
         if (fetchedLoginTime === '—') {
-          const storedState = localStorage.getItem(`doctor_duty_log_${todayStr}`);
+          const storedState = localStorage.getItem(`doctor_duty_log_${userId}_${todayStr}`);
           if (storedState) {
             try {
               const parsed = JSON.parse(storedState);
-              if (parsed.loginTime && parsed.loginTime !== '—') fetchedLoginTime = parsed.loginTime;
-              if (parsed.logoutTime && parsed.logoutTime !== '—') fetchedLogoutTime = parsed.logoutTime;
+              if (parsed.loginTime && parsed.loginTime !== '—') {
+                setIsLoggedIn(parsed.isLoggedIn);
+                setLoginTime(parsed.loginTime);
+                setLogoutTime(parsed.logoutTime || '—');
+                setStatus(parsed.status || 'Active');
+                setActivities(parsed.activities || []);
+                setLoginLoc(parsed.loginLoc || null);
+                setLogoutLoc(parsed.logoutLoc || null);
+                setLoginAddress(parsed.loginAddress || '');
+                setLogoutAddress(parsed.logoutAddress || '');
+                return; // Exit early, trust local storage over empty API response
+              }
             } catch(e) {}
           }
         }
@@ -203,19 +267,25 @@ const AttendanceTracker = () => {
 
         setLoginTime(fetchedLoginTime);
         setLogoutTime(fetchedLogoutTime);
+        setLoginLoc(fetchedLoginLoc);
+        setLogoutLoc(fetchedLogoutLoc);
 
         if (fetchedLoginTime !== '—') {
           // If there's a login time and no logout time (or logout is '—'), they are logged in
           const currentlyLoggedIn = fetchedLogoutTime === '—';
           setIsLoggedIn(currentlyLoggedIn);
-          setStatus(dailyData.status || (currentlyLoggedIn ? 'Active' : 'Present'));
+          
+          let apiStatus = dailyData.status;
+          if (apiStatus === 'Not Logged In') apiStatus = currentlyLoggedIn ? 'Active' : 'Present';
+          setStatus(apiStatus || (currentlyLoggedIn ? 'Active' : 'Present'));
         } else {
           setIsLoggedIn(false);
           setStatus('—');
         }
       } else {
         // Fallback to localStorage if no remote database record yet
-        const storedState = localStorage.getItem(`doctor_duty_log_${todayStr}`);
+        const userId = localStorage.getItem('doctorId') || '0001';
+        const storedState = localStorage.getItem(`doctor_duty_log_${userId}_${todayStr}`);
         if (storedState) {
           const parsed = JSON.parse(storedState);
           setIsLoggedIn(parsed.isLoggedIn);
@@ -223,19 +293,28 @@ const AttendanceTracker = () => {
           setLogoutTime(parsed.logoutTime);
           setStatus(parsed.status);
           setActivities(parsed.activities || []);
+          setLoginLoc(parsed.loginLoc || null);
+          setLogoutLoc(parsed.logoutLoc || null);
+          setLoginAddress(parsed.loginAddress || '');
+          setLogoutAddress(parsed.logoutAddress || '');
         } else {
           setActivities([]);
           setLoginTime('—');
           setLogoutTime('—');
           setIsLoggedIn(false);
           setStatus('—');
+          setLoginLoc(null);
+          setLogoutLoc(null);
+          setLoginAddress('');
+          setLogoutAddress('');
         }
       }
     } catch (err) {
       console.error('Error fetching daily attendance:', err);
       // Fallback
       const todayStr = new Date().toISOString().split('T')[0];
-      const storedState = localStorage.getItem(`doctor_duty_log_${todayStr}`);
+      const userId = localStorage.getItem('doctorId') || '0001';
+      const storedState = localStorage.getItem(`doctor_duty_log_${userId}_${todayStr}`);
       if (storedState) {
         const parsed = JSON.parse(storedState);
         setIsLoggedIn(parsed.isLoggedIn);
@@ -243,6 +322,20 @@ const AttendanceTracker = () => {
         setLogoutTime(parsed.logoutTime);
         setStatus(parsed.status);
         setActivities(parsed.activities || []);
+        setLoginLoc(parsed.loginLoc || null);
+        setLogoutLoc(parsed.logoutLoc || null);
+        setLoginAddress(parsed.loginAddress || '');
+        setLogoutAddress(parsed.logoutAddress || '');
+      } else {
+        setActivities([]);
+        setLoginTime('—');
+        setLogoutTime('—');
+        setIsLoggedIn(false);
+        setStatus('—');
+        setLoginLoc(null);
+        setLogoutLoc(null);
+        setLoginAddress('');
+        setLogoutAddress('');
       }
     }
   };
@@ -265,10 +358,10 @@ const AttendanceTracker = () => {
           idle: item.idleTime || '—'
         }));
         setMonthlyHistory(historyList);
-        localStorage.setItem('doctor_monthly_attendance', JSON.stringify(historyList));
+        localStorage.setItem(`doctor_monthly_attendance_${userId}`, JSON.stringify(historyList));
       } else {
         // Fallback
-        const storedHistory = localStorage.getItem('doctor_monthly_attendance');
+        const storedHistory = localStorage.getItem(`doctor_monthly_attendance_${userId}`) || localStorage.getItem('doctor_monthly_attendance');
         if (storedHistory) {
           setMonthlyHistory(JSON.parse(storedHistory));
         }
@@ -276,7 +369,8 @@ const AttendanceTracker = () => {
     } catch (err) {
       console.error('Error fetching monthly attendance:', err);
       // Fallback
-      const storedHistory = localStorage.getItem('doctor_monthly_attendance');
+      const userId = localStorage.getItem('doctorId') || '0001';
+      const storedHistory = localStorage.getItem(`doctor_monthly_attendance_${userId}`) || localStorage.getItem('doctor_monthly_attendance');
       if (storedHistory) {
         setMonthlyHistory(JSON.parse(storedHistory));
       }
@@ -294,61 +388,67 @@ const AttendanceTracker = () => {
     initializeData();
 
     // Load actual data instead of seeding mock data
-    const storedHistory = localStorage.getItem('doctor_monthly_attendance');
+    const userId = localStorage.getItem('doctorId') || '0001';
+    const storedHistory = localStorage.getItem(`doctor_monthly_attendance_${userId}`) || localStorage.getItem('doctor_monthly_attendance');
     if (storedHistory) {
       setMonthlyHistory(JSON.parse(storedHistory));
     }
   }, []);
 
   // Save state helper
-  const saveState = (updatedLogin, updatedInTime, updatedOutTime, updatedStatus, updatedActivities) => {
+  const saveState = (updatedLogin, updatedInTime, updatedOutTime, updatedStatus, updatedActivities, inLoc = null, outLoc = null, inAddr = '', outAddr = '') => {
     const todayStr = new Date().toISOString().split('T')[0];
+    const userId = localStorage.getItem('doctorId') || '0001';
     const stateObj = {
       isLoggedIn: updatedLogin,
       loginTime: updatedInTime,
       logoutTime: updatedOutTime,
       status: updatedStatus,
-      activities: updatedActivities
+      activities: updatedActivities,
+      loginLoc: inLoc !== null ? inLoc : loginLoc,
+      logoutLoc: outLoc !== null ? outLoc : logoutLoc,
+      loginAddress: inAddr || loginAddress,
+      logoutAddress: outAddr || logoutAddress
     };
-    localStorage.setItem(`doctor_duty_log_${todayStr}`, JSON.stringify(stateObj));
+    localStorage.setItem(`doctor_duty_log_${userId}_${todayStr}`, JSON.stringify(stateObj));
   };
 
   // Toggle Login / Logout Action
   const handleToggleLogin = async () => {
-    const format24h = (date) => {
-      let hours = date.getHours();
-      let minutes = date.getMinutes();
-      hours = hours < 10 ? '0' + hours : hours;
-      minutes = minutes < 10 ? '0' + minutes : minutes;
-      return `${hours}:${minutes}`;
-    };
-
-    const nowStr = format24h(new Date());
-    const todayStr = new Date().toISOString().split('T')[0];
-    const userId = localStorage.getItem('doctorId');
-
-    const getCurrentLocationCoords = () => {
-      return new Promise((resolve) => {
-        if (window.isSecureContext && navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              resolve({
-                lat: position.coords.latitude.toString(),
-                lon: position.coords.longitude.toString()
-              });
-            },
-            () => resolve({ lat: "", lon: "" }),
-            { enableHighAccuracy: true, timeout: 5000 }
-          );
-        } else {
-          resolve({ lat: "", lon: "" });
-        }
-      });
-    };
-
     if (!isLoggedIn) {
-      // Clock In (Login)
+      setIsProcessing(true);
       try {
+        const format24h = (date) => {
+          let hours = date.getHours();
+          let minutes = date.getMinutes();
+          hours = hours < 10 ? '0' + hours : hours;
+          minutes = minutes < 10 ? '0' + minutes : minutes;
+          return `${hours}:${minutes}`;
+        };
+
+        const nowStr = format24h(new Date());
+        const todayStr = new Date().toISOString().split('T')[0];
+        const userId = localStorage.getItem('doctorId') || '0001';
+
+        const getCurrentLocationCoords = () => {
+          return new Promise((resolve) => {
+            if (window.isSecureContext && navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(
+                (position) => {
+                  resolve({
+                    lat: position.coords.latitude.toString(),
+                    lon: position.coords.longitude.toString()
+                  });
+                },
+                () => resolve({ lat: "", lon: "" }),
+                { enableHighAccuracy: true, timeout: 5000 }
+              );
+            } else {
+              resolve({ lat: "", lon: "" });
+            }
+          });
+        };
+
         const getStorageVal = (keys, defaultVal) => {
           for (let k of keys) {
             const val = localStorage.getItem(k);
@@ -357,37 +457,20 @@ const AttendanceTracker = () => {
           return defaultVal;
         };
 
-        let branchId = getStorageVal(['branchId', 'BranchId'], '');
-        // if (!branchId) {
-          const ddStr = localStorage.getItem('doctorDetails');
-          if (ddStr) {
-            try {
-              const dd = JSON.parse(ddStr);
-              branchId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
-            } catch (e) { }
-          }
-        // }
-        // if (!branchId) branchId = 'B001';
-
         const role = getStorageVal(['role', 'Role'], 'doctor');
         const clinicId = getStorageVal(['hospitalId', 'HospitalId', 'clinicId'], 'C001');
-        const safeUserId = getStorageVal(['doctorId', 'DoctorId', 'userId'], userId || '0001');
 
         const coords = await getCurrentLocationCoords();
         const payload = {
           date: todayStr,
-          userId: safeUserId,
+          userId,
           role,
           clinicId,
-          // branchId,
           login: {
             time: nowStr,
             latitude: coords.lat,
             longitude: coords.lon
-          },
-          // time: nowStr,
-          // latitude: coords.lat,
-          // longitude: coords.lon
+          }
         };
 
         const res = await axios.post(`${ipUrl}/clinic-admin/saveUserAttendence`, payload);
@@ -396,7 +479,8 @@ const AttendanceTracker = () => {
         setLoginTime(nowStr);
         setLogoutTime('—');
         setStatus('Active');
-        saveState(true, nowStr, '—', 'Active', activities);
+        setLoginLoc(`${coords.lat},${coords.lon}`);
+        saveState(true, nowStr, '—', 'Active', activities, `${coords.lat},${coords.lon}`, null);
       } catch (err) {
         console.error('Failed to log in on server:', err);
         // Local fallback
@@ -404,7 +488,10 @@ const AttendanceTracker = () => {
         setLoginTime(nowStr);
         setLogoutTime('—');
         setStatus('Active');
-        saveState(true, nowStr, '—', 'Active', activities);
+        setLoginLoc(`${coords.lat},${coords.lon}`);
+        saveState(true, nowStr, '—', 'Active', activities, `${coords.lat},${coords.lon}`, null);
+      } finally {
+        setIsProcessing(false);
       }
     } else {
       setShowLogoutModal(true);
@@ -413,40 +500,42 @@ const AttendanceTracker = () => {
 
   const confirmLogout = async () => {
     setShowLogoutModal(false);
-
-    const format24h = (date) => {
-      let hours = date.getHours();
-      let minutes = date.getMinutes();
-      hours = hours < 10 ? '0' + hours : hours;
-      minutes = minutes < 10 ? '0' + minutes : minutes;
-      return `${hours}:${minutes}`;
-    };
-
-    const nowStr = format24h(new Date());
-    const todayStr = new Date().toISOString().split('T')[0];
-    const userId = localStorage.getItem('doctorId') || '0001';
-
-    const getCurrentLocationCoords = () => {
-      return new Promise((resolve) => {
-        if (window.isSecureContext && navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              resolve({
-                lat: position.coords.latitude.toString(),
-                lon: position.coords.longitude.toString()
-              });
-            },
-            () => resolve({ lat: "", lon: "" }),
-            { enableHighAccuracy: true, timeout: 5000 }
-          );
-        } else {
-          resolve({ lat: "", lon: "" });
-        }
-      });
-    };
+    setIsProcessing(true);
 
     try {
+      const format24h = (date) => {
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        hours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        return `${hours}:${minutes}`;
+      };
+
+      const nowStr = format24h(new Date());
+      const todayStr = new Date().toISOString().split('T')[0];
+      const userId = localStorage.getItem('doctorId') || '0001';
+
+      const getCurrentLocationCoords = () => {
+        return new Promise((resolve) => {
+          if (window.isSecureContext && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve({
+                  lat: position.coords.latitude.toString(),
+                  lon: position.coords.longitude.toString()
+                });
+              },
+              () => resolve({ lat: "", lon: "" }),
+              { enableHighAccuracy: true, timeout: 5000 }
+            );
+          } else {
+            resolve({ lat: "", lon: "" });
+          }
+        });
+      };
+
       const coords = await getCurrentLocationCoords();
+
       const payload = {
         userId,
         date: todayStr,
@@ -454,19 +543,24 @@ const AttendanceTracker = () => {
         logoutLatitude: coords.lat,
         logoutLongitude: coords.lon
       };
-      const res = await axios.put(`${ipUrl}/clinic-admin/updateUserAttendence`, payload);
+
+      await axios.put(`${ipUrl}/clinic-admin/updateUserAttendence`, payload);
 
       setIsLoggedIn(false);
       setLogoutTime(nowStr);
       setStatus('Present');
-      saveState(false, loginTime, nowStr, 'Present', activities);
+      setLogoutLoc(`${coords.lat},${coords.lon}`);
+      saveState(false, loginTime, nowStr, 'Present', activities, loginLoc, `${coords.lat},${coords.lon}`);
     } catch (err) {
       console.error('Failed to log out on server:', err);
       // Local fallback
       setIsLoggedIn(false);
       setLogoutTime(nowStr);
       setStatus('Present');
-      saveState(false, loginTime, nowStr, 'Present', activities);
+      setLogoutLoc(`${coords.lat},${coords.lon}`);
+      saveState(false, loginTime, nowStr, 'Present', activities, loginLoc, `${coords.lat},${coords.lon}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -614,7 +708,8 @@ const AttendanceTracker = () => {
             idle: idleStr
           };
           setMonthlyHistory(updatedHistory);
-          localStorage.setItem('doctor_monthly_attendance', JSON.stringify(updatedHistory));
+          const userId = localStorage.getItem('doctorId') || '0001';
+          localStorage.setItem(`doctor_monthly_attendance_${userId}`, JSON.stringify(updatedHistory));
         }
       }
 
@@ -632,6 +727,10 @@ const AttendanceTracker = () => {
     setSelectedHistoryDate(dateStr);
     setShowDetailsModal(true);
     setSelectedDateActivities([]);
+    setSelectedDateLogin('—');
+    setSelectedDateLogout('—');
+    setSelectedDateLoginAddress('');
+    setSelectedDateLogoutAddress('');
 
     try {
       const userId = localStorage.getItem('doctorId') || '0001';
@@ -639,20 +738,60 @@ const AttendanceTracker = () => {
 
       const res = await axios.get(apiUrl);
       if (res.data && res.data.success && res.data.data) {
-        setSelectedDateActivities(res.data.data.activities || res.data.data.sessions || []);
+        const dailyData = res.data.data;
+        setSelectedDateActivities(dailyData.activities || dailyData.sessions || []);
+
+        const parseTime = (val) => {
+          if (!val) return '—';
+          if (typeof val === 'string' && (val.trim() === '' || val.trim().toLowerCase() === 'null' || val === '—' || val === '-')) return '—';
+          return val;
+        };
+        let inTime = parseTime(dailyData.inTime || dailyData.loginTime || dailyData.login?.time);
+        let outTime = parseTime(dailyData.outTime || dailyData.logoutTime || dailyData.logout?.time || dailyData.logoutTime);
+        
+        setSelectedDateLogin(inTime);
+        setSelectedDateLogout(outTime);
+
+        let inLoc = dailyData.login?.latitude ? `${dailyData.login.latitude},${dailyData.login.longitude}` : (dailyData.inLatitude ? `${dailyData.inLatitude},${dailyData.inLongitude}` : null);
+        let outLoc = dailyData.logout?.latitude ? `${dailyData.logout.latitude},${dailyData.logout.longitude}` : (dailyData.logoutLatitude ? `${dailyData.logoutLatitude},${dailyData.logoutLongitude}` : (dailyData.outLatitude ? `${dailyData.outLatitude},${dailyData.outLongitude}` : null));
+
+        const getAddress = async (locStr) => {
+          if (!locStr) return '';
+          const [lat, lon] = locStr.split(',');
+          try {
+            const r = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            if (r.data && r.data.display_name) return r.data.display_name;
+          } catch(e){}
+          return '';
+        };
+
+        if (inLoc) getAddress(inLoc).then(setSelectedDateLoginAddress);
+        if (outLoc) getAddress(outLoc).then(setSelectedDateLogoutAddress);
       } else {
         // Fallback
-        const storedState = localStorage.getItem(`doctor_duty_log_${dateStr}`);
+        const storedState = localStorage.getItem(`doctor_duty_log_${userId}_${dateStr}`);
         if (storedState) {
           const parsed = JSON.parse(storedState);
           setSelectedDateActivities(parsed.activities || []);
+          setSelectedDateLogin(parsed.loginTime || '—');
+          setSelectedDateLogout(parsed.logoutTime || '—');
+          setSelectedDateLoginAddress(parsed.loginAddress || '');
+          setSelectedDateLogoutAddress(parsed.logoutAddress || '');
         }
       }
     } catch (err) {
       console.error('Error fetching historical daily details:', err);
       // Fallback
-      const storedState = localStorage.getItem(`doctor_duty_log_${dateStr}`);
-      if (storedState) setSelectedDateActivities(JSON.parse(storedState).activities || []);
+      const userId = localStorage.getItem('doctorId') || '0001';
+      const storedState = localStorage.getItem(`doctor_duty_log_${userId}_${dateStr}`);
+      if (storedState) {
+          const parsed = JSON.parse(storedState);
+          setSelectedDateActivities(parsed.activities || []);
+          setSelectedDateLogin(parsed.loginTime || '—');
+          setSelectedDateLogout(parsed.logoutTime || '—');
+          setSelectedDateLoginAddress(parsed.loginAddress || '');
+          setSelectedDateLogoutAddress(parsed.logoutAddress || '');
+      }
     }
   };
 
@@ -687,7 +826,7 @@ const AttendanceTracker = () => {
 
           <button
             onClick={handleToggleLogin}
-            disabled={logoutTime !== '—'}
+            disabled={logoutTime !== '—' || isProcessing}
             style={{
               backgroundColor: logoutTime !== '—' ? '#f3f4f6' : (isLoggedIn ? '#ef4444' : '#10b981'),
               color: logoutTime !== '—' ? '#9ca3af' : '#ffffff',
@@ -696,24 +835,29 @@ const AttendanceTracker = () => {
               padding: '6px 16px',
               fontSize: '13px',
               fontWeight: '700',
-              cursor: logoutTime !== '—' ? 'not-allowed' : 'pointer',
+              cursor: logoutTime !== '—' || isProcessing ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               boxShadow: logoutTime !== '—' ? 'none' : (isLoggedIn ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px rgba(16, 185, 129, 0.25)'),
               transition: 'all 0.2s ease-in-out',
+              opacity: isProcessing ? 0.7 : 1,
             }}
           >
-            <span
-              style={{
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                backgroundColor: '#ffffff',
-                display: 'inline-block'
-              }}
-            />
-            {logoutTime !== '—' ? 'Logged Out' : (isLoggedIn ? 'Clock Out' : 'Clock In')}
+            {isProcessing ? (
+              <CSpinner size="sm" style={{ width: '12px', height: '12px' }} />
+            ) : (
+              <span
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: '#ffffff',
+                  display: 'inline-block'
+                }}
+              />
+            )}
+            {isProcessing ? (isLoggedIn ? 'Logging Out...' : 'Logging In...') : (logoutTime !== '—' ? 'Logged Out' : (isLoggedIn ? 'Clock Out' : 'Clock In'))}
           </button>
         </div>
 
@@ -727,6 +871,11 @@ const AttendanceTracker = () => {
                 <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>
                   {isLoading ? <Skeleton width="50px" height="15px" /> : loginTime}
                 </h4>
+                {!isLoading && loginAddress && loginTime !== '—' && (
+                  <div style={{ marginTop: '4px', fontSize: '10px', color: '#8a94a6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '135px' }} title={loginAddress}>
+                    • {loginAddress}
+                  </div>
+                )}
               </div>
               <div style={{ color: '#d88665', fontSize: '18px', fontWeight: '700' }}>🚪➜</div>
             </CCardBody>
@@ -740,6 +889,11 @@ const AttendanceTracker = () => {
                 <h4 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '13px', margin: 0 }}>
                   {isLoading ? <Skeleton width="50px" height="15px" /> : logoutTime}
                 </h4>
+                {!isLoading && logoutAddress && logoutTime !== '—' && (
+                  <div style={{ marginTop: '4px', fontSize: '10px', color: '#8a94a6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '135px' }} title={logoutAddress}>
+                    • {logoutAddress}
+                  </div>
+                )}
               </div>
               <div style={{ color: '#d88665', fontSize: '18px', fontWeight: '700' }}>🚪⬅</div>
             </CCardBody>
@@ -1076,39 +1230,70 @@ const AttendanceTracker = () => {
 
       {/* ─── MODAL: VIEW DAILY LOG DETAILS ─────────────────────────────────── */}
       <CModal visible={showDetailsModal} onClose={() => setShowDetailsModal(false)} size="lg">
-        <CModalHeader style={{ backgroundColor: '#1B4F8A' }}>
-          <CModalTitle className="text-white fw-bold">Daily Log Details - {selectedHistoryDate}</CModalTitle>
+        <CModalHeader style={{ borderBottom: 'none', padding: '24px 24px 8px' }}>
+          <CModalTitle style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '20px' }}>Daily Report - {selectedHistoryDate}</CModalTitle>
         </CModalHeader>
-        <CModalBody>
+        <CModalBody style={{ padding: '8px 24px 24px' }}>
+
+          <div className="d-flex flex-wrap gap-4 mb-4">
+            {/* Login Details Card */}
+            <div className="flex-fill p-3 rounded" style={{ backgroundColor: '#F8F9FA', border: '1px solid #E9ECEF', minWidth: '250px' }}>
+              <div className="d-flex align-items-center gap-2 mb-2" style={{ color: '#1B4F8A', fontWeight: '700', fontSize: '13px' }}>
+                <span>🚪➜</span> <span>Login Details</span>
+              </div>
+              <div className="d-flex align-items-center gap-2 mb-2 text-dark">
+                <span style={{ fontSize: '14px' }}>🕒</span> <span className="fw-bold" style={{ fontSize: '15px' }}>{selectedDateLogin}</span>
+              </div>
+              <div className="d-flex align-items-start gap-2 text-muted" style={{ fontSize: '11px', lineHeight: '1.4' }}>
+                <span style={{ fontSize: '12px' }}>📍</span> <span>{selectedDateLoginAddress || '—'}</span>
+              </div>
+            </div>
+
+            {/* Logout Details Card */}
+            <div className="flex-fill p-3 rounded" style={{ backgroundColor: '#F8F9FA', border: '1px solid #E9ECEF', minWidth: '250px' }}>
+              <div className="d-flex align-items-center gap-2 mb-2" style={{ color: '#1B4F8A', fontWeight: '700', fontSize: '13px' }}>
+                <span>🚪⬅</span> <span>Logout Details</span>
+              </div>
+              <div className="d-flex align-items-center gap-2 mb-2 text-dark">
+                <span style={{ fontSize: '14px' }}>🕒</span> <span className="fw-bold" style={{ fontSize: '15px' }}>{selectedDateLogout}</span>
+              </div>
+              <div className="d-flex align-items-start gap-2 text-muted" style={{ fontSize: '11px', lineHeight: '1.4' }}>
+                <span style={{ fontSize: '12px' }}>📍</span> <span>{selectedDateLogoutAddress || '—'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-2" style={{ color: '#1B4F8A', fontWeight: '700', fontSize: '15px', borderBottom: '2px solid #EBF3FC', paddingBottom: '8px' }}>
+            Activity Log
+          </div>
+
           <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0" style={{ fontSize: '13px' }}>
+            <table className="table align-middle mb-0" style={{ fontSize: '12.5px' }}>
               <thead>
-                <tr style={{ color: '#8a94a6', fontSize: '11.5px', letterSpacing: '0.3px' }}>
-                  <th className="ps-4 fw-bold">#</th>
-                  <th className="fw-bold">Activity</th>
-                  <th className="fw-bold">Duration</th>
-                  <th className="fw-bold">Location</th>
-                  {/* <th className="fw-bold pe-4">Date</th> */}
+                <tr style={{ color: '#1B4F8A', fontSize: '11px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  <th className="fw-bold border-0 text-center" style={{ width: '50px' }}>#</th>
+                  <th className="fw-bold border-0">ACTIVITY</th>
+                  <th className="fw-bold border-0">DURATION</th>
+                  <th className="fw-bold border-0">LOCATION</th>
                 </tr>
               </thead>
               <tbody>
                 {selectedDateActivities.length > 0 ? (
                   selectedDateActivities.map((act, idx) => (
                     <tr key={act.id}>
-                      <td className="ps-4 text-muted fw-semibold">{idx + 1}</td>
-                      <td className="text-dark">
-                        <div className="fw-bold">{act.activity}</div>
+                      <td className="text-muted fw-semibold text-center border-0">{idx + 1}</td>
+                      <td className="text-dark border-0">
+                        <div className="fw-bold" style={{ fontSize: '13px' }}>{act.activity}</div>
                         {act.description && <div className="text-muted small fw-normal" style={{ fontSize: '11px', marginTop: '2px' }}>{act.description}</div>}
                       </td>
-                      <td>{act.duration}</td>
-                      <td style={{ color: '#1B4F8A', fontWeight: '500' }}>{act.location ? `📍 ${act.location}` : '—'}</td>
-                      <td className="pe-4 text-muted">{act.date}</td>
+                      <td className="text-muted border-0 fw-semibold">{act.duration}</td>
+                      <td className="border-0" style={{ color: '#1B4F8A', fontWeight: '500' }}>{act.location ? `📍 ${act.location}` : '—'}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center py-5 text-muted" style={{ fontSize: '13.5px' }}>
-                      No activities logged on this day.
+                    <td colSpan="4" className="text-center py-5 text-muted border-0" style={{ fontSize: '13.5px' }}>
+                      No sessions found for this day.
                     </td>
                   </tr>
                 )}
@@ -1116,8 +1301,8 @@ const AttendanceTracker = () => {
             </table>
           </div>
         </CModalBody>
-        <CModalFooter>
-          <button className="btn btn-primary btn-sm" style={{ backgroundColor: '#1B4F8A', borderColor: '#1B4F8A' }} onClick={() => setShowDetailsModal(false)}>Close</button>
+        <CModalFooter style={{ borderTop: 'none', padding: '8px 24px 24px' }}>
+          <button className="btn text-white fw-semibold" style={{ backgroundColor: '#64748b', borderRadius: '6px', padding: '6px 20px', fontSize: '14px' }} onClick={() => setShowDetailsModal(false)}>Close</button>
         </CModalFooter>
       </CModal>
 

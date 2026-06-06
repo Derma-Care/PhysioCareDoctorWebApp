@@ -21,9 +21,23 @@ const AppHeaderDropdown = () => {
 
   // Logout
   const handleLock = () => {
+    // Preserve local attendance data so it doesn't disappear if they log back in
+    const todayStr = new Date().toISOString().split('T')[0]
+    const userId = localStorage.getItem('doctorId') || '0001'
+    const attendanceKey = `doctor_duty_log_${userId}_${todayStr}`
+    const monthlyKey = `doctor_monthly_attendance_${userId}`
+    
+    const attendanceData = localStorage.getItem(attendanceKey)
+    const monthlyData = localStorage.getItem(monthlyKey)
+
     localStorage.removeItem('token')
     sessionStorage.clear()
     localStorage.clear()
+
+    // Restore the attendance data securely under the doctor's specific ID
+    if (attendanceData) localStorage.setItem(attendanceKey, attendanceData)
+    if (monthlyData) localStorage.setItem(monthlyKey, monthlyData)
+
     navigate('/login', { replace: true })
   }
 
