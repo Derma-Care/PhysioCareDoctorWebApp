@@ -120,7 +120,7 @@ const TabContent = ({
       break
 
     case 'Diagnosis':
-      content = <PrescriptionTab seed={{ diagnosis: formData.diagnosis || {} }} onNext={handleNext} formData={formData} />
+      content = <PrescriptionTab seed={{ diagnosis: formData.diagnosis || {} }} onNext={handleNext} formData={formData} setFormData={setFormData} />
       break
 
     case 'Investigation':

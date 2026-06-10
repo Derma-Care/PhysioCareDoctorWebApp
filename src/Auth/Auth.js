@@ -230,6 +230,51 @@ export const SavePatientPrescription = async (prescriptionData) => {
   }
 }
 
+export const SavePrescriptionTemplate = async (templateData) => {
+  try {
+    if (Array.isArray(templateData)) {
+      throw new Error('Expected a single object, but received an array.')
+    }
+    const response = await axios.post(
+      `${savePrescriptionbaseUrl}/createTemplate`,
+      templateData,
+    )
+    const result = response?.data
+    console.log("✅ Template API Response:", result)
+    return result ? result : null
+  } catch (error) {
+    console.error('❌ Error saving prescription template:', error)
+    return null
+  }
+}
+
+export const getTemplateById = async (templateId) => {
+  try {
+    const response = await api.get(
+      `${savePrescriptionbaseUrl}/getTemplateById/${templateId}`
+    )
+    const result = response?.data
+    return result?.success ? result.data : result
+  } catch (error) {
+    console.error('❌ Error getting template by ID:', error)
+    return null
+  }
+}
+
+export const getTemplatesByClinic = async () => {
+  const clinicId = localStorage.getItem('hospitalId')
+  try {
+    const response = await api.get(
+      `${savePrescriptionbaseUrl}/getPrescriptionsByClinicId/${clinicId}`
+    )
+    const result = response?.data
+    return result?.success ? result.data : result
+  } catch (error) {
+    console.error('❌ Error fetching templates by clinic:', error)
+    return null
+  }
+}
+
 export const getDoctorSaveDetails = async (disease) => {
   console.log(disease)
   const hospitalId = localStorage.getItem('hospitalId')

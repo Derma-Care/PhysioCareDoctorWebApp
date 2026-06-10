@@ -6,7 +6,7 @@ import { COLORS } from '../Themes'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
 import { useLocation, useParams } from 'react-router-dom'
 import { useDoctorContext } from '../Context/DoctorContext'
-import { SavePatientPrescription, getInProgressDetails, getFollowUpRecord } from '../Auth/Auth'
+import { SavePatientPrescription, getInProgressDetails, getFollowUpRecord, SavePrescriptionTemplate } from '../Auth/Auth'
 import { useToast } from '../utils/Toaster'
 import { normalizeSavedData } from '../utils/normalizeData'
 
@@ -69,7 +69,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   const formDataRef = useRef(formData)
   useEffect(() => { formDataRef.current = formData }, [formData])
 
-  const { success, info } = useToast()
+  const { success, info, error } = useToast()
 
   const ALL_TABS = tabs || [
     'Complaints', 'Assessment', 'Diagnosis', 'Investigation',
@@ -103,7 +103,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
   const TABS = useMemo(() => {
     let list = ALL_TABS
     if (fromDoctorTemplate) {
-      list = formData?.symptoms?.complaints?.trim() ? ALL_TABS : ['Complaints']
+      list = formData?.diagnosis?.physioDiagnosis?.trim() ? ALL_TABS : ['Diagnosis']
     }
 
     // status confirmed means history reports has to be disabled
@@ -332,20 +332,97 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     },
   }
 
-  useEffect(() => { if (fromDoctorTemplate) setActiveTab('Complaints') }, [fromDoctorTemplate])
+  useEffect(() => { if (fromDoctorTemplate) setActiveTab('Diagnosis') }, [fromDoctorTemplate])
 
   /* ── Save template ── */
   const savePrescriptionTemplate = async () => {
     try {
-      const complaints = formData.symptoms?.complaints?.trim() || ''
+      const physioDiagnosis = formData.diagnosis?.physioDiagnosis?.trim() || ''
+      if (!physioDiagnosis) {
+        error?.('Primary Diagnosis is mandatory to save a template.', { title: 'Required Field' })
+        return false
+      }
       const clinicId = localStorage.getItem('hospitalId')
-      const template = { clinicId, title: complaints, symptoms: complaints, tests: formData.tests || [], prescription: formData.prescription || [], treatments: formData.treatments || [], followUp: formData.followUp || [], exercisePlan: formData.exercisePlan || {}, investigation: formData.investigation || {} }
-      const res = await SavePatientPrescription(template)
-      if (res.status === 200) success(res.message || 'Saved successfully!', { title: 'Success' })
-      else info(res.message || 'Updated successfully', { title: 'Info' })
+      const branchId = localStorage.getItem('branchId') || ''
+      const doctorId = localStorage.getItem('doctorId') || ''
+
+      const template = {
+        clinicId,
+        branchId,
+        title: physioDiagnosis,
+        status: 'template',
+        
+        // ── Diagnosis ──────────────────────────────────────────────────────
+        diagnosis: {
+          physioDiagnosis: formData.diagnosis?.physioDiagnosis || '',
+          differentialDiagnosis: formData.diagnosis?.differentialDiagnosis || '',
+          affectedArea: formData.diagnosis?.affectedArea || '',
+          severity: formData.diagnosis?.severity || '',
+          stage: formData.diagnosis?.stage || '',
+          notes: formData.diagnosis?.notes || '',
+        },
+
+        // ── Exercise Plan ──────────────────────────────────────────────────
+        exercisePlan: {
+          homeAdvice: formData.exercisePlan?.homeAdvice || '',
+          homeExercises: (formData.exercisePlan?.exercises || formData.exercisePlan?.homeExercises || []).map(ex => ({
+            id: ex.therapyExercisesId || ex.id || '',
+            therapyExercisesId: ex.therapyExercisesId || ex.id || '',
+            name: ex.name ?? ex.exerciseName ?? '',
+            sets: String(ex.sets ?? ''),
+            reps: String(ex.reps ?? ex.repetitions ?? ''),
+            duration: ex.activityDuration || ex.activityduration || ex.duration || '',
+            frequency: ex.frequency ?? null,
+            instructions: ex.instructions ?? ex.notes ?? '',
+            videoUrl: ex.videoUrl ?? ex.youtubeUrl ?? '',
+            session: ex.sessions || ex.session || '',
+          })),
+        },
+
+        // ── Follow Up ──────────────────────────────────────────────────────
+        followUp: {
+          nextVisitDate: formData.followUp?.nextVisitDate ?? '',
+          reviewNotes: formData.followUp?.reviewNotes ?? '',
+          modifications: formData.followUp?.modifications ?? '',
+        },
+
+        // ── Investigation ──────────────────────────────────────────────────
+        investigation: {
+          tests: formData.investigation?.tests || [],
+          reason: formData.investigation?.reason || '',
+        },
+
+        // ── Prescription PDF URL ───────────────────────────────────────────
+        prescriptionPdf: formData.prescriptionPdf || '',
+
+        // ── Therapy Sessions ───────────────────────────────────────────────
+        therapySessions: formData.therapySessions || [],
+
+        // ── Treatment Plan ─────────────────────────────────────────────────
+        treatmentPlan: {
+          doctorId,
+          doctorName: formData.treatmentPlan?.doctorName || '',
+          therapistId: formData.treatmentPlan?.therapistId || '',
+          therapistName: formData.treatmentPlan?.therapistName || '',
+          manualTherapy: formData.treatmentPlan?.manualTherapy || '',
+          modalitiesUsed: formData.treatmentPlan?.modalitiesUsed || [],
+          patientResponse: formData.treatmentPlan?.patientResponse || '',
+          precautions: formData.treatmentPlan?.precautions || [],
+        }
+      }
+
+      const res = await SavePrescriptionTemplate(template)
+      if (res?.success || res?.status === 200) {
+        success(res?.message || 'Template saved successfully!', { title: 'Success' })
+        return true
+      } else {
+        info(res?.message || 'Template updated successfully', { title: 'Info' })
+        return true
+      }
     } catch (error) {
       console.error('❌ Error saving template:', error)
       alert('Failed to save prescription template.')
+      return false
     }
   }
 

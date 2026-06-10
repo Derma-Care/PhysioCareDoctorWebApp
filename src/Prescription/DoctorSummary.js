@@ -378,12 +378,14 @@ const DoctorSummary = ({
     }
   }
   console.log('durationValue:', followUp.durationValue)
-  const handleClick = () => {
-    // First, call your save function
-    onSaveTemplate?.()
+  const handleClick = async () => {
+    // First, call your save function and await its result
+    const saved = await onSaveTemplate?.()
 
-    // Then navigate to the desired screen
-    navigate('/Dashboard') // <-- replace with your route
+    // Then navigate to the desired screen if save succeeded (did not return false)
+    if (saved !== false) {
+      navigate('/Dashboard') // <-- replace with your route
+    }
   }
   return (
     <div className="pb-5" style={{ backgroundColor: COLORS.theme }}>
@@ -395,17 +397,7 @@ const DoctorSummary = ({
           medicines.length > 0 ||
           followUp.durationValue !== 'NA' ? (
           <>
-            {/* complaints */}
-            {complaints && (
-              <CCard className="shadow-sm mb-3">
-                <CCardHeader className="py-2">
-                  <strong>Probable Disease</strong>
-                </CCardHeader>
-                <CCardBody>
-                  <div className="fs-6">{complaints}</div>
-                </CCardBody>
-              </CCard>
-            )}
+
             {/* Diagnosis Table */}
             {medicines.length > 0 && (
               <CCard className="shadow-sm mb-3">
@@ -476,37 +468,7 @@ const DoctorSummary = ({
               </CCard>
             )}
 
-            {/* Tests */}
-            {(tests.length > 0 || testsReason) && (
-              <CCard className="shadow-sm mb-3">
-                <CCardHeader className="py-2">
-                  <strong style={{ color: COLORS.black }}>Assessment</strong>
-                </CCardHeader>
-                <CCardBody>
-                  {tests.length > 0 ? (
-                    <ul className="mb-2">
-                      {tests.map((t, i) => (
-                        <li key={`test-${i}`}>
-                          <span className="fw-semibold">Recommended Test (Optional): </span>
-                          <span>{typeof t === 'string' ? t : t?.name || '—'}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="mb-2">
-                      <span className="fw-semibold">Recommended Test (Optional):</span> NA
-                    </p>
-                  )}
 
-                  {testsReason && (
-                    <div className="mt-2">
-                      <div className="text-muted fw-semibold">Reason:{testsReason}</div>
-
-                    </div>
-                  )}
-                </CCardBody>
-              </CCard>
-            )}
 
             {/* Treatments */}
             {treatments.length > 0 && (

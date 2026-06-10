@@ -3,6 +3,8 @@ import Button from '../components/CustomButton/CustomButton'
 import { COLORS } from '../Themes'
 import { CCard, CCardBody } from '@coreui/react'
 import { useToast } from '../utils/Toaster'
+import { getTemplatesByClinic, getTemplateById } from '../Auth/Auth'
+import Select from 'react-select'
 
 /* ─── Diagnosis static options ─────────────────────────────────────────── */
 const SEVERITY_OPTIONS = [
@@ -92,7 +94,7 @@ const DiagTextarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
 /* ══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
-const PrescriptionTab = ({ seed = {}, onNext, formData = {} }) => {
+const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
 
   const rawAss = formData.assessment || {}
   const sub = rawAss.subjectiveAssessment || {}
@@ -139,8 +141,74 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {} }) => {
   const [differentialDiagnosis, setDifferentialDiagnosis] = useState(seed.diagnosis?.differentialDiagnosis ?? '')
   const [diagNotes, setDiagNotes] = useState(seed.diagnosis?.notes ?? '')
 
-  const { warning } = useToast()
+  const { success, warning, error } = useToast()
   const seedRef = useRef(null)
+
+  const [templateOptions, setTemplateOptions] = useState([])
+  const [loadingTemplates, setLoadingTemplates] = useState(false)
+
+  const loadTemplates = async () => {
+    setLoadingTemplates(true)
+    try {
+      const data = await getTemplatesByClinic()
+      if (data && Array.isArray(data)) {
+        const options = data.map(t => {
+          const tId = t.id || t._id || t.therapistRecordId || 'N/A'
+          const name = t.title || t.diagnosis?.physioDiagnosis || 'Unnamed Template'
+          return {
+            label: `${name} (ID: ${tId})`,
+            value: tId,
+            data: t
+          }
+        })
+        setTemplateOptions(options)
+      }
+    } catch (err) {
+      console.error('❌ Failed to fetch templates:', err)
+    } finally {
+      setLoadingTemplates(false)
+    }
+  }
+
+  useEffect(() => {
+    loadTemplates()
+  }, [])
+
+  const handleTemplateSelect = async (selected) => {
+    if (!selected) return
+    const tId = selected.value
+    try {
+      const details = await getTemplateById(tId)
+      if (details) {
+        // Auto-populate local state
+        setPhysioDiagnosis(details.diagnosis?.physioDiagnosis ?? '')
+        setAffectedArea(details.diagnosis?.affectedArea ?? '')
+        setSeverity(details.diagnosis?.severity ?? '')
+        setStage(details.diagnosis?.stage ?? '')
+        setDifferentialDiagnosis(details.differentialDiagnosis ?? details.diagnosis?.differentialDiagnosis ?? '')
+        setDiagNotes(details.notes ?? details.diagnosis?.notes ?? '')
+
+        // Update parent formData state
+        if (setFormData) {
+          setFormData(prev => ({
+            ...prev,
+            diagnosis: details.diagnosis || {},
+            exercisePlan: details.exercisePlan || {},
+            followUp: details.followUp || {},
+            investigation: details.investigation || {},
+            prescription: details.prescription || {},
+            therapySessions: details.therapySessions || {},
+            treatmentPlan: details.treatmentPlan || {},
+            prescriptionPdf: details.prescriptionPdf || '',
+          }))
+        }
+        success('Template applied successfully!', { title: 'Applied' })
+      }
+    } catch (err) {
+      console.error('❌ Error applying template:', err)
+      error('Failed to apply template.', { title: 'Error' })
+    }
+  }
 
   useEffect(() => {
     if (seed === seedRef.current) return
@@ -176,6 +244,61 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {} }) => {
         minHeight: '100vh',
       }}
     >
+
+      {/* ── TEMPLATE SEARCH CARD ────────────────────────────────────────── */}
+      <CCard
+        className="mb-4"
+        style={{
+          border: '1.5px solid #b6cfe8',
+          borderRadius: 12,
+          backgroundColor: '#FFFFFF',
+          boxShadow: '0 4px 24px rgba(27,79,138,0.10)',
+        }}
+      >
+        <CCardBody>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            marginBottom: 16,
+            borderBottom: '2px solid #dceeff',
+            paddingBottom: 12,
+          }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: 8,
+              background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 17,
+              boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+            }}>🔍</div>
+            <h5 style={{
+              margin: 0,
+              color: '#1B4F8A',
+              fontWeight: 700,
+              fontSize: '1.05rem',
+            }}>Quick Template Search</h5>
+          </div>
+          <div>
+            <label style={diagLabelStyle}>Search Template by Name or ID</label>
+            <Select
+              options={templateOptions}
+              isLoading={loadingTemplates}
+              onChange={handleTemplateSelect}
+              placeholder="Search and select a template to auto-populate fields..."
+              isClearable
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  border: '1.5px solid #b6cfe8',
+                  borderRadius: 7,
+                  boxShadow: 'none',
+                  '&:hover': {
+                    borderColor: '#1B4F8A',
+                  },
+                }),
+              }}
+            />
+          </div>
+        </CCardBody>
+      </CCard>
 
       {/* ── DIAGNOSIS SECTION ─────────────────────────────────────────────── */}
       <CCard
