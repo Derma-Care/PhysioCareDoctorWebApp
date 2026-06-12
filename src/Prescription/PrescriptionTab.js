@@ -246,7 +246,7 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
     >
 
       {/* ── TEMPLATE SEARCH CARD ────────────────────────────────────────── */}
-      <CCard
+      {/* <CCard
         className="mb-4"
         style={{
           border: '1.5px solid #b6cfe8',
@@ -254,9 +254,9 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
           backgroundColor: '#FFFFFF',
           boxShadow: '0 4px 24px rgba(27,79,138,0.10)',
         }}
-      >
-        <CCardBody>
-          <div style={{
+      > */}
+        {/* <CCardBody> */}
+          {/* <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             marginBottom: 16,
             borderBottom: '2px solid #dceeff',
@@ -268,15 +268,15 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 17,
               boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
-            }}>🔍</div>
-            <h5 style={{
+            }}>🔍</div> */}
+            {/* <h5 style={{
               margin: 0,
               color: '#1B4F8A',
               fontWeight: 700,
               fontSize: '1.05rem',
-            }}>Quick Template Search</h5>
-          </div>
-          <div>
+            }}>Quick Template Search</h5> */}
+          {/* </div> */}
+          {/* <div>
             <label style={diagLabelStyle}>Search Template by Name or ID</label>
             <Select
               options={templateOptions}
@@ -296,9 +296,9 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
                 }),
               }}
             />
-          </div>
-        </CCardBody>
-      </CCard>
+          </div> */}
+        {/* </CCardBody> */}
+      {/* </CCard> */}
 
       {/* ── DIAGNOSIS SECTION ─────────────────────────────────────────────── */}
       <CCard

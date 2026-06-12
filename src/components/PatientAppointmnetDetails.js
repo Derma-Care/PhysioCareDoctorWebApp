@@ -63,11 +63,18 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     insuranceProvider: '',
     activityLevels: [],
     patientPain: '',
+    uptoInvestigation: false,
   })
 
   // Keep a ref always in sync so tab handlers never read stale formData
   const formDataRef = useRef(formData)
   useEffect(() => { formDataRef.current = formData }, [formData])
+
+  useEffect(() => {
+    if (patientData) {
+      setPatient(patientData)
+    }
+  }, [patientData])
 
   const { success, info, error } = useToast()
 
@@ -76,7 +83,6 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     'Plan', 'HomePlan', 'FollowUp', 'Prescription', 'History', 'Reports',
   ]
 
-  const [activeTab, setActiveTab] = useState(defaultTab || ALL_TABS[0])
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
 
   /* ── Fetch in-progress ── */
@@ -88,15 +94,29 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           const data = await getInProgressDetails(patient.patientId, patient.bookingId)
           if (data) {
             setDetails(data)
-            setFormData(prev => ({
-              ...prev,
-              ...normalizeSavedData(data?.savedDetails?.[0] || {}),
-            }))
+            setFormData(prev => {
+              const normalized = normalizeSavedData(data?.savedDetails?.[0] || {})
+              const currentStatusNorm = (patient?.status || patientData?.status || '').toLowerCase().replace(/[\s_]/g, '')
+              const isDueOrDone = ['dueforinvestigation', 'duetoinvestigation', 'investigationdone', 'doneforinvestigation'].includes(currentStatusNorm)
+              return {
+                ...prev,
+                ...normalized,
+                uptoInvestigation: isDueOrDone ? true : !!normalized.uptoInvestigation
+              }
+            })
           }
         } catch (err) { console.error('❌ Failed to fetch in-progress details:', err) }
       })()
     }
   }, [state?.fromTab, patient, details])
+
+  useEffect(() => {
+    const currentStatusNorm = (patientData?.status || patient?.status || '').toLowerCase().replace(/[\s_]/g, '')
+    const isDueOrDone = ['dueforinvestigation', 'duetoinvestigation', 'investigationdone', 'doneforinvestigation'].includes(currentStatusNorm)
+    if (isDueOrDone && !formData.uptoInvestigation) {
+      setFormData(prev => ({ ...prev, uptoInvestigation: true }))
+    }
+  }, [patientData?.status, patient?.status, formData.uptoInvestigation])
 
 
 
@@ -106,14 +126,24 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       list = formData?.diagnosis?.physioDiagnosis?.trim() ? ALL_TABS : ['Diagnosis']
     }
 
-    // status confirmed means history reports has to be disabled
-    const currentStatus = patientData?.status || patient?.status || ''
-    if (currentStatus.toLowerCase() === 'confirmed') {
+    const currentStatus = (patientData?.status || patient?.status || '').toLowerCase()
+    if (currentStatus === 'completed') {
+      list = ['History', 'Reports']
+    } else if (currentStatus === 'confirmed') {
+      // status confirmed means history reports has to be disabled
       list = list.filter(t => t !== 'History' && t !== 'Reports')
     }
 
     return list
   }, [ALL_TABS, fromDoctorTemplate, formData?.symptoms?.complaints, patientData?.status, patient?.status])
+
+  const [activeTab, setActiveTab] = useState(defaultTab || TABS[0])
+
+  useEffect(() => {
+    if (!TABS.includes(activeTab) && TABS.length > 0) {
+      setActiveTab(TABS[0])
+    }
+  }, [TABS, activeTab])
 
   /* ── Go to next tab ── */
   const goToNext = useCallback((current) => {
@@ -238,6 +268,13 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           notes: notes,
           reason: notes,
         },
+      }
+      if (data.uptoInvestigation !== undefined) {
+        patch.uptoInvestigation = data.uptoInvestigation
+      }
+      if (data.therapyRecordId) {
+        patch.therapyRecordId = data.therapyRecordId
+        patch.id = data.therapyRecordId
       }
       mergeAndLog('Investigation', patch)
       goToNext('Investigation')

@@ -28,20 +28,18 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
   const { success, info } = useToast()
 
   // Use tabs passed from props, or fallback to default
-  const TABS = tabs || [
-    'Complaints',
-    'Assessment',
-    'Diagnosis',
-    'Investigation',
-    'Plan',
-    'HomePlan',
-    'FollowUp',
-    'Prescription',
-    'History',
-    'Reports',
-  ]
+  const TABS = useMemo(() => {
+    if (tabs) return tabs
+    return ['History', 'Reports']
+  }, [tabs])
 
   const [activeTab, setActiveTab] = useState(defaultTab || TABS[0])
+
+  useEffect(() => {
+    if (!TABS.includes(activeTab) && TABS.length > 0) {
+      setActiveTab(TABS[0])
+    }
+  }, [TABS, activeTab])
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
 
   // Fetch patient if needed

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { CCard, CCardBody, CContainer, CAlert } from '@coreui/react'
+import { useNavigate } from 'react-router-dom'
 import Button from '../components/CustomButton/CustomButton'
 import CreatableSelect from 'react-select/creatable'
 import { addLabTest, getLabTests, updateAppointmentBasedOnBookingId, SavePatientPrescription } from '../../src/Auth/Auth'
@@ -85,7 +86,8 @@ function escapeHtml(str) {
 /* ══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
-const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
+const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: patientDataProp }) => {
+  const navigate = useNavigate()
   const [selectedTests, setSelectedTests] = useState(seed.selectedTests ?? [])
   const [selectedTestOption, setSelectedTestOption] = useState(null)
   const [notes, setNotes] = useState(seed.notes ?? '')
@@ -95,7 +97,10 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
 
   const seedRef = useRef(null)
 
-  const { patientData, clinicDetails, doctorDetails } = useDoctorContext()
+  const context = useDoctorContext()
+  const patientData = patientDataProp || context?.patientData
+  const clinicDetails = context?.clinicDetails
+  const doctorDetails = context?.doctorDetails
 
   // ── Seed sync ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -136,6 +141,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
 
   const buildPhysioRecordPayload = () => {
     const record = formData ?? {}
+    const existingRecordId = record.id || record._id || record.therapyRecordId || record.therapyrecordid || (record.therapistRecordId !== 'TR001' ? record.therapistRecordId : null)
     
     // Top-level IDs
     const bookingId = record.bookingId || patientData?.bookingId || ''
@@ -243,7 +249,8 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
     }
 
     return {
-      therapistRecordId: record.therapistRecordId || "TR001",
+      therapistRecordId: existingRecordId || undefined,
+      therapyRecordId: existingRecordId || undefined,
       bookingId,
       clinicId,
       branchId,
@@ -363,19 +370,35 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
 
   // ── updateStatus helper ────────────────────────────────────────────────
   const updateStatus = (status) => {
-    const bookingId = patientData?.bookingId
-    if (!bookingId) return Promise.resolve()
+    const bookingId = formData?.bookingId || patientData?.bookingId
+    console.log(`[Investigation.jsx] updateStatus called: status="${status}", bookingId="${bookingId}"`)
+    if (!bookingId) {
+      console.warn('[Investigation.jsx] Skipping status update because bookingId is missing!', { formData, patientData })
+      return Promise.resolve()
+    }
+    const setPatientData = context?.setPatientData
     return updateAppointmentBasedOnBookingId({ data: { bookingId, status } })
+      .then((res) => {
+        if (patientData && setPatientData) {
+          console.log(`[Investigation.jsx] updateStatus success, updating context patientData status to: "${status}"`)
+          setPatientData({ ...patientData, status })
+        }
+        return res
+      })
   }
 
   const handleNext = () => {
     const payload = { investigation: { selectedTests, notes } }
     setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
-    const nextStatus = selectedTests.length > 0 ? 'Due for Investigation' : 'On-Going'
+    const nextStatus = 'On-Going'
+    console.log(`[Investigation.jsx] handleNext triggered: nextStatus="${nextStatus}", selectedTestsCount=${selectedTests.length}`)
     updateStatus(nextStatus)
-      .then(() => onNext?.(payload))
+      .then(() => {
+        console.log('[Investigation.jsx] handleNext status update succeeded. Navigating...')
+        onNext?.(payload)
+      })
       .catch(err => {
-        console.error('Failed to update appointment status:', err)
+        console.error('[Investigation.jsx] handleNext status update failed:', err)
         onNext?.(payload) // still navigate even if status update fails
       })
   }
@@ -388,19 +411,58 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
     }
 
     setSending(true)
+    let savedId = null
     try {
+      const response = await updateStatus('Due for Investigation')
+      console.log('Appointment status updated to Due for Investigation:', response)
+
       // ── API call to SavePatientPrescription ──
       const payloadRecord = buildPhysioRecordPayload()
-      console.log('Sending investigation payload to create record:', payloadRecord)
-      await SavePatientPrescription(payloadRecord)
+      const createPayload = { ...payloadRecord }
+      delete createPayload.therapyRecordId
+      delete createPayload.status
+      delete createPayload.therapistRecordId
+
+      console.log('Sending investigation payload to create record:', createPayload)
+      if(response.status == 200) {
+              const res = await SavePatientPrescription(createPayload)
+      console.log('SavePatientPrescription response:', res)
+       const savedRecord = res?.data || res
+        if (savedRecord) {
+        savedId = savedRecord.therapistRecordId || savedRecord.therapyRecordId || savedRecord.id || savedRecord._id || savedRecord.therapyrecordid
+      }
+     else
+      showSnackbar(response.message||'Failed to save prescription record. Investigation not sent.', 'error')
+
+
+
+      }
+    
 
       // MOCK: simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 900))
 
       showSnackbar('Investigation sent to Lab Technician successfully! ✉️', 'success')
-      const payload = { investigation: { selectedTests, notes } }
-      setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
-      await updateStatus('Due for Investigation')
+      
+      const payload = {
+        uptoInvestigation: true,
+        therapyRecordId: savedId || undefined,
+        investigation: { selectedTests, notes }
+      }
+
+      setFormData?.((prev) => {
+        const nextFormData = {
+          ...prev,
+          uptoInvestigation: true,
+          investigation: { selectedTests, notes }
+        }
+        if (savedId) {
+          nextFormData.therapyRecordId = savedId
+          nextFormData.id = savedId
+        }
+        return nextFormData
+      })
+
       onNext?.(payload)
     } catch (err) {
       console.error('Failed to send investigation:', err)
@@ -412,6 +474,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData }) => {
 
   // ── handlePrint ────────────────────────────────────────────────────────
   const handlePrint = async () => {
+    
     const today = new Date()
     const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 
@@ -494,21 +557,60 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
     win.document.close()
     win.onload = () => { win.focus(); win.print() }
 
+    let savedId = null
     try {
+       const response = await updateStatus('Due for Investigation')
+      console.log('Appointment status updated to Due for Investigation:', response)
       const payloadRecord = buildPhysioRecordPayload()
       console.log('Printing investigation payload to create record:', payloadRecord)
-      await SavePatientPrescription(payloadRecord)
+      const createPayload = { ...payloadRecord }
+      delete createPayload.therapyRecordId
+      delete createPayload.status
+      delete createPayload.therapistRecordId
+      const res = await SavePatientPrescription(createPayload)
+      console.log('SavePatientPrescription response:', res)
+      const savedRecord = res?.data || res
+       if(response.status == 200) {
+              const res = await SavePatientPrescription(createPayload)
+      console.log('SavePatientPrescription response:', res)
+       const savedRecord = res?.data || res
+        if (savedRecord) {
+        savedId = savedRecord.therapistRecordId || savedRecord.therapyRecordId || savedRecord.id || savedRecord._id || savedRecord.therapyrecordid
+      }
+     else
+      showSnackbar(response.message||'Failed to save prescription record. Investigation not sent.', 'error')
+
+
+
+      }
     } catch (e) {
       console.error('Failed to save record during print:', e)
     }
 
-    const payload = { investigation: { selectedTests, notes } }
-    setFormData?.((prev) => ({ ...prev, investigation: { selectedTests, notes } }))
+    const payload = {
+      uptoInvestigation: true,
+      therapyRecordId: savedId || undefined,
+      investigation: { selectedTests, notes }
+    }
+
+    setFormData?.((prev) => {
+      const nextFormData = {
+        ...prev,
+        uptoInvestigation: true,
+        investigation: { selectedTests, notes }
+      }
+      if (savedId) {
+        nextFormData.therapyRecordId = savedId
+        nextFormData.id = savedId
+      }
+      return nextFormData
+    })
+
     updateStatus('Due for Investigation')
-      .then(() => onNext?.(payload))
+      .then(() => navigate('/dashboard', { replace: true }))
       .catch(err => {
         console.error('Failed to update appointment status:', err)
-        onNext?.(payload) // still navigate even if status update fails
+        
       })
   }
 
@@ -710,7 +812,7 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
         </Button>
 
         {/* Send to Lab Technician */}
-        <Button
+        {/* <Button
           style={{
             background: sending ? '#e8f0fb' : '#FFFFFF',
             color: sending ? '#8aaac8' : '#1B4F8A',
@@ -740,7 +842,7 @@ header{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-botto
           ) : (
             '✉️ Send'
           )}
-        </Button>
+        </Button> */}
 
         {/* Next */}
         <Button

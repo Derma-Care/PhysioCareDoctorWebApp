@@ -17,7 +17,7 @@ import { COLORS } from '../Themes'
 import { useToast } from '../utils/Toaster'
 import FileUploader from './FileUploader'
 import { uploadPrescriptionPdf } from '../utils/S3UploadServices'
-import { createDoctorSaveDetails, getClinicDetails, getDoctorDetails, SavePatientPrescription } from '../Auth/Auth'
+import { createDoctorSaveDetails, getClinicDetails, getDoctorDetails, SavePatientPrescription, UpdatePatientPrescription, updateAppointmentBasedOnBookingId } from '../Auth/Auth'
 import { useDoctorContext } from '../Context/DoctorContext'
 import PrescriptionPDF from '../utils/PdfGenerator'
 import { pdf } from '@react-pdf/renderer'
@@ -1119,17 +1119,20 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   }
 
   // ─── FIX: buildPayload — always sends the correct API-expected shape ──────
-  const buildPayload = (prescriptionPdf = '') => {
+  const buildPayload = (prescriptionPdf = '', isPrint = false) => {
     const firstDiag = diagnosisRows[0] ?? {}
     const followUpPayload = Array.isArray(followUpRaw) ? (followUpRaw[0] ?? {}) : (followUpRaw ?? {})
+    const existingRecordId = record.id || record._id || record.therapyRecordId || record.therapyrecordid || (record.therapistRecordId !== 'TR001' ? record.therapistRecordId : null)
 
     return {
       // 🏥 Top-level IDs 🏥
-      therapistRecordId: record.therapistRecordId || "TR001",
+      therapistRecordId: existingRecordId || undefined,
+      therapyRecordId: existingRecordId || undefined,
       bookingId,
       clinicId,
       branchId,
-      status: overallStatus || patientData?.status || 'Completed',
+      status: isPrint ? 'Due for Investigation' : (overallStatus || 'Completed'),
+      uptoInvestigation: isPrint || !!(record.uptoInvestigation || formData?.uptoInvestigation || patientData?.uptoInvestigation),
 
       // ── Patient Info ───────────────────────────────────────────────────
       patientInfo: {
@@ -1287,9 +1290,38 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       const pdfFile = new File([blob], `${safeName}.pdf`, { type: 'application/pdf' })
       const prescriptionPdfKey = await uploadPrescriptionPdf(pdfFile)
 
-      const payload = buildPayload(prescriptionPdfKey)
+      const payload = buildPayload(prescriptionPdfKey, downloadAfter)
 
-      const resp = await SavePatientPrescription(payload)
+      const isUptoInvestigation = downloadAfter || !!(record.uptoInvestigation || formData?.uptoInvestigation || patientData?.uptoInvestigation)
+      const existingRecordId = record.id || record._id || record.therapyRecordId || record.therapyrecordid || (record.therapistRecordId !== 'TR001' ? record.therapistRecordId : null)
+      if (bookingId) {
+        try {
+          const currentStatus = patientData?.status || ''
+          const currentStatusNorm = currentStatus.toLowerCase().replace(/[\s_]/g, '')
+          const isDueOrDone = ['dueforinvestigation', 'duetoinvestigation', 'investigationdone', 'doneforinvestigation'].includes(currentStatusNorm)
+          const nextStatus = downloadAfter ? 'Due for Investigation' : (isDueOrDone ? currentStatus : 'Completed')
+          console.log(`Updating appointment status to ${nextStatus}...`, bookingId)
+          await updateAppointmentBasedOnBookingId({ data: { bookingId, status: nextStatus } })
+        } catch (statusErr) {
+          console.error(`Failed to update appointment status to ${nextStatus}:`, statusErr)
+        }
+      }
+
+      const shouldUpdate = !!existingRecordId
+
+      let resp
+      if (shouldUpdate) {
+        console.log('Calling Update API on Save...', payload)
+        resp = await UpdatePatientPrescription(payload)
+      } else {
+        console.log('Calling Create API on Save...', payload)
+        const createPayload = { ...payload }
+        delete createPayload.therapyRecordId
+        delete createPayload.status
+        delete createPayload.therapistRecordId
+        resp = await SavePatientPrescription(createPayload)
+      }
+
       if (resp) {
         success('Record saved successfully!', { title: 'Success' })
         if (downloadAfter) downloadBlob(blob, `${safeName}.pdf`)
@@ -1749,10 +1781,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
       {/* ── Sticky Bottom Bar ── */}
       <div style={{ position: 'fixed', bottom: 0, left: sidebarWidth ? `${sidebarWidth}px` : 0, width: sidebarWidth ? `calc(100vw - ${sidebarWidth}px)` : '100vw', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 24px', zIndex: 999, boxShadow: '0 -2px 10px rgba(27,79,138,0.12)', borderTop: '2px solid #1B4F8A' }}>
-        <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
+        {/* <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
           onClick={() => { setClickedSaveTemplate(true); onSaveTemplate?.(); info('Template saved!', { title: 'Template' }) }}>
           {!updateTemplate ? '💾 Save as Template' : '🔄 Update Template'}
-        </Button>
+        </Button> */}
         {saving && <CSpinner size="sm" style={{ color: '#1B4F8A' }} />}
         <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
           onClick={() => { setPendingAction(ACTIONS.SAVE); clickedSaveTemplate ? doSave() : setShowTemplateModal(true) }} disabled={saving}>

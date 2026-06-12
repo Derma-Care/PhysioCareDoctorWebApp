@@ -379,7 +379,7 @@ const Dashboard = () => {
                               : item.status === 'Cancelled' || item.status === 'Drop' ? '#FFF0F0'
                                 : item.status === 'No-Show' || item.status === 'No Reply' ? '#F4F4F4'
                                   : item.status === 'Completed' ? '#EAF7F0'
-                                    : item.status === 'Due for Investigation' || item.status === 'Investigation Done' ? '#EBF5FF'
+                                    : ['dueforinvestigation', 'duetoinvestigation', 'investigationdone', 'doneforinvestigation'].includes((item.status || '').toLowerCase().replace(/[\s_]/g, '')) ? '#EBF5FF'
                                       : '#F0F6FF',
                         color:
                           item.status === 'Confirmed' ? '#1B8A56'
@@ -387,7 +387,7 @@ const Dashboard = () => {
                               : item.status === 'Cancelled' || item.status === 'Drop' ? '#D32F2F'
                                 : item.status === 'No-Show' || item.status === 'No Reply' ? '#616161'
                                   : item.status === 'Completed' ? '#1B8A56'
-                                    : item.status === 'Due for Investigation' || item.status === 'Investigation Done' ? COLORS.bgcolor
+                                    : ['dueforinvestigation', 'duetoinvestigation', 'investigationdone', 'doneforinvestigation'].includes((item.status || '').toLowerCase().replace(/[\s_]/g, '')) ? COLORS.bgcolor
                                       : COLORS.black,
                         borderRadius: '20px',
                         padding: '3px 10px',

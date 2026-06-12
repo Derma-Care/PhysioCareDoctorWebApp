@@ -159,8 +159,14 @@ export const normalizeSavedData = (saved) => {
     notes: invRaw.notes || invRaw.reason || '',
   }
 
+  const recordStatusNorm = (saved.status || '').toLowerCase().replace(/[\s_]/g, '')
+  const isDueOrDone = ['dueforinvestigation', 'duetoinvestigation', 'investigationdone', 'doneforinvestigation'].includes(recordStatusNorm)
+
   return {
     ...saved,
+    therapyRecordId: saved.therapistRecordId || saved.therapyRecordId || saved.id || saved._id || saved.therapyrecordid,
+    id: saved.therapistRecordId || saved.therapyRecordId || saved.id || saved._id || saved.therapyrecordid,
+    uptoInvestigation: isDueOrDone ? true : !!saved.uptoInvestigation,
     symptoms,
     assessment,
     diagnosis,

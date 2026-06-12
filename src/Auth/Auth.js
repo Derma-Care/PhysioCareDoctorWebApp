@@ -230,6 +230,25 @@ export const SavePatientPrescription = async (prescriptionData) => {
   }
 }
 
+export const UpdatePatientPrescription = async (prescriptionData) => {
+  try {
+    if (Array.isArray(prescriptionData)) {
+      throw new Error('Expected a single object, but received an array.')
+    }
+    const id = prescriptionData.therapistRecordId || prescriptionData.therapyRecordId || prescriptionData.id || prescriptionData._id || prescriptionData.therapyrecordid
+    const response = await axios.put(
+      `${savePrescriptionbaseUrl}/updateById/${id}`,
+      prescriptionData,
+    )
+    const result = response?.data
+    console.log(result)
+    return result ? result : null
+  } catch (error) {
+    console.error('❌ Error updating prescription:', error)
+    return null
+  }
+}
+
 export const SavePrescriptionTemplate = async (templateData) => {
   try {
     if (Array.isArray(templateData)) {

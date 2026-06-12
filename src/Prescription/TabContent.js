@@ -94,7 +94,17 @@ const TabContent = ({
       } else if (activeTab === 'Diagnosis') {
         setFormData(prev => deepMerge(prev, { diagnosis: payload }))
       } else if (activeTab === 'Investigation') {
-        setFormData(prev => deepMerge(prev, { investigation: payload }))
+        const patch = {
+          investigation: payload.investigation || { selectedTests: payload.selectedTests, notes: payload.notes }
+        }
+        if (payload.uptoInvestigation !== undefined) {
+          patch.uptoInvestigation = payload.uptoInvestigation
+        }
+        if (payload.therapyRecordId) {
+          patch.therapyRecordId = payload.therapyRecordId
+          patch.id = payload.therapyRecordId
+        }
+        setFormData(prev => deepMerge(prev, patch))
       } else if (activeTab === 'FollowUp') {
         setFormData(prev => deepMerge(prev, { followUp: payload }))
       } else {
@@ -124,7 +134,7 @@ const TabContent = ({
       break
 
     case 'Investigation':
-      content = <Investigation seed={formData.investigation || {}} onNext={handleNext} formData={formData} setFormData={setFormData} />
+      content = <Investigation seed={formData.investigation || {}} onNext={handleNext} formData={formData} setFormData={setFormData} patientData={patientData} />
       break
 
     case 'Plan':
