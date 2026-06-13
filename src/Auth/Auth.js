@@ -501,7 +501,7 @@ export const averageRatings = async (doctorId) => {
 export const getDoctorFeedbackSummary = async (clinicId, doctorId) => {
   try {
     const response = await api.get(`${getDoctorFeedbackSummaryUrl}/${clinicId}/${doctorId}`)
-    
+
     if (response.data?.success && response.data?.data) {
       return {
         success: true,
@@ -816,10 +816,10 @@ export const getExerciseSessionsByExerciseId = async (clinicId, branchId, therap
   }
 }
 
-export const getExerciseSessionsWithRecords = async (clinicId, branchId, bookingId, patientId, therapistRecordId) => {
+export const getExerciseSessionsWithRecords = async (clinicId, branchId, bookingId, patientId, therapistId, therapistRecordId) => {
   try {
     const response = await api.get(
-      `${baseUrl}/payment/getExerciseSessionsWithRecords/${clinicId}/${branchId}/${bookingId}/${patientId}/${therapistRecordId}`
+      `${baseUrl}/payment/getExerciseSessionsWithRecords/${clinicId}/${branchId}/${bookingId}/${patientId}/${therapistId}/${therapistRecordId}`
     );
     console.log("✅ Exercise Sessions with Records:", response.data);
     return response.data;

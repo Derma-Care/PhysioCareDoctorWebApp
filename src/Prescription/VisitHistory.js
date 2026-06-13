@@ -56,7 +56,7 @@ const toImageSrc = (raw) => {
           bytes = new Uint8Array(decoded.length)
           for (let i = 0; i < decoded.length; i++) bytes[i] = decoded.charCodeAt(i)
         }
-      } catch (e) {}
+      } catch (e) { }
       if (!bytes) {
         bytes = new Uint8Array(s.length)
         for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i) & 0xff
@@ -71,7 +71,7 @@ const toImageSrc = (raw) => {
     else if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) mime = 'image/gif'
     else if (bytes[0] === 0x42 && bytes[1] === 0x4d) mime = 'image/bmp'
     else if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
-             bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) mime = 'image/webp'
+      bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) mime = 'image/webp'
 
     let bin = ''
     for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
@@ -1243,11 +1243,11 @@ const transformVisit = (visit) => {
   const exercisePlanObj = record.exercisePlan ?? visit.exercisePlan ?? {}
   const homeExercises = Array.isArray(exercisePlanObj.homeExercises) ? exercisePlanObj.homeExercises
     : Array.isArray(exercisePlanObj.exercises) ? exercisePlanObj.exercises
-    : Array.isArray(record.homeExercises) ? record.homeExercises
-    : Array.isArray(visit.homeExercises) ? visit.homeExercises
-    : Array.isArray(record.exercises) ? record.exercises
-    : Array.isArray(visit.exercises) ? visit.exercises
-    : []
+      : Array.isArray(record.homeExercises) ? record.homeExercises
+        : Array.isArray(visit.homeExercises) ? visit.homeExercises
+          : Array.isArray(record.exercises) ? record.exercises
+            : Array.isArray(visit.exercises) ? visit.exercises
+              : []
   const homeAdvice = exercisePlanObj.homeAdvice ?? record.homeAdvice ?? visit.homeAdvice ?? ''
 
   // ── Follow Up ───────────────────────────────────────────────────────────────
@@ -1367,8 +1367,9 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
     const cId = v.clinicId || localStorage.getItem('hospitalId') || localStorage.getItem('clinicId') || ''
     const bId = v.branchId || ''
     const bookId = v.bookingId || ''
+    const tId = v.topTherapistId || ''
     const pId = v.patientId || ''
-    const trId = v.therapistRecordId || 'TR001'
+    const trId = v.therapistRecordId || ''
 
     setSessionLoading(true)
     setShowSessionModal(true)
@@ -1486,7 +1487,7 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
         const results = await Promise.all(fetchPromises)
         setSessionRecords(results.filter(Boolean))
       } else {
-        const res = await getExerciseSessionsWithRecords(cId, bId, bookId, pId, trId)
+        const res = await getExerciseSessionsWithRecords(cId, bId, bookId, pId, tId, trId)
         if (res?.success && res.data) {
           setSessionRecords(res.data)
         } else {
