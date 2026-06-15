@@ -19,7 +19,7 @@ import {
 import { COLORS, SIZES } from '../../Themes'
 import TooltipButton from '../../components/CustomButton/TooltipButton'
 import Button from '../../components/CustomButton/CustomButton'
-import { getAppointments } from '../../Auth/Auth'
+import { getAppointments, getBookingsByPatientId } from '../../Auth/Auth'
 import { useDoctorContext } from '../../Context/DoctorContext'
 import { useToast } from '../../utils/Toaster'
 import SkeletonLoader from '../../components/SkeletonLoader'
@@ -71,6 +71,13 @@ const Appointments = ({ searchTerm = '' }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedBranch, setSelectedBranch] = useState(null)
   const [selectedDate, setSelectedDate] = useState('')
+  const [patientIdInput, setPatientIdInput] = useState('')
+  // ── All Appointments (Patient ID search) State ────────────────────────────────────
+  const [showAllAppointments, setShowAllAppointments] = useState(false)
+  const [patientIdSearchLoading, setPatientIdSearchLoading] = useState(false)
+  const [patientIdResults, setPatientIdResults] = useState(null) // null = not searched
+  const [patientIdError, setPatientIdError] = useState('')
+
   const toast = useToast()
 
   const isFetchingRef = useRef(false)
@@ -113,16 +120,65 @@ const Appointments = ({ searchTerm = '' }) => {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [activeTab, filter, selectedBranch, selectedDate, searchTerm, searchQuery])
+  }, [activeTab, filter, selectedBranch, selectedDate, searchTerm, searchQuery, showAllAppointments, patientIdResults])
 
+  // ── Patient ID Search Handler ─────────────────────────────────────────
+  // Uses searchQuery as the patient ID
+  const handlePatientIdSearch = async () => {
+    const trimmed = searchQuery.trim()
+    // const trimmed = searchQuery.trim()
+    if (!trimmed) {
+
+      toast.warning('Please enter a Patient ID to search')
+      return
+    }
+    setPatientIdInput(trimmed)
+
+    setPatientIdSearchLoading(true)
+    setPatientIdError('')
+    setPatientIdResults(null)
+    try {
+      const res = await getBookingsByPatientId(trimmed)
+      if (res.success && res.data.length > 0) {
+        setPatientIdResults(res.data)
+      } else if (res.success && res.data.length === 0) {
+        setPatientIdResults([])
+        setPatientIdError('No bookings found for this Patient ID')
+      } else {
+        setPatientIdResults([])
+        setPatientIdError(res.message || 'Failed to fetch bookings')
+      }
+    } catch (e) {
+      setPatientIdResults([])
+      setPatientIdError('Error fetching bookings')
+    } finally {
+      setPatientIdSearchLoading(false)
+    }
+  }
+
+  const handleClearPatientIdSearch = () => {
+    setSearchQuery('')
+    setPatientIdResults(null)
+    setPatientIdError('')
+  }
+
+  // Determine which data set to use
+  const isPatientIdMode = patientIdResults !== null
+  const baseAppointments = isPatientIdMode ? patientIdResults : appointments
+
+  // In normal mode: filter by searchQuery (name/mobile)
+  // In patient ID mode: API already filtered, show all results
   const safeSearch = (searchQuery || searchTerm).toLowerCase()
 
-  const filteredPatients = Array.isArray(appointments)
-    ? appointments
+  const filteredPatients = Array.isArray(baseAppointments)
+    ? baseAppointments
       .filter((p) => {
+        if (isPatientIdMode) return true
         const matchesSearch =
+          !safeSearch ||
           p.name?.toLowerCase().includes(safeSearch) ||
-          p.patientMobileNumber?.toLowerCase().includes(safeSearch) || p.mobileNumber?.toLowerCase().includes(safeSearch)
+          p.patientMobileNumber?.toLowerCase().includes(safeSearch) ||
+          p.mobileNumber?.toLowerCase().includes(safeSearch)
         const matchesFilter =
           filter === 'All' ||
           filter === 'First-Time & Follow-up' ||
@@ -242,63 +298,122 @@ const Appointments = ({ searchTerm = '' }) => {
                       </CDropdownMenu>
                     </CDropdown>
 
-                    {/* Search Bar */}
-                    <div style={{ position: 'relative' }}>
-                      <span
-                        style={{
-                          position: 'absolute',
-                          left: '10px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: COLORS.black,
-                          pointerEvents: 'none',
-                          fontSize: '13px',
-                        }}
-                      >
-                        🔍
-                      </span>
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search patient name or mobile..."
-                        style={{
-                          width: '260px',
-                          paddingLeft: '32px',
-                          paddingRight: searchQuery ? '28px' : '10px',
-                          paddingTop: '6px',
-                          paddingBottom: '6px',
-                          borderRadius: '8px',
-                          border: `1.5px solid ${COLORS.bgcolor}40`,
-                          fontSize: '13px',
-                          outline: 'none',
-                          backgroundColor: COLORS.white,
-                          color: COLORS.black,
-                          transition: 'border-color 0.2s',
-                        }}
-                        onFocus={(e) => (e.target.style.borderColor = COLORS.bgcolor)}
-                        onBlur={(e) => (e.target.style.borderColor = `${COLORS.bgcolor}40`)}
-                      />
-                      {searchQuery && (
-                        <button
-                          onClick={() => setSearchQuery('')}
+                    {/* ── Single Search Bar ──
+                         Unchecked: filters name / mobile in real-time
+                         Checked:   value used as Patient ID, Search button triggers API
+                    */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                      <div style={{ position: 'relative' }}>
+                        <span
                           style={{
-                            position: 'absolute',
-                            right: '8px',
-                            top: '50%',
+                            position: 'absolute', left: '10px', top: '50%',
                             transform: 'translateY(-50%)',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: COLORS.black,
-                            fontSize: '13px',
-                            padding: 0,
+                            color: showAllAppointments ? COLORS.bgcolor : COLORS.black,
+                            pointerEvents: 'none', fontSize: '13px',
                           }}
                         >
-                          ✕
+                          {showAllAppointments ? '🪪' : '🔍'}
+                        </span>
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value)
+                            // If in API mode and user clears input, reset results
+                            if (!e.target.value.trim() && isPatientIdMode) {
+                              setPatientIdResults(null)
+                              setPatientIdError('')
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && showAllAppointments) handlePatientIdSearch()
+                          }}
+                          placeholder={showAllAppointments ? 'Enter Patient ID…' : 'Search name or mobile…'}
+                          style={{
+                            width: '230px', paddingLeft: '32px',
+                            paddingRight: searchQuery ? '28px' : '10px',
+                            paddingTop: '6px', paddingBottom: '6px',
+                            borderRadius: showAllAppointments ? '8px 0 0 8px' : '8px',
+                            border: `1.5px solid ${showAllAppointments ? COLORS.bgcolor : `${COLORS.bgcolor}40`}`,
+                            borderRight: showAllAppointments ? 'none' : `1.5px solid ${COLORS.bgcolor}40`,
+                            fontSize: '13px', outline: 'none',
+                            backgroundColor: showAllAppointments ? '#EAF1FB' : COLORS.white,
+                            color: COLORS.black,
+                            transition: 'all 0.2s',
+                          }}
+                          onFocus={(e) => (e.target.style.borderColor = COLORS.bgcolor)}
+                          onBlur={(e) => (e.target.style.borderColor = showAllAppointments ? COLORS.bgcolor : `${COLORS.bgcolor}40`)}
+                        />
+                        {searchQuery && (
+                          <button
+                            onClick={() => {
+                              setSearchQuery('')
+                              setPatientIdResults(null)
+                              setPatientIdError('')
+                            }}
+                            style={{
+                              position: 'absolute', right: '8px', top: '50%',
+                              transform: 'translateY(-50%)', background: 'none',
+                              border: 'none', cursor: 'pointer',
+                              color: COLORS.black, fontSize: '13px', padding: 0,
+                            }}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Search button — only visible when checkbox is checked */}
+                      {showAllAppointments && (
+                        <button
+                          onClick={handlePatientIdSearch}
+                          disabled={patientIdSearchLoading || !searchQuery.trim()}
+                          style={{
+                            backgroundColor: searchQuery.trim() ? COLORS.bgcolor : '#9ca3af',
+                            color: '#fff', border: 'none',
+                            borderRadius: '0 8px 8px 0',
+                            padding: '6px 14px', fontSize: '13px', fontWeight: '600',
+                            cursor: searchQuery.trim() ? 'pointer' : 'not-allowed',
+                            display: 'flex', alignItems: 'center', gap: 4,
+                            whiteSpace: 'nowrap', transition: 'background-color 0.2s',
+                            height: '33px',
+                          }}
+                        >
+                          {patientIdSearchLoading ? '⏳' : '🔎'} Search
                         </button>
                       )}
                     </div>
+
+                    {/* ── All Appointments Checkbox ── */}
+                    <label
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        cursor: 'pointer', fontSize: '13px', fontWeight: '600',
+                        color: COLORS.black, userSelect: 'none',
+                        padding: '5px 10px', borderRadius: '8px',
+                        border: `1.5px solid ${showAllAppointments ? COLORS.bgcolor : `${COLORS.bgcolor}40`}`,
+                        backgroundColor: showAllAppointments ? '#EAF1FB' : COLORS.white,
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={showAllAppointments}
+                        onChange={(e) => {
+                          const checked = e.target.checked
+                          setShowAllAppointments(checked)
+                          if (!checked) {
+                            // Uncheck → clear API results, go back to normal filter mode
+                            setPatientIdResults(null)
+                            setPatientIdError('')
+                          }
+                        }}
+                        style={{ accentColor: COLORS.bgcolor, width: 15, height: 15 }}
+                      />
+                      All Appointments
+                    </label>
+
+
 
                     {/* First-Time & Follow-up */}
                     {/* <button
@@ -403,6 +518,59 @@ const Appointments = ({ searchTerm = '' }) => {
               </CCol>
             </CRow>
           </div>
+
+          {/* ── Patient ID Search Banner ── */}
+          {isPatientIdMode && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 14px',
+                marginBottom: 8,
+                borderRadius: '8px',
+                backgroundColor: patientIdError ? '#FFF3CD' : '#EAF1FB',
+                border: `1.5px solid ${patientIdError ? '#F9C571' : COLORS.bgcolor}`,
+                fontSize: '13px',
+                fontWeight: '500',
+                color: COLORS.black,
+                gap: 10,
+                flexWrap: 'wrap',
+              }}
+            >
+              <span>
+                {patientIdError
+                  ? `⚠️ ${patientIdError}`
+                  : `🪪 Showing ${filteredPatients.length} booking(s) for Patient ID: `}
+                {!patientIdError && (
+                  <strong style={{ color: COLORS.bgcolor }}>{patientIdInput}</strong>
+                )}
+              </span>
+              <button
+                onClick={handleClearPatientIdSearch}
+                style={{
+                  background: 'none',
+                  border: `1.5px solid ${COLORS.bgcolor}`,
+                  borderRadius: '6px',
+                  color: COLORS.bgcolor,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  padding: '3px 10px',
+                }}
+              >
+                ✕ Clear Search
+              </button>
+            </div>
+          )}
+
+          {/* ── Patient ID Search Loading ── */}
+          {patientIdSearchLoading && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontSize: '13px', color: COLORS.bgcolor, fontWeight: '500' }}>
+              <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
+              Searching bookings for Patient ID <strong>{patientIdInput}</strong>…
+            </div>
+          )}
 
           {/* ── Appointments Table ── */}
           <CCard
@@ -542,10 +710,10 @@ const Appointments = ({ searchTerm = '' }) => {
                           </span>
                         </CTableDataCell>
                         <CTableDataCell style={{ padding: '10px 12px' }}>
-                          {p.status?.toLowerCase() === 'drop' || 
-                           p.status?.toLowerCase() === 'cancelled' || 
-                           p.followupStatus?.toLowerCase() === 'drop' || 
-                           p.followupStatus?.toLowerCase() === 'cancelled' ? (
+                          {p.status?.toLowerCase() === 'drop' ||
+                            p.status?.toLowerCase() === 'cancelled' ||
+                            p.followupStatus?.toLowerCase() === 'drop' ||
+                            p.followupStatus?.toLowerCase() === 'cancelled' ? (
                             <span style={{ color: '#9ca3af', fontSize: '13px' }}>—</span>
                           ) : (
                             <TooltipButton patient={p} tab={p.status} />

@@ -54,6 +54,7 @@ export const reportbaseUrl = `${ipUrl}/clinic-admin`
 export const AllReports = `getallreports`
 export const SavingReports = `savereports`
 export const Get_ReportsByBookingId = `getReportByBookingId`
+export const bookingsByPatientIdUrl = `${ipUrl}/clinic-admin/bookings/byPatientId`
 
 // Physiotherapy — Prescription
 export const savePrescriptionbaseUrl = `${baseUrl}/physiotherapy-record`

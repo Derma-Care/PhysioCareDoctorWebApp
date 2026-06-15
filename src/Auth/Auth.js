@@ -31,6 +31,7 @@ import {
   bookingDetailsUrl,
   therapistUrl,
   therapyExercisesUrl,
+  bookingsByPatientIdUrl,
   programUrl,
   programAllUrl,
   therapyUrl,
@@ -655,10 +656,39 @@ export const ReportsData = async () => {
     return null
   }
 }
+export const getBookingsByPatientId = async (patientId) => {
+  try {
+    const url = `${bookingsByPatientIdUrl}/${patientId}`
+    console.log('📡 Fetching bookings by patientId URL:', url)
+    const response = await api.get(url)
+    console.log('✅ Bookings by patientId response:', response.data)
+    let data = response.data?.data
+    if (!Array.isArray(data)) {
+      if (Array.isArray(response.data)) {
+        data = response.data
+      } else if (data && typeof data === 'object') {
+        const arrayProp = Object.values(data).find(v => Array.isArray(v))
+        if (arrayProp) data = arrayProp
+      }
+    }
+    return {
+      success: true,
+      data: Array.isArray(data) ? data : [],
+      message: response.data?.message || ''
+    }
+  } catch (error) {
+    console.error('❌ Error fetching bookings by patientId:', error)
+    return {
+      success: false,
+      data: [],
+      message: error.response?.data?.message || error.message || 'Failed to fetch'
+    }
+  }
+}
 
 export const Get_ReportsByBookingIdData = async (bookingId) => {
   try {
-    const response = await api.get(`${reportbaseUrl}/${Get_ReportsByBookingId}/${bookingId}`)
+    const response = await api.get(`${reportbaseUrl}/${Get_ReportsByBookingId}/${bookingId}?t=${Date.now()}`)
     console.log(response)
     return response.data.data
   } catch (error) {

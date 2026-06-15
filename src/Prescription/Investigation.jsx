@@ -139,7 +139,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
     setSelectedTestOption(null)
   }
 
-  const buildPhysioRecordPayload = () => {
+  const buildPhysioRecordPayload = (prescriptionPdf = '') => {
     const record = formData ?? {}
     const existingRecordId = record.id || record._id || record.therapyRecordId || record.therapyrecordid || (record.therapistRecordId !== 'TR001' ? record.therapistRecordId : null)
     
@@ -242,8 +242,15 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
     // Diagnosis
     const diag = record.diagnosis || {}
     let firstDiag = {}
-    if (Array.isArray(diag.diagnosisRows) && diag.diagnosisRows.length) {
-      firstDiag = diag.diagnosisRows[0] || {}
+    if (diag.physioDiagnosis) {
+      firstDiag = diag
+    } else if (Array.isArray(diag.diagnosisRows) && diag.diagnosisRows.length) {
+      const first = diag.diagnosisRows[0] || {}
+      if (first.physioDiagnosis) {
+        firstDiag = first
+      } else {
+        firstDiag = diag
+      }
     } else {
       firstDiag = diag
     }
@@ -364,7 +371,8 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
         reviewNotes: '',
         modifications: '',
       },
-      prescriptionPdf: '',
+      prescription: record.prescription || formData?.prescription || {},
+      prescriptionPdf,
     }
   }
 

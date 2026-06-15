@@ -803,37 +803,37 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const complaintsAPI = record.complaints ?? {}   // from API response
   const symptomsInternal = record.symptoms ?? {}  // from internal formData
 
-  // Merge: API fields take priority when present; fall back to internal keys
+  // Merge: UI fields take priority when present; fall back to API keys
   const complaintDetails =
-    complaintsAPI.complaintDetails ||
     symptomsInternal.symptomDetails ||
+    complaintsAPI.complaintDetails ||
     patientData?.problem || ''
 
   const complaintDuration =
-    complaintsAPI.duration ||
     symptomsInternal.duration ||
+    complaintsAPI.duration ||
     patientData?.symptomsDuration || ''
 
   const selectedTherapy =
-    complaintsAPI.selectedTherapy ||
     symptomsInternal.selectedTherapy ||
+    complaintsAPI.selectedTherapy ||
     patientData?.subServiceName || ''
 
   const selectedTherapyID =
+    symptomsInternal.selectedTherapyID ||
     complaintsAPI.selectedTherapyId ||   // API key (no capital D)
     complaintsAPI.selectedTherapyID ||   // just in case
-    symptomsInternal.selectedTherapyID ||
     patientData?.subServiceId || ''
 
   const partImage =
-    complaintsAPI.painAssessmentImage ||
-    symptomsInternal.partImage || ''
+    symptomsInternal.partImage ||
+    complaintsAPI.painAssessmentImage || ''
 
   const reportImages = (() => {
     const apiImgs = complaintsAPI.reportImages
     const intImgs = symptomsInternal.attachmentImages
-    if (Array.isArray(apiImgs) && apiImgs.length) return apiImgs
     if (Array.isArray(intImgs) && intImgs.length) return intImgs
+    if (Array.isArray(apiImgs) && apiImgs.length) return apiImgs
     return []
   })()
 
@@ -888,44 +888,44 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
   // ─── Background patient fields ────────────────────────────────────────────
   const previousInjuries =
-    isValid(complaintsAPI.previousInjuries) ? complaintsAPI.previousInjuries :
-      isValid(symptomsInternal.previousInjuries) ? symptomsInternal.previousInjuries :
+    isValid(symptomsInternal.previousInjuries) ? symptomsInternal.previousInjuries :
+      isValid(complaintsAPI.previousInjuries) ? complaintsAPI.previousInjuries :
         isValid(record.previousInjuries) ? record.previousInjuries :
           isValid(formData?.previousInjuries) ? formData.previousInjuries :
             isValid(patientData?.previousInjuries) ? patientData.previousInjuries : ''
 
   const currentMedications =
-    complaintsAPI.currentMedications ??
     symptomsInternal.currentMedications ??
+    complaintsAPI.currentMedications ??
     record.currentMedications ??
     formData?.currentMedications ??
     patientData?.currentMedications ?? ''
 
   const allergies =
-    complaintsAPI.allergies ??
     symptomsInternal.allergies ??
+    complaintsAPI.allergies ??
     record.allergies ??
     formData?.allergies ??
     patientData?.allergies ?? ''
 
   const occupation =
-    complaintsAPI.occupation ??
     symptomsInternal.occupation ??
+    complaintsAPI.occupation ??
     record.occupation ??
     formData?.occupation ??
     patientData?.occupation ?? ''
 
   const insuranceProvider =
-    complaintsAPI.insuranceProvider ??
     symptomsInternal.insuranceProvider ??
+    complaintsAPI.insuranceProvider ??
     record.insuranceProvider ??
     formData?.insuranceProvider ??
     patientData?.insuranceProvider ?? ''
 
   const activityLevels = (() => {
     const candidates = [
-      complaintsAPI.activityLevels,
       symptomsInternal.activityLevels,
+      complaintsAPI.activityLevels,
       record.activityLevels,
       formData?.activityLevels,
     ]
@@ -1025,11 +1025,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const diagnosisObj = record.diagnosis ?? formData?.diagnosis ?? {}
 
   const diagnosisRows = (() => {
-    // 1. Internal shape: array of rows
-    if (Array.isArray(diagnosisObj.diagnosisRows) && diagnosisObj.diagnosisRows.length) {
-      return diagnosisObj.diagnosisRows
-    }
-    // 2. API shape: flat object with physioDiagnosis
+    // If the UI flat fields are set and not empty, use them
     if (isValid(diagnosisObj.physioDiagnosis)) {
       return [{
         physioDiagnosis: diagnosisObj.physioDiagnosis ?? '',
@@ -1039,6 +1035,13 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         differentialDiagnosis: diagnosisObj.differentialDiagnosis ?? '',
         notes: diagnosisObj.notes ?? '',
       }]
+    }
+    // Otherwise, check if we have a valid non-empty array of rows
+    if (Array.isArray(diagnosisObj.diagnosisRows) && diagnosisObj.diagnosisRows.length) {
+      const first = diagnosisObj.diagnosisRows[0] || {};
+      if (isValid(first.physioDiagnosis) || isValid(first.affectedArea)) {
+        return diagnosisObj.diagnosisRows;
+      }
     }
     return []
   })()
@@ -1276,9 +1279,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         modifications: followUpPayload.modifications ?? '',
       },
 
-      prescriptionPdf,
+      prescription: record.prescription ?? formData?.prescription ?? {},
+      prescriptionPdf:record.prescriptionPdf ,
     }
-  }
+  } 
 
   const doSave = async ({ downloadAfter = false } = {}) => {
     setSaving(true)
@@ -1299,7 +1303,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           const currentStatus = patientData?.status || ''
           const currentStatusNorm = currentStatus.toLowerCase().replace(/[\s_]/g, '')
           const isDueOrDone = ['dueforinvestigation', 'duetoinvestigation', 'investigationdone', 'doneforinvestigation'].includes(currentStatusNorm)
-          const nextStatus = downloadAfter ? 'Due for Investigation' : (isDueOrDone ? currentStatus : 'Completed')
+          const nextStatus = downloadAfter ? 'Due for Investigation' : (isDueOrDone ? currentStatus : 'In-progress')
           console.log(`Updating appointment status to ${nextStatus}...`, bookingId)
           await updateAppointmentBasedOnBookingId({ data: { bookingId, status: nextStatus } })
         } catch (statusErr) {
