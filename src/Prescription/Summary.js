@@ -784,7 +784,15 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
   // Top-level IDs — same in both shapes
   const bookingId = record.bookingId ?? patientData?.bookingId ?? ''
-  const clinicId = record.clinicId ?? patientData?.clinicId ?? clinicDetails?.hospitalId ?? ''
+  let clinicId = ''
+  try {
+    clinicId = localStorage.getItem(JSON.parse(localStorage.getItem('doctorData'))?.hospitalId)
+  } catch (e) {
+    console.warn('Failed to get clinicId from localStorage doctorData:', e)
+  }
+  if (!clinicId) {
+    clinicId = record.clinicId ?? patientData?.clinicId ?? clinicDetails?.hospitalId ?? localStorage.getItem('hospitalId') ?? localStorage.getItem('clinicId') ?? ''
+  }
   const branchId = record.branchId ?? patientData?.branchId ?? ''
   const clinicName = clinicDetails?.name ?? patientData?.clinicName ?? ''
   const doctorId = doctorDetails?.doctorId ?? patientData?.doctorId ?? ''
@@ -1120,6 +1128,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     const a = document.createElement('a'); a.href = url; a.download = filename
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
   }
+  console.log('Summary component initialized with record:', record, 'formData:', formData, 'patientData:', patientData)
 
   // ─── FIX: buildPayload — always sends the correct API-expected shape ──────
   const buildPayload = (prescriptionPdf = '', isPrint = false) => {
@@ -1134,8 +1143,8 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       bookingId,
       clinicId,
       branchId,
-      status: isPrint ? 'Due for Investigation' : (overallStatus || 'Completed'),
-      uptoInvestigation: isPrint || !!(record.uptoInvestigation || formData?.uptoInvestigation || patientData?.uptoInvestigation),
+      // status: isPrint ? 'Due for Investigation' : (overallStatus || 'Completed'),
+      // uptoInvestigation: isPrint || !!(record.uptoInvestigation || formData?.uptoInvestigation || patientData?.uptoInvestigation),
 
       // ── Patient Info ───────────────────────────────────────────────────
       patientInfo: {
@@ -1280,7 +1289,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       },
 
       prescription: record.prescription ?? formData?.prescription ?? {},
-      prescriptionPdf:record.prescriptionPdf ,
+      prescriptionPdf: prescriptionPdf || record.prescriptionPdf || formData?.prescriptionPdf || '',
     }
   } 
 
@@ -1297,29 +1306,45 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       const payload = buildPayload(prescriptionPdfKey, downloadAfter)
 
       const isUptoInvestigation = downloadAfter || !!(record.uptoInvestigation || formData?.uptoInvestigation || patientData?.uptoInvestigation)
+      console.log(isUptoInvestigation);
       const existingRecordId = record.id || record._id || record.therapyRecordId || record.therapyrecordid || (record.therapistRecordId !== 'TR001' ? record.therapistRecordId : null)
-      if (bookingId) {
-        try {
-          const currentStatus = patientData?.status || ''
-          const currentStatusNorm = currentStatus.toLowerCase().replace(/[\s_]/g, '')
-          const isDueOrDone = ['dueforinvestigation', 'duetoinvestigation', 'investigationdone', 'doneforinvestigation'].includes(currentStatusNorm)
-          const nextStatus = downloadAfter ? 'Due for Investigation' : (isDueOrDone ? currentStatus : 'In-progress')
-          console.log(`Updating appointment status to ${nextStatus}...`, bookingId)
-          await updateAppointmentBasedOnBookingId({ data: { bookingId, status: nextStatus } })
-        } catch (statusErr) {
-          console.error(`Failed to update appointment status to ${nextStatus}:`, statusErr)
-        }
-      }
+      // if (bookingId) {
+      //   try {
+      //     const currentStatus = patientData?.status || ''
+      //     const currentStatusNorm = currentStatus.toLowerCase().replace(/[\s_]/g, '')
+      //     const isDueOrDone = ['dueforinvestigation', 'duetoinvestigation', 'investigationdone', 'doneforinvestigation'].includes(currentStatusNorm)
+      //     const nextStatus = downloadAfter ? 'Due for Investigation' : (isDueOrDone ? currentStatus : 'In-progress')
+      //     console.log(`Updating appointment status to ${nextStatus}...`, bookingId)
+      //     await updateAppointmentBasedOnBookingId({ data: { bookingId, status: nextStatus } })
+      //   } catch (statusErr) {
+      //     console.error(`Failed to update appointment status to ${nextStatus}:`, statusErr)
+      //   }
+      // }
 
-      const shouldUpdate = !!existingRecordId
+      const shouldUpdate = !!existingRecordId&&isUptoInvestigation
 
       let resp
       if (shouldUpdate) {
         console.log('Calling Update API on Save...', payload)
-        resp = await UpdatePatientPrescription(payload)
+        const createPayload = { ...payload }
+
+       resp = await UpdatePatientPrescription(createPayload)
+       console.log(resp)
+      if (resp) {
+  try {
+    await updateAppointmentBasedOnBookingId({
+      data: { bookingId, status: 'In-progress' }
+    })
+  } catch (err) {
+    console.error('Status update failed:', err)
+  }}
+
+
+
       } else {
         console.log('Calling Create API on Save...', payload)
         const createPayload = { ...payload }
+
         delete createPayload.therapyRecordId
         delete createPayload.status
         delete createPayload.therapistRecordId

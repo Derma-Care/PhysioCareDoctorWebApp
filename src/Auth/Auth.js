@@ -656,9 +656,10 @@ export const ReportsData = async () => {
     return null
   }
 }
-export const getBookingsByPatientId = async (patientId) => {
+export const getBookingsByPatientId = async ( input) => {
+  const clinicId = JSON.parse(localStorage.getItem('clinicDetails'))?.hospitalId;
   try {
-    const url = `${bookingsByPatientIdUrl}/${patientId}`
+    const url = `${baseUrl}/searchBookings/${clinicId}/${input}`
     console.log('📡 Fetching bookings by patientId URL:', url)
     const response = await api.get(url)
     console.log('✅ Bookings by patientId response:', response.data)
