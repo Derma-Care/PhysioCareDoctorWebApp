@@ -153,7 +153,7 @@ const TabContent = ({
       break
 
     case 'HomePlan':
-      content = <HomePlan seed={formData.exercisePlan || {}} onNext={handleNext} sidebarWidth={260} patientData={patientData} />
+      content = <HomePlan seed={{ ...formData.exercisePlan, recoverySupport: formData.recoverySupport }} onNext={handleNext} sidebarWidth={260} patientData={patientData} />
       break
 
     case 'FollowUp':

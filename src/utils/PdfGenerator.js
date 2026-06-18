@@ -772,6 +772,7 @@ function resolve(props) {
     ? exercisePlan.homeExercises
     : Array.isArray(exercisePlan?.exercises) ? exercisePlan.exercises : [];
   const homeAdvice = exercisePlan?.homeAdvice ?? "";
+  const recoverySupport = exercisePlan?.recoverySupport ?? "";
 
   const followUpEntry =
     Array.isArray(followUp) ? (followUp[0] ?? {}) : typeof followUp === "object" ? followUp : {};
@@ -786,7 +787,7 @@ function resolve(props) {
     patient, complaints, investigation, background,
     assessment, diagnosisRows, treatmentPlan,
     sessionsList, overallStatus, topTherapistId, topTherapistName,
-    homeExercises, homeAdvice, followUpEntry, parts, treatmentTemplates,
+    homeExercises, homeAdvice, recoverySupport, followUpEntry, parts, treatmentTemplates,
     bookingId, clinicId, branchId,
     doctorData: props.doctorData ?? {},
     clicniData: props.clicniData ?? {},
@@ -1163,9 +1164,15 @@ const PrescriptionPDF = (props) => {
     patient, complaints, investigation, background,
     assessment, diagnosisRows, treatmentPlan,
     sessionsList, overallStatus, topTherapistId, topTherapistName,
-    homeExercises, homeAdvice, followUpEntry, parts, treatmentTemplates,
+    homeExercises, homeAdvice, recoverySupport, followUpEntry, parts, treatmentTemplates,
     bookingId, clinicId, branchId, doctorData, clicniData,
   } = resolve(props);
+
+  const recoverySupportVal = Array.isArray(recoverySupport) ? recoverySupport.filter(Boolean) : recoverySupport;
+  const hasRecoverySupport = Array.isArray(recoverySupportVal) ? recoverySupportVal.length > 0 : hv(recoverySupportVal);
+  const recoverySupportStr = Array.isArray(recoverySupportVal)
+    ? recoverySupportVal.map(x => typeof x === 'string' ? x : (x.name || x.recoverySupportName || '')).filter(Boolean).join(", ")
+    : (typeof recoverySupportVal === 'string' ? recoverySupportVal : (recoverySupportVal?.name || recoverySupportVal?.recoverySupportName || ''));
 
   const today = new Date().toLocaleDateString("en-IN", {
     day: "2-digit", month: "long", year: "numeric",
@@ -1619,7 +1626,7 @@ const PrescriptionPDF = (props) => {
           )}
 
           {/* ── 10 · HOME EXERCISE PLAN ── */}
-          {(homeExercises.length > 0 || hv(homeAdvice)) && (
+          {(homeExercises.length > 0 || hv(homeAdvice) || hasRecoverySupport) && (
             <SectionBlockWrap num="10" title="Home Exercise Plan"
               badge={homeExercises.length > 0 ? `${homeExercises.length} exercise(s)` : null}
             >
@@ -1651,6 +1658,12 @@ const PrescriptionPDF = (props) => {
                 <View style={[S.cardAccent, S.cNavy, { marginTop: homeExercises.length > 0 ? 6 : 0 }]} wrap={false}>
                   <Text style={S.lbl}>Home Advice & Instructions</Text>
                   <Text style={[S.val, { lineHeight: 1.7, marginTop: 3 }]}>{homeAdvice}</Text>
+                </View>
+              )}
+              {hasRecoverySupport && (
+                <View style={[S.cardAccent, S.cNavy, { marginTop: (homeExercises.length > 0 || hv(homeAdvice)) ? 6 : 0 }]} wrap={false}>
+                  <Text style={S.lbl}>Recovery Support</Text>
+                  <Text style={[S.val, { lineHeight: 1.7, marginTop: 3 }]}>{recoverySupportStr}</Text>
                 </View>
               )}
             </SectionBlockWrap>

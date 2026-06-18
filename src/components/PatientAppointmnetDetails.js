@@ -310,20 +310,33 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       if (!data || typeof data !== 'object') { goToNext('HomePlan'); return }
       const rawExercises = Array.isArray(data.exercisePlan?.exercises) ? data.exercisePlan.exercises : []
       const patch = {
+        recoverySupport: (data.recoverySupport || []).map(item => ({
+          id: item.id || item.recoverySupportId || '',
+          recoverySupportId: item.recoverySupportId || item.id || '',
+          recoverySupportName: item.name || item.recoverySupportName || '',
+          name: item.name || item.recoverySupportName || '',
+          category: item.category || item.recoverySupportCategory || item.categoryName || '',
+          description: item.description || item.recoverySupportDescription || '',
+        })),
         exercisePlan: {
           homeAdvice: data.exercisePlan?.homeAdvice ?? data.homeAdvice ?? '',
           exercises: rawExercises,
-          homeExercises: rawExercises.map(ex => ({
-            therapyExercisesId: ex.therapyExercisesId ?? ex._id ?? '',
-            name: ex.name ?? '',
-            sets: String(ex.sets ?? ''),
-            reps: String(ex.reps ?? ''),
-            frequency: ex.frequency ?? '',
-            instructions: ex.instructions ?? '',
-            videoUrl: ex.videoUrl ?? '',
-            sessions: ex.sessions,
-            thumbnail: ex.thumbnail ?? '',
-          })),
+          homeExercises: rawExercises.map(ex => {
+            const exId = ex.therapyExercisesId ?? ex.exerciseId ?? ex.id ?? ex._id ?? ''
+            return {
+              id: exId,
+              therapyExercisesId: exId,
+              exerciseId: exId,
+              name: ex.name ?? '',
+              sets: String(ex.sets ?? ''),
+              reps: String(ex.reps ?? ''),
+              frequency: ex.frequency ?? '',
+              instructions: ex.instructions ?? '',
+              videoUrl: ex.videoUrl ?? '',
+              sessions: ex.sessions,
+              thumbnail: ex.thumbnail ?? '',
+            }
+          }),
         },
       }
       mergeAndLog('HomePlan', patch)
@@ -404,22 +417,33 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
           stage: formData.diagnosis?.stage || '',
           notes: formData.diagnosis?.notes || '',
         },
-
+        recoverySupport: (formData.recoverySupport || formData.exercisePlan?.recoverySupport || []).map(item => ({
+          id: item.id || item.recoverySupportId || '',
+          recoverySupportId: item.recoverySupportId || item.id || '',
+          recoverySupportName: item.name || item.recoverySupportName || '',
+          name: item.name || item.recoverySupportName || '',
+          category: item.category || item.recoverySupportCategory || item.categoryName || '',
+          description: item.description || item.recoverySupportDescription || '',
+        })),
         // ── Exercise Plan ──────────────────────────────────────────────────
         exercisePlan: {
           homeAdvice: formData.exercisePlan?.homeAdvice || '',
-          homeExercises: (formData.exercisePlan?.exercises || formData.exercisePlan?.homeExercises || []).map(ex => ({
-            id: ex.therapyExercisesId || ex.id || '',
-            therapyExercisesId: ex.therapyExercisesId || ex.id || '',
-            name: ex.name ?? ex.exerciseName ?? '',
-            sets: String(ex.sets ?? ''),
-            reps: String(ex.reps ?? ex.repetitions ?? ''),
-            duration: ex.activityDuration || ex.activityduration || ex.duration || '',
-            frequency: ex.frequency ?? null,
-            instructions: ex.instructions ?? ex.notes ?? '',
-            videoUrl: ex.videoUrl ?? ex.youtubeUrl ?? '',
-            session: ex.sessions || ex.session || '',
-          })),
+          homeExercises: (formData.exercisePlan?.exercises || formData.exercisePlan?.homeExercises || []).map(ex => {
+            const exId = ex.therapyExercisesId || ex.id || ex.exerciseId || ''
+            return {
+              id: exId,
+              therapyExercisesId: exId,
+              exerciseId: exId,
+              name: ex.name ?? ex.exerciseName ?? '',
+              sets: String(ex.sets ?? ''),
+              reps: String(ex.reps ?? ex.repetitions ?? ''),
+              duration: ex.activityDuration || ex.activityduration || ex.duration || '',
+              frequency: ex.frequency ?? null,
+              instructions: ex.instructions ?? ex.notes ?? '',
+              videoUrl: ex.videoUrl ?? ex.youtubeUrl ?? '',
+              session: ex.sessions || ex.session || '',
+            }
+          }),
         },
 
         // ── Follow Up ──────────────────────────────────────────────────────

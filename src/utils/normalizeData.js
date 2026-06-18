@@ -156,8 +156,11 @@ export const normalizeSavedData = (saved) => {
 
   // 5. Exercise Plan
   const ep = saved.exercisePlan || {}
+  const rawSupport = saved.recoverySupport || ep.recoverySupport || []
+  const recoverySupportNormalized = Array.isArray(rawSupport) ? rawSupport : (rawSupport ? [rawSupport] : [])
   const exercisePlan = {
     homeAdvice: ep.homeAdvice || '',
+    recoverySupport: recoverySupportNormalized,
     exercises: Array.isArray(ep.homeExercises) ? ep.homeExercises : (Array.isArray(ep.exercises) ? ep.exercises : []),
   }
 
@@ -183,6 +186,7 @@ export const normalizeSavedData = (saved) => {
     diagnosis,
     therapySessions,
     exercisePlan,
+    recoverySupport: recoverySupportNormalized,
     investigation,
     followUp: Array.isArray(saved.followUp) ? saved.followUp : (saved.followUp ? [saved.followUp] : []),
     history: saved.history || {},

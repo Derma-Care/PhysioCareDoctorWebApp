@@ -156,6 +156,7 @@ const CompletedAppointmentsView = ({ defaultTab, tabs, fromDoctorTemplate = fals
         therapySessions: formData.therapySessions || {},
         followUp: formData.followUp || [],
         exercisePlan: formData.exercisePlan || {},
+        recoverySupport: formData.recoverySupport || formData.exercisePlan?.recoverySupport || [],
       }
 
       const res = await SavePatientPrescription(template)

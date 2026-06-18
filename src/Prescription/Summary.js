@@ -1091,6 +1091,12 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
     return []
   })()
   const homeAdvice = formData?.exercisePlan?.homeAdvice ?? exercisePlanObj.homeAdvice ?? ''
+  const recoverySupportRaw = formData?.recoverySupport ?? formData?.exercisePlan?.recoverySupport ?? record.recoverySupport ?? exercisePlanObj.recoverySupport ?? ''
+  const recoverySupportVal = Array.isArray(recoverySupportRaw) ? recoverySupportRaw.filter(Boolean) : recoverySupportRaw
+  const hasRecoverySupport = Array.isArray(recoverySupportVal) ? recoverySupportVal.length > 0 : isValid(recoverySupportVal)
+  const recoverySupportStr = Array.isArray(recoverySupportVal)
+    ? recoverySupportVal.map(x => typeof x === 'string' ? x : (x.name || x.recoverySupportName || '')).filter(Boolean).join(', ')
+    : (typeof recoverySupportVal === 'string' ? recoverySupportVal : (recoverySupportVal?.name || recoverySupportVal?.recoverySupportName || ''))
 
   // ─── Follow Up ────────────────────────────────────────────────────────────
   // API shape  : record.followUp → { nextVisitDate, reviewNotes, modifications }
@@ -1260,25 +1266,35 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
 
       // ── Therapy Sessions ───────────────────────────────────────────────
       therapySessions: sessionsList,
+      recoverySupport: (Array.isArray(recoverySupportRaw) ? recoverySupportRaw : []).map(item => ({
+        id: item.id || item.recoverySupportId || '',
+        recoverySupportId: item.recoverySupportId || item.id || '',
+        recoverySupportName: item.name || item.recoverySupportName || '',
+        name: item.name || item.recoverySupportName || '',
+        category: item.category || item.recoverySupportCategory || item.categoryName || '',
+        description: item.description || item.recoverySupportDescription || '',
+      })),
+
 
       // ── Exercise Plan ──────────────────────────────────────────────────
       exercisePlan: {
         homeAdvice,
-        homeExercises: homeExercises.map(ex => ({
-          id: ex.therapyExercisesId || ex.id || '',
-          therapyExercisesId: ex.therapyExercisesId || ex.id || '',
-          name: ex.name ?? ex.exerciseName ?? '',
-          sets: String(ex.sets ?? ''),
-          reps: String(ex.reps ?? ex.repetitions ?? ''),
-          duration: ex.activityDuration || ex.activityduration || ex.duration || '',
-          // activityDuration: ex.activityDuration || ex.activityduration || ex.duration || '',
-          frequency: ex.frequency ?? null,
-          instructions: ex.instructions ?? ex.notes ?? '',
-          videoUrl: ex.videoUrl ?? ex.youtubeUrl ?? '',
-          // thumbnail: ex.thumbnail ?? '',
-          // sessions: ex.sessions || ex.session || '',
-          session: ex.sessions || ex.session || '',
-        })),
+        homeExercises: homeExercises.map(ex => {
+          const exId = ex.therapyExercisesId || ex.id || ex.exerciseId || ''
+          return {
+            id: exId,
+            therapyExercisesId: exId,
+            exerciseId: exId,
+            name: ex.name ?? ex.exerciseName ?? '',
+            sets: String(ex.sets ?? ''),
+            reps: String(ex.reps ?? ex.repetitions ?? ''),
+            duration: ex.activityDuration || ex.activityduration || ex.duration || '',
+            frequency: ex.frequency ?? null,
+            instructions: ex.instructions ?? ex.notes ?? '',
+            videoUrl: ex.videoUrl ?? ex.youtubeUrl ?? '',
+            session: ex.sessions || ex.session || '',
+          }
+        }),
       },
 
       // ── Follow Up ──────────────────────────────────────────────────────
@@ -1742,10 +1758,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
         </Section>
 
         {/* 10. Exercise Plan */}
-        {(homeExercises.length > 0 || isValid(homeAdvice)) && (
+        {(homeExercises.length > 0 || isValid(homeAdvice) || hasRecoverySupport) && (
           <Section icon="🏋️" title="Exercise Plan">
             {homeExercises.length > 0 && (
-              <div style={{ overflowX: 'auto', marginBottom: isValid(homeAdvice) ? 12 : 0 }}>
+              <div style={{ overflowX: 'auto', marginBottom: (isValid(homeAdvice) || hasRecoverySupport) ? 12 : 0 }}>
                 <table style={tableStyle}>
                   <thead><tr>{['#', 'Exercise', 'Sets', 'Reps', 'Sessions', 'Act. Duration', 'Frequency', 'Instructions'].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
                   <tbody>
@@ -1766,6 +1782,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               </div>
             )}
             {isValid(homeAdvice) && <Row label="Home Advice" value={homeAdvice} full highlight />}
+            {hasRecoverySupport && <Row label="Recovery Support" value={recoverySupportStr} full highlight />}
           </Section>
         )}
 
@@ -1816,7 +1833,13 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       {/* ── Sticky Bottom Bar ── */}
       <div style={{ position: 'fixed', bottom: 0, left: sidebarWidth ? `${sidebarWidth}px` : 0, width: sidebarWidth ? `calc(100vw - ${sidebarWidth}px)` : '100vw', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '8px 24px', zIndex: 999, boxShadow: '0 -2px 10px rgba(27,79,138,0.12)', borderTop: '2px solid #1B4F8A' }}>
         <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
-          onClick={() => { setClickedSaveTemplate(true); onSaveTemplate?.(); info('Template saved!', { title: 'Template' }) }}>
+          onClick={async () => {
+            setClickedSaveTemplate(true);
+            const ok = await onSaveTemplate?.();
+            if (ok !== false) {
+              navigate('/dashboard', { replace: true });
+            }
+          }}>
           {!updateTemplate ? '💾 Save as Template' : '🔄 Update Template'}
         </Button>
         {saving && <CSpinner size="sm" style={{ color: '#1B4F8A' }} />}
@@ -1824,10 +1847,10 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
           onClick={() => { setPendingAction(ACTIONS.SAVE); clickedSaveTemplate ? doSave() : setShowTemplateModal(true) }} disabled={saving}>
           ✅ Save
         </Button>
-        <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
+        {/* <Button customColor="#1B4F8A" color="#FFFFFF" style={{ borderRadius: '20px', fontWeight: 700, padding: '5px 20px', fontSize: 12, boxShadow: '0 2px 8px rgba(27,79,138,0.30)', border: '1.5px solid #1B4F8A' }}
           onClick={() => { setPendingAction(ACTIONS.SAVE_PRINT); clickedSaveTemplate ? doSave({ downloadAfter: true }) : setShowTemplateModal(true) }} disabled={saving}>
           📄 Save & Download PDF
-        </Button>
+        </Button> */}
       </div>
 
       {/* ── Template modal ── */}

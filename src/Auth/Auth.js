@@ -298,6 +298,21 @@ export const getTemplatesByClinic = async () => {
   }
 }
 
+export const getAllRecoverySupportsByClinicId = async () => {
+  const clinicId = localStorage.getItem('hospitalId') || localStorage.getItem('clinicId')
+  if (!clinicId) return []
+  try {
+    const response = await api.get(
+      `${baseUrl}/getAllRecoverySupportsByClinicId/${clinicId}`
+    )
+    const result = response?.data
+    return result?.success ? (Array.isArray(result.data) ? result.data : []) : []
+  } catch (error) {
+    console.error('❌ Error fetching recovery supports by clinic ID:', error)
+    return []
+  }
+}
+
 export const getDoctorSaveDetails = async (disease) => {
   console.log(disease)
   const hospitalId = localStorage.getItem('hospitalId')

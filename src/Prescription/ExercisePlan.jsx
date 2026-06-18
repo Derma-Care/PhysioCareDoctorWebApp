@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import Button from '../components/CustomButton/CustomButton'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
-import { getTherapyExercises, getTodayAppointments } from '../Auth/Auth'
+import { getTherapyExercises, getTodayAppointments, getAllRecoverySupportsByClinicId } from '../Auth/Auth'
+import Select from 'react-select'
+
 
 /* ─── Empty exercise entry ───────────────────────────────────────────────── */
 const EMPTY_EXERCISE = {
+  id: '', therapyExercisesId: '', exerciseId: '',
   name: '', sets: '', reps: '', sessions: '', frequencyValue: '', frequencyUnit: 'day',
   instructions: '', videoUrl: '', thumbnail: '', activityDuration: '',
 }
@@ -15,6 +18,8 @@ const FREQ_UNITS = [
   { label: 'per week',  value: 'week' },
   { label: 'per month', value: 'month' },
 ]
+
+
 
 /* ─── Validation helpers ─────────────────────────────────────────────────── */
 // Only allow letters, numbers, spaces, hyphens, apostrophes, parentheses
@@ -326,8 +331,12 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
     if (!Array.isArray(arr)) return []
     return arr.map(ex => {
       const match = String(ex.frequency || '').match(/^(\d+)\s*(day|week|month)?/i)
+      const exId = ex.therapyExercisesId || ex.exerciseId || ex.id || ex._id || ''
       return {
         ...ex,
+        id: exId,
+        therapyExercisesId: exId,
+        exerciseId: exId,
         sessions: ex.sessions || ex.session || '',
         activityDuration: ex.activityDuration || ex.duration || '',
         frequencyValue: ex.frequencyValue !== undefined ? ex.frequencyValue : (match ? match[1] : ''),
@@ -338,6 +347,24 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
 
   const [exercises, setExercises] = useState(normaliseSeedExercises(seed.exercises))
   const [homeAdvice, setHomeAdvice] = useState(seed.homeAdvice ?? '')
+  const [recoverySupport, setRecoverySupport] = useState(() => {
+    const raw = Array.isArray(seed.recoverySupport)
+      ? seed.recoverySupport
+      : (seed.recoverySupport ? [seed.recoverySupport] : [])
+    return raw.map(item => {
+      if (typeof item === 'string') {
+        return { id: '', recoverySupportId: '', name: item, category: '', description: '' }
+      }
+      return {
+        id: item.recoverySupportId || item.id || item._id || '',
+        recoverySupportId: item.recoverySupportId || item.id || item._id || '',
+        name: item.name || item.recoverySupportName || '',
+        category: item.category || item.recoverySupportCategory || item.categoryName || '',
+        description: item.description || item.recoverySupportDescription || ''
+      }
+    }).filter(item => item.name)
+  })
+  const [supportOptions, setSupportOptions] = useState([])
   const [form, setForm] = useState({ ...EMPTY_EXERCISE })
   const [editingIdx, setEditingIdx] = useState(null)
   const [fieldErrors, setFieldErrors] = useState({})
@@ -386,7 +413,56 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
   useEffect(() => {
     setExercises(normaliseSeedExercises(seed.exercises))
     setHomeAdvice(seed.homeAdvice ?? '')
+    setRecoverySupport(
+      (Array.isArray(seed.recoverySupport)
+        ? seed.recoverySupport
+        : (seed.recoverySupport ? [seed.recoverySupport] : [])
+      ).map(item => {
+        if (typeof item === 'string') {
+          return { id: '', recoverySupportId: '', name: item, category: '', description: '' }
+        }
+        return {
+          id: item.recoverySupportId || item.id || item._id || '',
+          name: item.name  || '',
+          category: item.category || item.recoverySupportCategory || item.categoryName || '',
+          description: item.description || item.recoverySupportDescription || ''
+        }
+      }).filter(item => item.name)
+    )
   }, [seed])
+
+  useEffect(() => {
+    const fetchSupports = async () => {
+      try {
+        const res = await getAllRecoverySupportsByClinicId()
+        const list = (Array.isArray(res) ? res : []).map(item => {
+          if (typeof item === 'string') {
+            return { id: '', recoverySupportId: '', name: item, category: '', description: '' }
+          }
+          return {
+            id: item.recoverySupportId || item.id || item._id || '',
+            name:  item.name || '',
+            category: item.category ||item.categoryName || '',
+            description: item.description || item.recoverySupportDescription || ''
+          }
+        }).filter(item => item.name)
+        setSupportOptions(list)
+      } catch (err) {
+        console.error('❌ Error fetching recovery supports:', err)
+      }
+    }
+    fetchSupports()
+  }, [])
+
+  const handleRecoverySupportChange = (selectedOptions) => {
+    const vals = selectedOptions ? selectedOptions.map(opt => {
+      const found = supportOptions.find(o => o.name === opt.value)
+      return found || { id: '', recoverySupportId: '', name: opt.value, category: '', description: '' }
+    }) : []
+    setRecoverySupport(vals)
+  }
+
+
 
   const set = field => val => {
     setFieldErrors(prev => ({ ...prev, [field]: '' }))
@@ -436,8 +512,11 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
         const fv = ex.frequency ? String(ex.frequency).match(/^(\d+)/)?.[1] || '' : ''
         const fu = ex.frequency ? (String(ex.frequency).match(/day|week|month/i)?.[0]?.toLowerCase() || 'day') : 'day'
         const freqStr = fv ? `${fv} ${fu}${Number(fv) > 1 ? 's' : ''}` : ''
+        const exId = ex.therapyExercisesId || ex.exerciseId || ex.id || ex._id || ''
         return {
-          therapyExercisesId: ex.therapyExercisesId,
+          id: exId,
+          therapyExercisesId: exId,
+          exerciseId: exId,
           name: ex.name || '',
           sets: ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : '',
           reps: ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : '',
@@ -510,14 +589,28 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
   const handleNext = () => {
     const payload = {
       exercisePlan: {
-        exercises: exercises.map(ex => ({
-          ...ex,
-          frequency: ex.frequencyValue
-            ? `${ex.frequencyValue} ${ex.frequencyUnit}${Number(ex.frequencyValue) > 1 ? 's' : ''}`
-            : ex.frequency || '',
-        })),
+        exercises: exercises.map(ex => {
+          const exId = ex.therapyExercisesId || ex.exerciseId || ex.id || ex._id || ''
+          return {
+            ...ex,
+            id: exId,
+            therapyExercisesId: exId,
+            exerciseId: exId,
+            frequency: ex.frequencyValue
+              ? `${ex.frequencyValue} ${ex.frequencyUnit}${Number(ex.frequencyValue) > 1 ? 's' : ''}`
+              : ex.frequency || '',
+          }
+        }),
         homeAdvice,
       },
+      recoverySupport: recoverySupport.map(item => ({
+        id: item.id || item.recoverySupportId || '',
+        recoverySupportId: item.recoverySupportId || item.id || '',
+        recoverySupportName: item.name || item.recoverySupportName || '',
+        name: item.name || item.recoverySupportName || '',
+        category: item.category || item.recoverySupportCategory || item.categoryName || '',
+        description: item.description || item.recoverySupportDescription || '',
+      })),
     }
     console.log('handleNext payload:', payload)
     onNext?.(payload)
@@ -545,6 +638,125 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
       )}
 
       <CContainer fluid className="p-1">
+
+        {/* ══ RECOVERY SUPPORT CARD ══════════════════════════════════════ */}
+        <CCard className="mb-4" style={cardStyle}>
+          <CCardBody style={{ padding: '24px 32px' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              marginBottom: 16, borderBottom: '2px solid #dceeff', paddingBottom: 12,
+            }}>
+              <div style={{
+                width: 34, height: 34, borderRadius: 8,
+                background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 17, boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+              }}>🛡️</div>
+              <h5 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '1.05rem' }}>Recovery Support</h5>
+            </div>
+            <div>
+              <div style={{ marginBottom: 8 }}>
+                <label style={{ ...labelStyle, textTransform: 'none', letterSpacing: 'normal', fontSize: '0.85rem' }}>
+                  Select one or more supportive devices (e.g. Knee Cap, Lumbar Belt):
+                </label>
+              </div>
+              <Select
+                isMulti
+                options={supportOptions.map(item => ({ label: item.name, value: item.name }))}
+                value={recoverySupport.map(val => ({ label: val.name, value: val.name }))}
+                onChange={handleRecoverySupportChange}
+                placeholder="Search and select recovery support..."
+                isClearable
+                isSearchable
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    border: state.isFocused ? '1.5px solid #1B4F8A' : '1.5px solid #b6cfe8',
+                    borderRadius: 7,
+                    backgroundColor: '#FFFFFF',
+                    fontSize: '0.875rem',
+                    color: '#1a3a5c',
+                    minHeight: 38,
+                    boxShadow: 'none',
+                    transition: 'border-color 0.18s ease',
+                    '&:hover': { borderColor: '#1B4F8A' },
+                  }),
+                  valueContainer: (base) => ({ ...base, padding: '4px 8px' }),
+                  placeholder: (base) => ({ ...base, color: '#8aaac8', fontSize: '0.875rem' }),
+                  indicatorSeparator: () => ({ display: 'none' }),
+                  dropdownIndicator: (base) => ({ ...base, padding: '0 6px', color: '#8aaac8' }),
+                  menu: (base) => ({
+                    ...base, borderRadius: 8,
+                    border: '1px solid #b6cfe8',
+                    boxShadow: '0 4px 16px rgba(27,79,138,0.12)',
+                    zIndex: 1000,
+                  }),
+                  option: (base, state) => ({
+                    ...base, fontSize: '0.875rem', color: '#1a3a5c',
+                    backgroundColor: state.isFocused ? '#dceeff' : '#fff',
+                    cursor: 'pointer',
+                    ':active': {
+                      backgroundColor: '#1B4F8A',
+                      color: '#ffffff'
+                    }
+                  }),
+                  multiValue: (base) => ({
+                    ...base,
+                    backgroundColor: '#dceeff',
+                    borderRadius: 4,
+                    color: '#1B4F8A',
+                  }),
+                  multiValueLabel: (base) => ({
+                    ...base,
+                    color: '#1B4F8A',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                  }),
+                  multiValueRemove: (base) => ({
+                    ...base,
+                    color: '#1B4F8A',
+                    ':hover': {
+                      backgroundColor: '#1B4F8A',
+                      color: 'white',
+                      borderRadius: 4,
+                    },
+                  }),
+                }}
+              />
+              {recoverySupport.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#1B4F8A', marginBottom: 8, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    Selected Device Details
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {recoverySupport.map((item, idx) => {
+                      const name = item.name
+                      const cat = item.category
+                      const desc = item.description
+                      return (
+                        <div key={idx} style={{ padding: '12px 16px', borderRadius: 8, border: '1.5px solid #dceeff', backgroundColor: '#fcfdfe' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1B4F8A' }}>{name}</span>
+                            {cat && (
+                              <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: '#dceeff', color: '#1B4F8A', padding: '2px 8px', borderRadius: 12 }}>
+                                {cat}
+                              </span>
+                            )}
+                          </div>
+                          {desc && (
+                            <div style={{ fontSize: '0.8rem', color: '#4a6b82', marginTop: 6, fontStyle: 'italic' }}>
+                              {desc}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CCardBody>
+        </CCard>
 
         {/* ══ FORM CARD ══════════════════════════════════════════════════ */}
         <CCard className="mb-4" style={cardStyle}>
@@ -744,9 +956,12 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                             <div
                               key={i}
                               onMouseDown={() => {
+                                const normExId = exId || ex.exerciseId || ex.id || ex._id || ''
                                 setForm(f => ({
                                   ...f,
-                                  therapyExercisesId: exId,
+                                  id: normExId,
+                                  therapyExercisesId: normExId,
+                                  exerciseId: normExId,
                                   name: exName,
                                   sets: exSets || f.sets,
                                   reps: exReps || f.reps,

@@ -326,8 +326,34 @@ const DoctorSummary = ({
         treatments: formData?.treatments,
         followUp: formData.followUp,
         prescription: formData.prescription,
-        subServiceId: patientData?.subServiceId
-        // visitType: patientData?.visitType || "OFFLINE",
+        subServiceId: patientData?.subServiceId,
+        recoverySupport: (formData.recoverySupport || formData.exercisePlan?.recoverySupport || []).map(item => ({
+          id: item.id || item.recoverySupportId || '',
+          recoverySupportId: item.recoverySupportId || item.id || '',
+          recoverySupportName: item.name || item.recoverySupportName || '',
+          name: item.name || item.recoverySupportName || '',
+          category: item.category || item.recoverySupportCategory || item.categoryName || '',
+          description: item.description || item.recoverySupportDescription || '',
+        })),
+        exercisePlan: formData.exercisePlan ? {
+          homeAdvice: formData.exercisePlan.homeAdvice || '',
+          homeExercises: (formData.exercisePlan.exercises || formData.exercisePlan.homeExercises || []).map(ex => {
+            const exId = ex.therapyExercisesId || ex.id || ex.exerciseId || ''
+            return {
+              id: exId,
+              therapyExercisesId: exId,
+              exerciseId: exId,
+              name: ex.name ?? ex.exerciseName ?? '',
+              sets: String(ex.sets ?? ''),
+              reps: String(ex.reps ?? ex.repetitions ?? ''),
+              duration: ex.activityDuration || ex.activityduration || ex.duration || '',
+              frequency: ex.frequency ?? null,
+              instructions: ex.instructions ?? ex.notes ?? '',
+              videoUrl: ex.videoUrl ?? ex.youtubeUrl ?? '',
+              session: ex.sessions || ex.session || '',
+            }
+          }),
+        } : undefined,
       }
       console.log(payload)
       const response = await createDoctorSaveDetails(payload)
@@ -364,8 +390,34 @@ const DoctorSummary = ({
       treatments: formData?.treatments,
       followUp: formData.followUp,
       prescription: formData.prescription,
-      subServiceId: patientData?.subServiceId
-
+      subServiceId: patientData?.subServiceId,
+      recoverySupport: (formData.recoverySupport || formData.exercisePlan?.recoverySupport || []).map(item => ({
+        id: item.id || item.recoverySupportId || '',
+        recoverySupportId: item.recoverySupportId || item.id || '',
+        recoverySupportName: item.name || item.recoverySupportName || '',
+        name: item.name || item.recoverySupportName || '',
+        category: item.category || item.recoverySupportCategory || item.categoryName || '',
+        description: item.description || item.recoverySupportDescription || '',
+      })),
+      exercisePlan: formData.exercisePlan ? {
+        homeAdvice: formData.exercisePlan.homeAdvice || '',
+        homeExercises: (formData.exercisePlan.exercises || formData.exercisePlan.homeExercises || []).map(ex => {
+          const exId = ex.therapyExercisesId || ex.id || ex.exerciseId || ''
+          return {
+            id: exId,
+            therapyExercisesId: exId,
+            exerciseId: exId,
+            name: ex.name ?? ex.exerciseName ?? '',
+            sets: String(ex.sets ?? ''),
+            reps: String(ex.reps ?? ex.repetitions ?? ''),
+            duration: ex.activityDuration || ex.activityduration || ex.duration || '',
+            frequency: ex.frequency ?? null,
+            instructions: ex.instructions ?? ex.notes ?? '',
+            videoUrl: ex.videoUrl ?? ex.youtubeUrl ?? '',
+            session: ex.sessions || ex.session || '',
+          }
+        }),
+      } : undefined,
     }
     console.log(payload)
     const response = await createDoctorSaveDetails(payload)
@@ -384,7 +436,7 @@ const DoctorSummary = ({
 
     // Then navigate to the desired screen if save succeeded (did not return false)
     if (saved !== false) {
-      navigate('/Dashboard') // <-- replace with your route
+      navigate('/dashboard') // <-- replace with your route
     }
   }
   return (
