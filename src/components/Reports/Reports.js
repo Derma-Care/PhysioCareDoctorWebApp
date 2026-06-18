@@ -14,13 +14,25 @@ const ReportDetails = ({ patientData, formData, show, label = 'Reports' }) => {
   const [error, setError] = useState('')
 
   // ---- helpers ----
-  const isPdfFromBase64 = (base64, name = '', type = '') => {
+  const isPdfFromBase64 = (val, name = '', type = '') => {
     const n = (name || '').toLowerCase()
     const t = (type || '').toLowerCase()
     if (n.endsWith('.pdf') || t.includes('pdf')) return true
-    if (!base64) return false
-    return (base64 || '').trim().slice(0, 8).toUpperCase().startsWith('JVBER')
+    if (!val) return false
+    const s = String(val).trim()
+    if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/')) {
+      try {
+        const urlPath = s.startsWith('/') ? s : new URL(s).pathname
+        if (urlPath.toLowerCase().endsWith('.pdf')) return true
+      } catch (e) {}
+      return false
+    }
+    if (s.startsWith('data:')) {
+      return s.includes('application/pdf')
+    }
+    return s.slice(0, 8).toUpperCase().startsWith('JVBER')
   }
+
   const mimeFromBase64 = (base64) => {
     if (!base64) return 'application/octet-stream'
     const head = (base64 || '').trim().slice(0, 8).toUpperCase()
@@ -33,6 +45,10 @@ const ReportDetails = ({ patientData, formData, show, label = 'Reports' }) => {
   // Open in a NEW TAB using Blob -> ObjectURL (prevents SPA navigating to data:)
   const openInNewTab = (dataUrl) => {
     if (!dataUrl) return
+    if (dataUrl.startsWith('http://') || dataUrl.startsWith('https://')) {
+      window.open(dataUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
     try {
       const [header, b64] = dataUrl.split(',')
       const mimeFromHeader = header?.split(':')[1]?.split(';')[0] || ''
@@ -57,6 +73,58 @@ const ReportDetails = ({ patientData, formData, show, label = 'Reports' }) => {
     }
   }
 
+  const downloadFile = async (e, fileUrl, fileName) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!fileUrl) return
+
+    try {
+      if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+        const response = await fetch(fileUrl)
+        const blob = await response.blob()
+        const objectUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = objectUrl
+        a.download = fileName
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1500)
+      } else if (fileUrl.startsWith('data:')) {
+        const [header, b64] = fileUrl.split(',')
+        const mime = header.split(':')[1].split(';')[0]
+        const binary = atob(b64)
+        const bytes = new Uint8Array(binary.length)
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+        const blob = new Blob([bytes], { type: mime })
+        const objectUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = objectUrl
+        a.download = fileName
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1500)
+      } else {
+        const a = document.createElement('a')
+        a.href = fileUrl
+        a.download = fileName
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+      }
+    } catch (err) {
+      console.error('Download failed:', err)
+      const a = document.createElement('a')
+      a.href = fileUrl
+      a.target = '_blank'
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    }
+  }
+
   // ---- load data ----
   useEffect(() => {
     const load = async () => {
@@ -69,17 +137,64 @@ const ReportDetails = ({ patientData, formData, show, label = 'Reports' }) => {
       setError('')
       try {
         const res = await Get_ReportsByBookingIdData(bookingId)
-        const raw = Array.isArray(res) ? res : []
-        const reports = raw.flatMap((r) => r?.reportsList || [])
+        const raw = res ? (Array.isArray(res) ? res : [res]) : []
+        
+        let reports = []
+        if (raw.some(item => item && (item.reportFile || item.reportName))) {
+          reports = raw
+        } else {
+          reports = raw.flatMap((r) => r?.reportsList || [])
+        }
 
         const mapped = reports
           .map((r, idx) => {
-            const b64 = Array.isArray(r.reportFile) ? r.reportFile[0] : r.reportFile
+            let b64 = Array.isArray(r.reportFile) ? r.reportFile[0] : r.reportFile
             if (!b64) return null
+            b64 = String(b64).trim()
+
+            const isUrl = b64.startsWith('http://') || b64.startsWith('https://')
+            const isRelativeUrl = b64.startsWith('/')
+            const isDataUri = b64.startsWith('data:')
+
+            let fileUrl = ''
+            if (isUrl) {
+              fileUrl = b64
+            } else if (isRelativeUrl) {
+              fileUrl = `https://api.ccmstestserver.online${b64}`
+            } else if (isDataUri) {
+              fileUrl = b64
+            } else {
+              // Plain base64
+              const isPdf = isPdfFromBase64(b64, r?.reportName, r?.reportType)
+              const mime = isPdf ? 'application/pdf' : mimeFromBase64(b64)
+              fileUrl = `data:${mime};base64,${b64}`
+            }
+
             const isPdf = isPdfFromBase64(b64, r?.reportName, r?.reportType)
             const mime = isPdf ? 'application/pdf' : mimeFromBase64(b64)
-            const ext = isPdf ? 'pdf' : mime.includes('image/') ? mime.split('/')[1] : 'dat'
-            const fileUrl = `data:${mime};base64,${(b64 || '').trim()}`
+
+            // Determine extension
+            let ext = 'dat'
+            if (isPdf) {
+              ext = 'pdf'
+            } else if (isUrl || isRelativeUrl) {
+              try {
+                const urlObj = new URL(fileUrl)
+                const parts = urlObj.pathname.split('.')
+                if (parts.length > 1) {
+                  ext = parts.pop().toLowerCase()
+                }
+              } catch (e) {}
+            } else if (isDataUri) {
+              const match = b64.match(/^data:([^;]+);base64,/)
+              if (match && match[1]) {
+                const m = match[1]
+                ext = m.includes('image/') ? m.split('/')[1] : m.split('/')[0] || 'dat'
+              }
+            } else {
+              ext = mime.includes('image/') ? mime.split('/')[1] : 'dat'
+            }
+
             const name = r?.reportName || `Report ${idx + 1}`
             const fileName = `${name}.${ext}`
 
@@ -150,19 +265,14 @@ const ReportDetails = ({ patientData, formData, show, label = 'Reports' }) => {
                   <FaEye />
                 </div>
 
-                <a
+                <button
                   className="report-dl btn btn-sm btn-primary"
-                  href={it.fileUrl}
-                  download={it.fileName || it.name}
                   title="Download"
-                  onClick={(e) => {
-                    // keep download from also opening preview
-                    e.stopPropagation()
-                  }}
-                  onKeyDown={(e) => e.stopPropagation()}
+                  onClick={(e) => downloadFile(e, it.fileUrl, it.fileName)}
+                  style={{ border: 'none' }}
                 >
                   <FaDownload />
-                </a>
+                </button>
               </div>
             ))}
           </div>

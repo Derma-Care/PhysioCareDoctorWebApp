@@ -256,7 +256,7 @@ export const SavePrescriptionTemplate = async (templateData) => {
       throw new Error('Expected a single object, but received an array.')
     }
     const response = await axios.post(
-      `${savePrescriptionbaseUrl}/createTemplate`,
+      `${baseUrl}/physiotherapy-record-template/create`,
       templateData,
     )
     const result = response?.data
@@ -269,10 +269,13 @@ export const SavePrescriptionTemplate = async (templateData) => {
 }
 
 export const getTemplateById = async (templateId) => {
+  const clinicId = localStorage.getItem('hospitalId')
+  console.log('📡 [Auth API] getTemplateById called. clinicId:', clinicId, '| templateId:', templateId)
+  const requestUrl = `${baseUrl}/physiotherapy-record-template/template/${clinicId}/${templateId}`
+  console.log('📡 [Auth API] getTemplateById requesting URL:', requestUrl)
   try {
-    const response = await api.get(
-      `${savePrescriptionbaseUrl}/getTemplateById/${templateId}`
-    )
+    const response = await api.get(requestUrl)
+    console.log('📡 [Auth API] getTemplateById Response Status:', response.status, '| Data:', response.data)
     const result = response?.data
     return result?.success ? result.data : result
   } catch (error) {
@@ -285,7 +288,7 @@ export const getTemplatesByClinic = async () => {
   const clinicId = localStorage.getItem('hospitalId')
   try {
     const response = await api.get(
-      `${savePrescriptionbaseUrl}/getPrescriptionsByClinicId/${clinicId}`
+      `${baseUrl}/physiotherapy-record-template/template/list/${clinicId}`
     )
     const result = response?.data
     return result?.success ? result.data : result

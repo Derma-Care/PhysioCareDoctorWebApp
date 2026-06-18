@@ -87,7 +87,8 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
   /* ── Fetch in-progress ── */
   useEffect(() => {
-    const isFollowUp = patient?.visitType?.toLowerCase() === 'followup' || patient?.visitType?.toLowerCase() === 'follow_up'
+    const visitType = patient?.visitType || patientData?.visitType || ''
+    const isFollowUp = visitType.toLowerCase().replace(/[\s_-]+/g, '') === 'followup'
     if (state?.fromTab === 'In-Progress' && patient && !details && !isFollowUp) {
       ; (async () => {
         try {
@@ -130,12 +131,16 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
     if (currentStatus === 'completed') {
       list = ['History', 'Reports']
     } else if (currentStatus === 'confirmed') {
-      // status confirmed means history reports has to be disabled
-      list = list.filter(t => t !== 'History' && t !== 'Reports')
+      // status confirmed means history reports has to be disabled EXCEPT for follow-ups
+      const visitType = patient?.visitType || patientData?.visitType || ''
+      const isFollowUp = visitType.toLowerCase().replace(/[\s_-]+/g, '') === 'followup'
+      if (!isFollowUp) {
+        list = list.filter(t => t !== 'History' && t !== 'Reports')
+      }
     }
 
     return list
-  }, [ALL_TABS, fromDoctorTemplate, formData?.symptoms?.complaints, patientData?.status, patient?.status])
+  }, [ALL_TABS, fromDoctorTemplate, formData?.symptoms?.complaints, patientData?.status, patient?.status, patient?.visitType, patientData?.visitType])
 
   const [activeTab, setActiveTab] = useState(defaultTab || TABS[0])
 
@@ -383,11 +388,12 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       const branchId = localStorage.getItem('branchId') || ''
       const doctorId = localStorage.getItem('doctorId') || ''
 
+      const followUpRaw = formData.followUp
+      const followUpPayload = Array.isArray(followUpRaw) ? (followUpRaw[0] ?? {}) : (followUpRaw ?? {})
+
       const template = {
         clinicId,
         branchId,
-        title: physioDiagnosis,
-        status: 'template',
         
         // ── Diagnosis ──────────────────────────────────────────────────────
         diagnosis: {
@@ -418,33 +424,46 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
 
         // ── Follow Up ──────────────────────────────────────────────────────
         followUp: {
-          nextVisitDate: formData.followUp?.nextVisitDate ?? '',
-          reviewNotes: formData.followUp?.reviewNotes ?? '',
-          modifications: formData.followUp?.modifications ?? '',
+          nextVisitDate: followUpPayload.nextVisitDate ?? '',
+          reviewNotes: followUpPayload.reviewNotes ?? '',
+          modifications: followUpPayload.modifications ?? '',
         },
 
         // ── Investigation ──────────────────────────────────────────────────
         investigation: {
-          tests: formData.investigation?.tests || [],
-          reason: formData.investigation?.reason || '',
+          tests: Array.isArray(formData.investigation?.tests)
+            ? formData.investigation.tests
+            : Array.isArray(formData.investigation?.selectedTests)
+              ? formData.investigation.selectedTests
+              : [],
+          reason: formData.investigation?.reason || formData.investigation?.notes || '',
         },
 
-        // ── Prescription PDF URL ───────────────────────────────────────────
-        prescriptionPdf: formData.prescriptionPdf || '',
-
         // ── Therapy Sessions ───────────────────────────────────────────────
-        therapySessions: formData.therapySessions || [],
+        therapySessions: Array.isArray(formData.therapySessions)
+          ? formData.therapySessions
+          : Array.isArray(formData.therapySessions?.sessions)
+            ? formData.therapySessions.sessions
+            : [],
 
         // ── Treatment Plan ─────────────────────────────────────────────────
         treatmentPlan: {
           doctorId,
-          doctorName: formData.treatmentPlan?.doctorName || '',
-          therapistId: formData.treatmentPlan?.therapistId || '',
-          therapistName: formData.treatmentPlan?.therapistName || '',
-          manualTherapy: formData.treatmentPlan?.manualTherapy || '',
-          modalitiesUsed: formData.treatmentPlan?.modalitiesUsed || [],
-          patientResponse: formData.treatmentPlan?.patientResponse || '',
-          precautions: formData.treatmentPlan?.precautions || [],
+          doctorName: formData.treatmentPlan?.doctorName || formData.therapySessions?.doctorName || '',
+          therapistId: formData.treatmentPlan?.therapistId || formData.therapySessions?.therapistId || '',
+          therapistName: formData.treatmentPlan?.therapistName || formData.therapySessions?.therapistName || '',
+          manualTherapy: formData.treatmentPlan?.manualTherapy || formData.therapySessions?.manualTherapy || '',
+          modalitiesUsed: Array.isArray(formData.treatmentPlan?.modalitiesUsed)
+            ? formData.treatmentPlan.modalitiesUsed
+            : Array.isArray(formData.therapySessions?.modalitiesUsed)
+              ? formData.therapySessions.modalitiesUsed
+              : [],
+          patientResponse: formData.treatmentPlan?.patientResponse || formData.therapySessions?.patientResponse || '',
+          precautions: Array.isArray(formData.treatmentPlan?.precautions)
+            ? formData.treatmentPlan.precautions
+            : Array.isArray(formData.therapySessions?.precautions)
+              ? formData.therapySessions.precautions
+              : [],
         }
       }
 

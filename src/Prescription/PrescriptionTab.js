@@ -5,6 +5,7 @@ import { CCard, CCardBody } from '@coreui/react'
 import { useToast } from '../utils/Toaster'
 import { getTemplatesByClinic, getTemplateById } from '../Auth/Auth'
 import Select from 'react-select'
+import { normalizeSavedData } from '../utils/normalizeData'
 
 /* ─── Diagnosis static options ─────────────────────────────────────────── */
 const SEVERITY_OPTIONS = [
@@ -153,10 +154,10 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
       const data = await getTemplatesByClinic()
       if (data && Array.isArray(data)) {
         const options = data.map(t => {
-          const tId = t.id || t._id || t.therapistRecordId || 'N/A'
-          const name = t.title || t.diagnosis?.physioDiagnosis || 'Unnamed Template'
+          const tId = t.templateRecordId || t.id || t._id || t.therapistRecordId || 'N/A'
+          const name = t.physioDiagnosis || t.title || t.diagnosis?.physioDiagnosis || 'Unnamed Template'
           return {
-            label: `${name} (ID: ${tId})`,
+            label: name,
             value: tId,
             data: t
           }
@@ -175,34 +176,63 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
   }, [])
 
   const handleTemplateSelect = async (selected) => {
-    if (!selected) return
-    const tId = selected.value
+    console.log('🔍 [PrescriptionTab] handleTemplateSelect triggered. Selected option:', selected)
+    if (!selected) {
+      console.log('🔍 [PrescriptionTab] No template selected (cleared)')
+      return
+    }
+
+    const searchStr = String(selected.value || selected.label || '').trim().toLowerCase()
+    
+    // Search templateOptions to find the matching templateRecordId
+    const match = templateOptions.find(opt => {
+      const val = String(opt.value || '').toLowerCase()
+      const lab = String(opt.label || '').toLowerCase()
+      const diagName = String(opt.data?.physioDiagnosis || '').toLowerCase()
+      return val === searchStr || lab === searchStr || diagName === searchStr
+    })
+
+    const tId = match ? match.value : selected.value
+    console.log('🔍 [PrescriptionTab] Resolved template ID:', tId, 'from searchStr:', searchStr)
+
+    if (!tId || tId === 'N/A') {
+      console.warn('🔍 [PrescriptionTab] No valid template ID resolved.')
+      return
+    }
+
     try {
+      console.log('🔍 [PrescriptionTab] Calling getTemplateById with ID:', tId)
       const details = await getTemplateById(tId)
+      console.log('🔍 [PrescriptionTab] getTemplateById response details:', details)
       if (details) {
+        const normalized = normalizeSavedData(details)
+        console.log('🔍 [PrescriptionTab] Normalized template details:', normalized)
+
         // Auto-populate local state
-        setPhysioDiagnosis(details.diagnosis?.physioDiagnosis ?? '')
-        setAffectedArea(details.diagnosis?.affectedArea ?? '')
-        setSeverity(details.diagnosis?.severity ?? '')
-        setStage(details.diagnosis?.stage ?? '')
-        setDifferentialDiagnosis(details.differentialDiagnosis ?? details.diagnosis?.differentialDiagnosis ?? '')
-        setDiagNotes(details.notes ?? details.diagnosis?.notes ?? '')
+        setPhysioDiagnosis(normalized.diagnosis?.physioDiagnosis ?? '')
+        setAffectedArea(normalized.diagnosis?.affectedArea ?? '')
+        setSeverity(normalized.diagnosis?.severity ?? '')
+        setStage(normalized.diagnosis?.stage ?? '')
+        setDifferentialDiagnosis(normalized.diagnosis?.differentialDiagnosis ?? '')
+        setDiagNotes(normalized.diagnosis?.notes ?? '')
 
         // Update parent formData state
         if (setFormData) {
           setFormData(prev => ({
             ...prev,
-            diagnosis: details.diagnosis || {},
-            exercisePlan: details.exercisePlan || {},
-            followUp: details.followUp || {},
-            investigation: details.investigation || {},
-            prescription: details.prescription || {},
-            therapySessions: details.therapySessions || {},
-            treatmentPlan: details.treatmentPlan || {},
-            prescriptionPdf: details.prescriptionPdf || '',
+            diagnosis: normalized.diagnosis || {},
+            exercisePlan: normalized.exercisePlan || {},
+            followUp: normalized.followUp || {},
+            investigation: normalized.investigation || {},
+            prescription: normalized.prescription || {},
+            therapySessions: normalized.therapySessions || {},
+            treatmentPlan: normalized.treatmentPlan || {},
+            prescriptionPdf: normalized.prescriptionPdf || '',
           }))
         }
         success('Template applied successfully!', { title: 'Applied' })
+      } else {
+        console.warn('🔍 [PrescriptionTab] No details returned from getTemplateById')
       }
     } catch (err) {
       console.error('❌ Error applying template:', err)
@@ -246,7 +276,7 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
     >
 
       {/* ── TEMPLATE SEARCH CARD ────────────────────────────────────────── */}
-      {/* <CCard
+      <CCard
         className="mb-4"
         style={{
           border: '1.5px solid #b6cfe8',
@@ -254,9 +284,9 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
           backgroundColor: '#FFFFFF',
           boxShadow: '0 4px 24px rgba(27,79,138,0.10)',
         }}
-      > */}
-        {/* <CCardBody> */}
-          {/* <div style={{
+      >
+        <CCardBody>
+          <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             marginBottom: 16,
             borderBottom: '2px solid #dceeff',
@@ -268,21 +298,21 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 17,
               boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
-            }}>🔍</div> */}
-            {/* <h5 style={{
+            }}>🔍</div>
+            <h5 style={{
               margin: 0,
               color: '#1B4F8A',
               fontWeight: 700,
               fontSize: '1.05rem',
-            }}>Quick Template Search</h5> */}
-          {/* </div> */}
-          {/* <div>
-            <label style={diagLabelStyle}>Search Template by Name or ID</label>
+            }}>Quick Template Search</h5>
+          </div>
+          <div>
+            <label style={diagLabelStyle}>Search Template by Name</label>
             <Select
               options={templateOptions}
               isLoading={loadingTemplates}
               onChange={handleTemplateSelect}
-              placeholder="Search and select a template to auto-populate fields..."
+              placeholder="Search and select a template by name..."
               isClearable
               styles={{
                 control: (provided) => ({
@@ -296,9 +326,9 @@ const PrescriptionTab = ({ seed = {}, onNext, formData = {}, setFormData }) => {
                 }),
               }}
             />
-          </div> */}
-        {/* </CCardBody> */}
-      {/* </CCard> */}
+          </div>
+        </CCardBody>
+      </CCard>
 
       {/* ── DIAGNOSIS SECTION ─────────────────────────────────────────────── */}
       <CCard
