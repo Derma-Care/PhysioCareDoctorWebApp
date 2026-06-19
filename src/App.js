@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useState } from 'react'
-import { HashRouter, Route, Routes, Navigate } from 'react-router-dom'
+import { HashRouter, Route, Routes, Navigate, BrowserRouter } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
@@ -216,7 +216,7 @@ const App = () => {
           </div>
         </div>
       )}
-      <HashRouter>
+      <BrowserRouter>
         <ToastContainer position="top-right" autoClose={3500} />
         <Suspense fallback={<LogoLoader />}>
           <div style={{ minHeight: '100vh', backgroundColor: COLORS.theme, padding: 20 }}>
@@ -235,7 +235,7 @@ const App = () => {
             </Routes>
           </div>
         </Suspense>
-      </HashRouter>
+      </BrowserRouter>
       {/* <PWAInstallPrompt /> */}
     </>
   )

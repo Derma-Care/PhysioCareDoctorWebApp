@@ -126,7 +126,10 @@ export default function DoctorHelpCenter() {
   )
 
   const logoSrc = resolveLogoSrc(clinicDetails.hospitalLogo || clinicDetails.logo)
-
+  const hasValue = (value) =>
+    value !== null &&
+    value !== undefined &&
+    String(value).trim() !== "";
   const d = {
     clinicName: clinicDetails.name || "Clinic",
     logo: logoSrc,
@@ -149,10 +152,21 @@ export default function DoctorHelpCenter() {
       address: "Jubilee Hills",
     },
     social: {
-      Facebook: clinicDetails.facebookHandle || clinicDetails.facebook || "",
-      Instagram: clinicDetails.instagramHandle || clinicDetails.instagram || "",
-      YouTube: clinicDetails.twitterHandle || "",
-      Website: clinicDetails.website || "",
+      ...(hasValue(clinicDetails.facebookHandle) || hasValue(clinicDetails.facebook)
+        ? { Facebook: clinicDetails.facebookHandle || clinicDetails.facebook }
+        : {}),
+
+      ...(hasValue(clinicDetails.instagramHandle) || hasValue(clinicDetails.instagram)
+        ? { Instagram: clinicDetails.instagramHandle || clinicDetails.instagram }
+        : {}),
+
+      ...(hasValue(clinicDetails.twitterHandle)
+        ? { Twitter: clinicDetails.twitterHandle }
+        : {}),
+
+      ...(hasValue(clinicDetails.website)
+        ? { Website: clinicDetails.website }
+        : {}),
     },
     branches: clinicDetails.branches || [],
   }
@@ -198,67 +212,67 @@ export default function DoctorHelpCenter() {
     <div style={{ padding: "1.25rem", maxWidth: 900, margin: "0 auto", background: C.surface, borderRadius: 16 }}>
 
       {/* ── Hero ── */}
-   <div style={{ background: `linear-gradient(135deg, #1B4F8A 0%, #2A6DB5 100%)`, borderRadius: 14, padding: "16px 20px", marginBottom: 20, boxShadow: '0 4px 20px rgba(27,79,138,0.2)' }}>
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-    
-    {/* Left: Logo + Info */}
-    <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-      {d.logo ? (
-        <img src={d.logo} alt="Clinic Logo"
-          style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", border: `2px solid ${C.orange}`, background: C.white, flexShrink: 0 }}
-          onError={(e) => { e.target.style.display = "none" }}
-        />
-      ) : (
-        <div style={{ width: 52, height: 52, borderRadius: "50%", background: C.orange, border: `2px solid ${C.orange}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: C.navy, flexShrink: 0 }}>
-          {d.clinicName.charAt(0)}
+      <div style={{ background: `linear-gradient(135deg, #1B4F8A 0%, #2A6DB5 100%)`, borderRadius: 14, padding: "16px 20px", marginBottom: 20, boxShadow: '0 4px 20px rgba(27,79,138,0.2)' }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+
+          {/* Left: Logo + Info */}
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            {d.logo ? (
+              <img src={d.logo} alt="Clinic Logo"
+                style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", border: `2px solid ${C.orange}`, background: C.white, flexShrink: 0 }}
+                onError={(e) => { e.target.style.display = "none" }}
+              />
+            ) : (
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: C.orange, border: `2px solid ${C.orange}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: C.navy, flexShrink: 0 }}>
+                {d.clinicName.charAt(0)}
+              </div>
+            )}
+
+            <div>
+              {/* Clinic Name */}
+              <div style={{ color: C.white, fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>{d.clinicName}</div>
+
+              {/* Doctor Name — strip leading "Dr." to avoid "Dr. Dr." */}
+              {d.doctorName && (
+                <div style={{ color: C.orange, fontSize: 12, marginTop: 2, fontWeight: 600 }}>
+                  Dr. {d.doctorName.replace(/^Dr\.?\s*/i, '')}
+                </div>
+              )}
+
+              {/* Location */}
+              {(d.branch || d.city) && (
+                <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}>
+                  <MapPinIcon size={11} color="rgba(255,255,255,0.6)" />
+                  {[d.branch, d.city].filter(Boolean).join(", ")}
+                </div>
+              )}
+
+              {/* Service tags */}
+              {d.services.length > 0 && (
+                <div style={{ marginTop: 6, display: "flex", gap: 5, flexWrap: "wrap" }}>
+                  {d.services.slice(0, 3).map((s) => (
+                    <span key={s} style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.85)", fontSize: 10, padding: "2px 8px", borderRadius: 20, border: '1px solid rgba(255,255,255,0.15)' }}>{s}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Support badge + Hours */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+            <div style={{ background: C.orange, color: C.navy, fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20 }}>
+              24 / 7 Support
+            </div>
+            {d.hours && (
+              <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}>
+                <ClockIcon size={11} color="rgba(255,255,255,0.6)" />
+                {d.hours}
+              </div>
+            )}
+          </div>
+
         </div>
-      )}
-
-      <div>
-        {/* Clinic Name */}
-        <div style={{ color: C.white, fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>{d.clinicName}</div>
-
-        {/* Doctor Name — strip leading "Dr." to avoid "Dr. Dr." */}
-        {d.doctorName && (
-          <div style={{ color: C.orange, fontSize: 12, marginTop: 2, fontWeight: 600 }}>
-            Dr. {d.doctorName.replace(/^Dr\.?\s*/i, '')}
-          </div>
-        )}
-
-        {/* Location */}
-        {(d.branch || d.city) && (
-          <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}>
-            <MapPinIcon size={11} color="rgba(255,255,255,0.6)" />
-            {[d.branch, d.city].filter(Boolean).join(", ")}
-          </div>
-        )}
-
-        {/* Service tags */}
-        {d.services.length > 0 && (
-          <div style={{ marginTop: 6, display: "flex", gap: 5, flexWrap: "wrap" }}>
-            {d.services.slice(0, 3).map((s) => (
-              <span key={s} style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.85)", fontSize: 10, padding: "2px 8px", borderRadius: 20, border: '1px solid rgba(255,255,255,0.15)' }}>{s}</span>
-            ))}
-          </div>
-        )}
       </div>
-    </div>
-
-    {/* Right: Support badge + Hours */}
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-      <div style={{ background: C.orange, color: C.navy, fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20 }}>
-        24 / 7 Support
-      </div>
-      {d.hours && (
-        <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}>
-          <ClockIcon size={11} color="rgba(255,255,255,0.6)" />
-          {d.hours}
-        </div>
-      )}
-    </div>
-
-  </div>
-</div>
 
       {/* ── Contact Cards ── */}
       <SectionLabel>Quick contact</SectionLabel>

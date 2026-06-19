@@ -114,8 +114,8 @@ const AppSidebar = () => {
       ? 0
       : patientData?.visitType ?? '—',
     bookingFor: patientData?.bookingFor || '_',
-    visitCount: patientData?.visitCount === null ? 0 : patientData?.visitCount ?? '—',
-    followUp: patientData?.freeFollowUpsLeft || '—',
+    visitCount: patientData?.freeFollowUpsLeft === null ? 0 : patientData?.freeFollowUpsLeft ?? '—',
+    followUp: patientData?.freeFollowUps || '—',
     symptom: patientData?.problem || '—',
     patientId: patientData?.patientId || '—',
     clinicName: patientData?.clinicName || '—',
@@ -148,7 +148,7 @@ const AppSidebar = () => {
   if (typeof rawImg === 'string' && (rawImg === 'null' || rawImg === 'undefined' || rawImg.trim() === '')) {
     rawImg = null;
   }
-  
+
   if (rawImg && rawImg.includes('amazonaws.com/data%3Aimage')) {
     try {
       const decoded = decodeURIComponent(rawImg);
@@ -256,10 +256,10 @@ const AppSidebar = () => {
                     <strong>Visit Type:</strong> <span>{capitalizeFirst(display.visitType)}</span>
                   </h6>
                   <h6 style={{ color: COLORS.white, fontSize: SIZES.small, marginBottom: "6px" }}>
-                    <strong>Visit Count:</strong> <span>{display.visitCount === '—' ? 0 : display.visitCount}</span>
+                    <strong>Free FollowUp Left:</strong> <span>{display.visitCount === '—' ? 0 : display.visitCount}</span>
                   </h6>
                   <h6 style={{ color: COLORS.white, fontSize: SIZES.small, marginBottom: "6px" }}>
-                    <strong>FollowUp Count:</strong> <span>{display.followUp === '—' ? 0 : display.followUp}</span>
+                    <strong>FollowUp:</strong> <span>{display.followUp === '—' ? 0 : display.followUp}</span>
                   </h6>
                 </div>
                 <hr className="w-100 my-2" style={{ borderColor: 'rgba(255,255,255,0.2)' }} />
@@ -405,9 +405,9 @@ const AppSidebar = () => {
               </div>
             </div>
             <div className="info-grid">
-              <div><strong>Age/Gender:</strong> {display.age} / {display.gender}</div>
+              <div><strong>Age/Gender:</strong> {display.age} Yrs / {display.gender}</div>
               <div><strong>Mobile:</strong> {display.mobile}</div>
-              <div><strong>Booking For:</strong> {capitalizeFirst(display.bookingFor)}</div>
+              {/* <div><strong>Booking For:</strong> {capitalizeFirst(display.bookingFor)}</div> */}
               <div><strong>Visit Type:</strong> {capitalizeFirst(display.visitType)}</div>
               <div><strong>Visit Count:</strong> {display.visitCount === '—' ? 0 : display.visitCount}</div>
               <div><strong>FollowUps:</strong> {display.followUp === '—' ? 0 : display.followUp}</div>
@@ -415,7 +415,7 @@ const AppSidebar = () => {
           </div>
 
           {/* --- CLINIC / DOCTOR --- */}
-          <div className="info-card">
+          {/* <div className="info-card">
             <div className="info-block">
               <h5>Clinic Details</h5>
               <p><strong>{display.clinicName}</strong> ({display.clinicId})</p>
@@ -425,16 +425,16 @@ const AppSidebar = () => {
               <h5>Doctor</h5>
               <p><strong>{display.doctorName}</strong> ({display.doctorId})</p>
             </div>
-          </div>
+          </div> */}
 
           {/* --- DURATION & PROBLEM --- */}
           <div className="info-card">
             <div className="info-grid-2">
               <div>
-                <h5>Duration</h5>
+                <h5>Consultation Fee</h5>
                 <p>
-                  Consultation Expiration:{" "}
-                  {display?.consultationExpiration || "—"}
+
+                  {display?.consultationFee || "—"}
                 </p>
               </div>
               <div>
@@ -452,7 +452,7 @@ const AppSidebar = () => {
                 <p>Date: {display.serviceDate}</p>
                 <p>Time: {display.serviceTime}</p>
               </div>
-              <div>
+              {/* <div>
                 <h5>Sub-Service</h5>
                 {display?.subServiceId ? (
                   <>
@@ -462,16 +462,16 @@ const AppSidebar = () => {
                 ) : (
                   <p>—</p>
                 )}
-              </div>
+              </div> */}
             </div>
           </div>
 
           {/* --- FEES --- */}
-          <div className="info-card">
+          {/* <div className="info-card">
             <h5>Fees</h5>
             <p>Consultation Fee: {fmt(display.consultationFee)}</p>
             <p>Total Fee: {fmt(display.totalFee)}</p>
-          </div>
+          </div> */}
 
           {/* --- VITALS --- */}
           <div className="info-card">
