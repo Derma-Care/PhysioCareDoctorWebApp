@@ -179,6 +179,23 @@ const DoctorSummary = ({
     note: formData.followUp.followUpNote || 'NA',
   }
 
+  const recoverySupportRaw = formData?.recoverySupport || formData?.exercisePlan?.recoverySupport || []
+  const recoverySupportVal = Array.isArray(recoverySupportRaw) ? recoverySupportRaw.filter(Boolean) : (recoverySupportRaw ? [recoverySupportRaw] : [])
+  const recoverySupportList = recoverySupportVal.map(item => {
+    if (typeof item === 'string') return { name: item, category: '', description: '' }
+    return {
+      name: item.name || item.recoverySupportName || '',
+      category: item.category || item.recoverySupportCategory || item.categoryName || '',
+      description: item.description || item.recoverySupportDescription || '',
+    }
+  }).filter(x => x.name)
+  const hasRecoverySupport = recoverySupportList.length > 0
+
+  const homeExercises = formData.exercisePlan?.exercises || formData.exercisePlan?.homeExercises || []
+  const homeAdvice = formData.exercisePlan?.homeAdvice || ''
+  const hasExercisePlan = homeExercises.length > 0 || (homeAdvice && homeAdvice.trim() !== '') || hasRecoverySupport
+
+
   const ACTIONS = { SAVE: 'save', SAVE_PRINT: 'savePrint' }
   const freqLabel = (f) =>
     f === 'day' ? 'Daily' : f === 'week' ? 'Weekly' : f === 'month' ? 'Monthly' : f || '—'
@@ -447,7 +464,8 @@ const DoctorSummary = ({
           treatments.length > 0 ||
           (treatmentSchedules && Object.keys(treatmentSchedules).length > 0) ||
           medicines.length > 0 ||
-          followUp.durationValue !== 'NA' ? (
+          followUp.durationValue !== 'NA' ||
+          hasExercisePlan ? (
           <>
 
             {/* Diagnosis Table */}
@@ -608,6 +626,68 @@ const DoctorSummary = ({
             )}
 
 
+
+            {/* Exercise Plan */}
+            {hasExercisePlan && (
+              <CCard className="shadow-sm mb-3">
+                <CCardHeader className="py-2">
+                  <strong style={{ color: COLORS.black }}>Exercise Plan</strong>
+                </CCardHeader>
+                <CCardBody>
+                  {homeExercises.length > 0 && (
+                    <div className="table-responsive mb-3">
+                      <CTable striped hover responsive className="align-middle">
+                        <CTableHead>
+                          <CTableRow className="bg-primary text-white">
+                            <CTableHeaderCell>S.No</CTableHeaderCell>
+                            <CTableHeaderCell>Exercise</CTableHeaderCell>
+                            <CTableHeaderCell>Sets</CTableHeaderCell>
+                            <CTableHeaderCell>Reps</CTableHeaderCell>
+                            <CTableHeaderCell>Sessions</CTableHeaderCell>
+                            <CTableHeaderCell>Duration</CTableHeaderCell>
+                            <CTableHeaderCell>Frequency</CTableHeaderCell>
+                            <CTableHeaderCell>Instructions</CTableHeaderCell>
+                          </CTableRow>
+                        </CTableHead>
+                        <CTableBody>
+                          {homeExercises.map((ex, index) => (
+                            <CTableRow key={index}>
+                              <CTableDataCell>{index + 1}</CTableDataCell>
+                              <CTableDataCell><strong>{ex.name || '—'}</strong></CTableDataCell>
+                              <CTableDataCell>{ex.sets ? `🔁 ${ex.sets}` : '—'}</CTableDataCell>
+                              <CTableDataCell>{(ex.reps || ex.repetitions) ? `🔄 ${ex.reps || ex.repetitions}` : '—'}</CTableDataCell>
+                              <CTableDataCell>{(ex.sessions || ex.session) ? `🗓 ${ex.sessions || ex.session}` : '—'}</CTableDataCell>
+                              <CTableDataCell>{(ex.activityDuration || ex.duration) ? `⏱ ${ex.activityDuration || ex.duration}` : '—'}</CTableDataCell>
+                              <CTableDataCell>{ex.frequency ? `📆 ${ex.frequency}` : '—'}</CTableDataCell>
+                              <CTableDataCell>{ex.instructions || ex.notes || '—'}</CTableDataCell>
+                            </CTableRow>
+                          ))}
+                        </CTableBody>
+                      </CTable>
+                    </div>
+                  )}
+                  {homeAdvice && homeAdvice.trim() !== '' && (
+                    <div className="mb-2">
+                      <span className="fw-semibold" style={{ color: COLORS.black }}>Home Advice:</span>{' '}
+                      <span style={{ whiteSpace: 'pre-wrap' }}>{homeAdvice}</span>
+                    </div>
+                  )}
+                  {hasRecoverySupport && (
+                    <div className="mb-2">
+                      <span className="fw-semibold" style={{ color: COLORS.black }}>Recovery Support:</span>
+                      <div className="mt-1" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {recoverySupportList.map((item, idx) => (
+                          <div key={idx} style={{ padding: '6px 10px', border: '1px solid #dee2e6', borderRadius: 6, backgroundColor: '#f8f9fa' }}>
+                            <strong style={{ color: COLORS.black }}>{item.name}</strong> {item.category ? `(${item.category})` : ''}
+                            {item.description && <div className="text-muted small mt-1">{item.description}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CCardBody>
+              </CCard>
+            )}
 
             {/* TherapySessions Plan */}
             {followUp.durationValue !== 'NA' && (

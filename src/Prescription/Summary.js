@@ -1092,11 +1092,16 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   })()
   const homeAdvice = formData?.exercisePlan?.homeAdvice ?? exercisePlanObj.homeAdvice ?? ''
   const recoverySupportRaw = formData?.recoverySupport ?? formData?.exercisePlan?.recoverySupport ?? record.recoverySupport ?? exercisePlanObj.recoverySupport ?? ''
-  const recoverySupportVal = Array.isArray(recoverySupportRaw) ? recoverySupportRaw.filter(Boolean) : recoverySupportRaw
-  const hasRecoverySupport = Array.isArray(recoverySupportVal) ? recoverySupportVal.length > 0 : isValid(recoverySupportVal)
-  const recoverySupportStr = Array.isArray(recoverySupportVal)
-    ? recoverySupportVal.map(x => typeof x === 'string' ? x : (x.name || x.recoverySupportName || '')).filter(Boolean).join(', ')
-    : (typeof recoverySupportVal === 'string' ? recoverySupportVal : (recoverySupportVal?.name || recoverySupportVal?.recoverySupportName || ''))
+  const recoverySupportVal = Array.isArray(recoverySupportRaw) ? recoverySupportRaw.filter(Boolean) : (recoverySupportRaw ? [recoverySupportRaw] : [])
+  const recoverySupportList = recoverySupportVal.map(item => {
+    if (typeof item === 'string') return { name: item, category: '', description: '' }
+    return {
+      name: item.name || item.recoverySupportName || '',
+      category: item.category || item.recoverySupportCategory || item.categoryName || '',
+      description: item.description || item.recoverySupportDescription || '',
+    }
+  }).filter(x => x.name)
+  const hasRecoverySupport = recoverySupportList.length > 0
 
   // ─── Follow Up ────────────────────────────────────────────────────────────
   // API shape  : record.followUp → { nextVisitDate, reviewNotes, modifications }
@@ -1782,7 +1787,19 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
               </div>
             )}
             {isValid(homeAdvice) && <Row label="Home Advice" value={homeAdvice} full highlight />}
-            {hasRecoverySupport && <Row label="Recovery Support" value={recoverySupportStr} full highlight />}
+            {hasRecoverySupport && (
+              <div style={{ marginTop: 10 }}>
+                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#1B4F8A', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Recovery Support</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {recoverySupportList.map((item, idx) => (
+                    <div key={idx} style={{ padding: '8px 12px', border: '1.5px solid #c2d8f0', borderRadius: 8, backgroundColor: '#F0F6FF' }}>
+                      <strong style={{ color: '#1B4F8A', fontSize: '0.85rem' }}>{item.name}</strong> {item.category ? <span style={{ color: '#4a6fa5', fontSize: '0.75rem' }}>({item.category})</span> : ''}
+                      {item.description && <div style={{ color: '#4a6fa5', fontSize: '0.75rem', marginTop: 4, fontStyle: 'italic' }}>{item.description}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </Section>
         )}
 

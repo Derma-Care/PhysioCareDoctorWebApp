@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { FaDownload, FaFilePdf, FaFileImage, FaEye } from 'react-icons/fa'
 import { Get_ReportsByBookingIdData } from '../../Auth/Auth'
 import './ReportDetails.css'
+import { ipUrl } from '../../Auth/BaseUrl'
 
-const ReportDetails = ({ patientData, formData, show, label = 'Reports' }) => {
+const ReportDetails = ({ patientData, formData, show, label = 'Reports', onLoaded }) => {
   const bookingId = useMemo(
     () => patientData?.bookingId || formData?.bookingId || '',
     [patientData, formData],
@@ -160,7 +161,7 @@ const ReportDetails = ({ patientData, formData, show, label = 'Reports' }) => {
             if (isUrl) {
               fileUrl = b64
             } else if (isRelativeUrl) {
-              fileUrl = `https://api.ccmstestserver.online${b64}`
+              fileUrl = `${ipUrl}${b64}`
             } else if (isDataUri) {
               fileUrl = b64
             } else {
@@ -211,10 +212,12 @@ const ReportDetails = ({ patientData, formData, show, label = 'Reports' }) => {
           .filter(Boolean)
 
         setItems(mapped)
+        onLoaded?.(mapped)
       } catch (e) {
         console.error(e)
         setError('Failed to load reports.')
         setItems([])
+        onLoaded?.([])
       } finally {
         setLoading(false)
       }
@@ -279,7 +282,7 @@ const ReportDetails = ({ patientData, formData, show, label = 'Reports' }) => {
         ) : (
           <div
             className="d-flex align-items-center justify-content-center"
-            style={{ minHeight: '60vh' }}
+            style={{ padding: '24px', color: '#7a9ec2', fontStyle: 'italic' }}
           >
             <span>No Reports Found</span>
           </div>

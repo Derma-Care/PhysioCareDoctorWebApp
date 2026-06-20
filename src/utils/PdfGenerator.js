@@ -772,7 +772,17 @@ function resolve(props) {
     ? exercisePlan.homeExercises
     : Array.isArray(exercisePlan?.exercises) ? exercisePlan.exercises : [];
   const homeAdvice = exercisePlan?.homeAdvice ?? "";
-  const recoverySupport = exercisePlan?.recoverySupport ?? "";
+  const recoverySupportRaw = root?.recoverySupport ?? formData?.recoverySupport ?? exercisePlan?.recoverySupport ?? "";
+  const recoverySupportVal = Array.isArray(recoverySupportRaw) ? recoverySupportRaw.filter(Boolean) : (recoverySupportRaw ? [recoverySupportRaw] : []);
+  const recoverySupportList = recoverySupportVal.map(item => {
+    if (typeof item === 'string') return { name: item, category: '', description: '' }
+    return {
+      name: item.name || item.recoverySupportName || '',
+      category: item.category || item.recoverySupportCategory || item.categoryName || '',
+      description: item.description || item.recoverySupportDescription || '',
+    }
+  }).filter(x => x.name)
+  const hasRecoverySupport = recoverySupportList.length > 0;
 
   const followUpEntry =
     Array.isArray(followUp) ? (followUp[0] ?? {}) : typeof followUp === "object" ? followUp : {};
@@ -787,7 +797,7 @@ function resolve(props) {
     patient, complaints, investigation, background,
     assessment, diagnosisRows, treatmentPlan,
     sessionsList, overallStatus, topTherapistId, topTherapistName,
-    homeExercises, homeAdvice, recoverySupport, followUpEntry, parts, treatmentTemplates,
+    homeExercises, homeAdvice, hasRecoverySupport, recoverySupportList, followUpEntry, parts, treatmentTemplates,
     bookingId, clinicId, branchId,
     doctorData: props.doctorData ?? {},
     clicniData: props.clicniData ?? {},
@@ -1164,15 +1174,9 @@ const PrescriptionPDF = (props) => {
     patient, complaints, investigation, background,
     assessment, diagnosisRows, treatmentPlan,
     sessionsList, overallStatus, topTherapistId, topTherapistName,
-    homeExercises, homeAdvice, recoverySupport, followUpEntry, parts, treatmentTemplates,
+    homeExercises, homeAdvice, hasRecoverySupport, recoverySupportList, followUpEntry, parts, treatmentTemplates,
     bookingId, clinicId, branchId, doctorData, clicniData,
   } = resolve(props);
-
-  const recoverySupportVal = Array.isArray(recoverySupport) ? recoverySupport.filter(Boolean) : recoverySupport;
-  const hasRecoverySupport = Array.isArray(recoverySupportVal) ? recoverySupportVal.length > 0 : hv(recoverySupportVal);
-  const recoverySupportStr = Array.isArray(recoverySupportVal)
-    ? recoverySupportVal.map(x => typeof x === 'string' ? x : (x.name || x.recoverySupportName || '')).filter(Boolean).join(", ")
-    : (typeof recoverySupportVal === 'string' ? recoverySupportVal : (recoverySupportVal?.name || recoverySupportVal?.recoverySupportName || ''));
 
   const today = new Date().toLocaleDateString("en-IN", {
     day: "2-digit", month: "long", year: "numeric",
@@ -1626,7 +1630,7 @@ const PrescriptionPDF = (props) => {
           )}
 
           {/* ── 10 · HOME EXERCISE PLAN ── */}
-          {(homeExercises.length > 0 || hv(homeAdvice) || hasRecoverySupport) && (
+          {(homeExercises.length > 0 || hv(homeAdvice)) && (
             <SectionBlockWrap num="10" title="Home Exercise Plan"
               badge={homeExercises.length > 0 ? `${homeExercises.length} exercise(s)` : null}
             >
@@ -1660,18 +1664,26 @@ const PrescriptionPDF = (props) => {
                   <Text style={[S.val, { lineHeight: 1.7, marginTop: 3 }]}>{homeAdvice}</Text>
                 </View>
               )}
-              {hasRecoverySupport && (
-                <View style={[S.cardAccent, S.cNavy, { marginTop: (homeExercises.length > 0 || hv(homeAdvice)) ? 6 : 0 }]} wrap={false}>
-                  <Text style={S.lbl}>Recovery Support</Text>
-                  <Text style={[S.val, { lineHeight: 1.7, marginTop: 3 }]}>{recoverySupportStr}</Text>
-                </View>
-              )}
             </SectionBlockWrap>
           )}
 
-          {/* ── 11 · FOLLOW UP ── */}
+          {/* ── 11 · RECOVERY SUPPORT ── */}
+          {hasRecoverySupport && (
+            <SectionBlock num="11" title="Recovery Support">
+              {recoverySupportList.map((item, idx) => (
+                <View key={idx} style={[S.cardAccent, S.cNavy, { marginTop: idx > 0 ? 6 : 0 }]} wrap={false}>
+                  <Text style={S.lbl}>{item.name} {item.category ? `(${item.category})` : ''}</Text>
+                  {hv(item.description) && (
+                    <Text style={[S.val, { lineHeight: 1.5, marginTop: 3 }]}>{item.description}</Text>
+                  )}
+                </View>
+              ))}
+            </SectionBlock>
+          )}
+
+          {/* ── 12 · FOLLOW UP ── */}
           {(hv(followUpEntry.nextVisitDate) || hv(followUpEntry.reviewNotes)) && (
-            <SectionBlock num="11" title="Follow-Up Plan">
+            <SectionBlock num="12" title="Follow-Up Plan">
               <View style={[S.cardAccent, S.cPurple]} wrap={false}>
                 <View style={S.grid}>
                   {hv(followUpEntry.nextVisitDate) && (
@@ -1702,9 +1714,9 @@ const PrescriptionPDF = (props) => {
             </SectionBlock>
           )}
 
-          {/* ── 12 · TREATMENT TEMPLATES ── */}
+          {/* ── 13 · TREATMENT TEMPLATES ── */}
           {treatmentTemplates.length > 0 && (
-            <SectionBlockWrap num="12" title="Treatment Templates" badge={`${treatmentTemplates.length}`}>
+            <SectionBlockWrap num="13" title="Treatment Templates" badge={`${treatmentTemplates.length}`}>
               <View style={S.tbl}>
                 <View style={S.tHead}>
                   <Text style={[S.tHCell, { flex: 0.25 }]}>#</Text>

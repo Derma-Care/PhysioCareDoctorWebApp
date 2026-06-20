@@ -1250,6 +1250,20 @@ const transformVisit = (visit) => {
               : []
   const homeAdvice = exercisePlanObj.homeAdvice ?? record.homeAdvice ?? visit.homeAdvice ?? ''
 
+  // ── Recovery Support ───────────────────────────────────────────────────────────
+  const recoverySupportRaw = record.recoverySupport ?? visit.recoverySupport ?? exercisePlanObj.recoverySupport ?? ''
+  const recoverySupportVal = Array.isArray(recoverySupportRaw) ? recoverySupportRaw.filter(Boolean) : (recoverySupportRaw ? [recoverySupportRaw] : [])
+  const recoverySupportList = recoverySupportVal.map(item => {
+    if (typeof item === 'string') return { name: item, category: '', description: '' }
+    return {
+      name: item.name || item.recoverySupportName || '',
+      category: item.category || item.recoverySupportCategory || item.categoryName || '',
+      description: item.description || item.recoverySupportDescription || '',
+    }
+  }).filter(x => x.name)
+  const hasRecoverySupport = recoverySupportList.length > 0
+
+
   // ── Follow Up ───────────────────────────────────────────────────────────────
   const followUpRaw = record.followUp ?? visit.followUp ?? {}
   const followUpEntry = Array.isArray(followUpRaw)
@@ -1331,6 +1345,8 @@ const transformVisit = (visit) => {
     prescriptionPdf,
     homeExercises,
     homeAdvice,
+    hasRecoverySupport,
+    recoverySupportList,
     followUpEntry,
     treatmentTemplates,
     attachments,
@@ -1340,6 +1356,35 @@ const transformVisit = (visit) => {
     therapistRecordId: record.therapistRecordId ?? visit.therapistRecordId ?? '',
     visitDate: visit.visitDate,
   }
+}
+
+const ReportsCard = ({ formData, patientData }) => {
+  const [hasReports, setHasReports] = useState(false)
+  if (!hasReports) {
+    return (
+      <div style={{ display: 'none' }}>
+        <ReportDetails
+          formData={formData}
+          patientData={patientData}
+          show={false}
+          onLoaded={(items) => setHasReports(items.length > 0)}
+        />
+      </div>
+    )
+  }
+  return (
+    <div style={{ border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden' }}>
+      <div style={{ padding: '8px 14px', background: T.bgcolor, borderBottom: `2px solid ${T.orange}`, color: T.white, fontWeight: 700, fontSize: '0.8rem' }}>📊 Reports</div>
+      <div style={{ padding: '12px 14px', background: T.white }}>
+        <ReportDetails
+          formData={formData}
+          patientData={patientData}
+          show={false}
+          onLoaded={(items) => setHasReports(items.length > 0)}
+        />
+      </div>
+    </div>
+  )
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -2081,6 +2126,21 @@ const VisitHistory = ({ formData, patientData, patientId, bookingId }) => {
                       </div>
                     )}
                     {isValid(v.homeAdvice) && <Row label="Home Advice" value={v.homeAdvice} full highlight />}
+                  </AccordionItem>
+                )}
+
+                {/* 12.B Recovery Support */}
+                {v.hasRecoverySupport && (
+                  <AccordionItem title="🩹 Recovery Support">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {v.recoverySupportList && v.recoverySupportList.map((item, idx) => (
+                        <div key={idx} style={{ padding: '10px 14px', border: `1.5px solid ${T.borderLight}`, borderRadius: 8, backgroundColor: T.white }}>
+                          <div style={{ fontWeight: 700, color: T.text, fontSize: '0.85rem' }}>{item.name}</div>
+                          {item.category && <div style={{ fontSize: '0.75rem', color: T.textMid, marginTop: 2 }}><strong>Category:</strong> {item.category}</div>}
+                          {item.description && <div style={{ fontSize: '0.75rem', color: T.textSecondary, marginTop: 4, fontStyle: 'italic' }}>{item.description}</div>}
+                        </div>
+                      ))}
+                    </div>
                   </AccordionItem>
                 )}
 

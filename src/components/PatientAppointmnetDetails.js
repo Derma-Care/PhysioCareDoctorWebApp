@@ -312,8 +312,7 @@ const PatientAppointmentDetails = ({ defaultTab, tabs, fromDoctorTemplate = fals
       const patch = {
         recoverySupport: (data.recoverySupport || []).map(item => ({
           id: item.id || item.recoverySupportId || '',
-          recoverySupportId: item.recoverySupportId || item.id || '',
-          recoverySupportName: item.name || item.recoverySupportName || '',
+          
           name: item.name || item.recoverySupportName || '',
           category: item.category || item.recoverySupportCategory || item.categoryName || '',
           description: item.description || item.recoverySupportDescription || '',
