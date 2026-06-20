@@ -1,0 +1,582 @@
+    <div class="doc-section-divider"></div>
+
+    <!-- DOCTOR AUTH -->
+    <section id="doctor-auth" class="doc-section api-group" data-category="doctor-auth">
+      <div class="section-title">Doctor Web App - Auth &amp; Doctor Details <span class="tag">DoctorWeb</span></div>
+
+      <div class="card api-card" data-method="post">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method post">POST</span>
+            <span class="url">/PhysioDoctorlogin</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Authenticates the physiotherapist or doctor logging into the main portal.</p>
+          <div class="function-tag">postLogin()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/getDoctorById/{doctorId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves details of a doctor by ID (with fallback to /api/doctors/getDoctorById/{doctorId}).</p>
+          <div class="function-tag">getDoctorDetails()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="put">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method put">PUT</span>
+            <span class="url">/update-PhysioDoctorpassword/{userName}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Updates the password for a registered physiotherapist or doctor.</p>
+          <div class="function-tag">updateLogin()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="put">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method put">PUT</span>
+            <span class="url">/update-PhysioDoctorAvailability/{doctorId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Toggles or updates the availability status for a doctor.</p>
+          <div class="function-tag">updateAvailability()</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTOR APPOINTMENTS -->
+    <section id="doctor-appointments" class="doc-section api-group" data-category="doctor-appointments">
+      <div class="section-title">Doctor Web App - Appointments <span class="tag">DoctorWeb</span></div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/getTodaysAppointmentsByUsingClinicIdAndDoctorId/{hospitalId}/{doctorId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Fetches today's appointments specifically filtered by the clinic and doctor.</p>
+          <div class="function-tag">getTodayAppointments()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/getFutureDoctorappointmentsByDoctorId/{doctorId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves upcoming/future appointments for the doctor.</p>
+          <div class="function-tag">getTodayFutureAppointments()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/getDoctorAppointmentsonStatus/{hospitalId}/{branchId}/{doctorId}/{status}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves doctor appointments filtered by their current status.</p>
+          <div class="function-tag">getAppointments()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/appointments/completed/{hospitalId}/{doctorId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Gets the total count or list of completed appointments for a doctor.</p>
+          <div class="function-tag">getAppointmentsCount()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="put">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method put">PUT</span>
+            <span class="url">/clinic-admin/updateAppointmentBasedOnBookingId</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Updates the state or configuration of an existing booking appointment.</p>
+          <div class="function-tag">updateAppointmentBasedOnBookingId()</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTOR PRESCRIPTIONS -->
+    <section id="doctor-prescriptions" class="doc-section api-group" data-category="doctor-prescriptions">
+      <div class="section-title">Doctor Web App - Prescriptions &amp; Medicines <span class="tag">DoctorWeb</span></div>
+
+      <div class="card api-card" data-method="post">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method post">POST</span>
+            <span class="url">/physiotherapy-record/createPrescription</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Creates a new medical prescription record.</p>
+          <div class="function-tag">SavePrescription()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/physiotherapy-record/searchMedicines</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Searches the catalog of available medicines.</p>
+          <div class="function-tag">SearchPrescription()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="post">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method post">POST</span>
+            <span class="url">/physiotherapy-record/create</span>
+          </div>
+          <span class="source-label">Direct Axios</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Creates a new physiotherapy patient record or prescription directly.</p>
+          <div class="function-tag">SavePatientPrescription()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/physiotherapy-record/getTemplatesByClinicIdAndTitle/{hospitalId}/{disease}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Gets prescription templates based on disease title for a clinic.</p>
+          <div class="function-tag">getDoctorSaveDetails()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/physiotherapy-record/getPrescriptionsByClinicId/{clinicId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves medicine templates for a specific clinic.</p>
+          <div class="function-tag">medicineTemplate()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/getMedicineTypes/{clinicId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Fetches available medicine types or forms (tablet, syrup, etc).</p>
+          <div class="function-tag">getMedicineTypes()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="post">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method post">POST</span>
+            <span class="url">/search-or-add</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Adds a new medicine type if it does not already exist in the catalog.</p>
+          <div class="function-tag">addMedicineType()</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTOR LAB & TREATMENTS -->
+    <section id="doctor-lab" class="doc-section api-group" data-category="doctor-lab">
+      <div class="section-title">Doctor Web App - Lab Tests &amp; Treatments <span class="tag">DoctorWeb</span></div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/clinic-admin/labtest/getAllLabTests</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves all lab tests across the platform.</p>
+          <div class="function-tag">getAllLabTests()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/clinic-admin/labtests/{hospitalId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves all lab tests specifically configured for a given hospital/clinic ID.</p>
+          <div class="function-tag">getLabTests()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="post">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method post">POST</span>
+            <span class="url">/clinic-admin/addOrGetTest</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Adds a new lab test offering or retrieves it if it already exists.</p>
+          <div class="function-tag">addLabTest()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/clinic-admin/diseases/{hospitalId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Fetches all listed diseases for a specific hospital.</p>
+          <div class="function-tag">getAllDiseases()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="post">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method post">POST</span>
+            <span class="url">/clinic-admin/addDiseases</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Adds a new disease configuration to the clinic system.</p>
+          <div class="function-tag">addDisease()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/clinic-admin/treatment/getAllTreatments</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves a list of all general treatments.</p>
+          <div class="function-tag">getAllTreatments()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/clinic-admin/treatments/{hospitalId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves all treatments offered at a specific clinic.</p>
+          <div class="function-tag">getAllTreatmentsByHospital()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="post">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method post">POST</span>
+            <span class="url">/clinic-admin/addOrGetTreatment</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Adds or gets a treatment specific to the hospital.</p>
+          <div class="function-tag">addTreatmentByHospital()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/visitHistoryBypatientIdAndBookingId/{patientId}/{bookingId}</span>
+          </div>
+          <span class="source-label">Auth.js (Direct Fetch)</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Fetches the treatment status and visit history for a given visit.</p>
+          <div class="function-tag">getTreatmentStatusByVisitId()</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTOR CLINIC, RATINGS & VITALS -->
+    <section id="doctor-clinic" class="doc-section api-group" data-category="doctor-clinic">
+      <div class="section-title">Doctor Web App - Clinic, Ratings &amp; Vitals <span class="tag">DoctorWeb</span></div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/admin/getClinicById/{hospitalId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Fetches the overall details for the clinic.</p>
+          <div class="function-tag">getClinicDetails()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/clinic-admin/getAverageRatingsByDoctorId/{doctorId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves the average user rating score for a specific doctor.</p>
+          <div class="function-tag">averageRatings()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/clinic-admin/getVitals/{bookingId}/{patientId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves patient vitals (e.g. BP, HR) associated with a booking.</p>
+          <div class="function-tag">getPatientVitals()</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTOR REPORTS & ADS -->
+    <section id="doctor-reports" class="doc-section api-group" data-category="doctor-reports">
+      <div class="section-title">Doctor Web App - Reports &amp; Ads <span class="tag">DoctorWeb</span></div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/clinic-admin/getallreports</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves all reports available in the system.</p>
+          <div class="function-tag">ReportsData()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/clinic-admin/getReportByBookingId/{bookingId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Fetches a specific medical report associated with a booking.</p>
+          <div class="function-tag">Get_ReportsByBookingIdData()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/admin/categoryAdvertisement/getAll</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Gets advertisement media URLs for categories.</p>
+          <div class="function-tag">getAdImages()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/admin/doctorWebAds/getAll</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves specific ad banners for the doctor web app.</p>
+          <div class="function-tag">getAdImagesView()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="post">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method post">POST</span>
+            <span class="url">/admin/images/save</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Saves media images to the server.</p>
+          <div class="function-tag">saveImagesToServer()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/admin/images/getAll</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Loads previously saved images from the server.</p>
+          <div class="function-tag">loadImagesFromServer()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="delete">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method delete">DELETE</span>
+            <span class="url">/admin/images/clearAll</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Clears all saved images on the server.</p>
+          <div class="function-tag">clearImagesOnServer()</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTOR THERAPY & PROGRESS -->
+    <section id="doctor-therapy" class="doc-section api-group" data-category="doctor-therapy">
+      <div class="section-title">Doctor Web App - Therapy &amp; Progress <span class="tag">DoctorWeb</span></div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/getIn-progressByUsingPatientIdAndBookingId/{patientId}/{bookingId}</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves in-progress details of therapy for a patient booking.</p>
+          <div class="function-tag">getInProgressDetails()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/api/customer/therapy-records/getByClinicBranchExercise/...</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves exercise sessions by a specific exercise ID.</p>
+          <div class="function-tag">getExerciseSessionsByExerciseId()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/payment/getExerciseSessionsWithRecords/...</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Retrieves exercise sessions along with their related payment or tracking records.</p>
+          <div class="function-tag">getExerciseSessionsWithRecords()</div>
+        </div>
+      </div>
+
+      <div class="card api-card" data-method="get">
+        <div class="card-header">
+          <div class="endpoint-meta">
+            <span class="method get">GET</span>
+            <span class="url">/getCompletedTherapyRecord/...</span>
+          </div>
+          <span class="source-label">Auth.js</span>
+        </div>
+        <div class="card-body">
+          <p class="desc">Gets the fully completed therapy record summary.</p>
+          <div class="function-tag">getCompletedTherapyRecord()</div>
+        </div>
+      </div>
+    </section>

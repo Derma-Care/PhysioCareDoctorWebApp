@@ -262,7 +262,7 @@ const Login = () => {
     try {
       ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey', 'token']
         .forEach(k => localStorage.removeItem(k))
-      const res = await postLogin({ username: userName, password, fcmToken: 'fcmToken' }, loginUrl)
+      const res = await postLogin({ username: userName.trim(), password: password.trim(), fcmToken: 'fcmToken' }, loginUrl)
       if (res.success) {
         const doctorId = res.data.staffId || res.data.id || res.data.doctorId
         const hospitalId = res.data.hospitalId || res.data.clinicId
