@@ -144,7 +144,7 @@ export default function DoctorHelpCenter() {
       phone: clinicDetails.contactNumber || "",
     },
     cs: {
-      name: "Derma Care",
+      name: "CCMS",
       phone: "8919914783",
       email: "DermaCare@gmail.com",
       whatsapp: "8919914783",
@@ -193,7 +193,7 @@ export default function DoctorHelpCenter() {
       desc: "Send your queries or attachments. We reply within 24–48 hours.",
       iconBg: "#fff8ec", iconColor: "#d97706", Icon: MailIcon,
       btnBg: "#f9c571", btnColor: C.navy,
-      href: `mailto:${d.contact.email}`, newTab: false,
+      href: `https://mail.google.com/mail/u/0/?view=cm&fs=1&to=${encodeURIComponent(d.contact.email)}`, newTab: true, rel: "noopener noreferrer",
       meta: d.contact.email,
     },
   ]
@@ -319,7 +319,18 @@ export default function DoctorHelpCenter() {
               <Btn href={makeWA(d.cs.whatsapp, "Hello Customer Service")} newTab bg="#16a34a" color={C.white} Icon={ChatIcon} label="WhatsApp" />
             )}
             {d.cs.email && (
-              <Btn href={`mailto:${d.cs.email}`} bg={C.orange} color={C.navy} Icon={MailIcon} label="Email" />
+              <Btn
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                  d.cs.email
+                )}&su=${encodeURIComponent("Support Request")}&body=${encodeURIComponent(
+                  "Hello, I need assistance."
+                )}`}
+                newTab
+                bg={C.orange}
+                color={C.navy}
+                Icon={MailIcon}
+                label="Email"
+              />
             )}
           </div>
         </div>
