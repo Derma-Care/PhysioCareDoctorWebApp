@@ -33,7 +33,7 @@ const toImageSrc = (raw) => {
           bytes = new Uint8Array(decoded.length)
           for (let i = 0; i < decoded.length; i++) bytes[i] = decoded.charCodeAt(i)
         }
-      } catch (e) {}
+      } catch (e) { }
       if (!bytes) {
         bytes = new Uint8Array(s.length)
         for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i) & 0xff
@@ -48,7 +48,7 @@ const toImageSrc = (raw) => {
     else if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) mime = 'image/gif'
     else if (bytes[0] === 0x42 && bytes[1] === 0x4d) mime = 'image/bmp'
     else if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
-             bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) mime = 'image/webp'
+      bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) mime = 'image/webp'
 
     let bin = ''
     for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
@@ -316,6 +316,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const [loadingBooking, setLoadingBooking] = useState(false)
   const [bookingRecord, setBookingRecord] = useState(null)
   const [partImage, setPartImage] = useState(seed.partImage ?? '')
+  const [partImageKey, setPartImageKey] = useState(seed.partImageKey ?? '')
   const [showDiagramModal, setShowDiagramModal] = useState(false)
   const [theraphyAnswers, setTheraphyAnswers] = useState(seed.theraphyAnswers ?? {})
   const [selectedTherapy, setSelectedTherapy] = useState(seed.selectedTherapy ?? '')
@@ -382,7 +383,8 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           problem: record.problem,
           duration: record.symptomsDuration,
           therapy: record.subServiceName,
-          patientPain: record.patientPain
+          patientPain: record.patientPain,
+          partImageKey: record.partImageKey
         })
 
         if (isValid(record.problem)) {
@@ -407,6 +409,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         if (fetchedPartImage) {
           console.log("✅ Setting partImage (exists)")
           setPartImage(fetchedPartImage)
+          setPartImageKey(record.partImageKey)
         }
         if (Array.isArray(record.parts) && record.parts.length) {
           console.log("✅ Setting parts:", record.parts)
@@ -459,7 +462,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       symptomDetails,
       duration,
       attachments,
-      partImage,
+      partImage, partImageKey,
       parts,
       selectedTherapy,
       selectedTherapyID,
@@ -474,6 +477,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       patientPain,       // correct key name — was previously sent as patientPain but state init was from reasonforVisit
       reasonforVisit: patientPain, // keep for backward compat
     }
+    console.log(payload)
     onNext?.(payload)
 
     // Update appointment status to In-Progress
