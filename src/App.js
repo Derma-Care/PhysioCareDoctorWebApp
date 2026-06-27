@@ -22,7 +22,7 @@ import appLogo from './assets/images/ic_launcher.png'
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const storedTheme = useSelector((state) => state.theme)
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024)
 
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
@@ -42,8 +42,7 @@ const App = () => {
   }, [])
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 768)
-    onResize()
+    const onResize = () => setIsMobile(window.innerWidth <= 1024)
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])

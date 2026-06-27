@@ -260,8 +260,9 @@ const Login = () => {
     if (!validate()) return
     setLoading(true); setErrors({})
     try {
-      ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey', 'token']
-        .forEach(k => localStorage.removeItem(k))
+      // Clear all previous login data
+      localStorage.clear();
+      sessionStorage.clear();
       const res = await postLogin({ username: userName.trim(), password: password.trim(), fcmToken: 'fcmToken' }, loginUrl)
       if (res.success) {
         const doctorId = res.data.staffId || res.data.id || res.data.doctorId
@@ -288,8 +289,8 @@ const Login = () => {
           setDoctorDetails(dd)
           localStorage.setItem('doctorDetails', JSON.stringify(dd))
           if (!branchId) {
-             const bId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
-             if (bId) localStorage.setItem('branchId', bId);
+            const bId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
+            if (bId) localStorage.setItem('branchId', bId);
           }
         }
         if (cd) {
@@ -301,8 +302,8 @@ const Login = () => {
           setClinicDetails(mergedCd)
           localStorage.setItem('clinicDetails', JSON.stringify(mergedCd))
           if (!localStorage.getItem('branchId')) {
-             const bId = mergedCd.branchId || (mergedCd.branches && mergedCd.branches[0] ? mergedCd.branches[0].branchId : '');
-             if (bId) localStorage.setItem('branchId', bId);
+            const bId = mergedCd.branchId || (mergedCd.branches && mergedCd.branches[0] ? mergedCd.branches[0].branchId : '');
+            if (bId) localStorage.setItem('branchId', bId);
           }
         } else if (res.data.branches) {
           // If cd fetch failed but we have branches in login response
@@ -455,7 +456,7 @@ const Login = () => {
           {/* Title block */}
           <div style={{ textAlign: 'center', maxWidth: 460, ...A(.15) }}>
             <h1 style={{
-              
+
               fontSize: 'clamp(26px,3.2vw,40px)', fontWeight: 800,
               lineHeight: 1.18, color: '#fff',
               marginBottom: 8, letterSpacing: '-0.028em',
@@ -572,7 +573,7 @@ const Login = () => {
                   opacity: 0.9,
                 }} />
                 <h3 style={{
-                  
+
                   fontSize: 22, fontWeight: 800,
                   color: '#fff', marginBottom: 3, letterSpacing: '-0.015em',
                 }}>
