@@ -1,5 +1,4 @@
 import React from 'react'
-import NotificationDemo from './Prescription/Notification'
 import HelpCenter from './Prescription/HelpCenter'
 
 const DoctorProfile = React.lazy(() => import('./views/Profile/DoctorProfile'))
@@ -14,7 +13,6 @@ const routes = [
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   { path: '/appointments', name: 'Appointments', element: Appointments },
   { path: '/doctorprofile', name: 'DoctorProfile', element: DoctorProfile },
-  { path: '/notifications', name: 'Notifications', element: NotificationDemo },
   { path: '/helpCentre', name: 'HelpCenter', element: HelpCenter },
   { path: '/attendance', name: 'Attendance Tracker', element: AttendanceTracker },
   { path: '/feedback', name: 'Patient Feedback', element: PatientFeedback },

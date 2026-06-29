@@ -11,6 +11,7 @@ import { COLORS } from '../../../Themes'
 import { useToast } from '../../../utils/Toaster'
 import { useDoctorContext } from '../../../Context/DoctorContext'
 import { baseUrl, loginUrl } from '../../../Auth/BaseUrl'
+import { getFCMToken } from '../../../firebase'
 
 /* ─── Keyframes & global styles ─────────────────────────────────────────── */
 const KEYFRAMES = `
@@ -260,9 +261,20 @@ const Login = () => {
     if (!validate()) return
     setLoading(true); setErrors({})
     try {
-      ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey', 'token']
+      ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey', 'token', 'fcmToken']
         .forEach(k => localStorage.removeItem(k))
-      const res = await postLogin({ username: userName.trim(), password: password.trim(), fcmToken: 'fcmToken' }, loginUrl)
+
+      // ✅ Get FCM token first (this device's own token)
+      let fcmToken = ''
+      try {
+        await Notification.requestPermission()
+        fcmToken = await getFCMToken()
+        console.log('📱 This device FCM token:', fcmToken)
+      } catch (err) {
+        console.warn('Failed to retrieve FCM token during login:', err)
+      }
+
+      const res = await postLogin({ username: userName.trim(), password: password.trim(), deviceId: fcmToken || '' }, loginUrl)
       if (res.success) {
         const doctorId = res.data.staffId || res.data.id || res.data.doctorId
         const hospitalId = res.data.hospitalId || res.data.clinicId
@@ -276,6 +288,12 @@ const Login = () => {
         localStorage.setItem('doctorMobileNumber', userName)
         if (token) {
           localStorage.setItem('token', token)
+        }
+
+        // ✅ Always save THIS device's own FCM token.
+        if (fcmToken) {
+          localStorage.setItem('fcmToken', fcmToken)
+          console.log('✅ Saved this device FCM token to localStorage:', fcmToken)
         }
 
         // Fetch full details

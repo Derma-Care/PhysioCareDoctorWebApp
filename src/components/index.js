@@ -9,6 +9,7 @@ import DocsIcons from './DocsIcons'
 import DocsLink from './DocsLink'
 import DocsExample from './DocsExample'
 import AppSkeleton from './AppSkeleton'
+import FCMNotificationHandler from './FCMNotificationHandler'
 
 export {
   AppBreadcrumb,
@@ -22,4 +23,5 @@ export {
   DocsLink,
   DocsExample,
   AppSkeleton,
+  FCMNotificationHandler,
 }

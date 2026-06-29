@@ -1,9 +1,9 @@
-import React from 'react'
-import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
+import { AppContent, AppSidebar, AppFooter, AppHeader, FCMNotificationHandler } from '../components/index'
 
 const DefaultLayout = () => {
   return (
     <div>
+      <FCMNotificationHandler />
       <AppSidebar />
       <div className="wrapper d-flex flex-column  ">
         <AppHeader />

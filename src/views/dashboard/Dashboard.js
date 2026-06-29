@@ -17,15 +17,17 @@ import Button from '../../components/CustomButton/CustomButton';
 import TooltipButton from '../../components/CustomButton/TooltipButton';
 import { COLORS, SIZES } from '../../Themes';
 import { useDoctorContext } from '../../Context/DoctorContext';
-import { getTodayAppointments, getTodayFutureAppointments } from '../../Auth/Auth';
+import { getTodayAppointments, getTodayFutureAppointments, getFollowUpRecord } from '../../Auth/Auth';
 import CalendarModal from '../../utils/CalenderModal';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import { normalizeSavedData } from '../../utils/normalizeData';
 
 const capitalizeFirst = (str) => str?.charAt(0).toUpperCase() + str?.slice(1);
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setPatientData, setTodayAppointments, todayAppointments, doctorDetails } =
     useDoctorContext();
 
@@ -39,6 +41,46 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingCalendar, setLoadingCalendar] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const autoOpenAppointment = useCallback(async (patient) => {
+    try {
+      let formData = {};
+      let details = null;
+      const tab = patient.status || '';
+      const vType = patient?.visitType?.toLowerCase()?.replace(/[\s_-]+/g, '') || '';
+      const isFollowUp = vType === 'followup' || vType === 'follow_up';
+      const tabLower = tab?.toLowerCase()?.replace(/[\s_-]+/g, '') || '';
+      const isTargetStatus = ['inprogress', 'inprograss', 'ongoing', 'completed', 'investigationdone', 'dueforinvestigation'].includes(tabLower);
+
+      if (isFollowUp || isTargetStatus) {
+        const clinicId = localStorage.getItem('hospitalId');
+        const branchId = patient.branchId;
+        const resp = await getFollowUpRecord(clinicId, branchId, patient.patientId, patient.bookingId);
+        const record = Array.isArray(resp) ? resp[0] : (resp?.data && !Array.isArray(resp.data) ? resp.data : resp);
+        details = record || {};
+        const saved = details?.savedDetails?.[0] || details;
+        formData = normalizeSavedData(saved);
+      }
+
+      setPatientData({ ...patient, details });
+
+      if (tabLower === 'inprogress' || tabLower === 'inprograss' || tabLower === 'ongoing') {
+        navigate(`/tab-inProgress/${patient.patientId}`, {
+          state: { patient, formData, details, fromTab: 'In-Progress' },
+        });
+      } else if (tabLower === 'completed') {
+        navigate(`/tab-completed-content/${patient.patientId}`, {
+          state: { patient, formData, details, fromTab: 'Completed' },
+        });
+      } else {
+        navigate(`/tab-content/${patient.patientId}`, {
+          state: { patient, formData, details, fromTab: tab || 'Confirmed' },
+        });
+      }
+    } catch (err) {
+      console.error('Failed to auto-open appointment details:', err);
+    }
+  }, [navigate, setPatientData]);
 
 
 
@@ -81,8 +123,43 @@ const Dashboard = () => {
   }, [doctorDetails?.id]);
 
   useEffect(() => {
+    if (!('BroadcastChannel' in window)) return;
+    const channel = new BroadcastChannel('fcm_background_channel');
+    channel.onmessage = (event) => {
+      if (event.data && event.data.type === 'BACKGROUND_NOTIFICATION') {
+        fetchAppointments();
+      }
+    };
+    return () => channel.close();
+  }, [fetchAppointments]);
+
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
+
+  useEffect(() => {
+    const highlightBookingId = location.state?.highlightBookingId;
+    const highlightPatientId = location.state?.highlightPatientId;
+    if (highlightPatientId && todayAppointments.length > 0) {
+      navigate(location.pathname, { replace: true, state: {} });
+      
+      let match = null;
+      if (highlightBookingId) {
+        match = todayAppointments.find(
+          (a) => String(a.bookingId || a.id || a._id) === String(highlightBookingId)
+        );
+      }
+      if (!match) {
+        // Fallback: match by patientId on today's list
+        match = todayAppointments.find(
+          (a) => String(a.patientId) === String(highlightPatientId)
+        );
+      }
+      if (match) {
+        autoOpenAppointment(match);
+      }
+    }
+  }, [location.state, todayAppointments, navigate, location.pathname, autoOpenAppointment]);
 
   const filteredPatients = todayAppointments.filter((item) => {
     const typeMatch = selectedType ? item.consultationType === selectedType : true;

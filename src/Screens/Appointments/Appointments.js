@@ -19,10 +19,12 @@ import {
 import { COLORS, SIZES } from '../../Themes'
 import TooltipButton from '../../components/CustomButton/TooltipButton'
 import Button from '../../components/CustomButton/CustomButton'
-import { getAppointments, getBookingsByPatientId } from '../../Auth/Auth'
+import { getAppointments, getBookingsByPatientId, getFollowUpRecord } from '../../Auth/Auth'
 import { useDoctorContext } from '../../Context/DoctorContext'
 import { useToast } from '../../utils/Toaster'
 import SkeletonLoader from '../../components/SkeletonLoader'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { normalizeSavedData } from '../../utils/normalizeData'
 
 const tabLabels = {
   pending: 'Pending',
@@ -59,7 +61,9 @@ const tabToStatusMap = {
 }
 
 const Appointments = ({ searchTerm = '' }) => {
-  const { doctorDetails } = useDoctorContext()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { doctorDetails, setPatientData } = useDoctorContext()
   const branches = doctorDetails?.branches || []
 
   const [activeTab, setActiveTab] = useState('confirmed')
@@ -119,8 +123,88 @@ const Appointments = ({ searchTerm = '' }) => {
   }, [fetchData])
 
   useEffect(() => {
+    if (!('BroadcastChannel' in window)) return;
+    const channel = new BroadcastChannel('fcm_background_channel');
+    channel.onmessage = (event) => {
+      if (event.data && event.data.type === 'BACKGROUND_NOTIFICATION') {
+        fetchData();
+      }
+    };
+    return () => channel.close();
+  }, [fetchData]);
+
+  useEffect(() => {
     setCurrentPage(1)
   }, [activeTab, filter, selectedBranch, selectedDate, searchTerm, searchQuery, showAllAppointments, patientIdResults])
+
+  const autoOpenAppointment = useCallback(async (patient) => {
+    try {
+      let formData = {};
+      let details = null;
+      const tab = patient.status || '';
+      const vType = patient?.visitType?.toLowerCase()?.replace(/[\s_-]+/g, '') || '';
+      const isFollowUp = vType === 'followup' || vType === 'follow_up';
+      const tabLower = tab?.toLowerCase()?.replace(/[\s_-]+/g, '') || '';
+      const isTargetStatus = ['inprogress', 'inprograss', 'ongoing', 'completed', 'investigationdone', 'dueforinvestigation'].includes(tabLower);
+
+      if (isFollowUp || isTargetStatus) {
+        const clinicId = localStorage.getItem('hospitalId');
+        const branchId = patient.branchId;
+        const resp = await getFollowUpRecord(clinicId, branchId, patient.patientId, patient.bookingId);
+        const record = Array.isArray(resp) ? resp[0] : (resp?.data && !Array.isArray(resp.data) ? resp.data : resp);
+        details = record || {};
+        const saved = details?.savedDetails?.[0] || details;
+        formData = normalizeSavedData(saved);
+      }
+
+      setPatientData({ ...patient, details });
+
+      if (tabLower === 'inprogress' || tabLower === 'inprograss' || tabLower === 'ongoing') {
+        navigate(`/tab-inProgress/${patient.patientId}`, {
+          state: { patient, formData, details, fromTab: 'In-Progress' },
+        });
+      } else if (tabLower === 'completed') {
+        navigate(`/tab-completed-content/${patient.patientId}`, {
+          state: { patient, formData, details, fromTab: 'Completed' },
+        });
+      } else {
+        navigate(`/tab-content/${patient.patientId}`, {
+          state: { patient, formData, details, fromTab: tab || 'Confirmed' },
+        });
+      }
+    } catch (err) {
+      console.error('Failed to auto-open appointment details:', err);
+    }
+  }, [navigate, setPatientData]);
+
+  useEffect(() => {
+    const highlightBookingId = location.state?.highlightBookingId;
+    const highlightPatientId = location.state?.highlightPatientId;
+
+    if (highlightPatientId) {
+      navigate(location.pathname, { replace: true, state: {} });
+
+      getBookingsByPatientId(highlightPatientId)
+        .then((res) => {
+          if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+            let match = null;
+            if (highlightBookingId) {
+              match = res.data.find(
+                (a) => String(a.bookingId || a.id || a._id) === String(highlightBookingId)
+              );
+            }
+            // Fallback: if no matching booking ID, open the patient's latest booking (first item)
+            if (!match) {
+              match = res.data[0];
+            }
+            if (match) {
+              autoOpenAppointment(match);
+            }
+          }
+        })
+        .catch((err) => console.error('[Appointments] Failed to fetch highlighted booking:', err));
+    }
+  }, [location.state, navigate, location.pathname, autoOpenAppointment]);
 
   // ── Patient ID Search Handler ─────────────────────────────────────────
   // Uses searchQuery as the patient ID
@@ -173,6 +257,11 @@ const Appointments = ({ searchTerm = '' }) => {
   const filteredPatients = Array.isArray(baseAppointments)
     ? baseAppointments
       .filter((p) => {
+        const serviceISO = toISODate(p.serviceDate)
+        const today = new Date()
+        const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+        if (serviceISO === todayISO) return false
+
         if (isPatientIdMode) return true
         const matchesSearch =
           !safeSearch ||
@@ -187,7 +276,6 @@ const Appointments = ({ searchTerm = '' }) => {
           !selectedBranch ||
           p.branchId === selectedBranch.branchId ||
           p.branchName === selectedBranch.branchName
-        const serviceISO = toISODate(p.serviceDate)
         const matchesDate = !selectedDate || serviceISO === selectedDate
         return matchesSearch && matchesFilter && matchesDate && matchesBranch
       })

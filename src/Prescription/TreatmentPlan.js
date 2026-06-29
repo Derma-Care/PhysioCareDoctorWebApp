@@ -251,35 +251,65 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
         }}>
           {filtered.length > 0 ? filtered.map((t, i) => {
             const sel = isSelected(t.therapistId)
+            const isAbsent = t.isPresent === true || String(t.isPresent).toLowerCase() === 'true'
             return (
               <div
                 key={i}
-                onMouseDown={e => { e.preventDefault(); toggleTherapist(t) }}
-                style={{
-                  padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid #eee',
-                  background: sel ? '#dceeff' : i % 2 === 0 ? '#f8fbff' : '#fff',
-                  display: 'flex', alignItems: 'center', gap: 10,
+                onMouseDown={e => {
+                  e.preventDefault()
+                  if (isAbsent) return
+                  toggleTherapist(t)
                 }}
-                onMouseEnter={e => { if (!sel) e.currentTarget.style.background = '#f0f7ff' }}
-                onMouseLeave={e => { if (!sel) e.currentTarget.style.background = i % 2 === 0 ? '#f8fbff' : '#fff' }}
+                style={{
+                  padding: '9px 12px',
+                  cursor: isAbsent ? 'not-allowed' : 'pointer',
+                  borderBottom: '1px solid #eee',
+                  background: isAbsent ? '#f1f5f9' : (sel ? '#dceeff' : i % 2 === 0 ? '#f8fbff' : '#fff'),
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  opacity: isAbsent ? 0.65 : 1,
+                }}
+                onMouseEnter={e => {
+                  if (!sel && !isAbsent) e.currentTarget.style.background = '#f0f7ff'
+                }}
+                onMouseLeave={e => {
+                  if (!sel && !isAbsent) e.currentTarget.style.background = i % 2 === 0 ? '#f8fbff' : '#fff'
+                }}
               >
                 {/* checkbox-style indicator */}
                 <div style={{
-                  width: 16, height: 16, borderRadius: 4, flexShrink: 0,
-                  border: `2px solid ${sel ? '#1B4F8A' : '#a0bcda'}`,
-                  background: sel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#fff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 16,
+                  height: 16,
+                  borderRadius: 4,
+                  flexShrink: 0,
+                  border: `2px solid ${isAbsent ? '#cbd5e1' : (sel ? '#1B4F8A' : '#a0bcda')}`,
+                  background: isAbsent ? '#cbd5e1' : (sel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#fff'),
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}>
-                  {sel && <span style={{ color: '#fff', fontSize: '0.6rem', fontWeight: 700 }}>✓</span>}
+                  {sel && !isAbsent && <span style={{ color: '#fff', fontSize: '0.6rem', fontWeight: 700 }}>✓</span>}
                 </div>
                 <span 
                   style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}
                   onMouseLeave={() => setHoveredTherapist(null)}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <strong style={{ color: '#1B4F8A', fontSize: '0.9rem' }}>{t.therapistId}</strong>
-                    <span style={{ color: '#1a3a5c', fontWeight: 600 }}>— {t.fullName}</span>
+                    <strong style={{ color: isAbsent ? '#64748b' : '#1B4F8A', fontSize: '0.9rem' }}>{t.therapistId}</strong>
+                    <span style={{ color: isAbsent ? '#64748b' : '#1a3a5c', fontWeight: 600 }}>— {t.fullName}</span>
                     
+                    {/* Availability Status Badge */}
+                    {isAbsent ? (
+                      <span style={{ background: '#fee2e2', border: '1px solid #fecaca', padding: '2px 8px', borderRadius: 12, fontSize: '0.65rem', color: '#991b1b', fontWeight: 700 }}>
+                        Absent
+                      </span>
+                    ) : (
+                      <span style={{ background: '#dcfce7', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: 12, fontSize: '0.65rem', color: '#166534', fontWeight: 700 }}>
+                        Available
+                      </span>
+                    )}
+
                     {/* Service Type Badge */}
                     {Array.isArray(t.services) && t.services.length > 0 && (
                       <span style={{ background: '#e6fffa', border: '1px solid #81e6d9', padding: '2px 8px', borderRadius: 12, fontSize: '0.65rem', color: '#234e52', fontWeight: 700, textTransform: 'capitalize' }}>
