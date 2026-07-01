@@ -316,6 +316,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const [loadingBooking, setLoadingBooking] = useState(false)
   const [bookingRecord, setBookingRecord] = useState(null)
   const [partImage, setPartImage] = useState(seed.partImage ?? '')
+   const [partImageKey, setPartImageKey] = useState(seed.partImageKey ?? '')
   const [showDiagramModal, setShowDiagramModal] = useState(false)
   const [theraphyAnswers, setTheraphyAnswers] = useState(seed.theraphyAnswers ?? {})
   const [selectedTherapy, setSelectedTherapy] = useState(seed.selectedTherapy ?? '')
@@ -382,7 +383,8 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
           problem: record.problem,
           duration: record.symptomsDuration,
           therapy: record.subServiceName,
-          patientPain: record.patientPain
+          patientPain: record.patientPain,
+           partImageKey: record.partImageKey
         })
 
         if (isValid(record.problem)) {
@@ -407,6 +409,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         if (fetchedPartImage) {
           console.log("✅ Setting partImage (exists)")
           setPartImage(fetchedPartImage)
+           setPartImageKey(record.partImageKey)
         }
         if (Array.isArray(record.parts) && record.parts.length) {
           console.log("✅ Setting parts:", record.parts)
@@ -460,6 +463,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       duration,
       attachments,
       partImage,
+      partImageKey,
       parts,
       selectedTherapy,
       selectedTherapyID,
@@ -474,6 +478,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
       patientPain,       // correct key name — was previously sent as patientPain but state init was from reasonforVisit
       reasonforVisit: patientPain, // keep for backward compat
     }
+     console.log(payload)
     onNext?.(payload)
 
     // Update appointment status to In-Progress

@@ -172,6 +172,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
     const selectedTherapy = comp.selectedTherapy || patientData?.subServiceName || ''
     const selectedTherapyID = comp.selectedTherapyId || comp.selectedTherapyID || patientData?.subServiceId || ''
     const partImage = comp.painAssessmentImage || comp.partImage || ''
+     const partImageKey = comp.partImageKey || comp.partImage || ''
     
     const reportImages = (() => {
       const apiImgs = comp.reportImages
@@ -273,6 +274,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
       complaints: {
         complaintDetails: complaintDetails || '',
         painAssessmentImage: partImage || '',
+         painAssessmentImage: partImageKey || '',
         reportImages: reportImages || [],
         selectedTherapy: selectedTherapy || '',
         selectedTherapyId: selectedTherapyID || '',

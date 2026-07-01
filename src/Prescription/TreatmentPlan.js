@@ -316,6 +316,7 @@ const TherapistMultiSearch = ({ therapists, loading, selectedTherapists, onChang
                         {t.services.join(', ')}
                       </span>
                     )}
+                    {/* <span style={{ background: '#e6fffa', border: '1px solid #81e6d9', padding: '2px 8px', borderRadius: 12, fontSize: '0.65rem', color: '#234e52', fontWeight: 700, textTransform: 'capitalize' }}>Today Sessions: {t.totalSessionCount}</span> */}
 
                     {/* View Button placed at the end */}
                     <div 

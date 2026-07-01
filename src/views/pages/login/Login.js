@@ -261,8 +261,10 @@ const Login = () => {
     if (!validate()) return
     setLoading(true); setErrors({})
     try {
-      ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey', 'token', 'fcmToken']
-        .forEach(k => localStorage.removeItem(k))
+      // ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey', 'token', 'fcmToken']
+      //   .forEach(k => localStorage.removeItem(k))
+       localStorage.clear();
+      sessionStorage.clear();
 
       // ✅ Get FCM token first (this device's own token)
       let fcmToken = ''

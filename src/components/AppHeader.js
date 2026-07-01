@@ -51,13 +51,17 @@ const TYPE_CONFIG = {
     icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> },
   reminder:    { label: 'Reminder',    accent: '#92400e', bg: '#fffbeb',
     icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> },
+  feedback:    { label: 'Feedback',    accent: '#4f46e5', bg: '#eef2ff',
+    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> },
   default:     { label: 'Alert',    accent: '#1B4F8A', bg: '#EAF1FB',
     icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> },
 };
 
 function getTypeConfig(type) {
   if (!type) return TYPE_CONFIG.default;
-  return TYPE_CONFIG[type.toLowerCase()] || TYPE_CONFIG.default;
+  const lower = type.toLowerCase();
+  if (lower.includes('feedback')) return TYPE_CONFIG.feedback;
+  return TYPE_CONFIG[lower] || TYPE_CONFIG.default;
 }
 
 function Avatar({ name, bg, color }) {
@@ -697,7 +701,18 @@ const AppHeader = () => {
                       isToday = bodyText.includes('today') || titleText.includes('today') || bodyText.includes(todayISO) || titleText.includes(todayISO);
                     }
 
-                    const targetPath = isToday ? '/dashboard' : '/appointments';
+                    let targetPath = isToday ? '/dashboard' : '/appointments';
+                    const notifPath = selectedNotification.path || '';
+                    const notifMsg = (selectedNotification.message || '').toLowerCase();
+                    const notifTitle = (selectedNotification.title || '').toLowerCase();
+                    if (
+                      notifPath.includes('feedback') || 
+                      selectedNotification.type === 'SESSION_FEEDBACK' || 
+                      notifMsg.includes('feedback') || 
+                      notifTitle.includes('feedback')
+                    ) {
+                      targetPath = '/feedback';
+                    }
                     setSelectedNotification(null);
                     navigate(targetPath, {
                       state: {

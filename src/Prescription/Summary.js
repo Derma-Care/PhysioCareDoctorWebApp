@@ -836,6 +836,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
   const partImage =
     symptomsInternal.partImage ||
     complaintsAPI.painAssessmentImage || ''
+    const partImageKey = symptomsInternal.partImageKey || complaintsAPI.partImageKey || ''
 
   const reportImages = (() => {
     const apiImgs = complaintsAPI.reportImages
@@ -1169,7 +1170,7 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
       // ── Complaints ─────────────────────────────────────────────────────
       complaints: {
         complaintDetails: complaintDetails || '',
-        painAssessmentImage: partImage || '',
+          painAssessmentImage: partImageKey || '',
         reportImages: reportImages || [],
         selectedTherapy: selectedTherapy || '',
         selectedTherapyId: selectedTherapyID || '',
