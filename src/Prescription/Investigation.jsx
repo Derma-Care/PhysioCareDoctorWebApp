@@ -7,6 +7,7 @@ import { addLabTest, getLabTests, updateAppointmentBasedOnBookingId, SavePatient
 import { COLORS } from '../Themes'
 import { useDoctorContext } from '../Context/DoctorContext'
 import PrescriptionPDF from '../utils/PdfGenerator'
+import InvestigationPDF from '../utils/InvestigationPDF'
 import { uploadPrescriptionPdf } from '../utils/S3UploadServices'
 import { pdf } from '@react-pdf/renderer'
 /* ─── Styles ──────────────────────────────────────────────────────────────── */
@@ -502,9 +503,9 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
 
     let savedId = null
     try {
-      // 1. Generate PDF blob
+      // 1. Generate PDF blob using InvestigationPDF
       const blob = await pdf(
-        <PrescriptionPDF
+        <InvestigationPDF
           doctorData={doctorDetails}
           clicniData={clinicDetails}
           formData={updatedFormData}
@@ -513,7 +514,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
       ).toBlob()
 
       // 2. Upload PDF to S3
-      const pdfFile = new File([blob], `${safeName}.pdf`, { type: 'application/pdf' })
+      const pdfFile = new File([blob], `${safeName}_Investigation.pdf`, { type: 'application/pdf' })
       const prescriptionPdfKey = await uploadPrescriptionPdf(pdfFile)
 
       // 3. Update status
@@ -545,12 +546,9 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
         savedId = savedRecord.therapistRecordId || savedRecord.therapyRecordId || savedRecord.id || savedRecord._id || savedRecord.therapyrecordid
       }
 
-      // 5. Open PDF blob in a new tab/window for print/preview
+      // 5. Open PDF in new tab for viewing in browser
       const url = URL.createObjectURL(blob)
-      const win = window.open(url, '_blank')
-      if (!win) {
-        alert('Please allow pop-ups to print.')
-      }
+      window.open(url, '_blank')
 
       // 6. Update local form data
       setFormData?.((prev) => {
@@ -566,8 +564,10 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
         return nextFormData
       })
 
-      // 7. Navigate back to dashboard
-      navigate('/dashboard', { replace: true })
+      // 7. Navigate back to dashboard after delay
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true })
+      }, 1000)
     } catch (e) {
       console.error('Failed to generate/save/print record:', e)
       showSnackbar('Failed to generate PDF. Please try again.', 'error')
