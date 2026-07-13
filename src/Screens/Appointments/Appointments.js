@@ -258,9 +258,6 @@ const Appointments = ({ searchTerm = '' }) => {
     ? baseAppointments
       .filter((p) => {
         const serviceISO = toISODate(p.serviceDate)
-        const today = new Date()
-        const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-        if (serviceISO === todayISO) return false
 
         if (isPatientIdMode) return true
         const matchesSearch =

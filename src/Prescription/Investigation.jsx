@@ -274,8 +274,7 @@ const Investigation = ({ seed = {}, onNext, setFormData, formData, patientData: 
       },
       complaints: {
         complaintDetails: complaintDetails || '',
-        painAssessmentImage: partImage || '',
-         painAssessmentImage: partImageKey || '',
+        painAssessmentImage: partImageKey || partImage || '',
         reportImages: reportImages || [],
         selectedTherapy: selectedTherapy || '',
         selectedTherapyId: selectedTherapyID || '',

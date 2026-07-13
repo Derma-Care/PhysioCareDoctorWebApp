@@ -330,7 +330,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
   const [insuranceProvider, setInsuranceProvider] = useState(seed.insuranceProvider ?? '')
   const [activityLevels, setActivityLevels] = useState(Array.isArray(seed.activityLevels) ? seed.activityLevels : [])
 
-  const [patientPain, setPatientPain] = useState(seed.reasonforVisit ?? '')
+  const [patientPain, setPatientPain] = useState(seed.patientPain ?? seed.reasonforVisit ?? seed.reasonForVisit ?? '')
 
   const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' })
   const { error } = useToast()
@@ -354,6 +354,7 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
     if (Array.isArray(seed.activityLevels) && seed.activityLevels.length) setActivityLevels(seed.activityLevels)
     if (isValid(seed.patientPain)) setPatientPain(seed.patientPain)
     else if (isValid(seed.reasonforVisit)) setPatientPain(seed.reasonforVisit)
+    else if (isValid(seed.reasonForVisit)) setPatientPain(seed.reasonForVisit)
   }, [seed])
 
   useEffect(() => {
@@ -428,9 +429,10 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
         if (isValid(record.insuranceProvider)) setInsuranceProvider(record.insuranceProvider)
         if (Array.isArray(record.activityLevels) && record.activityLevels.length) setActivityLevels(record.activityLevels)
 
-        if (isValid(record.patientPain)) {
-          console.log("✅ Setting patientPain:", record.patientPain)
-          setPatientPain(record.patientPain)
+        const fetchedReason = record.patientPain ?? record.reasonforVisit ?? record.reasonForVisit ?? record.reason ?? record.complaints?.patientPain ?? record.complaints?.reasonforVisit ?? record.complaints?.reasonForVisit
+        if (isValid(fetchedReason)) {
+          console.log("✅ Setting patientPain/reasonForVisit:", fetchedReason)
+          setPatientPain(fetchedReason)
         }
 
         if (Array.isArray(record.attachments) && record.attachments.length) {
@@ -481,13 +483,17 @@ const SymptomsDiseases = ({ seed = {}, onNext, patientData, setFormData }) => {
      console.log(payload)
     onNext?.(payload)
 
-    // Update appointment status to In-Progress
+    // Update appointment status (In-progress or On-Going)
     const bookingId = patientData?.bookingId
     if (bookingId) {
+      const currentStatus = patientData?.status?.toLowerCase()?.replace(/[\s_-]+/g, '') || ''
+      const isAlreadyInProgress = ['inprogress', 'inprograss'].includes(currentStatus)
+      const nextStatus = isAlreadyInProgress ? 'In-progress' : 'On-Going'
+
       updateAppointmentBasedOnBookingId({
         data: {
           bookingId,
-          status: 'On-Going',
+          status: nextStatus,
         }
       }).catch(err => console.error('Failed to update appointment status:', err))
     }

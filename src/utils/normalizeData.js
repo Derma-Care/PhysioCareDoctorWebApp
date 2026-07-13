@@ -30,7 +30,7 @@ export const normalizeSavedData = (saved) => {
     partImage: complaints.painAssessmentImage || '',
     attachmentImages: complaints.reportImages || [],
     theraphyAnswers: theraphyAnswers,
-    patientPain: complaints.patientPain || '',
+    patientPain: complaints.patientPain || complaints.reasonforVisit || complaints.reasonForVisit || complaints.reason || saved.reasonforVisit || saved.patientPain || '',
     previousInjuries: complaints.previousInjuries || '',
     currentMedications: complaints.currentMedications || '',
     allergies: complaints.allergies || '',

@@ -237,6 +237,8 @@ const Login = () => {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [fcmTokenOnMount, setFcmTokenOnMount] = useState('')
+  const [notificationWarning, setNotificationWarning] = useState('')
 
   const navigate = useNavigate()
   const { success } = useToast()
@@ -245,6 +247,43 @@ const Login = () => {
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 60)
     document.body.style.overflow = 'hidden'
+
+    // Pre-fetch FCM token early on mount
+    const fetchTokenOnMount = async () => {
+      try {
+        const token = await getFCMToken()
+        if (token) {
+          setFcmTokenOnMount(token)
+          localStorage.setItem('fcmToken', token)
+          console.log('📱 Pre-fetched FCM token on mount:', token)
+        }
+      } catch (err) {
+        console.warn('Failed to pre-fetch FCM token on mount:', err)
+      }
+    }
+    fetchTokenOnMount()
+
+    // Check notification permission and environment warnings
+    const checkNotificationSupport = () => {
+      if (typeof window === 'undefined') return
+      
+      if (!window.isSecureContext) {
+        setNotificationWarning('⚠️ App is running in a non-secure (HTTP) context. Push notifications require HTTPS or localhost.')
+        return
+      }
+
+      if (!('Notification' in window)) {
+        setNotificationWarning('⚠️ This browser does not support desktop notifications.')
+        return
+      }
+
+      if (Notification.permission === 'denied') {
+        setNotificationWarning('⚠️ Notification permissions are blocked. Please allow notifications in your browser settings to enable push notifications.')
+        return
+      }
+    }
+    checkNotificationSupport()
+
     return () => { clearTimeout(t); document.body.style.overflow = 'auto' }
   }, [])
 
@@ -263,20 +302,51 @@ const Login = () => {
     try {
       // ;['doctorId', 'hospitalId', 'doctorDetails', 'clinicDetails', 'sessionKey', 'token', 'fcmToken']
       //   .forEach(k => localStorage.removeItem(k))
-       localStorage.clear();
+      const cachedFcmToken = localStorage.getItem('fcmToken')
+      const cachedDeviceUUID = localStorage.getItem('deviceUUID')
+      const cachedDeviceId = localStorage.getItem('deviceId')
+
+      localStorage.clear();
       sessionStorage.clear();
 
-      // ✅ Get FCM token first (this device's own token)
-      let fcmToken = ''
-      try {
-        await Notification.requestPermission()
-        fcmToken = await getFCMToken()
-        console.log('📱 This device FCM token:', fcmToken)
-      } catch (err) {
-        console.warn('Failed to retrieve FCM token during login:', err)
+      if (cachedFcmToken) localStorage.setItem('fcmToken', cachedFcmToken)
+      if (cachedDeviceUUID) localStorage.setItem('deviceUUID', cachedDeviceUUID)
+      if (cachedDeviceId) localStorage.setItem('deviceId', cachedDeviceId)
+
+      // ✅ Get FCM token (either pre-fetched or fetch it fresh if not ready)
+      let fcmToken = fcmTokenOnMount || localStorage.getItem('fcmToken') || ''
+      if (!fcmToken) {
+        try {
+          await Notification.requestPermission()
+          fcmToken = await getFCMToken()
+          console.log('📱 Freshly fetched FCM token during login:', fcmToken)
+        } catch (err) {
+          console.warn('Failed to retrieve FCM token during login:', err)
+        }
+      } else {
+        console.log('📱 Using pre-fetched/cached FCM token:', fcmToken)
       }
 
-      const res = await postLogin({ username: userName.trim(), password: password.trim(), deviceId: fcmToken || '' }, loginUrl)
+      // Helper to generate a unique device UUID fallback if FCM token is unavailable
+      const getOrGenerateDeviceUUID = () => {
+        let uuid = localStorage.getItem('deviceUUID')
+        if (!uuid) {
+          uuid = 'web-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+          localStorage.setItem('deviceUUID', uuid)
+        }
+        return uuid
+      }
+
+      const deviceUUID = getOrGenerateDeviceUUID()
+      const finalFcmToken = fcmToken || cachedFcmToken || ''
+
+      const res = await postLogin({ 
+        username: userName.trim(), 
+        password: password.trim(), 
+        deviceId: finalFcmToken || deviceUUID,
+        fcmToken: finalFcmToken || '',
+        deviceToken: finalFcmToken || ''
+      }, loginUrl)
       if (res.success) {
         const doctorId = res.data.staffId || res.data.id || res.data.doctorId
         const hospitalId = res.data.hospitalId || res.data.clinicId
@@ -292,11 +362,12 @@ const Login = () => {
           localStorage.setItem('token', token)
         }
 
-        // ✅ Always save THIS device's own FCM token.
-        if (fcmToken) {
-          localStorage.setItem('fcmToken', fcmToken)
-          console.log('✅ Saved this device FCM token to localStorage:', fcmToken)
+        // ✅ Always save THIS device's own FCM token and deviceId.
+        if (finalFcmToken) {
+          localStorage.setItem('fcmToken', finalFcmToken)
+          console.log('✅ Saved this device FCM token to localStorage:', finalFcmToken)
         }
+        localStorage.setItem('deviceId', finalFcmToken || deviceUUID)
 
         // Fetch full details
         const [dd, cd] = await Promise.all([
@@ -602,6 +673,17 @@ const Login = () => {
                   Sign in to your doctor portal
                 </p>
               </div>
+
+              {/* Notification Warning */}
+              {notificationWarning && (
+                <CAlert color="warning" style={{
+                  fontSize: 13, borderRadius: 10, padding: '.5rem .85rem',
+                  marginBottom: 14, backgroundColor: 'rgba(245,166,35,0.15)',
+                  border: '1px solid rgba(245,166,35,0.35)', color: '#F5A623',
+                }}>
+                  {notificationWarning}
+                </CAlert>
+              )}
 
               {/* Error */}
               {errors.login && (

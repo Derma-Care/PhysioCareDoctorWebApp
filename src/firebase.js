@@ -149,9 +149,15 @@ export const getFCMToken = async (isRetry = false) => {
       return ''
     }
 
-    const registration = await navigator.serviceWorker.register(
-      `${import.meta.env.BASE_URL || '/'}firebase-messaging-sw.js`
-    )
+    let swUrl = `${import.meta.env.BASE_URL || '/'}firebase-messaging-sw.js`
+    if (swUrl.startsWith('.')) {
+      swUrl = swUrl.replace(/^\.+/, '')
+      if (!swUrl.startsWith('/')) {
+        swUrl = '/' + swUrl
+      }
+    }
+
+    const registration = await navigator.serviceWorker.register(swUrl)
 
     // ✅ Wait for SW to be fully ACTIVE before subscribing.
     // navigator.serviceWorker.ready resolves when *a* SW is active but the

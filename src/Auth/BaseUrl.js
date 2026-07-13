@@ -25,7 +25,9 @@ export const visitHistoryBypatientIdAndBookingId = `${baseUrl}/visitHistoryBypat
 export const getDoctorSlotsEndpoint = `${ipUrl}/clinic-admin/getDoctorslots`
 
 // Appointments
-export const todayappointmentsbaseUrl = `${baseUrl}/getTodaysAppointmentsByUsingClinicIdAndDoctorId`
+//  export const todayappointmentsbaseUrl = `${baseUrl}/getTodaysAppointmentsByUsingClinicIdAndDoctorId`
+ export const todayappointmentsbaseUrl = `${baseUrl}/appointments/today`
+
 export const todayfutureappointmentsbaseUrl = `${baseUrl}/getFutureDoctorappointmentsByDoctorId`
 export const appointmentsbaseUrl = `${baseUrl}/getDoctorAppointmentsonStatus`
 export const appointmentsCountbaseUrl = `${baseUrl}/appointments/completed`

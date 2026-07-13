@@ -1353,13 +1353,18 @@ const Summary = ({ onNext, sidebarWidth = 0, onSaveTemplate, patientData, formDa
        resp = await UpdatePatientPrescription(createPayload)
        console.log(resp)
       if (resp) {
-  try {
-    await updateAppointmentBasedOnBookingId({
-      data: { bookingId, status: 'In-progress' }
-    })
-  } catch (err) {
-    console.error('Status update failed:', err)
-  }}
+        try {
+          const currentStatus = patientData?.status?.toLowerCase()?.replace(/[\s_-]+/g, '') || ''
+          const isAlreadyInProgress = ['inprogress', 'inprograss'].includes(currentStatus)
+          const nextStatus = isAlreadyInProgress ? 'In-progress' : 'On-Going'
+
+          await updateAppointmentBasedOnBookingId({
+            data: { bookingId, status: nextStatus }
+          })
+        } catch (err) {
+          console.error('Status update failed:', err)
+        }
+      }
 
 
 

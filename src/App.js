@@ -52,7 +52,11 @@ const App = () => {
   useEffect(() => {
     const sessionKey = localStorage.getItem('sessionKey')
     if (!sessionKey) {
+      
+      const deviceId = localStorage.getItem('deviceId')
       localStorage.clear()
+      
+      if (deviceId) localStorage.setItem('deviceId', deviceId)
     }
   }, [])
 

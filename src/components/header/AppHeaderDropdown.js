@@ -30,6 +30,9 @@ const AppHeaderDropdown = () => {
     const attendanceData = localStorage.getItem(attendanceKey)
     const monthlyData = localStorage.getItem(monthlyKey)
 
+   
+    const deviceId = localStorage.getItem('deviceId')
+
     localStorage.removeItem('token')
     sessionStorage.clear()
     localStorage.clear()
@@ -37,6 +40,9 @@ const AppHeaderDropdown = () => {
     // Restore the attendance data securely under the doctor's specific ID
     if (attendanceData) localStorage.setItem(attendanceKey, attendanceData)
     if (monthlyData) localStorage.setItem(monthlyKey, monthlyData)
+
+    
+    if (deviceId) localStorage.setItem('deviceId', deviceId)
 
     navigate('/login', { replace: true })
   }
