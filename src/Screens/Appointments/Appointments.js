@@ -357,7 +357,8 @@ const Appointments = ({ searchTerm = '' }) => {
                           color: COLORS.white,
                           fontWeight: '600',
                           fontSize: '13px',
-                          padding: '6px 14px',
+                          padding: '0 14px',
+                          height: '36px',
                           cursor: loading ? 'not-allowed' : 'pointer',
                         }}
                       >
@@ -417,7 +418,7 @@ const Appointments = ({ searchTerm = '' }) => {
                           style={{
                             width: '230px', paddingLeft: '32px',
                             paddingRight: searchQuery ? '28px' : '10px',
-                            paddingTop: '6px', paddingBottom: '6px',
+                            height: '36px',
                             borderRadius: showAllAppointments ? '8px 0 0 8px' : '8px',
                             border: `1.5px solid ${showAllAppointments ? COLORS.bgcolor : `${COLORS.bgcolor}40`}`,
                             borderRight: showAllAppointments ? 'none' : `1.5px solid ${COLORS.bgcolor}40`,
@@ -457,11 +458,11 @@ const Appointments = ({ searchTerm = '' }) => {
                             backgroundColor: searchQuery.trim() ? COLORS.bgcolor : '#9ca3af',
                             color: '#fff', border: 'none',
                             borderRadius: '0 8px 8px 0',
-                            padding: '6px 14px', fontSize: '13px', fontWeight: '600',
+                            padding: '0 14px', fontSize: '13px', fontWeight: '600',
                             cursor: searchQuery.trim() ? 'pointer' : 'not-allowed',
                             display: 'flex', alignItems: 'center', gap: 4,
                             whiteSpace: 'nowrap', transition: 'background-color 0.2s',
-                            height: '33px',
+                            height: '36px',
                           }}
                         >
                           {patientIdSearchLoading ? '⏳' : '🔎'} Search
@@ -475,10 +476,10 @@ const Appointments = ({ searchTerm = '' }) => {
                         display: 'flex', alignItems: 'center', gap: 6,
                         cursor: 'pointer', fontSize: '13px', fontWeight: '600',
                         color: COLORS.black, userSelect: 'none',
-                        padding: '5px 10px', borderRadius: '8px',
+                        padding: '0 14px', borderRadius: '8px',
                         border: `1.5px solid ${showAllAppointments ? COLORS.bgcolor : `${COLORS.bgcolor}40`}`,
                         backgroundColor: showAllAppointments ? '#EAF1FB' : COLORS.white,
-                        transition: 'all 0.2s',
+                        transition: 'all 0.2s', height: '36px', margin: 0
                       }}
                     >
                       <input
@@ -855,7 +856,7 @@ const Appointments = ({ searchTerm = '' }) => {
 
         </CCol>
       </CRow>
-    </CContainer>
+    </CContainer >
   )
 }
 

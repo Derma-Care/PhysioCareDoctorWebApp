@@ -1045,16 +1045,16 @@ const restoreSelectedItems = (sessions) => {
   const map = new Map()
   sessions.forEach(sess => {
     if (sess.serviceType === 'package') {
-      const id = sess.packageId || ''
+      const id = sess.packageId || sess.id || ''
       if (id) map.set(id, { packageId: id, packageName: sess.packageName || '', _restored: true })
     } else if (sess.serviceType === 'program') {
-      const id = sess.programId || ''
+      const id = sess.programId || sess.id || ''
       if (id) map.set(id, { programId: id, programName: sess.programName || '', _restored: true })
     } else if (sess.serviceType === 'therapy') {
-      const id = sess.therapyId || ''
+      const id = sess.therapyId || sess.id || ''
       if (id) map.set(id, { therapyId: id, therapyName: sess.therapyName || '', _restored: true })
     } else if (sess.serviceType === 'exercise') {
-      const id = sess.exerciseId || ''
+      const id = sess.exerciseId || sess.id || 'exercise'
       if (id) map.set(id, { therapyExercisesId: id, name: sess.exerciseName || '', _restored: true })
     }
   })

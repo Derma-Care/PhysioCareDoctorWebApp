@@ -30,6 +30,7 @@ const AppSidebar = () => {
   const sidebarShow = useSelector((state) => state.sidebarShow)
   const [doctorDetails, setDoctorDetails] = useState(null)
   const [clinicDetails, setClinicDetails] = useState(null)
+  const [isLoadingDoctor, setIsLoadingDoctor] = useState(true)
   const { patientData, isPatientLoading, setPatientData } = useDoctorContext()
   const hasPatient = !!patientData
   const [showModal, setShowModal] = useState(false)
@@ -49,16 +50,22 @@ const AppSidebar = () => {
       if (storedClinic) setClinicDetails(JSON.parse(storedClinic))
 
       // 2. Refresh from API
-      const doctor = await getDoctorDetails()
-      const clinic = await getClinicDetails()
+      try {
+        const doctor = await getDoctorDetails()
+        const clinic = await getClinicDetails()
 
-      if (doctor) {
-        setDoctorDetails(doctor)
-        localStorage.setItem('doctorDetails', JSON.stringify(doctor))
-      }
-      if (clinic) {
-        setClinicDetails(clinic)
-        localStorage.setItem('clinicDetails', JSON.stringify(clinic))
+        if (doctor) {
+          setDoctorDetails(doctor)
+          localStorage.setItem('doctorDetails', JSON.stringify(doctor))
+        }
+        if (clinic) {
+          setClinicDetails(clinic)
+          localStorage.setItem('clinicDetails', JSON.stringify(clinic))
+        }
+      } catch (err) {
+        console.error('Error fetching doctor/clinic details:', err)
+      } finally {
+        setIsLoadingDoctor(false)
       }
     }
     fetchData()
@@ -297,71 +304,72 @@ const AppSidebar = () => {
                     justifyContent: 'center',
                     alignContent: 'center',
                     alignItems: 'center',
+                    width: '100%',
                   }}
                 >
-                  <CImage
-                    src={imgSrc}
-                    alt="Doctor"
-                    width={100}
-                    height={100}
-                    className="rounded-circle border"
-                    style={{
-                      borderWidth: 2,
-                      padding: 5,
-                      color: COLORS.gray,
-                      objectFit: 'cover',
-                      backgroundColor: 'rgba(255,255,255,0.1)'
-                    }}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = doctor;
-                    }}
-                  />
+                  {isLoadingDoctor && !doctorDetails ? (
+                    <div className="w-100 d-flex flex-column align-items-center">
+                      <div
+                        className="rounded-circle border mb-2"
+                        style={{ width: 100, height: 100, opacity: 0.3, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                      />
+                      <div
+                        className="mb-1"
+                        style={{ width: '75%', height: 14, background: '#eee', borderRadius: 4, opacity: 0.5 }}
+                      />
+                      <div style={{ width: '50%', height: 12, background: '#eee', borderRadius: 4, opacity: 0.5 }} />
+                    </div>
+                  ) : (
+                    <>
+                      <CImage
+                        src={imgSrc}
+                        alt="Doctor"
+                        width={100}
+                        height={100}
+                        className="rounded-circle border"
+                        style={{
+                          borderWidth: 2,
+                          padding: 5,
+                          color: COLORS.gray,
+                          objectFit: 'cover',
+                          backgroundColor: 'rgba(255,255,255,0.1)'
+                        }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = doctor;
+                        }}
+                      />
 
-                  {/*                  
-<CImage
-  src={data:image/png;base64,${doctorDetails?.doctorPicture }}
-  alt="Doctor"
-  width={100}
-  className="rounded-circle border"
-  style={{ borderWidth: 2, padding: 5, color: COLORS.gray }}
-/> */}
-                  <h4
-                    className=" mb-0 mt-2 text-center"
-                    style={{ color: COLORS.white, fontWeight: 'bold', fontSize: SIZES.large }}
-                  >
-                    {capitalizeWords(
-                      doctorDetails?.doctorName ||
-                      doctorDetails?.staffName ||
-                      doctorDetails?.name ||
-                      doctorDetails?.userName ||
-                      localStorage.getItem('doctorName') ||
-                      'Doctor Name'
-                    )}
-                  </h4>
-                  <h6
-                    className="mb-0 mt-1 text-center"
-                    style={{ color: COLORS.white, fontSize: SIZES.small }}
-                  >
-                    {doctorDetails?.qualification || doctorDetails?.degree || 'Qualification'} (
-                    {doctorDetails?.specialization || doctorDetails?.speciality || 'Specialization'})
-                  </h6>
-                  {clinicDetails?.name && (
-                    <h6
-                      className="mb-0 mt-1 text-center"
-                      style={{ color: COLORS.white, fontSize: SIZES.small, opacity: 0.9 }}
-                    >
-                      {clinicDetails.name}
-                    </h6>
+                      <h4
+                        className=" mb-0 mt-2 text-center"
+                        style={{ color: COLORS.white, fontWeight: 'bold', fontSize: SIZES.large }}
+                      >
+                        {capitalizeWords(
+                          doctorDetails?.doctorName ||
+                          doctorDetails?.staffName ||
+                          doctorDetails?.name ||
+                          doctorDetails?.userName ||
+                          localStorage.getItem('doctorName') ||
+                          'Doctor Name'
+                        )}
+                      </h4>
+                      <h6
+                        className="mb-0 mt-1 text-center"
+                        style={{ color: COLORS.white, fontSize: SIZES.small }}
+                      >
+                        {doctorDetails?.qualification || doctorDetails?.degree || 'Qualification'} (
+                        {doctorDetails?.specialization || doctorDetails?.speciality || 'Specialization'})
+                      </h6>
+                      {clinicDetails?.name && (
+                        <h6
+                          className="mb-0 mt-1 text-center"
+                          style={{ color: COLORS.white, fontSize: SIZES.small, opacity: 0.9 }}
+                        >
+                          {clinicDetails.name}
+                        </h6>
+                      )}
+                    </>
                   )}
-                  {/* {clinicDetails?.address && (
-                    <span
-                      className="text-center mt-1"
-                      style={{ color: COLORS.white, fontSize: '11px', opacity: 0.7, padding: '0 10px', display: 'block' }}
-                    >
-                      📍 {clinicDetails.address}
-                    </span>
-                  )} */}
                 </div>
               </>
             )}

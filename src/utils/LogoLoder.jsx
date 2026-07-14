@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 export const LogoLoader = () => {
   return (
-    <div 
+    <div
       className="vh-100 d-flex flex-column justify-content-center align-items-center"
       style={{ backgroundColor: '#f8f9fa' }} // subtle background
     >
@@ -44,7 +44,7 @@ export const LogoLoader = () => {
           }}
         />
       </div>
-      
+
       {/* Loading text with shimmer */}
       <motion.h5
         className="mt-4"
@@ -52,7 +52,7 @@ export const LogoLoader = () => {
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
       >
-        LOADING...
+
       </motion.h5>
     </div>
   )

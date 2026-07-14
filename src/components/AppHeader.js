@@ -41,20 +41,34 @@ import {
 import './AppHeader.css'
 
 const TYPE_CONFIG = {
-  appointment: { label: 'Appointment', accent: '#1B4F8A', bg: '#EAF1FB',
-    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> },
-  cancel:      { label: 'Cancelled',   accent: '#b91c1c', bg: '#fef2f2',
-    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg> },
-  message:     { label: 'Message',     accent: '#0f6e56', bg: '#ecfdf5',
-    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
-  completed:   { label: 'Completed',   accent: '#0f6e56', bg: '#ecfdf5',
-    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> },
-  reminder:    { label: 'Reminder',    accent: '#92400e', bg: '#fffbeb',
-    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> },
-  feedback:    { label: 'Feedback',    accent: '#4f46e5', bg: '#eef2ff',
-    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> },
-  default:     { label: 'Alert',    accent: '#1B4F8A', bg: '#EAF1FB',
-    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> },
+  appointment: {
+    label: 'Appointment', accent: '#1B4F8A', bg: '#EAF1FB',
+    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+  },
+  cancel: {
+    label: 'Cancelled', accent: '#b91c1c', bg: '#fef2f2',
+    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M15 9l-6 6M9 9l6 6" /></svg>
+  },
+  message: {
+    label: 'Message', accent: '#0f6e56', bg: '#ecfdf5',
+    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+  },
+  completed: {
+    label: 'Completed', accent: '#0f6e56', bg: '#ecfdf5',
+    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" /></svg>
+  },
+  reminder: {
+    label: 'Reminder', accent: '#92400e', bg: '#fffbeb',
+    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+  },
+  feedback: {
+    label: 'Feedback', accent: '#4f46e5', bg: '#eef2ff',
+    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" /></svg>
+  },
+  default: {
+    label: 'Alert', accent: '#1B4F8A', bg: '#EAF1FB',
+    icon: <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+  },
 };
 
 function getTypeConfig(type) {
@@ -64,25 +78,24 @@ function getTypeConfig(type) {
   return TYPE_CONFIG[lower] || TYPE_CONFIG.default;
 }
 
-function Avatar({ name, bg, color }) {
-  const initials = name === 'System' ? '⚕' : name.split(' ').map(w => w[0]).slice(0, 2).join('');
+function NotificationIcon({ cfg }) {
   return (
     <div style={{
-      width: 32, height: 32, borderRadius: '50%',
-      backgroundColor: bg, color,
+      width: 40, height: 40, borderRadius: '50%',
+      backgroundColor: cfg.bg, color: cfg.accent,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: name === 'System' ? 14 : 11, fontWeight: 700,
       flexShrink: 0,
-      border: `1px solid ${color}22`,
+      border: `1px solid ${cfg.accent}30`,
+      boxShadow: `0 2px 8px ${cfg.accent}15`
     }}>
-      {initials}
+      {React.cloneElement(cfg.icon, { width: 20, height: 20 })}
     </div>
   );
 }
 
 const AppHeader = () => {
   const { patientData, setTodayAppointments, todayAppointments, clinicDetails } = useDoctorContext()
-   const branchName = localStorage.getItem('clinicDetails')
+  const branchName = localStorage.getItem('clinicDetails')
 
   useEffect(() => {
     appointmentDetails()
@@ -105,15 +118,31 @@ const AppHeader = () => {
   const [notifications, setNotifications] = useState([])
   const [selectedNotification, setSelectedNotification] = useState(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [isMarkingRead, setIsMarkingRead] = useState(false)
 
   useEffect(() => {
     setDropdownOpen(false)
   }, [location.pathname])
   const hoverTimeoutRef = useRef(null)
 
+  const markAllAsRead = async () => {
+    if (isMarkingRead) return;
+    const unread = notifications.filter(n => !n.read);
+    if (unread.length > 0) {
+      setIsMarkingRead(true);
+      try {
+        await Promise.all(unread.map(n => markNotificationAsReadInHistoryDB(n.id)));
+        await loadNotifications();
+      } finally {
+        setIsMarkingRead(false);
+      }
+    }
+  }
+
   const handleMouseEnter = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
     setDropdownOpen(true)
+    markAllAsRead()
   }
 
   const handleMouseLeave = () => {
@@ -132,7 +161,7 @@ const AppHeader = () => {
   const loadNotifications = async () => {
     try {
       const list = await getNotificationHistoryFromDB()
-      
+
       const dummyItems = list.filter(n => typeof n.id === 'number' && n.id < 1000000)
       if (dummyItems.length > 0) {
         for (const item of dummyItems) {
@@ -179,7 +208,6 @@ const AppHeader = () => {
         headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0)
     })
   }, [])
-
 
   const { day, date, time } = getDateParts()
   const [searchTerm, setSearchTerm] = useState('')
@@ -244,8 +272,38 @@ const AppHeader = () => {
             onMouseLeave={handleMouseLeave}
             style={{ display: 'flex', alignItems: 'center', position: 'relative' }}
           >
+            <style>
+              {`
+                @keyframes bellShake {
+                  0% { transform: rotate(0); }
+                  15% { transform: rotate(15deg); }
+                  30% { transform: rotate(-15deg); }
+                  45% { transform: rotate(10deg); }
+                  60% { transform: rotate(-10deg); }
+                  75% { transform: rotate(5deg); }
+                  85% { transform: rotate(-5deg); }
+                  100% { transform: rotate(0); }
+                }
+                .notif-bell-icon:hover {
+                  animation: bellShake 0.6s ease;
+                }
+                .notif-pulse {
+                  animation: pulse 2s infinite;
+                }
+                @keyframes pulse {
+                  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+                  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+                  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+                }
+              `}
+            </style>
             <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
+              onClick={() => {
+                const nextState = !dropdownOpen;
+                setDropdownOpen(nextState);
+                if (nextState) markAllAsRead();
+              }}
+              className="notif-bell-icon"
               style={{
                 cursor: 'pointer',
                 position: 'relative',
@@ -256,20 +314,23 @@ const AppHeader = () => {
             >
               <div
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  backgroundColor: '#EAF1FB',
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '25%',
+                  background: 'linear-gradient(135deg, #EAF1FB 0%, #D4E3F5 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: `1.5px solid ${COLORS.bgcolor}30`,
-                  position: 'relative'
+                  border: `1.5px solid #b6cfe8`,
+                  boxShadow: '0 2px 8px rgba(27,79,138,0.1)',
+                  position: 'relative',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <CIcon icon={cilBell} size="sm" style={{ color: COLORS.bgcolor }} />
                 {unreadCount > 0 && (
                   <span
+                    className="notif-pulse"
                     style={{
                       position: 'absolute',
                       top: '-4px',
@@ -277,18 +338,18 @@ const AppHeader = () => {
                       backgroundColor: '#ef4444',
                       color: '#ffffff',
                       fontSize: '10px',
-                      fontWeight: '700',
+                      fontWeight: '800',
                       borderRadius: '50%',
-                      width: '18px',
-                      height: '18px',
+                      width: '20px',
+                      height: '20px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       border: '2px solid #ffffff',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.15)'
+                      boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)'
                     }}
                   >
-                    {unreadCount}
+                    {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </div>
@@ -298,18 +359,16 @@ const AppHeader = () => {
               <div
                 style={{
                   position: 'absolute',
-                  top: '100%',
+                  top: 'calc(100% + 5px)',
                   right: 0,
-                  width: '350px',
+                  width: '400px',
                   padding: '0',
-                  borderRadius: '12px',
-                  boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
+                  borderRadius: '16px',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
                   border: '1px solid #E2E8F0',
                   overflow: 'hidden',
-                  maxHeight: '450px',
                   display: 'flex',
                   flexDirection: 'column',
-                  marginTop: '10px',
                   backgroundColor: '#ffffff',
                   zIndex: 1050
                 }}
@@ -320,12 +379,12 @@ const AppHeader = () => {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '12px 16px',
-                    borderBottom: '1px solid #F1F5F9',
-                    backgroundColor: '#F8FAFC',
+                    padding: '16px 20px',
+                    borderBottom: '1px solid #E2E8F0',
+                    background: 'linear-gradient(to right, #F8FAFC, #FFFFFF)',
                   }}
                 >
-                  <span style={{ fontWeight: '700', fontSize: '14px', color: '#1E293B' }}>
+                  <span style={{ fontWeight: '800', fontSize: '16px', color: '#1E293B', letterSpacing: '-0.3px' }}>
                     Notifications
                   </span>
                   {notifications.length > 0 && (
@@ -339,13 +398,18 @@ const AppHeader = () => {
                         }
                       }}
                       style={{
-                        background: 'none',
+                        background: 'rgba(239, 68, 68, 0.1)',
                         border: 'none',
                         color: '#ef4444',
                         fontSize: '12px',
-                        fontWeight: '600',
+                        fontWeight: '700',
                         cursor: 'pointer',
+                        padding: '6px 12px',
+                        borderRadius: '12px',
+                        transition: 'background 0.2s ease',
                       }}
+                      onMouseOver={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.2)'}
+                      onMouseOut={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.1)'}
                     >
                       Clear All
                     </button>
@@ -353,23 +417,27 @@ const AppHeader = () => {
                 </div>
 
                 {/* Dropdown List */}
-                <div style={{ overflowY: 'auto', flex: 1, maxHeight: '350px' }}>
+                <div style={{ overflowY: 'auto', flex: 1, maxHeight: '420px', padding: '0' }}>
                   {notifications.length === 0 ? (
                     <div
                       style={{
-                        padding: '40px 20px',
+                        padding: '50px 20px',
                         textAlign: 'center',
-                        color: '#64748B',
-                        fontSize: '13px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '12px'
                       }}
                     >
-                      No new notifications
+                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CIcon icon={cilBell} size="lg" style={{ color: '#94A3B8' }} />
+                      </div>
+                      <span style={{ color: '#64748B', fontSize: '15px', fontWeight: '500' }}>No new notifications</span>
                     </div>
                   ) : (
                     notifications.map((notif) => {
                       const isUnread = !notif.read;
                       const cfg = getTypeConfig(notif.type);
-                      const patientNameStr = notif.patientName || notif.patient || 'System';
                       return (
                         <div
                           key={notif.id}
@@ -382,9 +450,9 @@ const AppHeader = () => {
                           }}
                           style={{
                             display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '12px 16px',
+                            alignItems: 'flex-start',
+                            gap: '16px',
+                            padding: '16px 20px',
                             borderBottom: '1px solid #F1F5F9',
                             cursor: 'pointer',
                             backgroundColor: isUnread ? '#F8FAFC' : '#ffffff',
@@ -395,68 +463,75 @@ const AppHeader = () => {
                             (e.currentTarget.style.backgroundColor = isUnread ? '#F8FAFC' : '#ffffff')
                           }
                         >
-                          <Avatar name={patientNameStr} bg={cfg.bg} color={cfg.accent} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                              <span
-                                style={{
-                                  fontWeight: isUnread ? '700' : '500',
-                                  fontSize: '12px',
-                                  color: '#1E293B',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                }}
-                              >
-                                {notif.title}
-                              </span>
-                              {isUnread && (
+                          <NotificationIcon cfg={cfg} />
+                          <div style={{ flex: 1, minWidth: 0, paddingTop: '2px' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 <span
                                   style={{
-                                    width: '6px',
-                                    height: '6px',
-                                    borderRadius: '50%',
-                                    backgroundColor: '#ef4444',
-                                    flexShrink: 0,
+                                    fontWeight: '700',
+                                    fontSize: '14px',
+                                    color: isUnread ? '#0F172A' : '#334155',
+                                    lineHeight: '1.3',
                                   }}
-                                />
-                              )}
+                                >
+                                  {notif.title}
+                                </span>
+                                {isUnread && (
+                                  <span
+                                    style={{
+                                      width: '8px',
+                                      height: '8px',
+                                      borderRadius: '50%',
+                                      backgroundColor: '#3B82F6',
+                                      flexShrink: 0,
+                                      boxShadow: '0 0 0 3px #DBEAFE'
+                                    }}
+                                  />
+                                )}
+                              </div>
+                              <button
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  await deleteNotificationFromHistoryDB(notif.id);
+                                  await loadNotifications();
+                                }}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#CBD5E1',
+                                  fontSize: '16px',
+                                  cursor: 'pointer',
+                                  padding: '2px',
+                                  transition: 'color 0.2s',
+                                  marginTop: '-2px',
+                                  marginRight: '-4px'
+                                }}
+                                onMouseOver={(e) => e.target.style.color = '#ef4444'}
+                                onMouseOut={(e) => e.target.style.color = '#CBD5E1'}
+                                aria-label="Dismiss notification"
+                              >
+                                ✕
+                              </button>
                             </div>
                             <span
                               style={{
                                 display: 'block',
-                                fontSize: '11px',
-                                color: '#64748B',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                marginTop: '2px'
+                                fontSize: '13px',
+                                color: '#475569',
+                                whiteSpace: 'normal',
+                                wordBreak: 'break-word',
+                                marginTop: '4px',
+                                lineHeight: '1.5'
                               }}
                             >
                               {notif.message || notif.detail}
                             </span>
-                            <span style={{ fontSize: '9px', color: '#94A3B8', marginTop: '4px', display: 'block' }}>
+                            <span style={{ fontSize: '11px', color: '#94A3B8', marginTop: '8px', display: 'block', fontWeight: '600' }}>
                               {new Date(notif.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
-                          <button
-                            onClick={async (e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              await deleteNotificationFromHistoryDB(notif.id);
-                              await loadNotifications();
-                            }}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: '#94A3B8',
-                              fontSize: '12px',
-                              cursor: 'pointer',
-                              padding: '2px',
-                            }}
-                          >
-                            ✕
-                          </button>
                         </div>
                       );
                     })
@@ -674,7 +749,7 @@ const AppHeader = () => {
                 onClick={async () => {
                   if (selectedNotification) {
                     await markRead(selectedNotification.id);
-                    
+
                     const toISODate = (val) => {
                       if (!val) return ''
                       const parsed = new Date(val)
@@ -693,7 +768,7 @@ const AppHeader = () => {
                     const serviceDate = selectedNotification.serviceDate || selectedNotification.date;
                     const bodyText = (selectedNotification.message || selectedNotification.detail || '').toLowerCase();
                     const titleText = (selectedNotification.title || '').toLowerCase();
-                    
+
                     let isToday = false;
                     if (serviceDate) {
                       isToday = toISODate(serviceDate) === todayISO;
@@ -706,9 +781,9 @@ const AppHeader = () => {
                     const notifMsg = (selectedNotification.message || '').toLowerCase();
                     const notifTitle = (selectedNotification.title || '').toLowerCase();
                     if (
-                      notifPath.includes('feedback') || 
-                      selectedNotification.type === 'SESSION_FEEDBACK' || 
-                      notifMsg.includes('feedback') || 
+                      notifPath.includes('feedback') ||
+                      selectedNotification.type === 'SESSION_FEEDBACK' ||
+                      notifMsg.includes('feedback') ||
                       notifTitle.includes('feedback')
                     ) {
                       targetPath = '/feedback';

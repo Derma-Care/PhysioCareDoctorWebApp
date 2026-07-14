@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CForm, CFormInput, CAlert } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilUser, cilLowVision, cilEyedropper, cilLockLocked } from '@coreui/icons'
+import { cilUser, cilLowVision, cilLockLocked } from '@coreui/icons'
 import launcherIcon from '../../../assets/images/ic_launcher.png'
 import Doctor from '../../../assets/images/Group 11.png'
 import logo from '../../../assets/images/sat.png'
@@ -10,8 +10,11 @@ import { postLogin, getDoctorDetails, getClinicDetails } from '../../../Auth/Aut
 import { COLORS } from '../../../Themes'
 import { useToast } from '../../../utils/Toaster'
 import { useDoctorContext } from '../../../Context/DoctorContext'
-import { baseUrl, loginUrl } from '../../../Auth/BaseUrl'
+import { baseUrl, ipUrl, loginUrl } from '../../../Auth/BaseUrl'
 import { getFCMToken } from '../../../firebase'
+import api from '../../../Auth/axiosInterceptor'
+import ForgotPasswordModal from '../../../components/ForgotPasswordModal'
+import ResetPasswordModal from '../../../components/ResetPasswordModal'
 
 /* ─── Keyframes & global styles ─────────────────────────────────────────── */
 const KEYFRAMES = `
@@ -240,6 +243,12 @@ const Login = () => {
   const [fcmTokenOnMount, setFcmTokenOnMount] = useState('')
   const [notificationWarning, setNotificationWarning] = useState('')
 
+  // ── Reset-password modal state ──────────────────────────────────────────
+  const [showResetModal, setShowResetModal] = useState(false)
+
+  // ── Forgot-password modal state ──────────────────────────────────────────
+  const [showForgotModal, setShowForgotModal] = useState(false)
+
   const navigate = useNavigate()
   const { success } = useToast()
   const { setDoctorId, setHospitalId, setDoctorDetails, setClinicDetails } = useDoctorContext()
@@ -266,7 +275,7 @@ const Login = () => {
     // Check notification permission and environment warnings
     const checkNotificationSupport = () => {
       if (typeof window === 'undefined') return
-      
+
       if (!window.isSecureContext) {
         setNotificationWarning('⚠️ App is running in a non-secure (HTTP) context. Push notifications require HTTPS or localhost.')
         return
@@ -340,9 +349,9 @@ const Login = () => {
       const deviceUUID = getOrGenerateDeviceUUID()
       const finalFcmToken = fcmToken || cachedFcmToken || ''
 
-      const res = await postLogin({ 
-        username: userName.trim(), 
-        password: password.trim(), 
+      const res = await postLogin({
+        username: userName.trim(),
+        password: password.trim(),
         deviceId: finalFcmToken || deviceUUID,
         fcmToken: finalFcmToken || '',
         deviceToken: finalFcmToken || ''
@@ -379,8 +388,8 @@ const Login = () => {
           setDoctorDetails(dd)
           localStorage.setItem('doctorDetails', JSON.stringify(dd))
           if (!branchId) {
-             const bId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
-             if (bId) localStorage.setItem('branchId', bId);
+            const bId = dd.branchId || (dd.branches && dd.branches[0] ? dd.branches[0].branchId : '');
+            if (bId) localStorage.setItem('branchId', bId);
           }
         }
         if (cd) {
@@ -392,8 +401,8 @@ const Login = () => {
           setClinicDetails(mergedCd)
           localStorage.setItem('clinicDetails', JSON.stringify(mergedCd))
           if (!localStorage.getItem('branchId')) {
-             const bId = mergedCd.branchId || (mergedCd.branches && mergedCd.branches[0] ? mergedCd.branches[0].branchId : '');
-             if (bId) localStorage.setItem('branchId', bId);
+            const bId = mergedCd.branchId || (mergedCd.branches && mergedCd.branches[0] ? mergedCd.branches[0].branchId : '');
+            if (bId) localStorage.setItem('branchId', bId);
           }
         } else if (res.data.branches) {
           // If cd fetch failed but we have branches in login response
@@ -410,6 +419,12 @@ const Login = () => {
     } catch (err) {
       setErrors({ login: err.response?.data?.message || 'Login error occurred' })
     } finally { setLoading(false) }
+  }
+
+  // ── Reset-password handlers ────────────────────────────────────────────
+  const openResetModal = (e) => {
+    e.preventDefault()
+    setShowResetModal(true)
   }
 
   const A = (delay) => mounted ? { animation: `floatUp .72s ease ${delay}s both` } : { opacity: 0 }
@@ -546,7 +561,7 @@ const Login = () => {
           {/* Title block */}
           <div style={{ textAlign: 'center', maxWidth: 460, ...A(.15) }}>
             <h1 style={{
-              
+
               fontSize: 'clamp(26px,3.2vw,40px)', fontWeight: 800,
               lineHeight: 1.18, color: '#fff',
               marginBottom: 8, letterSpacing: '-0.028em',
@@ -663,7 +678,7 @@ const Login = () => {
                   opacity: 0.9,
                 }} />
                 <h3 style={{
-                  
+
                   fontSize: 22, fontWeight: 800,
                   color: '#fff', marginBottom: 3, letterSpacing: '-0.015em',
                 }}>
@@ -754,22 +769,58 @@ const Login = () => {
                     <button
                       type="button" tabIndex={-1}
                       onClick={() => setShowPassword(v => !v)}
-                      style={{ position: 'absolute', top: '50%', right: '0.8rem', transform: 'translateY(-50%)', backgroundColor: 'transparent', border: 'none', padding: 0, color: '#1B4F8A', cursor: 'pointer' }}
+                      style={{ position: 'absolute', top: '50%', right: '0.8rem', transform: 'translateY(-50%)', backgroundColor: 'transparent', border: 'none', padding: 0, color: '#1B4F8A', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     >
-                      <CIcon icon={showPassword ? cilLowVision : cilEyedropper} />
+                      {showPassword ? (
+                        /* closed-eye (hide) */
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                      ) : (
+                        /* open-eye (show) */
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
                     </button>
                   </div>
 
                   {errors.password && <div style={{ fontSize: 11.5, color: '#ff8a8a', marginTop: 4 }}>{errors.password}</div>}
                 </div>
 
-                {/* Forgot link */}
-                <div style={{ textAlign: 'right', marginBottom: 18 }}>
-                  <a href="#" style={{
-                    fontSize: 11.5, color: 'rgba(245,166,35,0.7)',
-                    textDecoration: 'none', fontWeight: 600,
-                    letterSpacing: '.02em',
-                  }}>Forgot password?</a>
+                {/* Reset & Forgot Password Buttons */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(true)}
+                    style={{
+                      background: 'none', border: 'none', padding: 0,
+                      fontSize: 11.5, color: 'rgba(255,255,255,0.6)',
+                      fontWeight: 600, letterSpacing: '.02em',
+                      cursor: 'pointer', transition: 'color .18s',
+                    }}
+                    onMouseEnter={e => e.target.style.color = '#fff'}
+                    onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}
+                  >Forgot password?</button>
+
+                  <button
+                    type="button"
+                    id="reset-password-btn"
+                    onClick={openResetModal}
+                    style={{
+                      background: 'none', border: 'none', padding: 0,
+                      fontSize: 11.5, color: 'rgba(245,166,35,0.75)',
+                      fontWeight: 600, letterSpacing: '.02em',
+                      cursor: 'pointer',
+                      transition: 'color .18s',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: 2,
+                    }}
+                    onMouseEnter={e => e.target.style.color = '#F5A623'}
+                    onMouseLeave={e => e.target.style.color = 'rgba(245,166,35,0.75)'}
+                  >🔑 Reset Password</button>
                 </div>
 
                 {/* ── Submit ── */}
@@ -837,6 +888,19 @@ const Login = () => {
         </div>
 
       </div>
+
+      {/* ══ RESET PASSWORD MODAL ══════════════════════════════════════════════ */}
+      {showResetModal && (
+        <ResetPasswordModal 
+          onClose={() => setShowResetModal(false)} 
+          initialUsername={userName.trim() || localStorage.getItem('doctorMobileNumber') || ''} 
+        />
+      )}
+
+      {/* ══ FORGOT PASSWORD MODAL ═════════════════════════════════════════════ */}
+      {showForgotModal && (
+        <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />
+      )}
     </>
   )
 }
