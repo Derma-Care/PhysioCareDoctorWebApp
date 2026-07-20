@@ -61,7 +61,7 @@ const App = () => {
   }, [])
 
   const doctorData = JSON.parse(localStorage.getItem('clinicDetails') || localStorage.getItem('user') || '{}');
-  const hospitalName = doctorData?.name || doctorData?.hospitalName || 'CCMS';
+  const hospitalName = doctorData?.name || doctorData?.hospitalName || 'PhysioElite';
   const hospitalLogo = doctorData?.hospitalLogo
     ? `data:image/webp;base64,${doctorData.hospitalLogo}`
     : appLogo;
