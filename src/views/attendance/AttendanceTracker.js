@@ -36,6 +36,15 @@ const Skeleton = ({ width, height, borderRadius = '4px', className = '' }) => (
 const AttendanceTracker = () => {
   const navigate = useNavigate();
 
+  let clinicName = '';
+  try {
+    const cdStr = localStorage.getItem('clinicDetails');
+    if (cdStr) {
+      const cd = JSON.parse(cdStr);
+      clinicName = cd.clinicName || cd.hospitalName || cd.name || '';
+    }
+  } catch (e) { }
+
   // State for Personal Attendance
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -118,12 +127,12 @@ const AttendanceTracker = () => {
                   setCurrentLocationText(address);
                   setNewLocation(address);
                 } else {
-                  const locText = `Kinetix Wellness Care (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+                  const locText = `${clinicName}(${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
                   setCurrentLocationText(locText);
                   setNewLocation(locText);
                 }
               } catch (geoErr) {
-                const locText = `Kinetix Wellness Care (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+                const locText = `${clinicName} (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
                 setCurrentLocationText(locText);
                 setNewLocation(locText);
               }
@@ -253,7 +262,7 @@ const AttendanceTracker = () => {
                 setLogoutAddress(parsed.logoutAddress || '');
                 return; // Exit early, trust local storage over empty API response
               }
-            } catch(e) {}
+            } catch (e) { }
           }
         }
 
@@ -274,7 +283,7 @@ const AttendanceTracker = () => {
           // If there's a login time and no logout time (or logout is '—'), they are logged in
           const currentlyLoggedIn = fetchedLogoutTime === '—';
           setIsLoggedIn(currentlyLoggedIn);
-          
+
           let apiStatus = dailyData.status;
           if (apiStatus === 'Not Logged In') apiStatus = currentlyLoggedIn ? 'Active' : 'Present';
           setStatus(apiStatus || (currentlyLoggedIn ? 'Active' : 'Present'));
@@ -748,7 +757,7 @@ const AttendanceTracker = () => {
         };
         let inTime = parseTime(dailyData.inTime || dailyData.loginTime || dailyData.login?.time);
         let outTime = parseTime(dailyData.outTime || dailyData.logoutTime || dailyData.logout?.time || dailyData.logoutTime);
-        
+
         setSelectedDateLogin(inTime);
         setSelectedDateLogout(outTime);
 
@@ -761,7 +770,7 @@ const AttendanceTracker = () => {
           try {
             const r = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
             if (r.data && r.data.display_name) return r.data.display_name;
-          } catch(e){}
+          } catch (e) { }
           return '';
         };
 
@@ -785,12 +794,12 @@ const AttendanceTracker = () => {
       const userId = localStorage.getItem('doctorId') || '0001';
       const storedState = localStorage.getItem(`doctor_duty_log_${userId}_${dateStr}`);
       if (storedState) {
-          const parsed = JSON.parse(storedState);
-          setSelectedDateActivities(parsed.activities || []);
-          setSelectedDateLogin(parsed.loginTime || '—');
-          setSelectedDateLogout(parsed.logoutTime || '—');
-          setSelectedDateLoginAddress(parsed.loginAddress || '');
-          setSelectedDateLogoutAddress(parsed.logoutAddress || '');
+        const parsed = JSON.parse(storedState);
+        setSelectedDateActivities(parsed.activities || []);
+        setSelectedDateLogin(parsed.loginTime || '—');
+        setSelectedDateLogout(parsed.logoutTime || '—');
+        setSelectedDateLoginAddress(parsed.loginAddress || '');
+        setSelectedDateLogoutAddress(parsed.logoutAddress || '');
       }
     }
   };
@@ -817,7 +826,7 @@ const AttendanceTracker = () => {
               <span style={{ marginRight: '6px', fontSize: '14px' }}>📅</span> {getFormattedDate()}
             </div>
             <h2 style={{ color: '#1B4F8A', fontWeight: '800', fontSize: '18px', margin: '0 0 4px' }}>
-              Daily Duty Log
+              Daily Duty Log {clinicName ? `- ${clinicName}` : ''}
             </h2>
             <div style={{ color: '#64748b', fontSize: '12px', fontWeight: '500' }}>
               Track your work hours and activities

@@ -18,7 +18,11 @@ import { getClinicDetails } from '../../Auth/Auth'
 const AppHeaderDropdown = () => {
   const navigate = useNavigate()
   const [clinic, setClinic] = useState(null)
-
+  const doctorData = JSON.parse(localStorage.getItem('clinicDetails') || localStorage.getItem('user') || '{}');
+  const hospitalName = doctorData?.name || doctorData?.hospitalName || 'CCMS';
+  const hospitalLogo = doctorData?.hospitalLogo
+    ? `data:image/webp;base64,${doctorData.hospitalLogo}`
+    : avatar8;
   // Logout
   const handleLock = () => {
     // Preserve local attendance data so it doesn't disappear if they log back in
@@ -26,11 +30,11 @@ const AppHeaderDropdown = () => {
     const userId = localStorage.getItem('doctorId') || '0001'
     const attendanceKey = `doctor_duty_log_${userId}_${todayStr}`
     const monthlyKey = `doctor_monthly_attendance_${userId}`
-    
+
     const attendanceData = localStorage.getItem(attendanceKey)
     const monthlyData = localStorage.getItem(monthlyKey)
 
-   
+
     const deviceId = localStorage.getItem('deviceId')
 
     localStorage.removeItem('token')
@@ -41,7 +45,7 @@ const AppHeaderDropdown = () => {
     if (attendanceData) localStorage.setItem(attendanceKey, attendanceData)
     if (monthlyData) localStorage.setItem(monthlyKey, monthlyData)
 
-    
+
     if (deviceId) localStorage.setItem('deviceId', deviceId)
 
     navigate('/login', { replace: true })
@@ -87,13 +91,13 @@ const AppHeaderDropdown = () => {
                   ? logo
                   : `data:image/png;base64,${logo}`;
               }
-              return avatar8;
+              return hospitalLogo;
             })()
           }
           className="profile-image"
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = avatar8;
+            e.target.src = hospitalLogo;
           }}
         />
       </CDropdownToggle>

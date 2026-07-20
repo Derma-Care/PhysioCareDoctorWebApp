@@ -325,7 +325,7 @@ const InvestigationPDF = ({ formData, patientData, doctorData, clicniData }) => 
     ''
 
   // Clinic info
-  const clinicName = clicniData?.name || 'Kinetix Wellness Care'
+  const clinicName = clicniData?.name || 'PhysioElite'
   const clinicAddress = clicniData?.address || ''
   const clinicPhone = clicniData?.phone || ''
   const clinicEmail = clicniData?.email || ''

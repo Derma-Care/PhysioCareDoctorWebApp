@@ -52,16 +52,16 @@ const App = () => {
   useEffect(() => {
     const sessionKey = localStorage.getItem('sessionKey')
     if (!sessionKey) {
-      
+
       const deviceId = localStorage.getItem('deviceId')
       localStorage.clear()
-      
+
       if (deviceId) localStorage.setItem('deviceId', deviceId)
     }
   }, [])
 
-  const doctorData = JSON.parse(localStorage.getItem('doctorInfo') || localStorage.getItem('user') || '{}');
-  const hospitalName = doctorData?.clinicName || doctorData?.hospitalName || 'Kinetix Wellness Care';
+  const doctorData = JSON.parse(localStorage.getItem('clinicDetails') || localStorage.getItem('user') || '{}');
+  const hospitalName = doctorData?.name || doctorData?.hospitalName || 'CCMS';
   const hospitalLogo = doctorData?.hospitalLogo
     ? `data:image/webp;base64,${doctorData.hospitalLogo}`
     : appLogo;

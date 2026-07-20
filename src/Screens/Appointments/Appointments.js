@@ -41,6 +41,7 @@ const tabLabels = {
   inprogress: "In-Progress",
 
   followUpPending: 'Follow-up Pending',
+  followup: 'Follow-up',
 }
 
 const tabToStatusMap = {
@@ -58,6 +59,7 @@ const tabToStatusMap = {
   drop: 'Drop',
   noReply: 'No Reply',
   followUpPending: 'Follow-up Pending',
+  followup: 'Follow-up',
 }
 
 const Appointments = ({ searchTerm = '' }) => {

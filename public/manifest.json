@@ -1,7 +1,7 @@
 {
-  "name": "Kinetix Wellness Care – Doctor",
-  "short_name": "KWC Doctor",
-  "description": "Kinetix Wellness Care Doctor Portal – manage appointments, prescriptions and patients.",
+  "name": "PhysioElite – Doctor",
+  "short_name": "PhysioElite Doctor",
+  "description": "PhysioElite Doctor Portal – manage appointments, prescriptions and patients.",
   "icons": [
     {
       "src": "/pwa-192x192.png",

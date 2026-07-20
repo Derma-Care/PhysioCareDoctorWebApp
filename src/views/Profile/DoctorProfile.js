@@ -515,17 +515,17 @@ const DoctorProfile = () => {
     fetchSlots()
   }, [])
 
-  useEffect(() => {
-    const fetchRatings = async () => {
-      const doctorId = localStorage.getItem('doctorId')
-      if (!doctorId) return
-      try {
-        const response = await averageRatings(doctorId)
-        if (response) setRatingsData(response)
-      } catch (e) { console.error(e) }
-    }
-    fetchRatings()
-  }, [])
+  // useEffect(() => {
+  //   const fetchRatings = async () => {
+  //     const doctorId = localStorage.getItem('doctorId')
+  //     if (!doctorId) return
+  //     try {
+  //       const response = await averageRatings(doctorId)
+  //       if (response) setRatingsData(response)
+  //     } catch (e) { console.error(e) }
+  //   }
+  //   fetchRatings()
+  // }, [])
 
   const normalizeDate = (d) => format(new Date(d), 'yyyy-MM-dd')
   const slotsForSelectedDate = slotsData.find(
@@ -601,20 +601,20 @@ const DoctorProfile = () => {
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
                 {doctorImage
                   ? (
-                      <>
-                        <img 
-                          src={doctorImage} 
-                          alt="Doctor" 
-                          className="dp-avatar-ring" 
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            const fallback = document.getElementById('doctor-profile-fallback');
-                            if (fallback) fallback.style.display = 'flex';
-                          }} 
-                        />
-                        <div id="doctor-profile-fallback" className="dp-avatar-placeholder" style={{ display: 'none' }}>No Image</div>
-                      </>
-                    )
+                    <>
+                      <img
+                        src={doctorImage}
+                        alt="Doctor"
+                        className="dp-avatar-ring"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const fallback = document.getElementById('doctor-profile-fallback');
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                      <div id="doctor-profile-fallback" className="dp-avatar-placeholder" style={{ display: 'none' }}>No Image</div>
+                    </>
+                  )
                   : <div className="dp-avatar-placeholder">No Image</div>
                 }
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -668,7 +668,7 @@ const DoctorProfile = () => {
                     >
                       {doctorDetails?.doctorAvailabilityStatus ? '⭕ Set Inactive' : '🟢 Set Active'}
                     </button>
-                      <div className="dp-hero-stat">
+                    <div className="dp-hero-stat">
                       <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.inClinicFee || 0}</div>
                       <div className="dp-hero-stat-lbl">In-clinic fee</div>
                     </div>
@@ -709,13 +709,13 @@ const DoctorProfile = () => {
                   {/* <div className="dp-hero-stat">
                     <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.inClinicFee || 0}</div>
                     <div className="dp-hero-stat-lbl">In-clinic fee</div> */}
-                  </div>
-                  {/* <div className="dp-hero-stat">
+                </div>
+                {/* <div className="dp-hero-stat">
                     <div className="dp-hero-stat-val">₹{doctorDetails?.doctorFees?.vedioConsultationFee || 0}</div>
                     <div className="dp-hero-stat-lbl">Video fee</div>
                   </div> */}
-                </div>
               </div>
+            </div>
             {/* </div> */}
 
             {/* Contact & Availability */}
@@ -763,7 +763,7 @@ const DoctorProfile = () => {
                       ? sig : `data:image/png;base64,${sig}`;
                     return (
                       <div className="dp-sig-box">
-                        <img src={finalSrc} alt="Signature" style={{ height: 56, display: 'block' }} 
+                        <img src={finalSrc} alt="Signature" style={{ height: 56, display: 'block' }}
                           onError={(e) => { e.target.style.display = 'none'; }} />
                       </div>
                     );

@@ -257,6 +257,18 @@ const Login = () => {
     const t = setTimeout(() => setMounted(true), 60)
     document.body.style.overflow = 'hidden'
 
+    // Clear local storage but keep fcmToken and device UUIDs
+    const cachedFcmToken = localStorage.getItem('fcmToken')
+    const cachedDeviceUUID = localStorage.getItem('deviceUUID')
+    const cachedDeviceId = localStorage.getItem('deviceId')
+
+    localStorage.clear();
+    sessionStorage.clear();
+
+    if (cachedFcmToken) localStorage.setItem('fcmToken', cachedFcmToken)
+    if (cachedDeviceUUID) localStorage.setItem('deviceUUID', cachedDeviceUUID)
+    if (cachedDeviceId) localStorage.setItem('deviceId', cachedDeviceId)
+
     // Pre-fetch FCM token early on mount
     const fetchTokenOnMount = async () => {
       try {
@@ -552,11 +564,11 @@ const Login = () => {
           </div>
 
           {/* App icon */}
-          <img src={launcherIcon} alt="App icon" style={{
+          {/* <img src={launcherIcon} alt="App icon" style={{
             height: 88, marginBottom: 20,
             filter: 'drop-shadow(0 12px 32px rgba(245,166,35,0.3))',
             animation: mounted ? `iconBob 4s ease-in-out 1s infinite, floatUp .7s ease 0s both` : 'none',
-          }} />
+          }} /> */}
 
           {/* Title block */}
           <div style={{ textAlign: 'center', maxWidth: 460, ...A(.15) }}>
@@ -566,8 +578,8 @@ const Login = () => {
               lineHeight: 1.18, color: '#fff',
               marginBottom: 8, letterSpacing: '-0.028em',
             }}>
-              Chiselon{' '}
-              <span style={{
+              PhysioElite{' '}
+              {/* <span style={{
                 backgroundImage: 'linear-gradient(90deg,#F5A623 0%,#ffd17a 40%,#F5A623 80%)',
                 backgroundSize: '200% auto',
                 WebkitBackgroundClip: 'text',
@@ -575,8 +587,8 @@ const Login = () => {
                 animation: 'shimmerText 2.8s linear infinite',
               }}>
                 Clinic
-              </span>
-              {' '}Management<br />System
+              </span> */}
+              {/* {' '}Management<br />System */}
             </h1>
 
             {/* Animated underline */}
@@ -792,7 +804,7 @@ const Login = () => {
 
                 {/* Reset & Forgot Password Buttons */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => setShowForgotModal(true)}
                     style={{
@@ -803,7 +815,7 @@ const Login = () => {
                     }}
                     onMouseEnter={e => e.target.style.color = '#fff'}
                     onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}
-                  >Forgot password?</button>
+                  >Forgot password?</button> */}
 
                   <button
                     type="button"
@@ -891,9 +903,9 @@ const Login = () => {
 
       {/* ══ RESET PASSWORD MODAL ══════════════════════════════════════════════ */}
       {showResetModal && (
-        <ResetPasswordModal 
-          onClose={() => setShowResetModal(false)} 
-          initialUsername={userName.trim() || localStorage.getItem('doctorMobileNumber') || ''} 
+        <ResetPasswordModal
+          onClose={() => setShowResetModal(false)}
+          initialUsername={userName.trim() || localStorage.getItem('doctorMobileNumber') || ''}
         />
       )}
 

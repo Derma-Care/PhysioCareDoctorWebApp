@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom'
 import './ToasterStyles.css'
 import { toast } from 'react-toastify'
 // utils/Toaster.js
- 
+import logo from '../assets/images/ic_launcher.png'
 const ToastCtx = createContext(null)
 export const useToast = () => {
   const ctx = useContext(ToastCtx)
@@ -24,9 +24,14 @@ export const useToast = () => {
  * autoClose: milliseconds (default 3500)
  * position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'
  */
+const doctorData = JSON.parse(localStorage.getItem('clinicDetails') || localStorage.getItem('user') || '{}');
+const hospitalName = doctorData?.name || doctorData?.hospitalName || 'CCMS';
+const hospitalLogo = doctorData?.hospitalLogo
+  ? `data:image/webp;base64,${doctorData.hospitalLogo}`
+  : logo;
 export function ToastProvider({
   children,
-  images,
+  images = hospitalLogo,
   autoClose = 3500,
   position = 'top-right',
   max = 3,

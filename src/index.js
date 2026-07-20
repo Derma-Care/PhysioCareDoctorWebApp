@@ -43,17 +43,17 @@ import store from './store'
 import { DoctorProvider } from './Context/DoctorContext'
 import { ToastProvider } from './utils/Toaster'
 
-import logo from './assets/images/ic_launcher.png'
+
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
     <ToastProvider
-      images={{
-        success: logo,
-        error: logo,
-        info: logo,
-        warning: logo,
-      }}
+    // images={{
+    //   success: logo,
+    //   error: logo,
+    //   info: logo,
+    //   warning: logo,
+    // }}
     >
       <DoctorProvider>
         <App />
