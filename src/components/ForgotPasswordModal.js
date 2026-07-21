@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import api from '../Auth/axiosInterceptor'
 import { ipUrl } from '../Auth/BaseUrl'
+import axios from 'axios'
 
 /* ── shared input style ─────────────────────────────────────────── */
 const inputStyle = (hasError) => ({
@@ -75,16 +76,13 @@ const ForgotPasswordModal = ({ onClose }) => {
     e.preventDefault()
     clearAlerts()
     if (!mobile.trim()) { setMobileError('Mobile number is required'); return }
-    if (!/^\\d{10}$/.test(mobile.trim())) { setMobileError('Enter a valid 10-digit mobile number'); return }
+    if (!/^\d{10}$/.test(mobile.trim())) { setMobileError('Enter a valid 10-digit mobile number'); return }
     setMobileError('')
     setMobileLoading(true)
     try {
-      // DUMMY IMPLEMENTATION FOR TESTING
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Simulate success
-      setOtpInfo('OTP has been sent to your registered email ID (dummy).')
-      setStep('otp')
+      const response = await axios.get(`${ipUrl}/clinic-admin/forgot-password/${mobile}/doctor`);
+      setOtpInfo(response.data?.message || 'OTP has been sent to your registered contact.');
+      setStep('otp');
     } catch (err) {
       setApiError(err?.response?.data?.message || 'Failed to send OTP. Please try again.')
     } finally {
@@ -97,17 +95,12 @@ const ForgotPasswordModal = ({ onClose }) => {
     e.preventDefault()
     clearAlerts()
     if (!otp.trim()) { setOtpError('Please enter the OTP'); return }
-    if (!/^\\d{4,8}$/.test(otp.trim())) { setOtpError('Enter a valid OTP'); return }
+    if (!/^\d{4,8}$/.test(otp.trim())) { setOtpError('Enter a valid OTP'); return }
     setOtpError('')
     setOtpLoading(true)
     try {
-      // DUMMY IMPLEMENTATION FOR TESTING
-      await new Promise(resolve => setTimeout(resolve, 1200))
-      
-      // Simulate success (or fail if OTP is '0000')
-      if (otp === '0000') throw new Error('Invalid OTP')
-      
-      setStep('password')
+      await api.get(`${ipUrl}/clinic-admin/verify-otp/${mobile}/doctor/${otp}`);
+      setStep('password');
     } catch (err) {
       setOtpError(err.message || err?.response?.data?.message || 'Invalid OTP. Please try again.')
     } finally {
@@ -128,9 +121,13 @@ const ForgotPasswordModal = ({ onClose }) => {
     if (Object.keys(errs).length) return
     setPwdLoading(true)
     try {
-      // DUMMY IMPLEMENTATION FOR TESTING
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
+      const payload = {
+        otp: otp,
+        newPassword: newPwd,
+        confirmPassword: confirmPwd
+      };
+      await api.post(`${ipUrl}/clinic-admin/reset-password/doctor/${mobile}`, payload);
+
       setSuccessMsg('Password reset successfully! You can now sign in with your new password.')
       setTimeout(() => onClose(), 2800)
     } catch (err) {
@@ -142,9 +139,9 @@ const ForgotPasswordModal = ({ onClose }) => {
 
   /* ── Shared top banner ─────────────────────────────────────────── */
   const stepMeta = {
-    mobile:   { icon: '📱', title: 'Forgot Password', sub: 'Enter your registered mobile number' },
-    otp:      { icon: '✉️', title: 'Verify OTP',      sub: 'Check your registered email for the OTP' },
-    password: { icon: '🔐', title: 'Reset Password',   sub: 'Set your new password' },
+    mobile: { icon: '📱', title: 'Forgot Password', sub: 'Enter your registered mobile number' },
+    otp: { icon: '✉️', title: 'Verify OTP', sub: 'Check your registered email for the OTP' },
+    password: { icon: '🔐', title: 'Reset Password', sub: 'Set your new password' },
   }
   const { icon, title, sub } = stepMeta[step]
 
@@ -236,7 +233,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                     maxLength={10}
                     placeholder="Enter 10-digit mobile number"
                     value={mobile}
-                    onChange={e => { setMobile(e.target.value.replace(/\\D/g, '')); setMobileError(''); clearAlerts() }}
+                    onChange={e => { setMobile(e.target.value.replace(/\D/g, '')); setMobileError(''); clearAlerts() }}
                     style={{ ...inputStyle(!!mobileError), paddingRight: '2.4rem' }}
                     onFocus={e => { e.target.style.borderColor = 'rgba(245,166,35,0.55)'; e.target.style.boxShadow = '0 0 0 3px rgba(245,166,35,0.12)' }}
                     onBlur={e => { e.target.style.borderColor = mobileError ? 'rgba(220,53,69,0.6)' : 'rgba(255,255,255,0.12)'; e.target.style.boxShadow = 'none' }}
@@ -265,7 +262,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                   maxLength={8}
                   placeholder="Enter OTP sent to your email"
                   value={otp}
-                  onChange={e => { setOtp(e.target.value.replace(/\\D/g, '')); setOtpError(''); clearAlerts() }}
+                  onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setOtpError(''); clearAlerts() }}
                   style={{
                     ...inputStyle(!!otpError),
                     fontSize: 22, letterSpacing: '0.4em', textAlign: 'center', fontWeight: 700,

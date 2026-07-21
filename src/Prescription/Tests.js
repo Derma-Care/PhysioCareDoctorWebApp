@@ -47,10 +47,10 @@ const NEURO_OPTIONS = ['Normal', 'Balance', 'Coordination', 'Sensation issues']
 /* ─── Tabs config ────────────────────────────────────────────────────────── */
 const TABS = [
   { id: 'subjective', label: 'Subjective', icon: '📋' },
-  { id: 'functional', label: 'Functional', icon: '🏃' },
-  { id: 'physical', label: 'Physical Exam', icon: '🔬' },
   { id: 'objective', label: 'Objective', icon: '📐' },
   { id: 'painClassification', label: 'Pain Classification', icon: '💊' },
+  { id: 'functional', label: 'Functional', icon: '🏃' },
+  { id: 'physical', label: 'Physical Exam', icon: '🔬' },
   { id: 'redFlags', label: 'Red Flags', icon: '🚩' },
   { id: 'neuroInfo', label: 'Neuro Info', icon: '🧠' },
 ]
@@ -159,7 +159,27 @@ const UnderlineInput = ({ value, onChange, placeholder = '' }) => (
 const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFormData }) => {
 
   /* ── tab state ── */
-  const [activeTab, setActiveTab] = useState(0)
+  const [showAllTabs, setShowAllTabs] = useState(false)
+  const visibleTabs = showAllTabs
+    ? TABS
+    : TABS.filter(t => ['subjective', 'objective', 'painClassification'].includes(t.id))
+
+  const [activeTab, setActiveTab] = useState(2) // Default to 'painClassification' which is at index 2 of visibleTabs
+
+  const handleToggleTabs = () => {
+    const currentTabId = visibleTabs[activeTab].id;
+    const nextShowAll = !showAllTabs;
+    const nextVisibleTabs = nextShowAll
+      ? TABS
+      : TABS.filter(t => ['subjective', 'objective', 'painClassification'].includes(t.id));
+
+    let nextIndex = nextVisibleTabs.findIndex(t => t.id === currentTabId);
+    if (nextIndex === -1) nextIndex = 0;
+
+    setShowAllTabs(nextShowAll);
+    setActiveTab(nextIndex);
+  }
+
 
   const [painScale, setPainScale] = useState(seed.painScale ?? '')
   const [painType, setPainType] = useState(seed.painType ?? '')
@@ -282,7 +302,10 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
     const sp = seed.sportsRehabPatients || seed || {}
     const nr = seed.neuroRehabPatients || seed || {}
 
-    if (isValid(seed.patientPain)) setPatientPain(seed.patientPain)
+    if (isValid(seed.patientPain)) {
+      const match = PATIENT_PAIN_OPTIONS.find(o => o.value === seed.patientPain || o.label === seed.patientPain)
+      setPatientPain(match ? match.value : seed.patientPain)
+    }
     setPainTriggers(cp.painTriggers ?? cp.painTriggers ?? '')
     setChronicRelieving(cp.relievingFactors || cp.chronicRelieving || '')
     setTypeOfSport(sp.sportName || sp.typeOfSport || '')
@@ -295,7 +318,6 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
   }, [seed])
 
   const cameFromBackend = isValid(seed.patientPain)
-  const effectivePain = cameFromBackend ? seed.patientPain : patientPain
 
   /* ── Duration: block negatives ── */
   const handleDurationChange = (val) => {
@@ -315,20 +337,20 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
       postureAssessment, postureDeviations,
       romStatus, romRestricted, romJoints,
       muscleStrength, muscleWeakness, neurologicalSigns,
-      patientPain: effectivePain,
-      ...(effectivePain === 'chronicPain' && { painTriggers, chronicRelieving }),
-      ...(effectivePain === 'sportsRehab' && { typeOfSport, recurringInjuries, returnToSportGoals }),
-      ...(effectivePain === 'neuroRehab' && { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }),
-      ...(effectivePain === 'acutePain' && { acuteMechanism, acuteInflammation }),
-      ...(effectivePain === 'mechanicalPain' && { mechanicalTriggers, posturalTolerance }),
-      ...(effectivePain === 'neuropathicPain' && { neuropathicNature, neuroDiagnosis }),
-      ...(effectivePain === 'inflammatoryPain' && { inflammatoryMorning, relievingFactors }),
-      ...(effectivePain === 'myofascialPain' && { myofascialTriggers, observations }),
-      ...(effectivePain === 'posturalPain' && { posturalTolerance, observations }),
-      ...(effectivePain === 'orthopedicRehab' && { orthoSurgery, mobilityStatus }),
-      ...(effectivePain === 'pediatricRehab' && { pediatricMilestones, dailyLivingAffected }),
-      ...(effectivePain === 'geriatricRehab' && { geriatricFalls, mobilityStatus }),
-      ...(effectivePain === 'cardiacRehab' && { cardiacVitals, painScale }),
+      patientPain: patientPain,
+      ...(patientPain === 'chronicPain' && { painTriggers, chronicRelieving }),
+      ...(patientPain === 'sportsRehab' && { typeOfSport, recurringInjuries, returnToSportGoals }),
+      ...(patientPain === 'neuroRehab' && { neuroDiagnosis, neuroOnset, mobilityStatus, cognitiveStatus }),
+      ...(patientPain === 'acutePain' && { acuteMechanism, acuteInflammation }),
+      ...(patientPain === 'mechanicalPain' && { mechanicalTriggers, posturalTolerance }),
+      ...(patientPain === 'neuropathicPain' && { neuropathicNature, neuroDiagnosis }),
+      ...(patientPain === 'inflammatoryPain' && { inflammatoryMorning, relievingFactors }),
+      ...(patientPain === 'myofascialPain' && { myofascialTriggers, observations }),
+      ...(patientPain === 'posturalPain' && { posturalTolerance, observations }),
+      ...(patientPain === 'orthopedicRehab' && { orthoSurgery, mobilityStatus }),
+      ...(patientPain === 'pediatricRehab' && { pediatricMilestones, dailyLivingAffected }),
+      ...(patientPain === 'geriatricRehab' && { geriatricFalls, mobilityStatus }),
+      ...(patientPain === 'cardiacRehab' && { cardiacVitals, painScale }),
       // Merged embedded data
       redFlags: redFlagsData,
       radiationNeuro,
@@ -357,7 +379,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
 
   const handleNext = () => {
     const payload = getPayload()
-    if (activeTab < TABS.length - 1) {
+    if (activeTab < visibleTabs.length - 1) {
       if (setFormData) {
         setFormData(prev => ({
           ...prev,
@@ -405,7 +427,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
 
   /* ─── Tab content ────────────────────────────────────────────────────── */
   const renderTabContent = () => {
-    switch (TABS[activeTab].id) {
+    switch (visibleTabs[activeTab].id) {
 
       /* ── 1. Subjective ── */
       case 'subjective':
@@ -599,47 +621,33 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
         return (
           <>
             <SectionHeader icon="💊" title="Patient Pain Classification" color="#dc2626" />
+
+            {cameFromBackend && (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: '#EFF6FF', border: '1px solid #b6cfe8',
+                borderRadius: 20, padding: '4px 12px', marginBottom: 16,
+                fontSize: '0.75rem', color: '#1B4F8A', fontWeight: 600
+              }}>
+                <span>ℹ️</span> Auto-filled from Complaints tab
+              </div>
+            )}
+
             <div style={{ marginBottom: 20 }}>
-              {cameFromBackend ? (
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-                  background: '#EFF6FF', border: '1.5px solid #b6cfe8',
-                  borderRadius: 10, padding: '12px 16px',
-                }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1B4F8A' }}>
-                    Pain type received from consultation:
-                  </span>
-                  <span style={{
-                    background: '#dceeff', color: '#1B4F8A',
-                    border: '1px solid #b6cfe8', borderRadius: 20,
-                    padding: '4px 16px', fontSize: 13, fontWeight: 700,
-                  }}>
-                    {getPainLabel(effectivePain)}
-                  </span>
-                  <span style={{
-                    fontSize: '0.75rem', color: '#1B4F8A',
-                    background: '#EFF6FF', border: '1px solid #b6cfe8',
-                    borderRadius: 20, padding: '2px 10px',
-                  }}>
-                    Auto-filled from Complaints tab
-                  </span>
-                </div>
-              ) : (
-                <div style={{ maxWidth: 400 }}>
-                  <Field label="Select Patient Pain Type">
-                    <NativeSelect value={patientPain} onChange={setPatientPain} options={PATIENT_PAIN_OPTIONS} />
-                  </Field>
-                  {!patientPain && (
-                    <p style={{ marginTop: 8, fontSize: '0.8rem', color: '#6b7280', fontStyle: 'italic' }}>
-                      Select a type to reveal additional fields below.
-                    </p>
-                  )}
-                </div>
-              )}
+              <div style={{ maxWidth: 400 }}>
+                <Field label="Select Patient Pain Type">
+                  <NativeSelect value={patientPain} onChange={setPatientPain} options={PATIENT_PAIN_OPTIONS} />
+                </Field>
+                {!patientPain && (
+                  <p style={{ marginTop: 8, fontSize: '0.8rem', color: '#6b7280', fontStyle: 'italic' }}>
+                    Select a type to reveal additional fields below.
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Chronic Pain */}
-            {effectivePain === 'chronicPain' && (
+            {patientPain === 'chronicPain' && (
               <div style={{ marginBottom: 24, background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#991b1b', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>🔴</span> Chronic Pain Patients
@@ -658,7 +666,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Sports Rehab */}
-            {effectivePain === 'sportsRehab' && (
+            {patientPain === 'sportsRehab' && (
               <div style={{ marginBottom: 24, background: '#f0fff4', border: '1.5px solid #6ee7b7', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#065f46', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>🟢</span> Sports Rehab Patients
@@ -679,7 +687,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Acute Pain */}
-            {effectivePain === 'acutePain' && (
+            {patientPain === 'acutePain' && (
               <div style={{ marginBottom: 24, background: '#fff5f5', border: '1.5px solid #fecaca', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#991b1b', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>🚨</span> Acute Pain Patients
@@ -696,7 +704,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Mechanical Pain */}
-            {effectivePain === 'mechanicalPain' && (
+            {patientPain === 'mechanicalPain' && (
               <div style={{ marginBottom: 24, background: '#f8fafc', border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#334155', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>⚙️</span> Mechanical Pain Patients
@@ -713,7 +721,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Neuropathic Pain */}
-            {effectivePain === 'neuropathicPain' && (
+            {patientPain === 'neuropathicPain' && (
               <div style={{ marginBottom: 24, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#5b21b6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>⚡</span> Neuropathic Pain Patients
@@ -730,7 +738,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Inflammatory Pain */}
-            {effectivePain === 'inflammatoryPain' && (
+            {patientPain === 'inflammatoryPain' && (
               <div style={{ marginBottom: 24, background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#92400e', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>🔥</span> Inflammatory Pain Patients
@@ -747,7 +755,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Myofascial Pain */}
-            {effectivePain === 'myofascialPain' && (
+            {patientPain === 'myofascialPain' && (
               <div style={{ marginBottom: 24, background: '#fef2f2', border: '1.5px solid #fecaca', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#991b1b', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>🧶</span> Myofascial Pain Patients
@@ -764,7 +772,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Postural Pain */}
-            {effectivePain === 'posturalPain' && (
+            {patientPain === 'posturalPain' && (
               <div style={{ marginBottom: 24, background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0369a1', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>🪑</span> Postural Pain Patients
@@ -781,7 +789,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Orthopedic Rehab */}
-            {effectivePain === 'orthopedicRehab' && (
+            {patientPain === 'orthopedicRehab' && (
               <div style={{ marginBottom: 24, background: '#f8fafc', border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#334155', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>🦴</span> Orthopedic Rehab Patients
@@ -798,7 +806,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Pediatric Rehab */}
-            {effectivePain === 'pediatricRehab' && (
+            {patientPain === 'pediatricRehab' && (
               <div style={{ marginBottom: 24, background: '#fff1f2', border: '1.5px solid #fecdd3', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#9f1239', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>👶</span> Pediatric Rehab Patients
@@ -815,7 +823,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Geriatric Rehab */}
-            {effectivePain === 'geriatricRehab' && (
+            {patientPain === 'geriatricRehab' && (
               <div style={{ marginBottom: 24, background: '#fdf4ff', border: '1.5px solid #f5d0fe', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#86198f', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>👵</span> Geriatric Rehab Patients
@@ -832,7 +840,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Cardiac Rehab */}
-            {effectivePain === 'cardiacRehab' && (
+            {patientPain === 'cardiacRehab' && (
               <div style={{ marginBottom: 24, background: '#fff7ed', border: '1.5px solid #ffedd5', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#9a3412', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>❤️</span> Cardiac Rehab Patients
@@ -849,7 +857,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
             )}
 
             {/* Neuro Rehab */}
-            {effectivePain === 'neuroRehab' && (
+            {patientPain === 'neuroRehab' && (
               <div style={{ marginBottom: 24, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 10, padding: '16px 20px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#5b21b6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>🟣</span> Neuro Rehab Patients
@@ -921,16 +929,27 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
 
                 {/* Card header */}
                 <div style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
                   marginBottom: 18, borderBottom: '2px solid #dceeff', paddingBottom: 14,
                 }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: 8,
-                    background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
-                  }}>🩺</div>
-                  <h5 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '1.1rem' }}>Assessment</h5>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 8,
+                      background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 18, boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+                    }}>🩺</div>
+                    <h5 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '1.1rem' }}>Assessment</h5>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleToggleTabs}
+                    style={{ background: '#e8f0fb', color: '#1B4F8A', padding: '6px 14px', borderRadius: 8, border: '1.5px solid #b6cfe8', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#dceeff' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#e8f0fb' }}
+                  >
+                    {showAllTabs ? 'Hide Additional Tabs' : '+ Additional Info'}
+                  </button>
                 </div>
 
                 {/* ── Tab Bar ── */}
@@ -943,7 +962,7 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
                   msOverflowStyle: 'none',
                   scrollbarWidth: 'none',
                 }}>
-                  {TABS.map((tab, idx) => {
+                  {visibleTabs.map((tab, idx) => {
                     const isActive = idx === activeTab
                     const isDone = idx < activeTab
                     return (
@@ -985,10 +1004,10 @@ const Assessment = ({ seed = {}, onNext, sidebarWidth = 0, formData = {}, setFor
                 {/* ── Step indicator ── */}
                 <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.78rem', color: '#6b7280' }}>
-                    Step {activeTab + 1} of {TABS.length}
+                    Step {activeTab + 1} of {visibleTabs.length}
                   </span>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    {TABS.map((_, idx) => (
+                    {visibleTabs.map((_, idx) => (
                       <div key={idx} style={{
                         width: idx === activeTab ? 20 : 8, height: 6,
                         borderRadius: 3,

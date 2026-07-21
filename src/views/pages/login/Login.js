@@ -804,7 +804,7 @@ const Login = () => {
 
                 {/* Reset & Forgot Password Buttons */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
-                  {/* <button
+                  <button
                     type="button"
                     onClick={() => setShowForgotModal(true)}
                     style={{
@@ -815,8 +815,7 @@ const Login = () => {
                     }}
                     onMouseEnter={e => e.target.style.color = '#fff'}
                     onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}
-                  >Forgot password?</button> */}
-
+                  >Forgot password?</button>
                   <button
                     type="button"
                     id="reset-password-btn"

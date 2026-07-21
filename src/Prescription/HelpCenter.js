@@ -131,7 +131,7 @@ export default function DoctorHelpCenter() {
     value !== undefined &&
     String(value).trim() !== "";
   const d = {
-    clinicName: clinicDetails.name || "Clinic",
+    clinicName: clinicDetails.name || "PhysioElite",
     logo: logoSrc,
     doctorName: doctorDetails.doctorName || "",
     branch: clinicDetails.branch || "",
