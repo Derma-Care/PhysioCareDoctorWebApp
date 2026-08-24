@@ -114,6 +114,16 @@ export const getTodayAppointments = async () => {
   }
 }
 
+export const updateHomeExercisePlan = async (therapistRecordId, status, payload) => {
+  try {
+    const response = await api.put(`${ipUrl}/api/physiotherapy-doctor/home-exercise-plan/${therapistRecordId}/${status}`, payload)
+    return response.data
+  } catch (error) {
+    console.error('❌ updateHomeExercisePlan Error:', error)
+    return null
+  }
+}
+
 export const getTodayFutureAppointments = async () => {
   const doctorId = localStorage.getItem("doctorId")
   const hospitalId = localStorage.getItem("hospitalId")

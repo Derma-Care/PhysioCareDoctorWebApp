@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Button from '../components/CustomButton/CustomButton'
 import { CCard, CCardBody, CContainer } from '@coreui/react'
-import { getTherapyExercises, getTodayAppointments, getAllRecoverySupportsByClinicId } from '../Auth/Auth'
+import { getTherapyExercises, getTodayAppointments, getAllRecoverySupportsByClinicId, updateHomeExercisePlan } from '../Auth/Auth'
 import Select from 'react-select'
 
 
@@ -14,8 +14,8 @@ const EMPTY_EXERCISE = {
 
 /* ─── Frequency unit options ─────────────────────────────────────────────── */
 const FREQ_UNITS = [
-  { label: 'per day',   value: 'day' },
-  { label: 'per week',  value: 'week' },
+  { label: 'per day', value: 'day' },
+  { label: 'per week', value: 'week' },
   { label: 'per month', value: 'month' },
 ]
 
@@ -136,7 +136,7 @@ const Textarea = ({ value, onChange, placeholder = '', rows = 3 }) => (
     rows={rows}
     style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5 }}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+    onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
   />
 )
 
@@ -181,7 +181,7 @@ const StepperInput = ({ value, onChange, min = 1, max, placeholder, hasError }) 
       appearance: 'auto',
     }}
     onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-    onBlur={e  => (e.target.style.borderColor = hasError ? '#e53e3e' : '#b6cfe8')}
+    onBlur={e => (e.target.style.borderColor = hasError ? '#e53e3e' : '#b6cfe8')}
   />
 )
 
@@ -208,7 +208,7 @@ const FrequencyInput = ({ value, unit, onValueChange, onUnitChange, hasError }) 
         backgroundColor: hasError ? '#fff5f5' : '#FFFFFF',
       }}
       onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-      onBlur={e  => (e.target.style.borderColor = hasError ? '#e53e3e' : '#b6cfe8')}
+      onBlur={e => (e.target.style.borderColor = hasError ? '#e53e3e' : '#b6cfe8')}
     />
     <select
       value={unit}
@@ -223,7 +223,7 @@ const FrequencyInput = ({ value, unit, onValueChange, onUnitChange, hasError }) 
         backgroundColor: '#f0f6ff',
       }}
       onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-      onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+      onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
     >
       {FREQ_UNITS.map(u => (
         <option key={u.value} value={u.value}>{u.label}</option>
@@ -324,7 +324,10 @@ const DeleteModal = ({ exerciseName, onConfirm, onCancel }) => (
 /* ══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
-const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
+const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData, formData }) => {
+  const therapyRecordId = patientData?.therapyRecordId || formData?.therapyRecordId || formData?.id || ''
+  const [isEditingMode, setIsEditingMode] = useState(!therapyRecordId)
+
 
   /* Normalise seed exercises — legacy `frequency` string → split into value+unit */
   const normaliseSeedExercises = (arr) => {
@@ -370,9 +373,9 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
   const [fieldErrors, setFieldErrors] = useState({})
 
   const [exerciseLibrary, setExerciseLibrary] = useState([])
-  const [loadingLibrary, setLoadingLibrary]   = useState(false)
-  const [search, setSearch]                   = useState('')
-  const [showDropdown, setShowDropdown]       = useState(false)
+  const [loadingLibrary, setLoadingLibrary] = useState(false)
+  const [search, setSearch] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
 
   const [bulkSelected, setBulkSelected] = useState(new Set())
   const [showBulkPanel, setShowBulkPanel] = useState(false)
@@ -386,7 +389,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
       if (!clinicId) return
       try {
         let branchId = patientData?.branchId || ''
-        
+
         // Fallback: only fetch today's appointments if branchId is missing from patientData
         if (!branchId) {
           const res = await getTodayAppointments()
@@ -394,7 +397,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
         }
 
         if (!branchId) return
-        
+
         setLoadingLibrary(true)
         const data = await getTherapyExercises(clinicId, branchId)
         const exercisesOnly = (Array.isArray(data) ? data : []).filter(
@@ -423,7 +426,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
         }
         return {
           id: item.recoverySupportId || item.id || item._id || '',
-          name: item.name  || '',
+          name: item.name || '',
           category: item.category || item.recoverySupportCategory || item.categoryName || '',
           description: item.description || item.recoverySupportDescription || ''
         }
@@ -441,8 +444,8 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
           }
           return {
             id: item.recoverySupportId || item.id || item._id || '',
-            name:  item.name || '',
-            category: item.category ||item.categoryName || '',
+            name: item.name || '',
+            category: item.category || item.categoryName || '',
             description: item.description || item.recoverySupportDescription || ''
           }
         }).filter(item => item.name)
@@ -586,23 +589,65 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
     setFieldErrors({})
   }
 
+  const getPayload = () => ({
+    exercisePlan: {
+      exercises: exercises.map(ex => {
+        const exId = ex.therapyExercisesId || ex.exerciseId || ex.id || ex._id || ''
+        return {
+          ...ex,
+          id: exId,
+          therapyExercisesId: exId,
+          exerciseId: exId,
+          frequency: ex.frequencyValue
+            ? `${ex.frequencyValue} ${ex.frequencyUnit}${Number(ex.frequencyValue) > 1 ? 's' : ''}`
+            : ex.frequency || '',
+        }
+      }),
+      homeAdvice,
+    },
+    recoverySupport: recoverySupport.map(item => ({
+      id: item.id || item.recoverySupportId || '',
+      recoverySupportId: item.recoverySupportId || item.id || '',
+      recoverySupportName: item.name || item.recoverySupportName || '',
+      name: item.name || item.recoverySupportName || '',
+      category: item.category || item.recoverySupportCategory || item.categoryName || '',
+      description: item.description || item.recoverySupportDescription || '',
+    })),
+  })
+
   const handleNext = () => {
-    const payload = {
-      exercisePlan: {
-        exercises: exercises.map(ex => {
-          const exId = ex.therapyExercisesId || ex.exerciseId || ex.id || ex._id || ''
-          return {
-            ...ex,
-            id: exId,
-            therapyExercisesId: exId,
-            exerciseId: exId,
-            frequency: ex.frequencyValue
-              ? `${ex.frequencyValue} ${ex.frequencyUnit}${Number(ex.frequencyValue) > 1 ? 's' : ''}`
-              : ex.frequency || '',
-          }
-        }),
-        homeAdvice,
-      },
+    const payload = getPayload()
+    console.log('handleNext payload:', payload)
+    onNext?.(payload)
+  }
+
+  const [isUpdating, setIsUpdating] = useState(false)
+  const handleUpdate = async () => {
+    if (!therapyRecordId) return
+    setIsUpdating(true)
+    const localPayload = getPayload()
+
+    const apiPayload = {
+      homeAdvice: homeAdvice,
+      homeExercises: exercises.map(ex => {
+        const exId = ex.therapyExercisesId || ex.exerciseId || ex.id || ex._id || ''
+        return {
+          id: exId,
+          therapyExercisesId: exId,
+          exerciseId: exId,
+          name: ex.name || '',
+          sets: ex.sets ? String(ex.sets) : '',
+          reps: ex.reps ? String(ex.reps) : '',
+          duration: ex.activityDuration || ex.duration || '',
+          frequency: ex.frequencyValue
+            ? `${ex.frequencyValue} ${ex.frequencyUnit}${Number(ex.frequencyValue) > 1 ? 's' : ''}`
+            : ex.frequency || '',
+          instructions: ex.instructions || ex.notes || '',
+          videoUrl: ex.videoUrl || ex.youtubeUrl || '',
+          sessions: ex.sessions || ex.session || '',
+          thumbnail: ex.thumbnail || ''
+        }
+      }),
       recoverySupport: recoverySupport.map(item => ({
         id: item.id || item.recoverySupportId || '',
         recoverySupportId: item.recoverySupportId || item.id || '',
@@ -612,8 +657,21 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
         description: item.description || item.recoverySupportDescription || '',
       })),
     }
-    console.log('handleNext payload:', payload)
-    onNext?.(payload)
+
+    try {
+      const res = await updateHomeExercisePlan(therapyRecordId, 'false', apiPayload)
+      if (res && res.success) {
+        setIsEditingMode(false)
+        onNext?.(localPayload)
+      } else {
+        setIsEditingMode(false)
+        onNext?.(localPayload)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   const bulkLibrary = exerciseLibrary.filter(ex => {
@@ -626,7 +684,7 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
   return (
     <div
       className="pb-5"
-      style={{  backgroundColor: '#FFFFFF', minHeight: '100vh' }}
+      style={{ backgroundColor: '#FFFFFF', minHeight: '100vh' }}
     >
       {/* Delete Confirmation Modal */}
       {deleteModal.open && (
@@ -657,72 +715,74 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
             <div>
               <div style={{ marginBottom: 8 }}>
                 <label style={{ ...labelStyle, textTransform: 'none', letterSpacing: 'normal', fontSize: '0.85rem' }}>
-                  Select one or more supportive devices (e.g. Knee Cap, Lumbar Belt):
+                  {isEditingMode ? 'Select one or more supportive devices (e.g. Knee Cap, Lumbar Belt):' : 'Selected supportive devices:'}
                 </label>
               </div>
-              <Select
-                isMulti
-                options={supportOptions.map(item => ({ label: item.name, value: item.name }))}
-                value={recoverySupport.map(val => ({ label: val.name, value: val.name }))}
-                onChange={handleRecoverySupportChange}
-                placeholder="Search and select recovery support..."
-                isClearable
-                isSearchable
-                styles={{
-                  control: (base, state) => ({
-                    ...base,
-                    border: state.isFocused ? '1.5px solid #1B4F8A' : '1.5px solid #b6cfe8',
-                    borderRadius: 7,
-                    backgroundColor: '#FFFFFF',
-                    fontSize: '0.875rem',
-                    color: '#1a3a5c',
-                    minHeight: 38,
-                    boxShadow: 'none',
-                    transition: 'border-color 0.18s ease',
-                    '&:hover': { borderColor: '#1B4F8A' },
-                  }),
-                  valueContainer: (base) => ({ ...base, padding: '4px 8px' }),
-                  placeholder: (base) => ({ ...base, color: '#8aaac8', fontSize: '0.875rem' }),
-                  indicatorSeparator: () => ({ display: 'none' }),
-                  dropdownIndicator: (base) => ({ ...base, padding: '0 6px', color: '#8aaac8' }),
-                  menu: (base) => ({
-                    ...base, borderRadius: 8,
-                    border: '1px solid #b6cfe8',
-                    boxShadow: '0 4px 16px rgba(27,79,138,0.12)',
-                    zIndex: 1000,
-                  }),
-                  option: (base, state) => ({
-                    ...base, fontSize: '0.875rem', color: '#1a3a5c',
-                    backgroundColor: state.isFocused ? '#dceeff' : '#fff',
-                    cursor: 'pointer',
-                    ':active': {
-                      backgroundColor: '#1B4F8A',
-                      color: '#ffffff'
-                    }
-                  }),
-                  multiValue: (base) => ({
-                    ...base,
-                    backgroundColor: '#dceeff',
-                    borderRadius: 4,
-                    color: '#1B4F8A',
-                  }),
-                  multiValueLabel: (base) => ({
-                    ...base,
-                    color: '#1B4F8A',
-                    fontWeight: 600,
-                    fontSize: '0.8rem',
-                  }),
-                  multiValueRemove: (base) => ({
-                    ...base,
-                    color: '#1B4F8A',
-                    ':hover': {
-                      backgroundColor: '#1B4F8A',
-                      color: 'white',
+              {isEditingMode && (
+                <Select
+                  isMulti
+                  options={supportOptions.map(item => ({ label: item.name, value: item.name }))}
+                  value={recoverySupport.map(val => ({ label: val.name, value: val.name }))}
+                  onChange={handleRecoverySupportChange}
+                  placeholder="Search and select recovery support..."
+                  isClearable
+                  isSearchable
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      border: state.isFocused ? '1.5px solid #1B4F8A' : '1.5px solid #b6cfe8',
+                      borderRadius: 7,
+                      backgroundColor: '#FFFFFF',
+                      fontSize: '0.875rem',
+                      color: '#1a3a5c',
+                      minHeight: 38,
+                      boxShadow: 'none',
+                      transition: 'border-color 0.18s ease',
+                      '&:hover': { borderColor: '#1B4F8A' },
+                    }),
+                    valueContainer: (base) => ({ ...base, padding: '4px 8px' }),
+                    placeholder: (base) => ({ ...base, color: '#8aaac8', fontSize: '0.875rem' }),
+                    indicatorSeparator: () => ({ display: 'none' }),
+                    dropdownIndicator: (base) => ({ ...base, padding: '0 6px', color: '#8aaac8' }),
+                    menu: (base) => ({
+                      ...base, borderRadius: 8,
+                      border: '1px solid #b6cfe8',
+                      boxShadow: '0 4px 16px rgba(27,79,138,0.12)',
+                      zIndex: 1000,
+                    }),
+                    option: (base, state) => ({
+                      ...base, fontSize: '0.875rem', color: '#1a3a5c',
+                      backgroundColor: state.isFocused ? '#dceeff' : '#fff',
+                      cursor: 'pointer',
+                      ':active': {
+                        backgroundColor: '#1B4F8A',
+                        color: '#ffffff'
+                      }
+                    }),
+                    multiValue: (base) => ({
+                      ...base,
+                      backgroundColor: '#dceeff',
                       borderRadius: 4,
-                    },
-                  }),
-                }}
-              />
+                      color: '#1B4F8A',
+                    }),
+                    multiValueLabel: (base) => ({
+                      ...base,
+                      color: '#1B4F8A',
+                      fontWeight: 600,
+                      fontSize: '0.8rem',
+                    }),
+                    multiValueRemove: (base) => ({
+                      ...base,
+                      color: '#1B4F8A',
+                      ':hover': {
+                        backgroundColor: '#1B4F8A',
+                        color: 'white',
+                        borderRadius: 4,
+                      },
+                    }),
+                  }}
+                />
+              )}
               {recoverySupport.length > 0 && (
                 <div style={{ marginTop: 16 }}>
                   <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#1B4F8A', marginBottom: 8, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -759,388 +819,390 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
         </CCard>
 
         {/* ══ FORM CARD ══════════════════════════════════════════════════ */}
-        <CCard className="mb-4" style={cardStyle}>
-          <CCardBody style={{ padding: '28px 32px' }}>
+        {isEditingMode && (
+          <CCard className="mb-4" style={cardStyle}>
+            <CCardBody style={{ padding: '28px 32px' }}>
 
-            {/* Card header row */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              marginBottom: 20, borderBottom: '2px solid #dceeff', paddingBottom: 12,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: 8,
-                  background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 17, boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
-                }}>🏋️</div>
-                <h5 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '1.05rem' }}>
-                  {editingIdx !== null ? `Editing Exercise #${editingIdx + 1}` : 'Add Exercise'}
-                </h5>
-              </div>
-
-              {exerciseLibrary.length > 0 && editingIdx === null && (
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button
-                    type="button"
-                    onClick={() => { setShowBulkPanel(v => !v); setSearch(''); setBulkSelected(new Set()) }}
-                    style={{
-                      padding: '7px 18px', borderRadius: 8, cursor: 'pointer',
-                      border: '1.5px solid #1B4F8A',
-                      background: showBulkPanel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
-                      color: showBulkPanel ? '#fff' : '#1B4F8A',
-                      fontWeight: 700, fontSize: '0.85rem',
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      boxShadow: showBulkPanel ? '0 2px 8px rgba(27,79,138,0.25)' : 'none',
-                    }}
-                  >
-                    📚 {showBulkPanel ? '✕ Close' : 'Browse Exercises'}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* ══ BULK LIBRARY PANEL ══════════════════════════════════════ */}
-            {showBulkPanel && (
-              <div style={{ marginBottom: 24, border: '1.5px solid #b6cfe8', borderRadius: 10, overflow: 'hidden', background: '#FFFFFF' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#f0f6ff', borderBottom: '1px solid #b6cfe8', flexWrap: 'wrap' }}>
-                  <input
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="Search exercises..."
-                    style={{ ...inputStyle, width: 220, height: 34 }}
-                    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-                    onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
-                  />
-                  <button
-                    type="button"
-                    onClick={toggleSelectAll}
-                    style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
-                  >
-                    {bulkSelected.size === bulkLibrary.length && bulkLibrary.length > 0 ? '☑ Deselect All' : '☐ Select All'}
-                  </button>
-                  <span style={{ fontSize: '0.8rem', color: '#1B4F8A', fontWeight: 600 }}>
-                    {bulkSelected.size} selected
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleBulkAdd}
-                    disabled={bulkSelected.size === 0}
-                    style={{
-                      marginLeft: 'auto', padding: '6px 20px', borderRadius: 8, border: 'none',
-                      background: bulkSelected.size > 0 ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#b6cfe8',
-                      color: '#fff', fontWeight: 700, fontSize: '0.85rem',
-                      cursor: bulkSelected.size > 0 ? 'pointer' : 'not-allowed',
-                    }}
-                  >
-                    ➕ Add {bulkSelected.size > 0 ? `${bulkSelected.size} ` : ''}Exercise{bulkSelected.size !== 1 ? 's' : ''}
-                  </button>
+              {/* Card header row */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                marginBottom: 20, borderBottom: '2px solid #dceeff', paddingBottom: 12,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 8,
+                    background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 17, boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
+                  }}>🏋️</div>
+                  <h5 style={{ margin: 0, color: '#1B4F8A', fontWeight: 700, fontSize: '1.05rem' }}>
+                    {editingIdx !== null ? `Editing Exercise #${editingIdx + 1}` : 'Add Exercise'}
+                  </h5>
                 </div>
 
-                {loadingLibrary ? (
-                  <div style={{ padding: 20, textAlign: 'center', color: '#4a7abf', fontSize: '0.875rem' }}>Loading exercises…</div>
-                ) : bulkLibrary.length === 0 ? (
-                  <div style={{ padding: 20, textAlign: 'center', color: '#8aaac8', fontSize: '0.875rem' }}>No exercises found.</div>
-                ) : (
-                  <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-                    {bulkLibrary.map((ex, i) => {
-                      const exName = ex.name || ''
-                      const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
-                      const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
-                      const exFreq = ex.frequency || ''
-                      const exSession = ex.session ? String(ex.session) : ''
-                      const isChecked = bulkSelected.has(exName)
-                      return (
-                        <label
-                          key={i}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 12,
-                            padding: '10px 14px', cursor: 'pointer',
-                            borderBottom: '1px solid #dceeff',
-                            background: isChecked ? '#dceeff' : i % 2 === 0 ? '#f0f6ff' : '#FFFFFF',
-                            transition: 'background 0.15s',
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => toggleBulk(exName)}
-                            style={{ width: 16, height: 16, accentColor: '#1B4F8A', cursor: 'pointer', flexShrink: 0 }}
-                          />
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1a3a5c' }}>{exName}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
-                              {[
-                                exSets && `🔁 ${exSets} sets`,
-                                exReps && `🔄 ${exReps} reps`,
-                                exFreq && `📆 ${exFreq}`,
-                                exSession && `🗓 ${exSession} session(s)`,
-                              ].filter(Boolean).join('  ·  ') || 'No details'}
-                            </div>
-                          </div>
-                          {isChecked && <span style={{ color: '#1B4F8A', fontWeight: 700, fontSize: '1rem' }}>✓</span>}
-                        </label>
-                      )
-                    })}
+                {exerciseLibrary.length > 0 && editingIdx === null && (
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setShowBulkPanel(v => !v); setSearch(''); setBulkSelected(new Set()) }}
+                      style={{
+                        padding: '7px 18px', borderRadius: 8, cursor: 'pointer',
+                        border: '1.5px solid #1B4F8A',
+                        background: showBulkPanel ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#FFFFFF',
+                        color: showBulkPanel ? '#fff' : '#1B4F8A',
+                        fontWeight: 700, fontSize: '0.85rem',
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        boxShadow: showBulkPanel ? '0 2px 8px rgba(27,79,138,0.25)' : 'none',
+                      }}
+                    >
+                      📚 {showBulkPanel ? '✕ Close' : 'Browse Exercises'}
+                    </button>
                   </div>
                 )}
               </div>
-            )}
 
-            {/* ══ SINGLE EXERCISE FORM ════════════════════════════════════ */}
-            {(!showBulkPanel) && (
-              <>
-                {/* Exercise Name */}
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ ...labelStyle, color: fieldErrors.name ? '#e53e3e' : '#1B4F8A' }}>
-                    Exercise Name <span style={{ color: '#e53e3e' }}>*</span>
-                  </label>
-                  {fieldErrors.name && (
-                    <span style={{ marginLeft: 8, fontWeight: 600, fontSize: '0.8rem', color: '#e53e3e' }}>
-                      ⚠ {fieldErrors.name}
-                    </span>
-                  )}
-                  <div style={{ position: 'relative', marginTop: 4 }}>
+              {/* ══ BULK LIBRARY PANEL ══════════════════════════════════════ */}
+              {showBulkPanel && (
+                <div style={{ marginBottom: 24, border: '1.5px solid #b6cfe8', borderRadius: 10, overflow: 'hidden', background: '#FFFFFF' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#f0f6ff', borderBottom: '1px solid #b6cfe8', flexWrap: 'wrap' }}>
                     <input
-                      value={search || form.name}
-                      onChange={e => {
-                        const raw = e.target.value
-                        const safe = sanitizeName(raw)
-                        setSearch(safe)
-                        set('name')(safe)
-                        setShowDropdown(true)
-                        setFieldErrors(prev => ({ ...prev, name: '' }))
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      placeholder="Search exercises..."
+                      style={{ ...inputStyle, width: 220, height: 34 }}
+                      onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+                      onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleSelectAll}
+                      style={{ padding: '5px 14px', borderRadius: 7, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+                    >
+                      {bulkSelected.size === bulkLibrary.length && bulkLibrary.length > 0 ? '☑ Deselect All' : '☐ Select All'}
+                    </button>
+                    <span style={{ fontSize: '0.8rem', color: '#1B4F8A', fontWeight: 600 }}>
+                      {bulkSelected.size} selected
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleBulkAdd}
+                      disabled={bulkSelected.size === 0}
+                      style={{
+                        marginLeft: 'auto', padding: '6px 20px', borderRadius: 8, border: 'none',
+                        background: bulkSelected.size > 0 ? 'linear-gradient(135deg,#1B4F8A,#2A6DB5)' : '#b6cfe8',
+                        color: '#fff', fontWeight: 700, fontSize: '0.85rem',
+                        cursor: bulkSelected.size > 0 ? 'pointer' : 'not-allowed',
                       }}
-                      onFocus={() => setShowDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                      onFocusCapture={e => (e.target.style.borderColor = '#1B4F8A')}
-                      onBlurCapture={e  => (e.target.style.borderColor = fieldErrors.name ? '#e53e3e' : '#b6cfe8')}
-                      placeholder={
-                        loadingLibrary
-                          ? 'Loading exercises...'
-                          : exerciseLibrary.length > 0
-                            ? 'Search or type exercise name...'
-                            : 'Type exercise name...'
-                      }
+                    >
+                      ➕ Add {bulkSelected.size > 0 ? `${bulkSelected.size} ` : ''}Exercise{bulkSelected.size !== 1 ? 's' : ''}
+                    </button>
+                  </div>
+
+                  {loadingLibrary ? (
+                    <div style={{ padding: 20, textAlign: 'center', color: '#4a7abf', fontSize: '0.875rem' }}>Loading exercises…</div>
+                  ) : bulkLibrary.length === 0 ? (
+                    <div style={{ padding: 20, textAlign: 'center', color: '#8aaac8', fontSize: '0.875rem' }}>No exercises found.</div>
+                  ) : (
+                    <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+                      {bulkLibrary.map((ex, i) => {
+                        const exName = ex.name || ''
+                        const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
+                        const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
+                        const exFreq = ex.frequency || ''
+                        const exSession = ex.session ? String(ex.session) : ''
+                        const isChecked = bulkSelected.has(exName)
+                        return (
+                          <label
+                            key={i}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 12,
+                              padding: '10px 14px', cursor: 'pointer',
+                              borderBottom: '1px solid #dceeff',
+                              background: isChecked ? '#dceeff' : i % 2 === 0 ? '#f0f6ff' : '#FFFFFF',
+                              transition: 'background 0.15s',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleBulk(exName)}
+                              style={{ width: 16, height: 16, accentColor: '#1B4F8A', cursor: 'pointer', flexShrink: 0 }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1a3a5c' }}>{exName}</div>
+                              <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
+                                {[
+                                  exSets && `🔁 ${exSets} sets`,
+                                  exReps && `🔄 ${exReps} reps`,
+                                  exFreq && `📆 ${exFreq}`,
+                                  exSession && `🗓 ${exSession} session(s)`,
+                                ].filter(Boolean).join('  ·  ') || 'No details'}
+                              </div>
+                            </div>
+                            {isChecked && <span style={{ color: '#1B4F8A', fontWeight: 700, fontSize: '1rem' }}>✓</span>}
+                          </label>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ══ SINGLE EXERCISE FORM ════════════════════════════════════ */}
+              {(!showBulkPanel) && (
+                <>
+                  {/* Exercise Name */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ ...labelStyle, color: fieldErrors.name ? '#e53e3e' : '#1B4F8A' }}>
+                      Exercise Name <span style={{ color: '#e53e3e' }}>*</span>
+                    </label>
+                    {fieldErrors.name && (
+                      <span style={{ marginLeft: 8, fontWeight: 600, fontSize: '0.8rem', color: '#e53e3e' }}>
+                        ⚠ {fieldErrors.name}
+                      </span>
+                    )}
+                    <div style={{ position: 'relative', marginTop: 4 }}>
+                      <input
+                        value={search || form.name}
+                        onChange={e => {
+                          const raw = e.target.value
+                          const safe = sanitizeName(raw)
+                          setSearch(safe)
+                          set('name')(safe)
+                          setShowDropdown(true)
+                          setFieldErrors(prev => ({ ...prev, name: '' }))
+                        }}
+                        onFocus={() => setShowDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                        onFocusCapture={e => (e.target.style.borderColor = '#1B4F8A')}
+                        onBlurCapture={e => (e.target.style.borderColor = fieldErrors.name ? '#e53e3e' : '#b6cfe8')}
+                        placeholder={
+                          loadingLibrary
+                            ? 'Loading exercises...'
+                            : exerciseLibrary.length > 0
+                              ? 'Search or type exercise name...'
+                              : 'Type exercise name...'
+                        }
+                        style={{
+                          ...inputStyle,
+                          borderColor: fieldErrors.name ? '#e53e3e' : '#b6cfe8',
+                          backgroundColor: fieldErrors.name ? '#fff5f5' : '#FFFFFF',
+                        }}
+                      />
+
+                      {/* Dropdown */}
+                      {showDropdown && !loadingLibrary && filteredLibrary.length > 0 && (
+                        <div style={{
+                          position: 'absolute', top: '100%', left: 0, right: 0,
+                          background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8,
+                          maxHeight: 260, overflowY: 'auto', zIndex: 1000,
+                          boxShadow: '0 4px 16px rgba(27,79,138,0.12)',
+                        }}>
+                          {filteredLibrary.map((ex, i) => {
+                            const exId = ex.therapyExercisesId
+                            const exName = ex.name || ''
+                            const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
+                            const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
+                            const exSession = ex.session ? String(ex.session) : ''
+                            const exFreq = ex.frequency || ''
+                            const exNotes = ex.notes || ''
+                            const exVideo = ex.video || ''
+                            const exImage = ex.image || ''
+                            const isSelected = form.name === exName
+                            const fvMatch = String(exFreq).match(/^(\d+)\s*(day|week|month)?/i)
+                            const fv = fvMatch ? fvMatch[1] : ''
+                            const fu = fvMatch?.[2]?.toLowerCase() || 'day'
+
+                            return (
+                              <div
+                                key={i}
+                                onMouseDown={() => {
+                                  const normExId = exId || ex.exerciseId || ex.id || ex._id || ''
+                                  setForm(f => ({
+                                    ...f,
+                                    id: normExId,
+                                    therapyExercisesId: normExId,
+                                    exerciseId: normExId,
+                                    name: exName,
+                                    sets: exSets || f.sets,
+                                    reps: exReps || f.reps,
+                                    sessions: exSession || f.sessions,
+                                    frequencyValue: fv || f.frequencyValue,
+                                    frequencyUnit: fu || f.frequencyUnit,
+                                    instructions: exNotes || f.instructions,
+                                    videoUrl: exVideo || f.videoUrl,
+                                    thumbnail: exImage || f.thumbnail,
+                                    activityDuration: ex.activityDuration || ex.duration || f.activityDuration || '',
+                                  }))
+                                  setSearch(exName)
+                                  setShowDropdown(false)
+                                  setFieldErrors(prev => ({ ...prev, name: '' }))
+                                }}
+                                style={{
+                                  padding: '9px 12px', cursor: 'pointer',
+                                  borderBottom: '1px solid #dceeff',
+                                  background: isSelected ? '#dceeff' : '#fff',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                }}
+                                onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f0f6ff' }}
+                                onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isSelected ? '#dceeff' : '#fff' }}
+                              >
+                                <div>
+                                  <strong style={{ color: '#1B4F8A', fontSize: '0.88rem' }}>{exName}</strong>
+                                  <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
+                                    {[
+                                      exSets && `🔁 ${exSets} sets`,
+                                      exReps && `🔄 ${exReps} reps`,
+                                      exFreq && `📆 ${exFreq}`,
+                                      exSession && `🗓 ${exSession} session(s)`,
+                                    ].filter(Boolean).join('  ·  ')}
+                                  </div>
+                                </div>
+                                {isSelected && <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.78rem' }}>✓</span>}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sets | Reps | Frequency value | Frequency unit */}
+                  <div style={gridFive}>
+                    <div>
+                      <label style={{ ...labelStyle, color: fieldErrors.sets ? '#e53e3e' : '#1B4F8A' }}>Sets</label>
+                      {fieldErrors.sets && (
+                        <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
+                          ⚠ {fieldErrors.sets}
+                        </span>
+                      )}
+                      <StepperInput
+                        value={form.sets}
+                        onChange={val => { set('sets')(val); setFieldErrors(prev => ({ ...prev, sets: '' })) }}
+                        min={1} max={50}
+                        placeholder="e.g. 3"
+                        hasError={!!fieldErrors.sets}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, color: fieldErrors.reps ? '#e53e3e' : '#1B4F8A' }}>Reps</label>
+                      {fieldErrors.reps && (
+                        <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
+                          ⚠ {fieldErrors.reps}
+                        </span>
+                      )}
+                      <StepperInput
+                        value={form.reps}
+                        onChange={val => { set('reps')(val); setFieldErrors(prev => ({ ...prev, reps: '' })) }}
+                        min={1} max={200}
+                        placeholder="e.g. 10"
+                        hasError={!!fieldErrors.reps}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, color: fieldErrors.sessions ? '#e53e3e' : '#1B4F8A' }}>Sessions</label>
+                      {fieldErrors.sessions && (
+                        <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
+                          ⚠ {fieldErrors.sessions}
+                        </span>
+                      )}
+                      <StepperInput
+                        value={form.sessions}
+                        onChange={val => { set('sessions')(val); setFieldErrors(prev => ({ ...prev, sessions: '' })) }}
+                        min={1} max={500}
+                        placeholder="e.g. 10"
+                        hasError={!!fieldErrors.sessions}
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Act. Duration</label>
+                      <input
+                        value={form.activityDuration || ''}
+                        onChange={e => set('activityDuration')(e.target.value)}
+                        placeholder="e.g. 50 mins"
+                        style={inputStyle}
+                        onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
+                        onBlur={e => (e.target.style.borderColor = '#b6cfe8')}
+                      />
+                    </div>
+                    <div style={{ gridColumn: 'span 1' }}>
+                      <label style={{ ...labelStyle, color: fieldErrors.frequencyValue ? '#e53e3e' : '#1B4F8A' }}>Frequency</label>
+                      {fieldErrors.frequencyValue && (
+                        <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
+                          ⚠ {fieldErrors.frequencyValue}
+                        </span>
+                      )}
+                      <FrequencyInput
+                        value={form.frequencyValue}
+                        unit={form.frequencyUnit}
+                        onValueChange={val => {
+                          setFieldErrors(prev => ({ ...prev, frequencyValue: '' }))
+                          setForm(f => ({ ...f, frequencyValue: val }))
+                        }}
+                        onUnitChange={val => setForm(f => ({ ...f, frequencyUnit: val }))}
+                        hasError={!!fieldErrors.frequencyValue}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Video URL */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ ...labelStyle, color: fieldErrors.videoUrl ? '#e53e3e' : '#1B4F8A' }}>Video URL</label>
+                    {fieldErrors.videoUrl && (
+                      <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
+                        ⚠ {fieldErrors.videoUrl}
+                      </span>
+                    )}
+                    <input
+                      value={form.videoUrl}
+                      onChange={e => { set('videoUrl')(e.target.value); setFieldErrors(prev => ({ ...prev, videoUrl: '' })) }}
+                      placeholder="https://example.com/video"
                       style={{
                         ...inputStyle,
-                        borderColor: fieldErrors.name ? '#e53e3e' : '#b6cfe8',
-                        backgroundColor: fieldErrors.name ? '#fff5f5' : '#FFFFFF',
+                        borderColor: fieldErrors.videoUrl ? '#e53e3e' : '#b6cfe8',
+                        backgroundColor: fieldErrors.videoUrl ? '#fff5f5' : '#FFFFFF',
                       }}
-                    />
-
-                    {/* Dropdown */}
-                    {showDropdown && !loadingLibrary && filteredLibrary.length > 0 && (
-                      <div style={{
-                        position: 'absolute', top: '100%', left: 0, right: 0,
-                        background: '#fff', border: '1px solid #b6cfe8', borderRadius: 8,
-                        maxHeight: 260, overflowY: 'auto', zIndex: 1000,
-                        boxShadow: '0 4px 16px rgba(27,79,138,0.12)',
-                      }}>
-                        {filteredLibrary.map((ex, i) => {
-                          const exId   = ex.therapyExercisesId
-                          const exName = ex.name || ''
-                          const exSets = ex.sets !== null && ex.sets !== undefined ? String(ex.sets) : ''
-                          const exReps = ex.repetitions !== null && ex.repetitions !== undefined ? String(ex.repetitions) : ''
-                          const exSession = ex.session ? String(ex.session) : ''
-                          const exFreq    = ex.frequency || ''
-                          const exNotes   = ex.notes || ''
-                          const exVideo   = ex.video || ''
-                          const exImage   = ex.image || ''
-                          const isSelected = form.name === exName
-                          const fvMatch = String(exFreq).match(/^(\d+)\s*(day|week|month)?/i)
-                          const fv = fvMatch ? fvMatch[1] : ''
-                          const fu = fvMatch?.[2]?.toLowerCase() || 'day'
-
-                          return (
-                            <div
-                              key={i}
-                              onMouseDown={() => {
-                                const normExId = exId || ex.exerciseId || ex.id || ex._id || ''
-                                setForm(f => ({
-                                  ...f,
-                                  id: normExId,
-                                  therapyExercisesId: normExId,
-                                  exerciseId: normExId,
-                                  name: exName,
-                                  sets: exSets || f.sets,
-                                  reps: exReps || f.reps,
-                                  sessions: exSession || f.sessions,
-                                  frequencyValue: fv || f.frequencyValue,
-                                  frequencyUnit: fu || f.frequencyUnit,
-                                  instructions: exNotes || f.instructions,
-                                  videoUrl: exVideo || f.videoUrl,
-                                  thumbnail: exImage || f.thumbnail,
-                                  activityDuration: ex.activityDuration || ex.duration || f.activityDuration || '',
-                                }))
-                                setSearch(exName)
-                                setShowDropdown(false)
-                                setFieldErrors(prev => ({ ...prev, name: '' }))
-                              }}
-                              style={{
-                                padding: '9px 12px', cursor: 'pointer',
-                                borderBottom: '1px solid #dceeff',
-                                background: isSelected ? '#dceeff' : '#fff',
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                              }}
-                              onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f0f6ff' }}
-                              onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isSelected ? '#dceeff' : '#fff' }}
-                            >
-                              <div>
-                                <strong style={{ color: '#1B4F8A', fontSize: '0.88rem' }}>{exName}</strong>
-                                <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 2 }}>
-                                  {[
-                                    exSets && `🔁 ${exSets} sets`,
-                                    exReps && `🔄 ${exReps} reps`,
-                                    exFreq && `📆 ${exFreq}`,
-                                    exSession && `🗓 ${exSession} session(s)`,
-                                  ].filter(Boolean).join('  ·  ')}
-                                </div>
-                              </div>
-                              {isSelected && <span style={{ color: '#38a169', fontWeight: 700, fontSize: '0.78rem' }}>✓</span>}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Sets | Reps | Frequency value | Frequency unit */}
-                <div style={gridFive}>
-                  <div>
-                    <label style={{ ...labelStyle, color: fieldErrors.sets ? '#e53e3e' : '#1B4F8A' }}>Sets</label>
-                    {fieldErrors.sets && (
-                      <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
-                        ⚠ {fieldErrors.sets}
-                      </span>
-                    )}
-                    <StepperInput
-                      value={form.sets}
-                      onChange={val => { set('sets')(val); setFieldErrors(prev => ({ ...prev, sets: '' })) }}
-                      min={1} max={50}
-                      placeholder="e.g. 3"
-                      hasError={!!fieldErrors.sets}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ ...labelStyle, color: fieldErrors.reps ? '#e53e3e' : '#1B4F8A' }}>Reps</label>
-                    {fieldErrors.reps && (
-                      <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
-                        ⚠ {fieldErrors.reps}
-                      </span>
-                    )}
-                    <StepperInput
-                      value={form.reps}
-                      onChange={val => { set('reps')(val); setFieldErrors(prev => ({ ...prev, reps: '' })) }}
-                      min={1} max={200}
-                      placeholder="e.g. 10"
-                      hasError={!!fieldErrors.reps}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ ...labelStyle, color: fieldErrors.sessions ? '#e53e3e' : '#1B4F8A' }}>Sessions</label>
-                    {fieldErrors.sessions && (
-                      <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
-                        ⚠ {fieldErrors.sessions}
-                      </span>
-                    )}
-                    <StepperInput
-                      value={form.sessions}
-                      onChange={val => { set('sessions')(val); setFieldErrors(prev => ({ ...prev, sessions: '' })) }}
-                      min={1} max={500}
-                      placeholder="e.g. 10"
-                      hasError={!!fieldErrors.sessions}
-                    />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Act. Duration</label>
-                    <input
-                      value={form.activityDuration || ''}
-                      onChange={e => set('activityDuration')(e.target.value)}
-                      placeholder="e.g. 50 mins"
-                      style={inputStyle}
                       onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-                      onBlur={e  => (e.target.style.borderColor = '#b6cfe8')}
+                      onBlur={e => (e.target.style.borderColor = fieldErrors.videoUrl ? '#e53e3e' : '#b6cfe8')}
                     />
                   </div>
-                  <div style={{ gridColumn: 'span 1' }}>
-                    <label style={{ ...labelStyle, color: fieldErrors.frequencyValue ? '#e53e3e' : '#1B4F8A' }}>Frequency</label>
-                    {fieldErrors.frequencyValue && (
-                      <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
-                        ⚠ {fieldErrors.frequencyValue}
-                      </span>
+
+                  {/* Instructions */}
+                  <div style={{ marginBottom: 20 }}>
+                    <Field label="Instructions">
+                      <Textarea value={form.instructions} onChange={set('instructions')}
+                        placeholder="e.g. Lie on back and tilt pelvis upward" rows={3} />
+                    </Field>
+                  </div>
+
+                  {/* Buttons — right aligned */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                    {editingIdx !== null && (
+                      <button type="button" onClick={handleCancel}
+                        style={{
+                          padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
+                          border: '1.5px solid #b6cfe8', background: '#FFFFFF',
+                          color: '#1B4F8A', fontWeight: 600, fontSize: '0.875rem',
+                        }}>
+                        Cancel
+                      </button>
                     )}
-                    <FrequencyInput
-                      value={form.frequencyValue}
-                      unit={form.frequencyUnit}
-                      onValueChange={val => {
-                        setFieldErrors(prev => ({ ...prev, frequencyValue: '' }))
-                        setForm(f => ({ ...f, frequencyValue: val }))
-                      }}
-                      onUnitChange={val => setForm(f => ({ ...f, frequencyUnit: val }))}
-                      hasError={!!fieldErrors.frequencyValue}
-                    />
-                  </div>
-                </div>
-
-                {/* Video URL */}
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ ...labelStyle, color: fieldErrors.videoUrl ? '#e53e3e' : '#1B4F8A' }}>Video URL</label>
-                  {fieldErrors.videoUrl && (
-                    <span style={{ display: 'block', marginBottom: 4, fontSize: '0.75rem', color: '#e53e3e', fontWeight: 600 }}>
-                      ⚠ {fieldErrors.videoUrl}
-                    </span>
-                  )}
-                  <input
-                    value={form.videoUrl}
-                    onChange={e => { set('videoUrl')(e.target.value); setFieldErrors(prev => ({ ...prev, videoUrl: '' })) }}
-                    placeholder="https://example.com/video"
-                    style={{
-                      ...inputStyle,
-                      borderColor: fieldErrors.videoUrl ? '#e53e3e' : '#b6cfe8',
-                      backgroundColor: fieldErrors.videoUrl ? '#fff5f5' : '#FFFFFF',
-                    }}
-                    onFocus={e => (e.target.style.borderColor = '#1B4F8A')}
-                    onBlur={e  => (e.target.style.borderColor = fieldErrors.videoUrl ? '#e53e3e' : '#b6cfe8')}
-                  />
-                </div>
-
-                {/* Instructions */}
-                <div style={{ marginBottom: 20 }}>
-                  <Field label="Instructions">
-                    <Textarea value={form.instructions} onChange={set('instructions')}
-                      placeholder="e.g. Lie on back and tilt pelvis upward" rows={3} />
-                  </Field>
-                </div>
-
-                {/* Buttons — right aligned */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                  {editingIdx !== null && (
-                    <button type="button" onClick={handleCancel}
+                    <button type="button" onClick={handleSave}
                       style={{
-                        padding: '8px 24px', borderRadius: 8, cursor: 'pointer',
-                        border: '1.5px solid #b6cfe8', background: '#FFFFFF',
-                        color: '#1B4F8A', fontWeight: 600, fontSize: '0.875rem',
+                        padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
+                        color: '#fff', fontWeight: 700, fontSize: '0.875rem',
+                        boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
                       }}>
-                      Cancel
+                      {editingIdx !== null ? '✅ Update Exercise' : '➕ Add Exercise'}
                     </button>
-                  )}
-                  <button type="button" onClick={handleSave}
-                    style={{
-                      padding: '8px 24px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                      background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)',
-                      color: '#fff', fontWeight: 700, fontSize: '0.875rem',
-                      boxShadow: '0 2px 8px rgba(27,79,138,0.25)',
-                    }}>
-                    {editingIdx !== null ? '✅ Update Exercise' : '➕ Add Exercise'}
-                  </button>
-                </div>
-              </>
-            )}
+                  </div>
+                </>
+              )}
 
-          </CCardBody>
-        </CCard>
+            </CCardBody>
+          </CCard>
+        )}
 
         {/* ══ TABLE CARD ═════════════════════════════════════════════════ */}
         {exercises.length > 0 && (
@@ -1151,9 +1213,10 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', color: '#1a3a5c' }}>
                   <thead>
                     <tr style={{ background: 'linear-gradient(135deg,#1B4F8A,#2A6DB5)', color: '#fff' }}>
-                      {['#', 'Name', 'Sets', 'Reps', 'Sessions', 'Act. Duration', 'Frequency', 'Instructions', 'Video', 'Actions'].map(h => (
+                      {['#', 'Name', 'Sets', 'Reps', 'Sessions', 'Act. Duration', 'Frequency', 'Instructions', 'Video'].map(h => (
                         <th key={h} style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>{h}</th>
                       ))}
+                      {isEditingMode && <th style={{ padding: '10px 14px', textAlign: 'left', whiteSpace: 'nowrap', fontWeight: 600 }}>Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -1196,16 +1259,18 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
                           <td style={{ padding: '10px 14px' }}>
                             {ex.videoUrl ? <a href={ex.videoUrl} target="_blank" rel="noreferrer" style={{ color: '#1B4F8A', fontWeight: 600, fontSize: '0.8rem' }}>▶ Watch</a> : '—'}
                           </td>
-                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                            <button onClick={() => handleEdit(idx)}
-                              style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
-                              ✏️ Edit
-                            </button>
-                            <button onClick={() => handleDeleteClick(idx)}
-                              style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
-                              🗑️ Delete
-                            </button>
-                          </td>
+                          {isEditingMode && (
+                            <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                              <button onClick={() => handleEdit(idx)}
+                                style={{ marginRight: 6, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #1B4F8A', background: '#FFFFFF', color: '#1B4F8A', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
+                                ✏️ Edit
+                              </button>
+                              <button onClick={() => handleDeleteClick(idx)}
+                                style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e53e3e', background: '#fff5f5', color: '#e53e3e', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer' }}>
+                                🗑️ Delete
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       )
                     })}
@@ -1221,8 +1286,14 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
           <CCardBody style={{ padding: '24px 32px' }}>
             <CardHeader emoji="🏠" title="Home Advice" />
             <Field label="Home Advice">
-              <Textarea value={homeAdvice} onChange={setHomeAdvice}
-                placeholder="e.g. Maintain correct posture and do exercises daily" rows={4} />
+              <textarea
+                value={homeAdvice}
+                onChange={e => setHomeAdvice(e.target.value)}
+                placeholder="e.g. Maintain correct posture and do exercises daily"
+                rows={4}
+                disabled={!isEditingMode}
+                style={{ ...inputStyle, height: 'auto', resize: 'vertical', lineHeight: 1.5, opacity: isEditingMode ? 1 : 0.7 }}
+              />
             </Field>
           </CCardBody>
         </CCard>
@@ -1241,8 +1312,42 @@ const HomePlan = ({ seed = {}, onNext, sidebarWidth = 0, patientData }) => {
           gap: 16,
           padding: '10px 24px',
           boxShadow: '0 -2px 10px rgba(27,79,138,0.12)',
+          zIndex: 1000
         }}
       >
+        {!isEditingMode && therapyRecordId && (
+          <Button
+            customColor="#f39c12"
+            color="#FFFFFF"
+            onClick={() => setIsEditingMode(true)}
+            style={{
+              borderRadius: '20px',
+              fontWeight: 700,
+              padding: '6px 24px',
+              boxShadow: '0 2px 8px rgba(243,156,18,0.30)',
+              border: '1.5px solid #f39c12',
+            }}
+          >
+            ✏️ Edit Plan
+          </Button>
+        )}
+        {isEditingMode && therapyRecordId && (
+          <Button
+            customColor="#2ecc71"
+            color="#FFFFFF"
+            onClick={handleUpdate}
+            style={{
+              borderRadius: '20px',
+              fontWeight: 700,
+              padding: '6px 24px',
+              boxShadow: '0 2px 8px rgba(46,204,113,0.30)',
+              border: '1.5px solid #2ecc71',
+            }}
+            disabled={isUpdating}
+          >
+            {isUpdating ? 'Updating...' : '✅ Update'}
+          </Button>
+        )}
         <Button
           customColor="#1B4F8A"
           color="#FFFFFF"
